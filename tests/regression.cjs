@@ -14,12 +14,12 @@ function runtime(options={}){
     addEventListener(k,f){(this.listeners[k]??=[]).push(f);}
     setAttribute(k,v){this.attrs[k]=v;}getAttribute(k){return this.attrs[k];}
     getContext(){return ctx;}toDataURL(){return 'data:image/png;base64,AA';}
-    getBoundingClientRect(){return {width:720,height:600,left:0,top:0};}
+    getBoundingClientRect(){return {width:720,height:600,left:0,top:0,bottom:600};}
     appendChild(e){elements.set(e.id,e);}focus(){}setSelectionRange(){}setPointerCapture(){}
     click(){this.onclick?.({target:this});for(const f of this.listeners.click||[])f({target:this});}
   }
   for(const m of html.matchAll(/id="([^"]+)"/g))elements.set(m[1],new El(m[1]));
-  const doc={hidden:false,querySelector:s=>elements.get(s.slice(1))||(elements.set(s.slice(1),new El(s.slice(1))),elements.get(s.slice(1))),querySelectorAll:()=>[],createElement:()=>new El(),head:new El('head'),addEventListener(){},fonts:null,documentElement:{clientWidth:1440,clientHeight:900}};
+  const doc={hidden:false,querySelector:s=>elements.get(s.slice(1))||(elements.set(s.slice(1),new El(s.slice(1))),elements.get(s.slice(1))),querySelectorAll:()=>[],createElement:()=>new El(),head:new El('head'),body:new El('body'),addEventListener(){},fonts:null,documentElement:{clientWidth:1440,clientHeight:900,style:{setProperty(){}}}};
   const context={console,document:doc,performance:{now:()=>clock},crypto:crypto.webcrypto,Math,Map,Set,WeakMap,JSON,Promise,Uint8Array,Uint8ClampedArray,Float32Array,Image:class{},devicePixelRatio:1,innerWidth:1440,innerHeight:900,
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     matchMedia:()=>({matches:false,addEventListener(){}}),
@@ -152,5 +152,69 @@ test('music schedules sound in battle and stops for pause, recovery and zero vol
   const timer=aa.BattleMusic.timer;aa.BattleMusic.update();assert.equal(aa.BattleMusic.timer,timer);
   aa.getB().paused=true;aa.BattleMusic.update();assert.equal(aa.BattleMusic.timer,null);aa.getB().paused=false;aa.Net.reconnecting=true;aa.BattleMusic.update();assert.equal(aa.BattleMusic.timer,null);
   aa.Net.reconnecting=false;aa.SETTINGS.music=0;aa.BattleMusic.update();assert.equal(aa.BattleMusic.timer,null);
+});
+function mobileRuntime(){
+  const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.SETTINGS.touchControls='on';aa.G.phase='battle';
+  const cfg=aa.makeCfg(aa.myCarCfg());aa.toBattle({...cfg,me:0,net:null});aa.getB().touch=true;aa.getB().seq='play';
+  rr.context.document.documentElement.clientWidth=390;
+  rr.elements.get('ac').getBoundingClientRect=()=>({left:10,top:50,width:390,height:720,bottom:770});
+  aa.sizeArena();aa.cam.x=1000;aa.cam.y=625;aa.cam.z=1;
+  return {rr,aa};
+}
+test('portrait projection and mouse aiming round-trip at every camera position',()=>{
+  const {aa}=mobileRuntime();assert.equal(aa.view.rot,Math.PI/2);
+  for(const rot of [0,Math.PI/2])for(const z of [1,1.6,2]){
+    aa.view.rot=rot;aa.cam.z=z;
+    for(const [x,y] of [[20,20],[1000,625],[1980,1230],[230,440]]){
+      const screen=aa.worldToScreen(x,y),world=aa.toWorld(screen[0]+10,screen[1]+50);
+      assert(Math.abs(world[0]-x)<1e-8);assert(Math.abs(world[1]-y)<1e-8);
+    }
+  }
+});
+test('rotated portrait camera keeps distant opponents visible without the old forced zoom',()=>{
+  const {aa}=mobileRuntime(),b=aa.getB();b.cars[0].x=180;b.cars[0].y=625;b.cars[1].x=1820;b.cars[1].y=625;
+  for(let i=0;i<200;i++)aa.updateCam(.05);
+  assert(aa.cam.z<=1.6);
+  for(const v of b.cars){const [x,y]=aa.worldToScreen(v.x,v.y);assert(x>0&&x<aa.view.w);assert(y>0&&y<aa.view.h);}
+});
+test('twin sticks aim without firing until the fire ring and preserve aim on release',()=>{
+  const {rr,aa}=mobileRuntime(),b=aa.getB(),canvas=rr.elements.get('ac');
+  const send=(type,id,x,y)=>{for(const f of canvas.listeners[type]||[])f({type,pointerType:'touch',pointerId:id,clientX:x,clientY:y,button:0,preventDefault(){}});};
+  send('pointerdown',7,330,620);send('pointermove',7,330,593);
+  let input=aa.readLocal();assert(!input.fire);assert(input.aimX<b.cars[0].x);assert(Math.abs(input.aimY-b.cars[0].y)<1e-8);
+  send('pointermove',7,330,569);assert(aa.readLocal().fire);
+  send('pointercancel',7,330,569);assert(!aa.readLocal().fire);assert(b.touchAim);
+  aa.keys.add('Space');assert(aa.readLocal().fire);aa.keys.clear();
+});
+test('rotated drive stick and cancellation remain independent of the aiming finger',()=>{
+  const {rr,aa}=mobileRuntime(),b=aa.getB(),canvas=rr.elements.get('ac');b.cars[0].a=-Math.PI/2;
+  const send=(type,id,x,y)=>{for(const f of canvas.listeners[type]||[])f({type,pointerType:'touch',pointerId:id,clientX:x,clientY:y,button:0,preventDefault(){}});};
+  send('pointerdown',1,80,620);send('pointermove',1,80,570);send('pointerdown',2,320,620);send('pointermove',2,320,570);
+  const input=aa.readLocal();assert(input.th>.8);assert(Math.abs(input.st)<.001);assert(input.fire);
+  send('pointerup',1,80,570);assert.equal(b.joy,null);assert(aa.readLocal().fire);
+  rr.event('blur',{});assert.equal(b.aimJoy,null);assert(!aa.readLocal().fire);
+});
+test('touch actions reflect equipment and real cooldowns',()=>{
+  const {aa}=mobileRuntime(),v=aa.getB().cars[0];let enabled=aa.equippedTouchActions(v);
+  assert(enabled.Space);assert(!enabled.KeyF);assert(!enabled.KeyC);assert(!enabled.KeyX);
+  v.has.blink=1;v.has.anchor=1;v.has.coupler=1;v.blinkCd=2.5;
+  enabled=aa.equippedTouchActions(v);assert(enabled.KeyF&&enabled.KeyC&&enabled.KeyX);assert.equal(aa.touchActionCooldown(v,'KeyF'),2.5);
+});
+test('solo aim assist is optional and never affects multiplayer or night visibility',()=>{
+  const {aa}=mobileRuntime(),b=aa.getB(),v=b.cars[0],e=b.cars[1];v.x=800;v.y=625;e.x=1100;e.y=637;b.st=[];b.objs=[];b.clouds=[];
+  const before=[1400,625];aa.G.mode='mp';assert.deepEqual([...aa.touchAimAssist(v,...before)],before);
+  aa.G.mode='solo';b.special='night';assert.deepEqual([...aa.touchAimAssist(v,...before)],before);
+  b.special=null;const assisted=aa.touchAimAssist(v,...before);assert(assisted[1]>625&&assisted[1]<649);
+  b.clouds=[{x:e.x,y:e.y,r:120}];assert.deepEqual([...aa.touchAimAssist(v,...before)],before);
+});
+test('garage tabs and arena presentation leave world coordinates and protocol intact',()=>{
+  const {rr,aa}=mobileRuntime();aa.setMobileTab('parts');assert.equal(rr.elements.get('build').dataset.mobileTab,'parts');aa.setMobileTab('bay');assert.equal(rr.elements.get('build').dataset.mobileTab,'bay');
+  const before=aa.getB().cars.map(v=>[v.x,v.y,v.a]);aa.syncPresentation();assert.deepEqual(aa.getB().cars.map(v=>[v.x,v.y,v.a]),before);
+  assert(html.includes('NET_PROTOCOL=6'));assert(html.includes('height:100dvh'));assert(html.includes('Subtle touch aim assist (solo only)'));
+});
+test('open overlays release held touch input and prevent background fire',()=>{
+  const {rr,aa}=mobileRuntime();const b=aa.getB();b.aimJoy={x:1,y:0,m:1};aa.keys.add('Space');
+  rr.elements.get('ovSettings').hidden=false;const i=aa.readLocal();assert.equal(i.fire,false);assert.equal(i.th,0);assert.equal(b.aimJoy,null);assert.equal(aa.keys.size,0);
+  assert.deepEqual({...aa.equippedTouchActions(null)},{});
 });
 console.log(`\n${passed} regression tests passed.`);

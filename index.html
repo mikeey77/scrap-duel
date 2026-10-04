@@ -2567,6 +2567,66 @@ textarea {
 }
 @media (prefers-reduced-motion: reduce) { .strip { transition: none !important; } }
 
+
+/* Mobile workshop and arena presentation. No world or networking rules change. */
+.mobile-workshop-nav { display:none; }
+.tile { transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.tile:hover { transform:translateY(-2px); box-shadow:0 5px 16px #0004; }
+.tile .q.zero { color:var(--muted); }
+.footprint-tag { color:#7fe0ff; border-color:#7fe0ff55; }
+#synergy progress { display:block; grid-column:1/-1; width:100%; height:4px; accent-color:var(--hazard); margin-top:5px; }
+.btn:active, .hbtn:active { transform:scale(.97); }
+.arena-tools { position:absolute; left:12px; top:112px; display:flex; flex-wrap:wrap; gap:6px; z-index:3; }
+.arena-tools button { background:#111b26dd; border:1px solid #7fe0ff55; color:#b8eaf5; border-radius:8px; padding:8px 10px; min-height:40px; font-size:12px; }
+.stick-guide { display:none; position:absolute; bottom:32px; width:108px; height:108px; border:1px solid #7fe0ff44; background:#0c162044; border-radius:50%; pointer-events:none; align-items:center; justify-content:center; text-align:center; font:600 11px var(--f-mono); color:#c1d7e5bb; line-height:1.6; }
+.stick-guide.left { left:26px; }
+.stick-guide.right { right:26px; border-color:#f2b70555; color:#ffe27abb; }
+.touch-enabled .stick-guide { display:flex; }
+.touch-enabled .touchpad { display:flex; bottom:154px; right:16px; max-width:min(188px,48%); gap:6px; }
+.touchpad button { min-width:52px; min-height:52px; font-size:12px; white-space:pre-line; line-height:1.3; touch-action:none; }
+.touchpad button[data-state=cooling] { border-color:#7fe0ff55; color:#94aabd; background:#102536dd; }
+.touchpad button[data-state=ready] { border-color:#f2b70588; box-shadow:inset 0 0 10px #f2b7050d; }
+.touchpad button[data-state=active] { color:#ffd257; background:#61501ddd; }
+.touch-disabled .touchpad { display:none; }
+#bay::before { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(120deg,transparent 35%,#7fe0ff0a 50%,transparent 65%); background-size:250% 100%; animation:workshop-light 14s linear infinite; }
+@keyframes workshop-light { from { background-position:200% 0; } to { background-position:-100% 0; } }
+@media (max-width:920px) {
+  body.in-arena { overflow:hidden; overscroll-behavior:none; }
+  body.in-arena #app { position:fixed; inset:0; height:100dvh; min-height:0; padding:6px 8px 0; }
+  body.in-arena main { flex:1; min-height:0; }
+  body.in-arena #arena { position:fixed; left:0; right:0; top:var(--arena-top,62px); bottom:calc(var(--host-safe) + env(safe-area-inset-bottom)); height:auto; border:0; border-radius:0; }
+  body.in-arena #hud { padding:5px 8px; gap:8px; min-height:40px; }
+  body.in-arena #hud .brand, body.in-arena #hud .track, body.in-arena #hud .hide-md, body.in-arena #hud .hide-sm, body.in-arena #hud .label, body.in-arena #btnCodex { display:none; }
+  body.in-arena #hud .pill { display:inline-flex; padding:4px 7px; font-size:10px; }
+  body.in-arena .net-status { flex-basis:auto; margin-left:auto; font-size:10px; }
+  body.in-arena .waitcard { top:116px; left:12px; transform:none; width:calc(100% - 24px); font-size:11px; }
+  body.in-arena .arena-tools { top:112px; }
+  body.in-arena #arena:has(#waitcard:not([hidden])) .arena-tools { top:210px; }
+  body.in-arena .abtns { left:10px; right:10px; bottom:218px; justify-content:center; max-width:none; gap:5px; }
+  body.in-arena .abtns .btn { padding:8px; font-size:11px; }
+  body.in-arena .coach { bottom:calc(var(--host-safe) + 160px); max-width:calc(100% - 24px); font-size:12px; }
+  body.in-arena .touchpad { bottom:150px; }
+  .mobile-workshop-nav { display:flex; gap:6px; order:-2; position:sticky; top:4px; z-index:5; padding:6px; background:#101b26f5; border:1px solid var(--line); border-radius:8px; }
+  .mobile-workshop-nav button { flex:1; min-height:40px; border:1px solid var(--line); background:#202b35; border-radius:6px; color:var(--muted); font-weight:700; font-size:12px; }
+  .mobile-workshop-nav button[aria-pressed=true] { color:#ffd257; border-color:#f2b70588; background:#403821; }
+  #build[data-mobile-tab=bay] > aside[aria-label="Parts bin and shop"], #build[data-mobile-tab=stats] > aside[aria-label="Parts bin and shop"], #build[data-mobile-tab=parts] > #bay, #build[data-mobile-tab=stats] > #bay { display:none; }
+  #build:not([data-mobile-tab=stats]) > aside[aria-label=Inspector] { display:contents; }
+  #build:not([data-mobile-tab=stats]) > aside[aria-label=Inspector] > .phead, #build:not([data-mobile-tab=stats]) > aside[aria-label=Inspector] > .pbody { display:none; }
+  #build > aside[aria-label="Parts bin and shop"] .pbody, #build[data-mobile-tab=stats] > aside[aria-label=Inspector] .pbody { max-height:calc(100dvh - 300px); min-height:220px; }
+  #bay { height:calc(100dvh - 290px); min-height:340px; }
+  .bin { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .layer-controls { gap:4px; top:42px; }
+  .layer-controls button { font-size:10px; padding:5px; }
+}
+@media (max-width:920px) and (orientation:landscape) {
+  body.in-arena .arena-tools, body.in-arena #arena:has(#waitcard:not([hidden])) .arena-tools { top:72px; }
+  body.in-arena .waitcard { top:12px; left:50%; transform:translateX(-50%); width:auto; max-width:50%; }
+  body.in-arena .abtns { bottom:16px; left:150px; right:150px; }
+  .touch-enabled .touchpad { bottom:118px; max-width:290px; }
+  .touch-enabled .touchpad button { min-height:44px; min-width:44px; padding:6px; }
+  .stick-guide { width:90px; height:90px; bottom:16px; }
+}
+@media (prefers-reduced-motion:reduce) { #bay::before { animation:none; } .tile,.btn,.hbtn { transition:none; } }
 </style>
   </head>
   <body>
@@ -2602,7 +2662,12 @@ textarea {
         ><button class="hbtn" id="btnMenu">Menu</button>
       </header>
       <main>
-        <section id="build">
+        <section id="build" data-mobile-tab="bay">
+          <nav class="mobile-workshop-nav" aria-label="Mobile workshop">
+            <button data-mobile-tab="parts" aria-pressed="false">Parts &amp; shop</button>
+            <button data-mobile-tab="bay" aria-pressed="true">Build bay</button>
+            <button data-mobile-tab="stats" aria-pressed="false">Car &amp; stats</button>
+          </nav>
           <aside class="panel" aria-label="Parts bin and shop">
             <div class="phead">
               <div class="tabs" role="tablist">
@@ -2732,7 +2797,13 @@ textarea {
           </aside>
         </section>
         <section id="arena" hidden>
-          <canvas id="ac"></canvas>
+          <canvas id="ac" aria-label="Arena: left stick drives; right stick aims, push farther to fire"></canvas>
+          <div class="arena-tools" aria-label="Arena view">
+            <button id="btnFullscreen">⛶ Fullscreen</button>
+            <button id="btnPortrait" aria-pressed="true">↻ Portrait view</button>
+          </div>
+          <div class="stick-guide left">DRIVE<br>left thumb</div>
+          <div class="stick-guide right">AIM<br>push to fire</div>
           <div class="waitcard" id="waitcard" hidden>
             <span><span class="dot"></span>You · ready</span
             ><span id="oppStatus"><span class="dot off"></span>Opponent · building</span>
@@ -2741,7 +2812,7 @@ textarea {
             <button data-k="Space">Fire</button><button data-k="ShiftLeft">Boost</button><button data-k="KeyJ">Jump</button
             ><button data-k="RMB">Action</button><button data-k="KeyZ">Drop</button
             ><button data-k="KeyV">Counter</button><button data-k="KeyF">Blink</button
-            ><button data-k="KeyH">Horn</button><button data-k="KeyC">Anchor</button>
+            ><button data-k="KeyH">Horn</button><button data-k="KeyC">Anchor</button><button data-k="KeyX">Release</button>
           </div>
           <div class="abtns" id="abtns"></div>
         </section>
@@ -2774,7 +2845,7 @@ textarea {
             WASD or arrows drive. Mouse aims; left-click or Space fires. Equipped gadgets and their cooldowns appear in battle. J jumps; right-click activates gadgets or reels a harpoon.
           </dd>
           <dt>Touch</dt>
-          <dd>Left thumb drives, hold on the right to aim and fire, buttons for the rest.</dd>
+          <dd>Left stick drives. Right stick aims; push it farther to fire, or use Fire. Portrait automatically rotates the arena. Equipped gadgets appear as thumb buttons.</dd>
         </dl>
         <p class="small">
           Ten rounds per match. Each round is worth one point; the final round is worth two. Play a bot rival, a
@@ -5869,8 +5940,8 @@ const PAINTS = ['#f2b705', '#e2504a', '#4ea1ff', '#5cc38f', '#c58bff', '#ff8fc7'
 const ROUNDS = 10;
 const MATCH_IDEAS = [
   [
-    'Escalating stakes (current)',
-    'Round N is worth N points. A round-5 lead of 15 can still be overturned by rounds 9 and 10 (19 points).'
+    'Balanced rounds (current)',
+    'One point per round and two points in the finale. Early wins count while the finale still offers a comeback.'
   ],
   [
     'Scrap lives',
@@ -8155,7 +8226,7 @@ const G = {
   rot: 0,
   binCat: 'all',
   catalogQ: '', catalogRarity: 'all', favoritesOnly: false, compatibleOnly: false,
-  favorites: new Set(), layerView: 'both', showArcs: false, showLinks: false,
+  favorites: new Set(), layerView: 'both', showArcs: false, showLinks: false, mobileTab:'bay',
   leftTab: 'bin',
   base: new Map(),
   top: new Map(),
@@ -8863,6 +8934,12 @@ $$('[data-layer]').forEach(b=>b.onclick=()=> {
 $('#btnArcs').onclick=()=> {G.showArcs=!G.showArcs;$('#btnArcs').setAttribute('aria-pressed',G.showArcs);drawBP();};
 $('#btnLinks').onclick=()=> {G.showLinks=!G.showLinks;$('#btnLinks').setAttribute('aria-pressed',G.showLinks);drawBP();};
 
+function setMobileTab(tab) {
+  G.mobileTab=tab; $('#build').dataset.mobileTab=tab;
+  $$('.mobile-workshop-nav button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mobileTab===tab));
+  if(tab==='bay')requestAnimationFrame(()=>{sizeBP();drawBP();});
+}
+$$('.mobile-workshop-nav button').forEach(b=>b.onclick=()=>setMobileTab(b.dataset.mobileTab));
 function bfxTick(dt) {
   for (let i = bfx.length - 1; i >= 0; i--) {
     const p = bfx[i];
@@ -9380,6 +9457,7 @@ function renderBin() {
       setTool('place');
       renderBin();
       renderInspect();
+      if(document.documentElement.clientWidth<=920)setMobileTab('bay');
     })
   );
 }
@@ -9472,7 +9550,7 @@ function renderInspect() {
     col = RAR[m.rar].col;
   $('#inspect').innerHTML =
     `<div class="art" style="--rc:${col}"><img alt="" src="${iconURL(m.id)}"></div><div><span class="tag" style="color:${col}">${RAR[m.rar].name} · ${CATNAME[m.cat]}</span><h4>${esc(m.name)}</h4><p>${esc(m.desc)}</p><p class="con">− ${esc(m.con)}</p>
-   <div class="tags"><span class="btag mount">${esc(mountLine(m))}</span>${m.tags.map(t => `<span class="btag">${TAGS[t]}</span>`).join('')}${m.dir ? `<span class="btag">Facing ${'▲▶▼◀'[G.rot]}</span>` : ''}</div></div>
+   <div class="tags"><span class="btag mount">${esc(mountLine(m))}</span><span class="btag footprint-tag">${m.size||1}×1 · ${m.size||1} cell${(m.size||1)>1?'s':''}</span>${m.tags.map(t => `<span class="btag">${TAGS[t]}</span>`).join('')}${m.dir ? `<span class="btag">Facing ${'▲▶▼◀'[G.rot]}</span>` : ''}</div></div>
    <div class="stl">${esc(statLine(m))}</div>
    <div class="trade"><span class="small">${left(m.id)} in bin · worth <span class="coin">${m.price}</span></span><span class="grow"></span>${G.found.has(m.id) && m.id !== 'cockpit' ? `<button class="buy" id="iBuy" ${G.coins < m.price ? 'disabled' : ''}>Buy +1</button><button class="buy" id="iSell" ${left(m.id) <= 0 ? 'disabled' : ''}>Sell 1 · ${Math.floor(m.price / 2)}</button>` : ''}</div>`;
   const ib = $('#iBuy');
@@ -9630,7 +9708,7 @@ function renderSynergy() {
           const lvl = tier[t] || 0,
             next = SYN_TIERS[lvl];
           const text = lvl ? SYNERGY[t].t[lvl - 1] : `${SYN_TIERS[0] - n} more for: ${SYNERGY[t].t[0]}`;
-          return `<div class="syn${lvl ? ' on' : ''}" title="${esc(SYNERGY[t].t.map((x, i) => SYN_TIERS[i] + ' parts: ' + x).join(' · '))}"><span class="sn">${TAGS[t]}</span><span class="sc">${n}${next ? '/' + next : ''}</span><span class="st">${esc(text)}</span></div>`;
+          return `<div class="syn${lvl ? ' on' : ''}" title="${esc(SYNERGY[t].t.map((x, i) => SYN_TIERS[i] + ' parts: ' + x).join(' · '))}"><span class="sn">${TAGS[t]}</span><span class="sc">${n}${next ? '/' + next : ''}</span><span class="st">${esc(text)}</span><progress max="5" value="${Math.min(5,n)}" aria-label="${TAGS[t]} synergy: ${n} parts"></progress></div>`;
         })
         .join('')
     : '<span class="small">Put 3 parts of the same branch on your car to unlock a bonus.</span>';
@@ -10608,20 +10686,57 @@ const AW = 2000,
   WM = 22,
   S = 20;
 let B = null,
-  view = { w: 0, h: 0, sc: 1 },
+  view = { w: 0, h: 0, sc: 1, rot:0, worldW:0, worldH:0 },
   ground = null,
   gx = null;
 const cam = { x: AW / 2, y: AH / 2, z: 1, tx: AW / 2, ty: AH / 2, tz: 1 };
 const CT = (car, id) => car.tune.has(id);
-function sizeArena() {
-  const r = ac.getBoundingClientRect(),
-    d = dprOf();
-  view.w = r.width;
-  view.h = r.height;
-  ac.width = Math.round(r.width * d);
-  ac.height = Math.round(r.height * d);
-  view.sc = Math.min(r.width / AW, r.height / AH);
+function touchPreferred() {
+  return SETTINGS.touchControls==='on'||(SETTINGS.touchControls!=='off'&&matchMedia('(pointer:coarse)').matches);
 }
+function screenVectorToWorld(x,y) { return view.rot ? [y,-x] : [x,y]; }
+function worldToScreen(x,y,s=view.sc*cam.z) {
+  const dx=(x-cam.x)*s,dy=(y-cam.y)*s;
+  return view.rot ? [view.w/2-dy,view.h/2+dx] : [view.w/2+dx,view.h/2+dy];
+}
+function sizeArena() {
+  const r=ac.getBoundingClientRect(),d=dprOf();
+  view.w=r.width;view.h=r.height;
+  view.rot=SETTINGS.rotatePortrait&&!B?.demo&&r.height>r.width&&(touchPreferred()||document.documentElement.clientWidth<=920)?Math.PI/2:0;
+  view.worldW=view.rot?r.height:r.width;view.worldH=view.rot?r.width:r.height;
+  ac.width=Math.round(r.width*d);ac.height=Math.round(r.height*d);
+  view.sc=Math.min(view.worldW/AW,view.worldH/AH);
+  $('#btnPortrait').setAttribute('aria-pressed',SETTINGS.rotatePortrait);
+  $('#btnPortrait').textContent=view.rot?'↻ Rotated view':'↻ Portrait view';
+}
+let presentationKey='';
+function syncPresentation() {
+  const active=!!B&&!B.demo&&['wait','battle','replay'].includes(G.phase),touch=!!B&&B.touch&&!B.replay;
+  const key=active+' '+touch+' '+innerWidth+' '+innerHeight;
+  if(key===presentationKey)return;
+  presentationKey=key;
+  document.body.classList.toggle('in-arena',active);
+  document.body.classList.toggle('touch-enabled',touch);
+  document.body.classList.toggle('touch-disabled',!touch);
+  if(active){const r=$('#hud').getBoundingClientRect();document.documentElement.style.setProperty('--arena-top',Math.ceil(r.bottom+6)+'px');sizeArena();}
+  else if(building())requestAnimationFrame(()=>{sizeBP();drawBP();});
+}
+function clearArenaInput() {
+  keys.clear();edges.clear();mouse.down=mouse.right=false;
+  if(B){B.joy=null;B.aimJoy=null;}
+}
+$('#btnFullscreen').onclick=async()=>{
+  try {
+    if(document.fullscreenElement)await document.exitFullscreen();
+    else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();
+    else if(document.documentElement.webkitRequestFullscreen)document.documentElement.webkitRequestFullscreen();
+    else return toast('This browser does not support fullscreen. Portrait play still fills the available screen.');
+  }catch(e){toast('Fullscreen was unavailable. The arena still fits the available screen.');}
+  clearArenaInput();presentationKey='';syncPresentation();
+};
+$('#btnPortrait').onclick=()=>{SETTINGS.rotatePortrait=!SETTINGS.rotatePortrait;saveSettings();clearArenaInput();sizeArena();cam.z=cam.tz=1;};
+document.addEventListener('fullscreenchange',()=>{presentationKey='';syncPresentation();$('#btnFullscreen').textContent=document.fullscreenElement?'⛶ Exit fullscreen':'⛶ Fullscreen';});
+window.visualViewport?.addEventListener('resize',()=>{presentationKey='';syncPresentation();});
 function makeGround(th, kind) {
   ground = document.createElement('canvas');
   ground.width = AW;
@@ -15217,6 +15332,7 @@ function drawArena() {
     s = view.sc * cam.z;
   c.save();
   c.translate(view.w / 2 + sh, view.h / 2 + sh2);
+  c.rotate(view.rot);
   c.scale(s, s);
   c.translate(-cam.x, -cam.y);
   c.drawImage(ground, 0, 0);
@@ -15326,8 +15442,7 @@ function drawArena() {
   if (v && B.cars.length > 1 && !B.demo) {
     const e = B.cars.find(x => x !== v);
     if (e && !e.dead) {
-      const ex = (e.x - cam.x) * s + view.w / 2,
-        ey = (e.y - cam.y) * s + view.h / 2,
+      const [ex,ey] = worldToScreen(e.x,e.y,s),
         m = 34;
       if (ex < 0 || ey < 0 || ex > view.w || ey > view.h) {
         const a = Math.atan2(ey - view.h / 2, ex - view.w / 2),
@@ -15391,8 +15506,7 @@ function drawCockpitMarker(c) {
 }
 /** Arrow on the screen edge pointing at a world position that is off screen. */
 function edgeArrow(c, wx, wy, s, col, label) {
-  const ex = (wx - cam.x) * s + view.w / 2,
-    ey = (wy - cam.y) * s + view.h / 2,
+  const [ex,ey] = worldToScreen(wx,wy,s),
     m = 40;
   if (ex > 0 && ey > 0 && ex < view.w && ey < view.h) return;
   const a = Math.atan2(ey - view.h / 2, ex - view.w / 2),
@@ -15419,13 +15533,12 @@ function edgeArrow(c, wx, wy, s, col, label) {
 /** Red wedges around your car showing where recent hits came from. */
 function drawHitArrows(c, v, s) {
   if (!B.hitDirs.length || v.dead) return;
-  const cx = (v.x - cam.x) * s + view.w / 2,
-    cy = (v.y - cam.y) * s + view.h / 2,
+  const [cx,cy] = worldToScreen(v.x,v.y,s),
     R = v.rad * s + 26;
   for (const h of B.hitDirs) {
     c.save();
     c.translate(cx, cy);
-    c.rotate(h.a);
+    c.rotate(h.a+view.rot);
     c.globalAlpha = Math.min(1, h.t * 1.6);
     c.fillStyle = '#ff4d3a';
     c.beginPath();
@@ -15494,9 +15607,24 @@ function abilityCooldown(v,k) {
   const live=v.insts.filter(I=>I.alive && I[k]>B.time);
   return live.length ? Math.max(0,Math.min(...live.map(I=>I[k]-B.time))) : 0;
 }
+const TOUCH_LABELS={Space:'Fire',ShiftLeft:'Boost',KeyJ:'Jump',RMB:'Action',KeyZ:'Drop',KeyV:'Counter',KeyF:'Blink',KeyH:'Horn',KeyC:'Anchor',KeyX:'Release'};
+function equippedTouchActions(v) {
+  if(!v)return {};
+  const h=v.has||{};
+  return {Space:!!v.insts?.some(I=>I.alive&&I.m.wpn),ShiftLeft:!!(h.booster||h.nitro),KeyJ:!!h.jump,RMB:!!(h.piston||h.flipper||h.catapult||h.harpoon||h.tractor),KeyZ:!!(h.oil||h.glue||h.banana||h.mines),KeyV:!!(h.smoke||h.decoy||h.jammer||h.flare||h.emp||h.flashbang),KeyF:!!h.blink,KeyH:!!h.horn,KeyC:!!h.anchor,KeyX:!!h.coupler};
+}
+function touchActionCooldown(v,k) {
+  return k==='ShiftLeft'?abilityCooldown(v,'bcd'):k==='RMB'?Math.max(abilityCooldown(v,'pcd'),abilityCooldown(v,'ccd')):k==='KeyJ'?Math.max(0,v.jumpCd||0):k==='KeyV'?Math.max(0,v.cmCd||0):k==='KeyF'?Math.max(0,v.blinkCd||0):k==='KeyH'?Math.max(0,v.hornCd||0):0;
+}
 function updateTouchControls(v) {
-  const h=v.has||{}, enabled={Space:true,ShiftLeft:h.booster,KeyJ:h.jump,RMB:h.piston||h.flipper||h.catapult||h.harpoon||h.tractor,KeyZ:h.oil||h.glue||h.banana||h.mines,KeyV:h.smoke||h.decoy||h.jammer||h.flare||h.emp||h.flashbang,KeyF:h.blink,KeyH:h.horn,KeyC:h.anchor};
-  $$('#touchpad button').forEach(b=>{b.hidden=!enabled[b.dataset.k];});
+  const enabled=equippedTouchActions(v);
+  $$('#touchpad button').forEach(b=>{
+    const k=b.dataset.k,cd=touchActionCooldown(v,k),state=k==='KeyC'&&v.anchored?'active':cd>0?'cooling':'ready';
+    b.hidden=!enabled[k];
+    const label=(k==='RMB'&&v.has.harpoon?'Reel / action':k==='KeyC'&&v.anchored?'Lift anchor':TOUCH_LABELS[k])+(cd>0?'\n'+cd.toFixed(1)+'s':'');
+    if(b.textContent!==label){b.textContent=label;b.setAttribute('aria-label',label.replace('\n',', '));}
+    if(b.dataset.state!==state)b.dataset.state=state;
+  });
 }
 function drawHUD(c) {
   const W = view.w,
@@ -15578,7 +15706,7 @@ function drawHUD(c) {
   }
   const ctl = [['WASD/↑↓←→', 'drive'], ['LMB/Space', 'fire']];
   if (h.piston || h.catapult || h.harpoon || h.flipper || h.tractor) ctl.push(['RMB', `${h.harpoon?'reel / ':''}action${Math.max(abilityCooldown(v,'pcd'),abilityCooldown(v,'ccd'))>0?' '+Math.max(abilityCooldown(v,'pcd'),abilityCooldown(v,'ccd')).toFixed(1)+'s':''}`]);
-  if (h.booster) ctl.push(['Shift', `boost${abilityCooldown(v,'bcd')>0?' '+abilityCooldown(v,'bcd').toFixed(1)+'s':''}`]);
+  if (h.booster||h.nitro) ctl.push(['Shift', `boost${abilityCooldown(v,'bcd')>0?' '+abilityCooldown(v,'bcd').toFixed(1)+'s':''}`]);
   if (h.jump) ctl.push(['J', `jump${v.jumpCd > 0 ? ' ' + v.jumpCd.toFixed(1) : ''}`]);
   if (h.omni) ctl.push(['Q/E', 'strafe']);
   if (h.oil || h.glue || h.banana || h.mines) ctl.push(['Z', `drop${h.glue ? ' · glue ' + v.glue : ''}`]);
@@ -15662,13 +15790,12 @@ function drawHUD(c) {
     c.fillStyle = '#ff8a6a';
     c.fillText('Connection hiccup… waiting for host', W / 2, H - 60);
   }
-  if (B.touch && B.joy) {
-    c.strokeStyle = 'rgba(236,232,223,.35)';
-    c.lineWidth = 2;
-    c.beginPath();
-    c.arc(B.joy.sx, B.joy.sy, 60, 0, 7);
-    c.stroke();
-    circ(c, B.joy.sx + B.joy.x * 60, B.joy.sy + B.joy.y * 60, 22, 'rgba(242,183,5,.6)');
+  if(B.touch) {
+    for(const [stick,col] of [[B.joy,'#7fe0ff'],[B.aimJoy,'#ffd257']])if(stick){
+      c.strokeStyle=col+'88';c.lineWidth=2;c.beginPath();c.arc(stick.sx,stick.sy,54,0,Math.PI*2);c.stroke();
+      if(stick===B.aimJoy){c.setLineDash([3,5]);c.beginPath();c.arc(stick.sx,stick.sy,54*.68,0,Math.PI*2);c.stroke();c.setLineDash([]);}
+      circ(c,stick.sx+stick.x*54,stick.sy+stick.y*54,18,col+'99');
+    }
   }
 }
 
@@ -15734,7 +15861,7 @@ function drawNight(c, s) {
   n.fillStyle = 'rgba(4,6,18,.9)';
   n.fillRect(0, 0, W, H);
   n.globalCompositeOperation = 'destination-out';
-  const toS = (x, y) => [(x - cam.x) * s + W / 2, (y - cam.y) * s + H / 2];
+  const toS = (x, y) => worldToScreen(x,y,s);
   const light = (x, y, r, a = 1) => {
     const [sx, sy] = toS(x, y),
       R = r * s,
@@ -15748,7 +15875,7 @@ function drawNight(c, s) {
     if (v.dead) continue;
     light(v.x, v.y, v.rad + 90, 0.95);
     // headlight cone
-    const fa = v.a - Math.PI / 2,
+    const fa = v.a - Math.PI / 2 + view.rot,
       [sx, sy] = toS(v.x, v.y),
       L = 460 * s,
       g = n.createRadialGradient(sx, sy, v.rad * s, sx, sy, L);
@@ -15826,83 +15953,55 @@ addEventListener('keydown', e => {
   }
 });
 addEventListener('keyup', e => keys.delete(e.code));
-addEventListener('blur', () => {
-  keys.clear();
-  edges.clear();
-  mouse.down = false;
-  mouse.right = false;
-});
-const toWorld = (cx, cy) => {
-  const r = ac.getBoundingClientRect(),
-    s = view.sc * cam.z;
-  return [(cx - r.left - view.w / 2) / s + cam.x, (cy - r.top - view.h / 2) / s + cam.y];
+addEventListener('blur',()=>clearArenaInput());
+const toWorld=(cx,cy)=>{
+  const r=ac.getBoundingClientRect(),s=view.sc*cam.z;
+  const [x,y]=screenVectorToWorld((cx-r.left-view.w/2)/s,(cy-r.top-view.h/2)/s);
+  return [x+cam.x,y+cam.y];
 };
-ac.addEventListener('pointerdown', ev => {
-  if (!B) return;
+function arenaInputBlocked(){return ['#ovMenu','#ovCodex','#ovSettings','#ovPause'].some(id=>!$(id).hidden);}
+function pointerIsTouch(ev){return SETTINGS.touchControls==='on'||(ev.pointerType==='touch'&&SETTINGS.touchControls!=='off');}
+function moveStick(stick,ev){
+  const r=ac.getBoundingClientRect(),x=(ev.clientX-r.left-stick.sx)/54,y=(ev.clientY-r.top-stick.sy)/54,m=Math.hypot(x,y),f=m>1?1/m:1;
+  stick.x=x*f;stick.y=y*f;stick.m=Math.min(1,m);
+}
+ac.addEventListener('pointerdown',ev=>{
+  if(!B||B.paused||B.replay||B.demo||Net.reconnecting||arenaInputBlocked())return;
   ev.preventDefault();
-  if (ev.pointerType === 'touch') {
-    B.touch = true;
-    const r = ac.getBoundingClientRect();
-    if (ev.clientX - r.left < r.width * 0.45 && !B.joy)
-      B.joy = { id: ev.pointerId, sx: ev.clientX - r.left, sy: ev.clientY - r.top, x: 0, y: 0 };
-    else {
-      B.aimTouch = ev.pointerId;
-      mouse.sx = ev.clientX;
-      mouse.sy = ev.clientY;
-      mouse.down = true;
-    }
-    try {
-      ac.setPointerCapture(ev.pointerId);
-    } catch (e) {}
-    return;
+  if(pointerIsTouch(ev)){
+    B.touch=true;const r=ac.getBoundingClientRect();
+    const stick={id:ev.pointerId,sx:ev.clientX-r.left,sy:ev.clientY-r.top,x:0,y:0,m:0};
+    if(stick.sx<r.width*.5){if(B.joy)return;B.joy=stick;}
+    else {if(B.aimJoy)return;B.aimJoy=stick;mouse.down=false;mouse.sx=undefined;mouse.sy=undefined;}
+    try{ac.setPointerCapture(ev.pointerId);}catch(e){}return;
   }
-  B.touch = false;
-  mouse.sx = ev.clientX;
-  mouse.sy = ev.clientY;
-  if (ev.button === 2) {
-    mouse.right = true;
-    edges.add('RMB');
-  } else mouse.down = true;
+  B.touch=false;mouse.pointerId=ev.pointerId;mouse.sx=ev.clientX;mouse.sy=ev.clientY;
+  if(ev.button===2){mouse.right=true;edges.add('RMB');}else mouse.down=true;
+  try{ac.setPointerCapture(ev.pointerId);}catch(e){}
 });
-ac.addEventListener('pointermove', ev => {
-  if (!B) return;
-  if (B.joy && ev.pointerId === B.joy.id) {
-    const r = ac.getBoundingClientRect();
-    let x = ev.clientX - r.left - B.joy.sx,
-      y = ev.clientY - r.top - B.joy.sy;
-    const m = Math.hypot(x, y),
-      R = 60;
-    if (m > R) {
-      x *= R / m;
-      y *= R / m;
-    }
-    B.joy.x = x / R;
-    B.joy.y = y / R;
-    return;
-  }
-  if (ev.pointerType !== 'touch' || ev.pointerId === B.aimTouch) {
-    mouse.sx = ev.clientX;
-    mouse.sy = ev.clientY;
-  }
+ac.addEventListener('pointermove',ev=>{
+  if(!B)return;
+  if(B.joy&&ev.pointerId===B.joy.id){moveStick(B.joy,ev);return;}
+  if(B.aimJoy&&ev.pointerId===B.aimJoy.id){moveStick(B.aimJoy,ev);return;}
+  if(!pointerIsTouch(ev)){mouse.sx=ev.clientX;mouse.sy=ev.clientY;}
 });
-const up = ev => {
-  if (!B) return;
-  if (B.joy && ev.pointerId === B.joy.id) B.joy = null;
-  if (ev.pointerType !== 'touch') {
-    if (ev.button === 2) mouse.right = false;
-    else mouse.down = false;
-  } else if (ev.pointerId === B.aimTouch) {
-    mouse.down = false;
-    B.aimTouch = null;
-  }
+const up=ev=>{
+  if(!B)return;
+  if(B.joy&&ev.pointerId===B.joy.id){B.joy=null;return;}
+  if(B.aimJoy&&ev.pointerId===B.aimJoy.id){B.aimJoy=null;mouse.down=false;return;}
+  if(ev.type==='lostpointercapture'){if(ev.pointerId===mouse.pointerId)mouse.down=mouse.right=false;return;}
+  if(ev.button===2)mouse.right=false;else mouse.down=false;
 };
 ac.addEventListener('pointerup', up);
 ac.addEventListener('pointercancel', up);
+ac.addEventListener('lostpointercapture',up);
 ac.addEventListener('contextmenu', e => e.preventDefault());
 $$('#touchpad button').forEach(b => {
   const k = b.dataset.k;
   b.addEventListener('pointerdown', e => {
     e.preventDefault();
+    if(!B||B.paused||Net.reconnecting||arenaInputBlocked()||!equippedTouchActions(myCar())[k])return;
+    try{b.setPointerCapture(e.pointerId);}catch(err){}
     edges.add(k);
     if (k === 'RMB') mouse.right = true;
     else keys.add(k);
@@ -15912,7 +16011,8 @@ $$('#touchpad button').forEach(b => {
     else keys.delete(k);
   };
   b.addEventListener('pointerup', off);
-  b.addEventListener('pointerleave', off);
+  b.addEventListener('pointercancel',off);
+  b.addEventListener('lostpointercapture',off);
 });
 
 const ZERO_IN = {
@@ -15942,10 +16042,12 @@ function readLocal() {
       edges: new Set(edges)
     };
   edges.clear();
+  if(arenaInputBlocked()){clearArenaInput();i.fire=i.rmb=i.drop=false;i.edges.clear();return i;}
   if (B.touch && B.joy && v) {
     const m = Math.hypot(B.joy.x, B.joy.y);
     if (m > 0.15) {
-      const want = Math.atan2(B.joy.y, B.joy.x),
+      const [jx,jy]=screenVectorToWorld(B.joy.x,B.joy.y);
+      const want = Math.atan2(jy,jx),
         diff = wrap(want - (v.a - Math.PI / 2));
       i.st = clamp(diff * 2.5, -1, 1);
       i.th = Math.min(1, m) * (Math.abs(diff) < 1.8 ? 1 : 0.2);
@@ -15959,10 +16061,33 @@ function readLocal() {
   }
   i.sf = (keys.has('KeyE') ? 1 : 0) - (keys.has('KeyQ') ? 1 : 0);
   i.boost = keys.has('ShiftLeft') || keys.has('ShiftRight');
-  if (mouse.sx !== undefined) [mouse.x, mouse.y] = toWorld(mouse.sx, mouse.sy);
+  if(B.touch&&v){
+    const stick=B.aimJoy;
+    if(stick&&stick.m>.16){
+      const [x,y]=screenVectorToWorld(stick.x,stick.y),m=Math.hypot(x,y);
+      B.touchAim={x:x/m,y:y/m,range:clamp(stick.m*800,200,800)};
+    }
+    const aim=B.touchAim||{x:Math.cos(v.a-Math.PI/2),y:Math.sin(v.a-Math.PI/2),range:600};
+    mouse.x=v.x+aim.x*aim.range;mouse.y=v.y+aim.y*aim.range;
+    i.fire=keys.has('Space')||!!(stick&&stick.m>=.68);
+    if(SETTINGS.touchAssist&&G.mode!=='mp'&&i.fire){const assisted=touchAimAssist(v,mouse.x,mouse.y);mouse.x=assisted[0];mouse.y=assisted[1];}
+  }else if(mouse.sx!==undefined)[mouse.x,mouse.y]=toWorld(mouse.sx,mouse.sy);
   i.aimX = mouse.x;
   i.aimY = mouse.y;
   return i;
+}
+function touchAimAssist(v,x,y) {
+  // Solo only, five-degree cone, no hidden targets, and no locking through obstacles.
+  if(G.mode==='mp'||B.special==='night')return [x,y];
+  const angle=Math.atan2(y-v.y,x-v.x),range=Math.hypot(x-v.x,y-v.y);
+  const target=B.cars.find(e=>e!==v&&!e.dead&&!inSmoke(e.x,e.y)&&Math.hypot(e.x-v.x,e.y-v.y)<Math.min(650,range+100)&&Math.abs(wrap(Math.atan2(e.y-v.y,e.x-v.x)-angle))<Math.PI/36);
+  if(!target)return [x,y];
+  const hit=rayHit(v.x,v.y,Math.atan2(target.y-v.y,target.x-v.x),Math.hypot(target.x-v.x,target.y-v.y)+target.rad,false,v.idx);
+  if(hit.hits[0]?.car!==target)return [x,y];
+  const [sx,sy]=worldToScreen(target.x,target.y);
+  if(sx<0||sy<0||sx>view.w||sy>view.h)return [x,y];
+  const a=angle+wrap(Math.atan2(target.y-v.y,target.x-v.x)-angle)*.35;
+  return [v.x+Math.cos(a)*range,v.y+Math.sin(a)*range];
 }
 function applyInput(v, i) {
   if (v.dead || B.seq !== 'play') {
@@ -16400,11 +16525,11 @@ function updateCam(rdt) {
         e = al.find(c => c !== m);
       const dx = Math.abs(m.x - e.x),
         dy = Math.abs(m.y - e.y);
-      const wMe = view.h > view.w ? 0.85 : 0.6; // phones: stay on your own car
+      const wMe = .6; // Keep both cars in view, including the rotated portrait arena.
       cam.tx = m.x * wMe + e.x * (1 - wMe);
       cam.ty = m.y * wMe + e.y * (1 - wMe);
       cam.tz = clamp(
-        Math.min(view.w / (view.sc * (dx / 0.8 + 520)), view.h / (view.sc * (dy / 0.8 + 400))),
+        Math.min(view.worldW / (view.sc * (dx / 0.8 + 520)), view.worldH / (view.sc * (dy / 0.8 + 400))),
         1,
         1.6
       );
@@ -16415,14 +16540,12 @@ function updateCam(rdt) {
       cam.tz = G.phase === 'wait' ? 1.3 : 1.15;
     }
   }
-  // tall phone screens: zoom in so the action fills the height instead of a thin letterbox
-  const zMin = view.h > view.w ? Math.max(1, (view.h / (AH * view.sc)) * 0.92) : 1;
-  cam.tz = Math.max(cam.tz, zMin);
+  // Fit in the rotated world dimensions; do not crop a portrait screen into a strip.
   const k = 1 - Math.exp(-4 * rdt);
   cam.z += (cam.tz - cam.z) * k;
   const s = view.sc * cam.z,
-    hw = view.w / (2 * s),
-    hh = view.h / (2 * s);
+    hw = view.worldW / (2 * s),
+    hh = view.worldH / (2 * s);
   const cx = hw * 2 >= AW ? AW / 2 : clamp(cam.tx, hw, AW - hw),
     cy = hh * 2 >= AH ? AH / 2 : clamp(cam.ty, hh, AH - hh);
   cam.x += (cx - cam.x) * k;
@@ -17261,7 +17384,7 @@ const Net = {
     try{old?.close();}catch(e){}
     if(G.mode!=='mp'||!G.started||G.phase==='final'||G.phase==='menu')return this.fail('Connection lost. Please join the room again.');
     this.reconnecting=true;this.recoveryDeadline=performance.now()+RECONNECT_MS;
-    keys.clear();edges.clear();mouse.down=mouse.right=false;
+    clearArenaInput();
     if(B){B.remoteIn={...ZERO_IN};B.remoteEdges=new Set();}
     $('#reconnectCard').innerHTML=`<span class="label">Multiplayer recovery</span><h2>Reconnecting…</h2><p>The match is paused. Waiting for ${esc(G.oppName)}: <b id="reconnectSeconds">30</b>s.</p><p class="small">Keep this page open. Temporary network drops can recover without losing your build.</p><button class="btn ghost" id="reconnectLeave">Leave match</button>`;
     $('#ovReconnect').hidden=false;
@@ -18099,9 +18222,10 @@ function newB(o) {
       flashCol: null,
       shake: 0,
       hitstop: 0,
-      touch: !!(window.matchMedia && matchMedia('(pointer:coarse)').matches),
+      touch: touchPreferred(),
       joy: null,
-      aimTouch: null,
+      aimJoy: null,
+      touchAim:null,
       chain: [],
       banner: null,
       ev: [],
@@ -18842,7 +18966,7 @@ function showTip(id) {
 
 /* ===== js/ui/settings.js ===== */
 // Settings (volume, screen shake, damage numbers, hit markers), the pause menu, controls card and hotkeys.
-const SETTINGS = { vol: 1, music: .4, shake: true, nums: true, marks: true };
+const SETTINGS = { vol: 1, music: .4, shake: true, nums: true, marks: true, rotatePortrait:true, touchControls:'auto',touchAssist:false };
 try {
   Object.assign(SETTINGS, JSON.parse(load('sd.settings') || '{}'));
 } catch (e) {}
@@ -18884,6 +19008,9 @@ function openSettings(back) {
     ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
     ${toggle('setNums', 'Floating damage numbers', SETTINGS.nums)}
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
+    <label class="vol"><span>Controls</span><select id="setTouch" aria-label="Control style"><option value="auto" ${SETTINGS.touchControls==='auto'?'selected':''}>Automatic</option><option value="on" ${SETTINGS.touchControls==='on'?'selected':''}>Touch sticks</option><option value="off" ${SETTINGS.touchControls==='off'?'selected':''}>Mouse &amp; keyboard</option></select></label>
+    ${toggle('setPortrait','Rotate arena in portrait',SETTINGS.rotatePortrait)}
+    ${toggle('setTouchAssist','Subtle touch aim assist (solo only)',SETTINGS.touchAssist)}
     <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Garage Style progress</button></div>
     <button class="btn" id="setDone">Done</button>`;
   $('#ovSettings').hidden = false;
@@ -18902,12 +19029,13 @@ function openSettings(back) {
   for (const [id, k] of [
     ['setShake', 'shake'],
     ['setNums', 'nums'],
-    ['setMarks', 'marks']
+    ['setMarks', 'marks'],['setPortrait','rotatePortrait'],['setTouchAssist','touchAssist']
   ])
     $('#' + id).addEventListener('change', e => {
       SETTINGS[k] = e.target.checked;
-      saveSettings();
+      saveSettings();if(B){sizeArena();clearArenaInput();}
     });
+  $('#setTouch').onchange=e=>{SETTINGS.touchControls=e.target.value;saveSettings();if(B){clearArenaInput();B.touch=touchPreferred();presentationKey='';syncPresentation();}};
   $('#setTips').addEventListener('click', e => {
     seenTips = new Set();
     store('sd.tips', []);
@@ -18945,8 +19073,7 @@ function togglePause(force) {
     return;
   }
   if (!online) B.paused = true;
-  keys.clear();
-  mouse.down = mouse.right = false;
+  clearArenaInput();
   sfx('pause');
   const forfeit = G.phase === 'battle' && G.mode === 'solo';
   $('#pauseCard').innerHTML =
@@ -19258,6 +19385,7 @@ function loop(t) {
   const dt = Math.min(0.05, Math.max(0, (t - lastT) / 1000));
   lastT = t;
   try {
+    syncPresentation();
     BattleMusic.update();
     Net.updateStatus();
     if (G.phase === 'replay' && B) {
@@ -19311,7 +19439,7 @@ requestAnimationFrame(loop);
 
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
-  window.__SD = { unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
+  window.__SD = { view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
 
 })();
 </script>
