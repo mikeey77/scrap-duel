@@ -394,6 +394,9 @@ main {
   filter: drop-shadow(0 0 6px var(--rc));
 }
 .tile.empty {
+  opacity: 1;
+}
+.tile.empty img {
   opacity: 0.45;
 }
 .shopsec {
@@ -2516,6 +2519,54 @@ textarea {
   padding: 1px 6px;
   justify-self: start;
 }
+
+/* Playtest update: accessible workshop, safe-area controls and lightweight reels. */
+:root { --host-safe: 54px; }
+#app { padding-bottom: calc(var(--host-safe) + env(safe-area-inset-bottom)); }
+.overlay { padding-bottom: calc(var(--host-safe) + 16px); }
+.toolbar { flex-wrap: wrap; justify-content: center; overflow: visible; width: max-content; }
+#bayScroll { padding-bottom: 112px; }
+.catalog-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.catalog-filters input[type=search] { grid-column: 1/-1; width: 100%; }
+.catalog-filters input[type=search], .catalog-filters select {
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px; color: var(--fg); padding: 8px; min-width: 0;
+}
+.catalog-filters label { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+.tilewrap { position: relative; min-width: 0; }
+.tilewrap .tile { width: 100%; height: 132px; }
+.tile .n { white-space: normal; overflow: visible; line-height: 1.1; padding: 0 3px; min-height: 28px; }
+.tile .q { position: static; font-size: 10px; margin-top: 3px; text-align: center; }
+.tile .ly { left: 5px; top: 5px; font-size: 9px; }
+.favorite { position: absolute; right: 2px; top: 2px; background: var(--bg-2); border: 0; border-radius: 4px; color: var(--muted); padding: 2px 5px; z-index: 1; }
+.favorite[aria-pressed=true] { color: var(--coin); }
+.layer-controls { position: absolute; top: 42px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 5px; z-index: 2; }
+.layer-controls button { background: rgba(12,22,32,.92); border: 1px solid var(--line); border-radius: 5px; padding: 4px 7px; color: var(--muted); font-size: 11px; }
+.layer-controls button[aria-pressed=true] { color: var(--coin); border-color: var(--coin); }
+.mount-gift { color: #8ae0af !important; }
+#ovCrate { backdrop-filter: none; background: rgba(7,12,18,.96); }
+.reel { contain: layout paint; }
+.strip { transform: translate3d(0,0,0); backface-visibility: hidden; }
+.net-status { font: 11px var(--f-mono); color: #8ae0af; white-space: nowrap; }
+.net-status[data-quality=poor] { color: #ff9d87; }
+.net-status[data-quality=fair] { color: #ffd257; }
+.replay-note { padding: 8px 12px; border-left: 3px solid #ff9d87; background: var(--bg-2); color: var(--fg); }
+.vol { flex-wrap: wrap; }
+@media (max-width: 920px) {
+  #app { padding-bottom: calc(var(--host-safe) + 112px + env(safe-area-inset-bottom)); }
+  #hud { flex-wrap: wrap; overflow: visible; }
+  #bay { height: 52dvh; min-height: 360px; }
+  .toolbar { width: calc(100% - 16px); max-width: none; overflow: visible; }
+  .toolbar button { flex: 0 1 auto; padding: 6px 8px; font-size: 12px; }
+  #build > .panel .pbody { max-height: 420px; }
+  #build > .panel .pfoot { position: fixed; bottom: calc(var(--host-safe) + env(safe-area-inset-bottom)); left: 12px; right: 12px; z-index: 8; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px; background: rgba(12,22,32,.97); border: 1px solid var(--line); border-radius: 9px; box-shadow: 0 0 18px #0008; }
+  #build > .panel .pfoot .autorow { grid-column: 1 / -1; }
+  #build > .panel .pfoot .btn { font-size: 11px; padding: 8px 5px; min-height: 34px; }
+  .touchpad { bottom: 62px; max-width: calc(100% - 24px); flex-wrap: wrap; }
+  .abtns { flex-wrap: wrap; max-width: calc(100% - 24px); }
+  .net-status { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .strip { transition: none !important; } }
+
 </style>
   </head>
   <body>
@@ -2571,6 +2622,13 @@ textarea {
               ><button id="zFit" title="Fit" style="width: auto; padding: 0 8px; font-size: 11px">FIT</button>
             </div>
             <div id="bayHint"></div>
+            <div class="layer-controls" aria-label="Builder view">
+              <button data-layer="both" aria-pressed="true">Both layers</button>
+              <button data-layer="base" aria-pressed="false">Chassis</button>
+              <button data-layer="top" aria-pressed="false">Equipment</button>
+              <button id="btnArcs" aria-pressed="false">Firing arcs</button>
+              <button id="btnLinks" aria-pressed="false">Weak links</button>
+            </div>
             <div class="toolbar" role="toolbar" aria-label="Builder tools">
               <button data-tool="place" aria-pressed="true">
                 <svg viewBox="0 0 16 16">
@@ -2680,7 +2738,7 @@ textarea {
             ><span id="oppStatus"><span class="dot off"></span>Opponent · building</span>
           </div>
           <div class="touchpad" id="touchpad">
-            <button data-k="ShiftLeft">Boost</button><button data-k="Space">Jump</button
+            <button data-k="Space">Fire</button><button data-k="ShiftLeft">Boost</button><button data-k="KeyJ">Jump</button
             ><button data-k="RMB">Action</button><button data-k="KeyZ">Drop</button
             ><button data-k="KeyV">Counter</button><button data-k="KeyF">Blink</button
             ><button data-k="KeyH">Horn</button><button data-k="KeyC">Anchor</button>
@@ -2713,14 +2771,13 @@ textarea {
           </dd>
           <dt>Drive</dt>
           <dd>
-            WASD. Mouse aims, left-click fires, right-click is the action button. Shift boost, Space jump, Q/E
-            strafe, Z drop, V countermeasures, F blink, H horn, C anchor, X release couplers.
+            WASD or arrows drive. Mouse aims; left-click or Space fires. Equipped gadgets and their cooldowns appear in battle. J jumps; right-click activates gadgets or reels a harpoon.
           </dd>
           <dt>Touch</dt>
           <dd>Left thumb drives, hold on the right to aim and fire, buttons for the rest.</dd>
         </dl>
         <p class="small">
-          Ten rounds per match. Round N is worth N points, so the late rounds decide it. Play a bot rival, a
+          Ten rounds per match. Each round is worth one point; the final round is worth two. Play a bot rival, a
           friend online, or mess around in the sandbox.
         </p>
         <button class="btn" id="btnStart">Main menu</button>
@@ -2736,6 +2793,7 @@ textarea {
     <div class="overlay" id="ovReady" hidden><div class="card" id="readyCard"></div></div>
     <div class="overlay" id="ovStyle" hidden></div>
     <div class="overlay" id="ovSettings" hidden><div class="card" id="settingsCard"></div></div>
+    <div class="overlay" id="ovReconnect" hidden><div class="card" id="reconnectCard"></div></div>
     <div class="overlay" id="ovPause" hidden><div class="card" id="pauseCard"></div></div>
     <div class="coach" id="coach" hidden></div>
     <div class="feed" id="demoFeed" hidden></div>
@@ -3189,7 +3247,7 @@ D(
   0,
   50,
   1.5,
-  'Space launches the car over low obstacles.',
+  'J launches the car over low obstacles.',
   'Land badly and you end up on your roof.',
   ['air', 'flip'],
   { k: 'jumpjet' },
@@ -5233,6 +5291,12 @@ D(
 );
 const MOD = Object.fromEntries(MODS.map(m => [m.id, m]));
 const STARTER = { frame: 10, wheel: 4, armor: 4, mg: 2, spike: 2 };
+const STARTER_GUNS = ['mg','smg','nailgun','pulse','rivet'];
+function starterKit(guns = [pick(STARTER_GUNS),pick(STARTER_GUNS)]) {
+  const kit={frame:10,wheel:4,armor:4,spike:2};
+  for(const id of guns) kit[id]=(kit[id]||0)+1;
+  return {kit,guns};
+}
 
 /* ===== js/data/upgrades.js ===== */
 // Tuning cards: drafted tradeoffs that change one module type.
@@ -8090,6 +8154,8 @@ const G = {
   sel: 'frame',
   rot: 0,
   binCat: 'all',
+  catalogQ: '', catalogRarity: 'all', favoritesOnly: false, compatibleOnly: false,
+  favorites: new Set(), layerView: 'both', showArcs: false, showLinks: false,
   leftTab: 'bin',
   base: new Map(),
   top: new Map(),
@@ -8509,11 +8575,13 @@ function canPlaceTop(id, x, y, occ) {
   return null;
 }
 function drawPiece(c, e, top, scale = 1) {
+  if (top && G.layerView === 'base') return;
   const m = MOD[e.id],
     [ccx, ccy] = top ? [e.x, e.y] : instCenter(e);
   c.save();
   c.translate(cpx(ccx) + cell / 2, cpy(ccy) + cell / 2);
   c.scale(scale, scale);
+  if (!top && G.layerView === 'top') c.globalAlpha *= .22;
   if (m.glow) {
     c.shadowColor = m.glow;
     c.shadowBlur = cell * 0.35 * (1 + Math.sin(ANIM * 3) * 0.3);
@@ -8612,6 +8680,7 @@ function drawBP() {
     drawPiece(c, e, false, sc);
   }
   for (const [k, e] of G.top) {
+    if (G.layerView === 'base') continue;
     const pt = pops.get('t' + k);
     let sc = 1;
     if (pt) {
@@ -8640,6 +8709,7 @@ function drawBP() {
     }
     drawPiece(c, e, true, sc);
   }
+  drawBuilderDiagnostics(c,occ);
   for (const [k, e] of [...G.base, ...G.top]) {
     const m = MOD[e.id];
     if (!m.dir || !building()) continue;
@@ -8705,7 +8775,7 @@ function drawBP() {
       const t = G.top.get(k),
         own = occ.get(k);
       c.strokeStyle = G.tool === 'remove' ? '#e2504a' : '#f2b705';
-      if (t) {
+      if (t && G.layerView !== 'base') {
         c.beginPath();
         c.arc(cpx(x) + cell / 2, cpy(y) + cell / 2, cell * 0.45, 0, 7);
         c.stroke();
@@ -8762,6 +8832,37 @@ function drawBP() {
   }
   c.globalAlpha = 1;
 }
+function weakLinks() {
+  const links=[];
+  for (const [k,e] of G.base) {
+    if (e.id==='cockpit') continue;
+    const nd=new Map(G.base); nd.delete(k);
+    if (!designConnected(nd)) links.push(e);
+  }
+  return links;
+}
+function drawBuilderDiagnostics(c,occ) {
+  if (G.showArcs && G.layerView !== 'base') for (const [k,e] of G.top) {
+    const m=MOD[e.id]; if (!m.wpn || !m.dir) continue;
+    const ring=baseAt(k,occ)?.id==='ring', angle=e.rot*Math.PI/2-Math.PI/2;
+    c.save(); c.translate(cpx(e.x)+cell/2,cpy(e.y)+cell/2);
+    c.fillStyle='rgba(127,224,255,.09)'; c.strokeStyle='rgba(127,224,255,.4)';
+    c.beginPath(); c.moveTo(0,0); c.arc(0,0,cell*2.6,ring?0:angle-.42,ring?Math.PI*2:angle+.42); c.closePath(); c.fill(); c.stroke(); c.restore();
+  }
+  if (G.showLinks) for (const e of weakLinks()) {
+    for (const [x,y] of footprint(e.id,e.rot,e.x,e.y)) {
+      c.fillStyle='rgba(255,90,70,.22)'; c.fillRect(cpx(x),cpy(y),cell,cell);
+      c.strokeStyle='#ff8a6a'; c.lineWidth=3; c.strokeRect(cpx(x)+2,cpy(y)+2,cell-4,cell-4);
+    }
+  }
+}
+$$('[data-layer]').forEach(b=>b.onclick=()=> {
+  G.layerView=b.dataset.layer;
+  $$('[data-layer]').forEach(x=>x.setAttribute('aria-pressed',x===b)); drawBP();
+});
+$('#btnArcs').onclick=()=> {G.showArcs=!G.showArcs;$('#btnArcs').setAttribute('aria-pressed',G.showArcs);drawBP();};
+$('#btnLinks').onclick=()=> {G.showLinks=!G.showLinks;$('#btnLinks').setAttribute('aria-pressed',G.showLinks);drawBP();};
+
 function bfxTick(dt) {
   for (let i = bfx.length - 1; i >= 0; i--) {
     const p = bfx[i];
@@ -8926,7 +9027,7 @@ function actCore(x, y, mode, quiet) {
     G.base.set(k, { id, rot: G.rot, x, y });
     fxPlace(x, y, 'b', k);
   } else if (mode === 'rotate') {
-    const t = G.top.get(k);
+    const t = G.layerView === 'base' ? null : G.top.get(k);
     if (t) {
       t.rot = (t.rot + (G._rd || 1) + 4) % 4;
       pops.set('t' + k, performance.now());
@@ -8955,7 +9056,7 @@ function actCore(x, y, mode, quiet) {
     G.base = nd;
     pops.set('b' + own, performance.now());
   } else if (mode === 'remove') {
-    const t = G.top.get(k);
+    const t = G.layerView === 'base' ? null : G.top.get(k);
     if (t) {
       G.top.delete(k);
       fxRemove(x, y, t.id, t.rot);
@@ -9193,9 +9294,61 @@ function renderLeft() {
   $('#tabShop').setAttribute('aria-pressed', G.leftTab === 'shop');
   G.leftTab === 'bin' ? renderBin() : renderShop();
 }
+function mountCompatible(m) {
+  return m.layer === 'b' || [...G.base.values()].some(e => MOD[e.id].mnt >= m.mnt);
+}
+function catalogMatches(m, q = G.catalogQ) {
+  return (!q || (m.name + ' ' + m.desc + ' ' + m.tags.map(t => TAGS[t]).join(' ')).toLowerCase().includes(q.toLowerCase())) &&
+    (G.catalogRarity === 'all' || m.rar === +G.catalogRarity) &&
+    (!G.favoritesOnly || G.favorites.has(m.id)) && (!G.compatibleOnly || mountCompatible(m));
+}
+function catalogFilters(prefix, q) {
+  return `<div class="catalog-filters"><input type="search" id="${prefix}Search" aria-label="Search modules" placeholder="Search modules or branches…" value="${esc(q)}">
+    <select id="${prefix}Rarity" aria-label="Module rarity"><option value="all">All rarities</option>${RAR.map((r,i) => `<option value="${i}" ${G.catalogRarity === String(i) ? 'selected' : ''}>${r.name}</option>`).join('')}</select>
+    <label><input type="checkbox" id="${prefix}Fav" ${G.favoritesOnly ? 'checked' : ''}>Favorites</label>
+    <label style="grid-column:1/-1"><input type="checkbox" id="${prefix}Compatible" ${G.compatibleOnly ? 'checked' : ''}>Compatible with current mounts</label></div>`;
+}
+function bindCatalog(prefix, render, codex = false) {
+  const input = $('#' + prefix + 'Search');
+  input.addEventListener('input', () => {
+    const at = input.selectionStart, value = input.value;
+    if (codex) codexQ = value; else G.catalogQ = value;
+    render();
+    const next = $('#' + prefix + 'Search');
+    next.focus(); if (at !== null) next.setSelectionRange(at, at);
+  });
+  for (const [suffix, state] of [['Rarity','catalogRarity'],['Fav','favoritesOnly'],['Compatible','compatibleOnly']])
+    $('#' + prefix + suffix).addEventListener('change', e => { G[state] = suffix === 'Rarity' ? e.target.value : e.target.checked; render(); });
+}
+function toggleFavorite(id) {
+  G.favorites.has(id) ? G.favorites.delete(id) : G.favorites.add(id);
+  store('sd.favorites', [...G.favorites]);
+}
+function draftSupportCount(id, n, P = G) {
+  const m = MOD[id];
+  if (m.layer !== 't') return 0;
+  let available = 0;
+  const used = {};
+  for (const e of [...(P.base || new Map()).values(), ...(P.top || new Map()).values()]) used[e.id] = (used[e.id] || 0) + 1;
+  for (const [k, e] of (P.base || new Map())) if (MOD[e.id].mnt >= m.mnt)
+    for (const [x,y] of footprint(e.id,e.rot,e.x,e.y)) if (!(P.top || new Map()).has(key(x,y))) available++;
+  for (const [part, count] of Object.entries(P.inv)) if (MOD[part].layer === 'b' && MOD[part].mnt >= m.mnt)
+    available += Math.max(0, count - (used[part] || 0)) * (MOD[part].size || 1);
+  return Math.max(0, n - available);
+}
+function gainWithSupport(id, n) {
+  const support = draftSupportCount(id, n);
+  gain(id,n);
+  if (support) {
+    const sid = MOD[id].mnt > 1 ? 'girder' : 'frame';
+    gain(sid,support);
+    toast(`Included ${support} ${MOD[sid].name}${support > 1 ? 's' : ''} to mount ${MOD[id].name}.`, true);
+  }
+}
+
 function renderBin() {
   const ids = MODS.filter(
-    m => m.id !== 'cockpit' && (G.inv[m.id] || 0) > 0 && (G.binCat === 'all' || m.cat === G.binCat)
+    m => m.id !== 'cockpit' && (G.inv[m.id] || 0) > 0 && (G.binCat === 'all' || m.cat === G.binCat) && catalogMatches(m)
   ).sort(
     (a, b) => CATS.findIndex(c => c.id === a.cat) - CATS.findIndex(c => c.id === b.cat) || a.rar - b.rar
   );
@@ -9203,16 +9356,18 @@ function renderBin() {
   for (const id in G.inv) if (id !== 'cockpit') loose += Math.max(0, left(id));
   $('#binCount').textContent = `${loose} loose`;
   $('#leftBody').innerHTML =
-    `<div class="chips">${[{ id: 'all', name: 'All' }, ...CATS].map(c => `<button class="chip" data-cat="${c.id}" aria-pressed="${G.binCat === c.id}">${c.name}</button>`).join('')}</div>
+    `${catalogFilters("bin", G.catalogQ)}<div class="chips">${[{ id: 'all', name: 'All' }, ...CATS].map(c => `<button class="chip" data-cat="${c.id}" aria-pressed="${G.binCat === c.id}">${c.name}</button>`).join('')}</div>
    <div class="bin">${
      ids
        .map(m => {
          const l = left(m.id);
-         return `<button class="tile r${m.rar}${l <= 0 ? ' empty' : ''}" style="--rc:${RAR[m.rar].col}" data-id="${m.id}" aria-pressed="${G.sel === m.id}" title="${esc(m.name)} · ${RAR[m.rar].name}"><span class="ly">${m.layer === 't' ? 'TOP' : 'BASE'}</span><span class="q${l <= 0 ? ' zero' : ''}">${l}/${G.inv[m.id]}</span><img alt="" src="${iconURL(m.id)}"><span class="n">${esc(m.name)}</span><i class="rb"></i></button>`;
+         return `<div class="tilewrap"><button class="tile r${m.rar}${l <= 0 ? ' empty' : ''}" style="--rc:${RAR[m.rar].col}" data-id="${m.id}" aria-pressed="${G.sel === m.id}" title="${esc(m.name)} · ${RAR[m.rar].name}"><span class="ly">${m.layer === 't' ? 'TOP' : 'BASE'}</span><img alt="" src="${iconURL(m.id)}"><span class="n">${esc(m.name)}</span><span class="q${l <= 0 ? ' zero' : ''}">${l} loose · ${G.inv[m.id]} owned</span><i class="rb"></i></button><button class="favorite" data-fav="${m.id}" aria-label="Favorite ${esc(m.name)}" aria-pressed="${G.favorites.has(m.id)}">${G.favorites.has(m.id) ? '★' : '☆'}</button></div>`;
        })
        .join('') || '<p class="small" style="grid-column:1/-1">Nothing here yet.</p>'
    }</div>
    <p class="small">BASE parts form the chassis. TOP parts bolt onto support blocks: light mounts (frames, armor, cockpit) or heavy mounts (girders, junctions, rings, heavy plate). Wheels and melee can’t hold anything.</p>`;
+  bindCatalog('bin', renderBin);
+  $$('#leftBody [data-fav]').forEach(b => b.addEventListener('click', () => { toggleFavorite(b.dataset.fav); renderBin(); }));
   $$('#leftBody .chip').forEach(b =>
     b.addEventListener('click', () => {
       G.binCat = b.dataset.cat;
@@ -9261,7 +9416,7 @@ function shapeURL(cells) {
 function renderShop() {
   $('#binCount').innerHTML = `<span class="coin">${G.coins}</span>`;
   const shapes = SHAPES.map(s => ({ s, cells: shapeCells(s) })).filter(x => x.cells.size);
-  const owned = MODS.filter(m => m.id !== 'cockpit' && G.found.has(m.id)).sort(
+  const owned = MODS.filter(m => m.id !== 'cockpit' && (G.found.has(m.id) || m.id === 'girder' || m.id === 'frame')).sort(
     (a, b) => a.rar - b.rar || a.price - b.price
   );
   $('#leftBody').innerHTML = `
@@ -9443,7 +9598,7 @@ function updateHUD() {
   $('#tScoreLbl').textContent = sb ? 'Mode' : `You vs ${G.oppName}`;
   $('#tStake').textContent = sb
     ? ''
-    : `Round ${Math.min(G.round, ROUNDS)} worth ${Math.min(G.round, ROUNDS)} pts`;
+    : `Round ${Math.min(G.round, ROUNDS)} worth ${roundPoints(Math.min(G.round, ROUNDS))} pts`;
   $('#tStake').hidden = sb;
   $('#tParts').textContent = G.base.size + G.top.size;
   $('#tFound').textContent = `${G.found.size} / ${MODS.length}`;
@@ -9620,7 +9775,7 @@ function optView(o) {
       kind: `${R.name} module`,
       img: `<img alt="" src="${iconURL(m.id, 184)}"><span class="x">×${o.n}</span>`,
       title: m.name,
-      body: `<p>${esc(m.desc)}</p><p class="con">− ${esc(m.con)}</p><p class="small">${esc(mountLine(m))} · worth <span class="coin">${m.price}</span> each</p>`,
+      body: `<p>${esc(m.desc)}</p><p class="con">− ${esc(m.con)}</p>${draftSupportCount(m.id,o.n) ? `<p class="mount-gift">Includes ${draftSupportCount(m.id,o.n)} ${m.mnt > 1 ? 'heavy' : 'light'} support block(s), ready to mount.</p>` : ''}<p class="small">${esc(mountLine(m))} · worth <span class="coin">${m.price}</span> each</p>`,
       isNew: o.isNew
     };
   }
@@ -9669,7 +9824,7 @@ function openDraft(fresh = true) {
     cost = free ? 0 : 15 + draftRerolls * 10;
   const best = Math.max(...opts.map(o => o.rar));
   $('#ovDraft').innerHTML =
-    `<div class="draft"><header><span class="label">${first ? 'Starter kit: frames, wheels, armor, machine guns, spikes' : 'Round ' + (G.round - 1) + ' done · win or lose, everyone drafts'}</span><h2>${first ? 'Pick a starting branch' : 'Pick a branch'}</h2><p class="small">${first ? 'Each card opens a different style. Later drafts lean toward what you take.' : 'One card fits your build, one opens a new direction, one is a wildcard.'}</p>${specialNote(G.round)}</header>
+    `<div class="draft"><header><span class="label">${first ? 'Starter kit: same chassis, randomized basic weapons'  : 'Round ' + (G.round - 1) + ' done · win or lose, everyone drafts'}</span><h2>${first ? 'Pick a starting branch' : 'Pick a branch'}</h2><p class="small">${first ? 'Each card opens a different style. Later drafts lean toward what you take.' : 'One card fits your build, one opens a new direction, one is a wildcard.'}</p>${specialNote(G.round)}</header>
   <div class="opts">${opts
     .map((o, i) => {
       const v = optView(o);
@@ -9708,7 +9863,7 @@ function openDraft(fresh = true) {
 function takeOption(o) {
   sfx('coin');
   if (o.type === 'module') {
-    gain(o.id, o.n);
+    gainWithSupport(o.id, o.n);
     addAff(o.id, 0.5);
     G.sel = o.id;
   } else if (o.type === 'tune') {
@@ -9717,81 +9872,60 @@ function takeOption(o) {
   } else if (o.type === 'ws') {
     for (const k of o.cells) G.ws.add(k);
   } else if (o.type === 'salvage') {
-    for (const id in o.items) gain(id, o.items[id]);
+    for (const id in o.items) gainWithSupport(id, o.items[id]);
   } else addCoins(o.n);
   $('#ovDraft').hidden = true;
   openBuild();
 }
 
 /* =================== MYSTERY CRATE =================== */
+let crateBusy = false;
 function openCrate() {
-  if (G.coins < CRATE_COST) return;
+  if (!building() || crateBusy || G.coins < CRATE_COST) return;
+  crateBusy = true;
   addCoins(-CRATE_COST);
-  const all = MODS.filter(m => m.id !== 'cockpit'),
-    rar = rollRar(0.15),
-    res = modOfRar(all, rar);
-  const n = res.rar <= 1 ? 2 : 1;
-  const cells = [];
-  for (let i = 0; i < 46; i++) {
-    const m = i === 38 ? res : modOfRar(all, rollRar());
-    cells.push(m);
-  }
-  $('#ovCrate').innerHTML =
-    `<div class="reelwrap"><span class="label">Mystery Crate</span><div class="reel" id="reel"><div class="strip" id="strip">${cells.map(m => `<div class="cell" style="--rc:${RAR[m.rar].col}"><img alt="" src="${iconURL(m.id)}"></div>`).join('')}</div></div><div class="reelres" id="reelres"></div></div>`;
-  $('#ovCrate').hidden = false;
-  const strip = $('#strip'),
-    W = $('#reel').getBoundingClientRect().width,
-    target = 38 * 112 + 52 - W / 2 + rnd(-30, 30);
-  strip.style.transform = 'translateX(0)';
-  void strip.offsetWidth;
-  strip.style.transition = 'transform 3.4s cubic-bezier(.08,.75,.12,1)';
-  strip.style.transform = `translateX(${-target}px)`;
-  setTimeout(() => {
-    strip.style.transition = 'transform .35s ease-out';
-    strip.style.transform = `translateX(${-(38 * 112 + 52 - W / 2)}px)`;
-  }, 3450);
-  setTimeout(() => {
-    const isNew = !G.found.has(res.id);
-    gain(res.id, n);
-    const col = RAR[res.rar].col;
-    $('#reelres').innerHTML =
-      `<div class="card" style="border-top:4px solid ${col};box-shadow:0 0 40px -10px ${col};max-width:520px"><span class="tag" style="color:${col}">${RAR[res.rar].name}${isNew ? ' · NEW MODULE' : ''}</span><div style="display:flex;gap:14px;align-items:center"><img alt="" src="${iconURL(res.id, 128)}" style="width:80px;height:80px"><div><h2 style="font-size:26px">${esc(res.name)} ×${n}</h2><p class="small">${esc(res.desc)}</p></div></div>
-      <div class="dfoot"><button class="btn ghost" id="cAgain" ${G.coins < CRATE_COST ? 'disabled' : ''}>Open another · <span class="coin">${CRATE_COST}</span></button><button class="btn" id="cDone">Back to the garage</button></div></div>`;
-    if (res.rar >= 3) {
-      const ov = $('#ovCrate');
-      ov.classList.remove('legend');
-      void ov.offsetWidth;
-      ov.style.animation = 'legflash .9s ease-out';
-      setTimeout(() => (ov.style.animation = ''), 900);
-    }
-    $('#cDone').addEventListener('click', () => {
-      $('#ovCrate').hidden = true;
-      G.sel = res.id;
-      refreshUI();
-    });
-    $('#cAgain').addEventListener('click', () => {
-      refreshUI();
-      openCrate();
-    });
-    refreshUI();
-  }, 3850);
+  const all = MODS.filter(m => m.id !== 'cockpit'), res = modOfRar(all,rollRar(.15));
+  const n = res.rar <= 1 ? 2 : 1, isNew = !G.found.has(res.id);
+  gainWithSupport(res.id,n); // Commit once; skipping or closing cannot lose or duplicate the reward.
+  const stop = 12, cells = Array.from({length:18}, (_,i) => i === stop ? res : pick(all));
+  const ov = $('#ovCrate');
+  ov.innerHTML = `<div class="reelwrap"><span class="label">Mystery Crate</span><div class="reel" id="reel"><div class="strip" id="strip">${cells.map(m => `<div class="cell" style="--rc:${RAR[m.rar].col}"><img alt="" decoding="async" src="${iconURL(m.id)}"></div>`).join('')}</div></div><button class="btn ghost" id="cSkip">Skip animation</button><div class="reelres" id="reelres" aria-live="polite"></div></div>`;
+  ov.hidden = false;
+  let finished = false, timer;
+  const finish = () => {
+    if (finished) return;
+    finished = true; clearTimeout(timer);
+    const strip = $('#strip'), col = RAR[res.rar].col;
+    strip.style.transition = 'none';
+    strip.style.transform = `translate3d(${-(stop*112+52-$('#reel').clientWidth/2)}px,0,0)`;
+    $('#cSkip').hidden = true;
+    $('#reelres').innerHTML = `<div class="card" style="border-top:4px solid ${col};max-width:520px"><span class="tag" style="color:${col}">${RAR[res.rar].name}${isNew ? ' · NEW MODULE' : ''}</span><h2>${esc(res.name)} ×${n}</h2><p>${esc(res.desc)}</p><p class="small">${esc(mountLine(res))}. Required support blocks are included when needed.</p><div class="dfoot"><button class="btn ghost" id="cAgain" ${G.coins < CRATE_COST ? 'disabled' : ''}>Open another · ${CRATE_COST}</button><button class="btn" id="cDone">Back to the garage</button></div></div>`;
+    sfx(res.rar >= 3 ? 'legend' : 'coin');
+    $('#cDone').onclick = () => { ov.hidden=true; crateBusy=false; G.sel=res.id; refreshUI(); };
+    $('#cAgain').onclick = () => { crateBusy=false; openCrate(); };
+  };
+  $('#cSkip').onclick = finish;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (finished) return;
+    const strip = $('#strip');
+    strip.style.transition = 'transform 1.35s cubic-bezier(.12,.65,.15,1)';
+    strip.style.transform = `translate3d(${-(stop*112+52-$('#reel').clientWidth/2)}px,0,0)`;
+    timer = setTimeout(finish, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1400);
+  }));
 }
-
 /* =================== CODEX =================== */
 let codexTab = 'mods',
   codexCat = 'all',
   codexQ = '';
 function openCodex() {
   $('#ovCodex').innerHTML =
-    `<div class="codex" role="dialog" aria-label="Codex"><header><h2>Codex</h2><div class="tabs"><button data-t="mods" aria-pressed="${codexTab === 'mods'}">Modules</button><button data-t="objs" aria-pressed="${codexTab === 'objs'}">Arena objects</button><button data-t="road" aria-pressed="${codexTab === 'road'}">Roadmap</button></div><div class="grow"></div><input id="cq" type="search" placeholder="Search" value="${esc(codexQ)}"><button class="btn ghost" id="cx">Close</button>
-   ${codexTab === 'mods' ? `<div class="chips">${[{ id: 'all', name: 'All' }, ...CATS].map(c => `<button class="chip" data-c="${c.id}" aria-pressed="${codexCat === c.id}">${c.name}</button>`).join('')}</div>` : ''}</header><div class="cbody" id="cbody"></div></div>`;
+    `<div class="codex" role="dialog" aria-label="Codex"><header><h2>Codex</h2><div class="tabs"><button data-t="mods" aria-pressed="${codexTab === 'mods'}">Modules</button><button data-t="objs" aria-pressed="${codexTab === 'objs'}">Arena objects</button><button data-t="road" aria-pressed="${codexTab === 'road'}">Roadmap</button></div><div class="grow"></div><button class="btn ghost" id="cx">Close</button>
+   ${codexTab === 'mods' ? `${catalogFilters("codex",codexQ)}<div class="chips">${[{ id: 'all', name: 'All' }, ...CATS].map(c => `<button class="chip" data-c="${c.id}" aria-pressed="${codexCat === c.id}">${c.name}</button>`).join('')}</div>` : `<input id="cq" type="search" placeholder="Search this page" aria-label="Search this page" value="${esc(codexQ)}">`}</header><div class="cbody" id="cbody"></div></div>`;
   $('#ovCodex').hidden = false;
   renderCodex();
   $('#cx').addEventListener('click', closeCodex);
-  $('#cq').addEventListener('input', e => {
-    codexQ = e.target.value;
-    renderCodex();
-  });
+  if (codexTab === 'mods') bindCatalog('codex', openCodex, true);
+  else $('#cq').oninput=e=>{codexQ=e.target.value;renderCodex();};
   $$('#ovCodex .tabs button').forEach(b =>
     b.addEventListener('click', () => {
       codexTab = b.dataset.t;
@@ -9819,7 +9953,7 @@ function renderCodex() {
     $('#cbody').innerHTML =
       CATS.filter(c => codexCat === 'all' || c.id === codexCat)
         .map(c => {
-          const list = MODS.filter(m => m.cat === c.id && hit(m.name + m.desc + m.con)).sort(
+          const list = MODS.filter(m => m.cat === c.id && hit(m.name + m.desc + m.con) && catalogMatches(m,codexQ)).sort(
             (a, b) => a.rar - b.rar
           );
           if (!list.length) return '';
@@ -9859,9 +9993,10 @@ $('#btnCodex').addEventListener('click', openCodex);
 // Bot rival garage: profile, draft picks, shopping and auto-building a car.
 /* =================== BOT RIVAL: draft, shop, build =================== */
 function newProfile() {
+  const starter=starterKit();
   return {
-    inv: { ...STARTER, cockpit: 1 },
-    found: new Set(['cockpit', ...Object.keys(STARTER)]),
+    inv: { ...starter.kit, cockpit: 1 },
+    found: new Set(['cockpit', ...Object.keys(starter.kit)]),
     tune: new Set(),
     aff: {},
     coins: 100,
@@ -10188,91 +10323,78 @@ const looseCount = () => looseIds().reduce((a, id) => a + left(id), 0);
 /** Bolts every loose part onto the current design: wheels on the flanks, melee up front, armor around the body, guns on mounts. */
 function autoPlace(quiet) {
   if (!building()) return 0;
-  const before = designKey();
+  const before = designKey(), initial = new Set(blockedList().map(([l,k]) => l+k));
   let placed = 0;
-  const neighbours = (x, y, occ) => DIRS.filter(([dx, dy]) => occ.has(key(x + dx, y + dy))).length;
-  const order = m => (m.drive ? 1 : m.front ? 2 : 0); // body first so wheels and blades have room
-  const bases = looseIds()
-    .filter(id => MOD[id].layer === 'b')
-    .sort((a, b) => order(MOD[a]) - order(MOD[b]) || MOD[b].hp - MOD[a].hp);
-  for (const id of bases) {
-    const m = MOD[id];
+  const safe = (map,k,e) => {
+    map.set(k,e);
+    const bad = blockedList().some(([l,bk]) => !initial.has(l+bk));
+    map.delete(k);
+    return !bad;
+  };
+  const ids = looseIds().sort((a,b) => {
+    const order = m => m.layer === 't' ? 3 : m.front ? 2 : m.drive ? 1 : 0;
+    return order(MOD[a])-order(MOD[b]) || MOD[b].mnt-MOD[a].mnt || MOD[b].hp-MOD[a].hp;
+  });
+  for (const id of ids) {
+    const m = MOD[id], top = m.layer === 't';
     while (left(id) > 0) {
-      const occ = occupancy(G.base);
-      let best = null,
-        bs = -1e9;
-      for (const k of G.ws) {
-        const [x, y] = unkey(k);
-        if (occ.has(k) || canPlaceBase(id, 0, x, y, occ)) continue;
-        if (m.front && occ.has(key(x, y - 1))) continue;
-        let sc;
-        if (m.drive) sc = Math.abs(x) * 3 - Math.abs(y) * 0.6 - neighbours(x, y, occ) * 0.5;
-        else if (m.front) sc = -y * 3 - Math.abs(x) * 0.8;
-        else sc = -(Math.abs(x) + Math.abs(y) * 1.2) + neighbours(x, y, occ) * 1.6;
-        if (sc > bs) {
-          bs = sc;
-          best = [x, y];
+      const occ = occupancy(G.base); let best=null, bs=-Infinity;
+      for (const k of (top ? occ.keys() : G.ws)) {
+        const [x,y] = unkey(k);
+        if (top ? G.top.has(k) || canPlaceTop(id,x,y,occ) : occ.has(k)) continue;
+        for (const rot of (m.dir || m.size > 1 ? [0,1,3,2] : [0])) {
+          if (!top && canPlaceBase(id,rot,x,y,occ)) continue;
+          const e = {id,rot,x,y};
+          if (!safe(top ? G.top : G.base,k,e)) continue;
+          const neighbours = DIRS.filter(([dx,dy]) => occ.has(key(x+dx,y+dy))).length;
+          let sc = m.drive ? Math.abs(x)*3-Math.abs(y)*.6 : m.front ? -y*3-Math.abs(x)*.8 : -(Math.abs(x)+Math.abs(y)*1.2)+neighbours*1.6;
+          if (top) sc = m.wpn ? -y*2-Math.abs(x)*.7 : y-Math.abs(x)*.3;
+          if (rot !== 0) sc -= .5;
+          if (m.front) sc += (x*FX[rot]+y*FY[rot])*.25;
+          if (sc>bs) { bs=sc; best=e; }
         }
       }
       if (!best) break;
-      G.base.set(key(best[0], best[1]), { id, rot: 0, x: best[0], y: best[1] });
-      fxPlace(best[0], best[1], 'b', key(best[0], best[1]));
-      placed++;
+      const k = key(best.x,best.y);
+      (top ? G.top : G.base).set(k,best); fxPlace(best.x,best.y,top?'t':'b',k); placed++;
     }
   }
-  const tops = looseIds()
-    .filter(id => MOD[id].layer === 't')
-    .sort((a, b) => dpsOf(b, {}, G.tune) - dpsOf(a, {}, G.tune));
-  for (const id of tops) {
-    const m = MOD[id],
-      weapon = !!(m.wpn || m.drones);
-    while (left(id) > 0) {
-      const occ = occupancy(G.base);
-      let best = null,
-        bs = -1e9;
-      for (const k of occ.keys()) {
-        const [x, y] = unkey(k);
-        if (G.top.has(k) || canPlaceTop(id, x, y, occ)) continue;
-        if (m.front && G.top.has(key(x, y - 1))) continue;
-        const behind = G.top.get(key(x, y + 1));
-        if (behind && MOD[behind.id].front) continue;
-        const sc = weapon ? -y * 2 - Math.abs(x) * 0.7 : y * 2 - Math.abs(x) * 0.3;
-        if (sc > bs) {
-          bs = sc;
-          best = [x, y];
-        }
-      }
-      if (!best) break;
-      G.top.set(key(best[0], best[1]), { id, rot: 0, x: best[0], y: best[1] });
-      fxPlace(best[0], best[1], 't', key(best[0], best[1]));
-      placed++;
-    }
-  }
-  if (placed) {
-    G.hist.push(before);
-    G.redo = [];
-    sfx('place');
-  }
+  if (placed) { G.hist.push(before); G.redo=[]; sfx('place'); }
   refreshUI();
-  if (!quiet)
-    window.__toast(
-      placed
-        ? `Placed ${placed} part${placed > 1 ? 's' : ''}. Ctrl+Z undoes it.`
-        : 'Nothing fits. Expand the bay or add support blocks.',
-      !!placed
-    );
+  if (!quiet) window.__toast(placed ? `Placed ${placed} working part${placed>1?'s':''}. ${looseCount()} remain in the bin. Ctrl+Z undoes it.` : 'No safe placement. Add compatible supports or expand the bay.', !!placed);
   return placed;
+}
+function fixAutoDirections() {
+  for (let pass=0;pass<4;pass++) {
+    const bad=blockedList(); if (!bad.length) break;
+    for (const [ly,k] of bad) {
+      const map=ly==='b'?G.base:G.top,e=map.get(k),old=e.rot;
+      let fixed=false;
+      for (const r of [old,0,1,3,2]) {
+        if ((MOD[e.id].size||1)>1 && r!==old) continue;
+        e.rot=r;
+        if (!blockedList().some(([l,bk])=>l===ly&&bk===k)) {fixed=true;break;}
+      }
+      if (!fixed) { e.rot=old; if (ly==='t') map.delete(k); else {
+        const nd=new Map(map); nd.delete(k);
+        if (designConnected(nd)) { G.base=nd; G.top.delete(k); }
+      }}
+    }
+  }
 }
 /** Rebuilds the whole car from everything you own, using the bot's builder. */
 function autoBuild() {
   if (!building()) return;
+  const historyLength = G.hist.length;
   const before = designKey(),
     d = botBuild({ inv: { ...G.inv }, ws: G.ws, tune: G.tune, found: G.found, likes: [], style: 'gunner' });
   G.base = d.base;
   G.top = d.top;
   G.hist.push(before);
   G.redo = [];
+  fixAutoDirections();
   autoPlace(true);
+  G.hist.length = historyLength; G.hist.push(before);
   sfx('legend');
   window.__toast('Rebuilt from everything you own. Ctrl+Z brings your old car back.', true);
 }
@@ -11362,6 +11484,7 @@ function killInst(v, I, quiet) {
   I.alive = false;
   v.lost.push(I.id);
   const [x, y] = ipos(v, I);
+  if (B.rec && !quiet) B.ev.push(['lesson',v.idx,x,y,`${MOD[I.id].name} destroyed`]);
   if (!quiet) boom(x, y, I.id === 'cockpit' ? 2 : 0.8);
   if (I.m.boom && !quiet)
     setTimeout(() => {
@@ -11372,7 +11495,9 @@ function killInst(v, I, quiet) {
     startDeath(v);
     return;
   }
+  let detachedCount=0;
   const detach = J => {
+    detachedCount++;
     J.alive = false;
     v.lost.push(J.id);
     partObj(v, J);
@@ -11406,6 +11531,11 @@ function killInst(v, I, quiet) {
         if (t && t.alive) detach(t);
       }
     }
+  }
+  if (B.rec && !quiet) {
+    if (detachedCount) B.ev.push(['lesson',v.idx,x,y,`${MOD[I.id].name} broke: ${detachedCount} attached part${detachedCount>1?'s':''} lost`]);
+    if (v.insts.filter(J=>J.alive && J.layer==='b' && J.id!=='cockpit').length<=2)
+      B.ev.push(['lesson',v.idx,v.x,v.y,'Cockpit exposed — almost no chassis protection remains']);
   }
   v.drones = v.drones.filter(d => d.bay.alive);
   if (!quiet) botSay(v, 'hurt', 0.12);
@@ -15170,6 +15300,9 @@ function drawArena() {
     c.stroke();
     c.setLineDash([]);
   }
+  if (B.replay && B.replayLesson && B.replayLesson.until>B.time) {
+    const l=B.replayLesson; c.strokeStyle='#ff8a6a'; c.lineWidth=3; c.beginPath(); c.arc(l.x,l.y,42,0,Math.PI*2); c.stroke();
+  }
   if (v && !B.touch && !v.dead && B.seq === 'play' && !B.demo && !B.replay) {
     c.strokeStyle = 'rgba(242,183,5,.85)';
     c.lineWidth = 2 / cam.z;
@@ -15357,12 +15490,21 @@ function bars(c, x, y, w, rows, right) {
     c.fillRect(right ? bx + bw - fw : bx, yy + 14, fw, 6);
   });
 }
+function abilityCooldown(v,k) {
+  const live=v.insts.filter(I=>I.alive && I[k]>B.time);
+  return live.length ? Math.max(0,Math.min(...live.map(I=>I[k]-B.time))) : 0;
+}
+function updateTouchControls(v) {
+  const h=v.has||{}, enabled={Space:true,ShiftLeft:h.booster,KeyJ:h.jump,RMB:h.piston||h.flipper||h.catapult||h.harpoon||h.tractor,KeyZ:h.oil||h.glue||h.banana||h.mines,KeyV:h.smoke||h.decoy||h.jammer||h.flare||h.emp||h.flashbang,KeyF:h.blink,KeyH:h.horn,KeyC:h.anchor};
+  $$('#touchpad button').forEach(b=>{b.hidden=!enabled[b.dataset.k];});
+}
 function drawHUD(c) {
   const W = view.w,
     H = view.h,
     v = myCar();
   if (!v) return;
   const h = v.has || {};
+  updateTouchControls(v);
   const rows = [[v.name.toUpperCase(), integrity(v), v.paint]];
   for (const I of v.shields)
     if (I.alive) {
@@ -15396,7 +15538,7 @@ function drawHUD(c) {
     c.font = '600 12px "Barlow Semi Condensed", sans-serif';
     c.fillStyle = '#ffd257';
     c.fillText(
-      `Round ${G.round} · worth ${G.round} pt${G.round > 1 ? 's' : ''} · ${G.score[0]}–${G.score[1]}`,
+      `Round ${G.round} · worth ${roundPoints(G.round)} pt${roundPoints(G.round) > 1 ? 's' : ''} · ${G.score[0]}–${G.score[1]}`,
       W / 2,
       ty + 31
     );
@@ -15434,10 +15576,10 @@ function drawHUD(c) {
     }
     c.textAlign = 'center';
   }
-  const ctl = [['LMB', 'fire']];
-  if (h.piston || h.catapult || h.harpoon || h.flipper || h.tractor) ctl.push(['RMB', 'action']);
-  if (h.booster) ctl.push(['Shift', 'boost']);
-  if (h.jump) ctl.push(['Space', `jump${v.jumpCd > 0 ? ' ' + v.jumpCd.toFixed(1) : ''}`]);
+  const ctl = [['WASD/↑↓←→', 'drive'], ['LMB/Space', 'fire']];
+  if (h.piston || h.catapult || h.harpoon || h.flipper || h.tractor) ctl.push(['RMB', `${h.harpoon?'reel / ':''}action${Math.max(abilityCooldown(v,'pcd'),abilityCooldown(v,'ccd'))>0?' '+Math.max(abilityCooldown(v,'pcd'),abilityCooldown(v,'ccd')).toFixed(1)+'s':''}`]);
+  if (h.booster) ctl.push(['Shift', `boost${abilityCooldown(v,'bcd')>0?' '+abilityCooldown(v,'bcd').toFixed(1)+'s':''}`]);
+  if (h.jump) ctl.push(['J', `jump${v.jumpCd > 0 ? ' ' + v.jumpCd.toFixed(1) : ''}`]);
   if (h.omni) ctl.push(['Q/E', 'strafe']);
   if (h.oil || h.glue || h.banana || h.mines) ctl.push(['Z', `drop${h.glue ? ' · glue ' + v.glue : ''}`]);
   if (h.smoke || h.decoy || h.jammer || h.flare || h.emp || h.flashbang)
@@ -15451,11 +15593,11 @@ function drawHUD(c) {
     c.textBaseline = 'bottom';
     c.font = '600 12px "Barlow Semi Condensed", sans-serif';
     let x = 14;
-    const y = H - 14;
+    let y = H - 14;
     for (const [k, l] of ctl) {
       const t = `${k} ${l}`,
         w = c.measureText(t).width + 14;
-      if (x + w > W - 330) break;
+      if (x + w > W - 14) { x=14; y-=28; }
       c.fillStyle = 'rgba(20,16,12,.7)';
       c.fillRect(x, y - 20, w, 22);
       c.fillStyle = '#ece8df';
@@ -15645,6 +15787,7 @@ const CTRL = [
   'ArrowLeft',
   'ArrowRight',
   'Space',
+  'KeyJ',
   'ShiftLeft',
   'ShiftRight',
   'KeyQ',
@@ -15657,8 +15800,8 @@ const CTRL = [
   'KeyH'
 ];
 addEventListener('keydown', e => {
-  if (e.target && e.target.tagName === 'INPUT') return;
-  if ((G.phase === 'wait' || G.phase === 'battle') && B && CTRL.includes(e.code)) {
+  if (e.target && (['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable)) return;
+  if ((G.phase === 'wait' || G.phase === 'battle') && B && !B.paused && !Net.reconnecting && ['#ovMenu','#ovCodex','#ovSettings','#ovPause'].every(id=>$(id).hidden) && CTRL.includes(e.code)) {
     e.preventDefault();
     if (!e.repeat) edges.add(e.code);
     keys.add(e.code);
@@ -15685,6 +15828,7 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => keys.delete(e.code));
 addEventListener('blur', () => {
   keys.clear();
+  edges.clear();
   mouse.down = false;
   mouse.right = false;
 });
@@ -15792,7 +15936,7 @@ function readLocal() {
       boost: false,
       aimX: 0,
       aimY: 0,
-      fire: mouse.down,
+      fire: mouse.down || keys.has('Space'),
       rmb: mouse.right,
       drop: keys.has('KeyZ'),
       edges: new Set(edges)
@@ -15839,7 +15983,7 @@ function applyInput(v, i) {
   v.fire = i.fire;
   v.rmb = i.rmb;
   const E = i.edges;
-  if (E.has('Space')) jump(v);
+  if (E.has('KeyJ')) jump(v);
   if (E.has('RMB')) action(v);
   if (E.has('KeyV')) counter(v);
   if (E.has('KeyX')) release(v);
@@ -16045,7 +16189,7 @@ function botThink(v, dt) {
     ai.det = 2.1;
     ai.detOff = -ai.rs * 1.3;
     if (v.has.blink && v.blinkCd <= 0) inp.edges.add('KeyF');
-    else if (v.has.jump) inp.edges.add('Space');
+    else if (v.has.jump) inp.edges.add('KeyJ');
   }
   if (ai.rev > 0) {
     ai.rev -= dt;
@@ -16094,7 +16238,7 @@ function botThink(v, dt) {
     v.jumpCd <= 0 &&
     B.lobs.some(l => l.own !== v.idx && Math.hypot(l.tx - v.x, l.ty - v.y) < l.splash && l.T - l.t < 0.5)
   )
-    inp.edges.add('Space');
+    inp.edges.add('KeyJ');
   if (v.has.anchor && v.anchored && (dist > P.range * 1.2 || P.melee)) inp.edges.add('KeyC');
   return inp;
 }
@@ -16512,6 +16656,49 @@ const unlock = () => {
 };
 addEventListener('pointerdown', unlock, true);
 addEventListener('keydown', unlock, true);
+const BattleMusic = {
+  bus:null, timer:null, step:0, next:0,
+  stop() { clearInterval(this.timer);this.timer=null;this.level=null; if(this.bus&&AC)this.bus.gain.setTargetAtTime(0,AC.currentTime,.12); },
+  note(freq,start,dur,vol,type='sawtooth') {
+    const o=AC.createOscillator(),g=AC.createGain(),f=AC.createBiquadFilter();
+    o.type=type;o.frequency.value=freq;f.type='lowpass';f.frequency.value=1800;
+    g.gain.setValueAtTime(.0001,start);g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),start+.012);g.gain.exponentialRampToValueAtTime(.0001,start+dur);
+    o.connect(f);f.connect(g);g.connect(this.bus);o.start(start);o.stop(start+dur+.02);
+    o.onended=()=>{o.disconnect();f.disconnect();g.disconnect();};
+  },
+  drum(start,snare=false) {
+    if(snare) {
+      const src=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();src.buffer=NOISE;f.type='highpass';f.frequency.value=1500;
+      g.gain.setValueAtTime(.11,start);g.gain.exponentialRampToValueAtTime(.0001,start+.14);src.connect(f);f.connect(g);g.connect(this.bus);src.start(start);src.stop(start+.15);src.onended=()=>{src.disconnect();f.disconnect();g.disconnect();};
+    } else {
+      const o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(130,start);o.frequency.exponentialRampToValueAtTime(42,start+.13);
+      g.gain.setValueAtTime(.4,start);g.gain.exponentialRampToValueAtTime(.0001,start+.17);o.connect(g);g.connect(this.bus);o.start(start);o.stop(start+.18);o.onended=()=>{o.disconnect();g.disconnect();};
+    }
+  },
+  update() {
+    const active=AC&&AC.state==='running'&&!MUTE&&SETTINGS.music>0&&B&&!B.demo&&!B.replay&&!B.paused&&!Net.reconnecting&&G.phase==='battle'&&!document.hidden;
+    if(!active) {if(this.timer)this.stop();return;}
+    if(!this.bus) {this.bus=AC.createGain();this.bus.gain.value=0;this.bus.connect(MASTER);}
+    if(this.level!==SETTINGS.music){this.level=SETTINGS.music;this.bus.gain.setTargetAtTime(SETTINGS.music,AC.currentTime,.1);}
+    if(this.timer)return;
+    this.step=0;this.next=AC.currentTime+.06;
+    const schedule=()=>{
+      if(!AC||AC.state!=='running')return;
+      if(this.next<AC.currentTime)this.next=AC.currentTime+.02;
+      let guard=0;
+      while(this.next<AC.currentTime+.12&&guard++<4) {
+        const t=this.next,n=this.step++,bar=Math.floor(n/16)%4,root=[110,87.31,130.81,98][bar],intense=B&&B.t<30;
+        if(n%4===0)this.drum(t);if(n%8===4)this.drum(t,true);
+        this.note(root*(n%4===3?2:1),t,.12,.12,'square');
+        const arp=[1,1.5,2,2.378];this.note(root*2*arp[n%4],t,.15,intense?.075:.045);
+        if(n%16===0)for(const ratio of [1,1.189,1.5])this.note(root*ratio,t,1.4,.025,'triangle');
+        this.next+=60/(intense?144:128)/4;
+      }
+    };
+    schedule();this.timer=setInterval(schedule,25);
+  }
+};
+
 function tone(type, f0, f1, dur, vol, delay = 0) {
   const a = AC,
     t = a.currentTime + delay,
@@ -16767,6 +16954,8 @@ function loadPeer() {
   });
 }
 const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const NET_PROTOCOL=6, RECONNECT_MS=30000;
+const connectionToken=()=>crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
 const Net = {
   peer: null,
   conn: null,
@@ -16779,7 +16968,11 @@ const Net = {
   acc: 0,
   inAcc: new Set(),
   sendT: 0,
+  reconnecting:false, remoteId:null, remoteToken:null, token:connectionToken(), ping:null, jitter:0, lastReceive:0, heartbeat:null, recoveryTimer:null, closing:false, lastResult:null,
   reset() {
+    clearInterval(this.heartbeat);clearInterval(this.recoveryTimer);
+    $('#ovReconnect').hidden=true;
+    Object.assign(this,{reconnecting:false,remoteId:null,remoteToken:null,token:connectionToken(),ping:null,jitter:0,lastReceive:0,heartbeat:null,recoveryTimer:null,closing:false,lastResult:null});
     Object.assign(this, {
       peer: null,
       conn: null,
@@ -16827,6 +17020,9 @@ const Net = {
       lobbyUI();
     });
     p.on('connection', c => {
+      if (this.reconnecting && this.remoteId && c.peer!==this.remoteId) {
+        c.on('open',()=>{c.send({t:'full'});setTimeout(()=>c.close(),100);});return;
+      }
       if (this.conn && this.conn.open) {
         c.on('open', () => {
           c.send({ t: 'full' });
@@ -16837,6 +17033,7 @@ const Net = {
       this.bind(c);
     });
     p.on('error', e => {
+      if (this.reconnecting) return;
       if (e && e.type === 'unavailable-id') {
         this.host();
         return;
@@ -16872,10 +17069,11 @@ const Net = {
     this.peer = p;
     p.on('open', () => {
       this.ready = true;
+      if (this.reconnecting) return;
       this.bind(p.connect('scrapduel-' + this.code, { reliable: true, serialization: 'json' }));
     });
     p.on('error', e =>
-      this.fail(
+      !this.reconnecting && this.fail(
         e && e.type === 'peer-unavailable'
           ? `No room called ${this.code}. Check the code with your friend.`
           : netErr(e)
@@ -16883,23 +17081,47 @@ const Net = {
     );
   },
   bind(c) {
-    this.conn = c;
-    c.on('open', () => {
-      this.connected = true;
-      this.error = '';
-      this.send({ t: 'hello', name: G.name, paint: G.paint, v: 5 });
-      lobbyUI();
-      sfx('coin');
+    this.conn=c;
+    c.on('open',()=>{
+      if(this.conn!==c || this.closing)return;
+      this.connected=true;this.error='';this.lastReceive=performance.now();
+      this.send({t:'hello',name:G.name,paint:G.paint,v:NET_PROTOCOL,token:this.token});
+      if(!this.reconnecting)lobbyUI();
+      this.startHeartbeat();sfx('coin');
     });
-    c.on('data', d => {
-      try {
-        this.recv(typeof d === 'string' ? JSON.parse(d) : d);
-      } catch (e) {
-        console.error(e);
-      }
+    c.on('data',d=>{
+      if(this.conn!==c || this.closing)return;
+      try{this.lastReceive=performance.now();this.recv(typeof d==='string'?JSON.parse(d):d);}catch(e){console.error(e);}
     });
-    c.on('close', () => this.lost());
-    c.on('error', () => this.lost());
+    const lost=()=>{if(this.conn===c&&!this.closing)this.lost();};
+    c.on('close',lost);c.on('error',lost);
+  },
+  startHeartbeat() {
+    clearInterval(this.heartbeat);
+    this.heartbeat=setInterval(()=>{
+      if(!this.connected)return;
+      const now=performance.now();
+      if(now-this.lastReceive>8000){this.lost();return;}
+      this.send({t:'ping',at:now});
+    },1000);
+  },
+  updateStatus() {
+    let el=$('#netStatus');
+    if(!el){el=document.createElement('span');el.id='netStatus';el.className='net-status';el.setAttribute('aria-live','polite');$('#hud').appendChild(el);}
+    el.hidden=G.mode!=='mp'; if(el.hidden)return;
+    const quality=this.ping===null?'connecting':this.ping<100&&this.jitter<50?'good':this.ping<220?'fair':'poor';
+    const text=this.reconnecting?`Reconnecting · ${Math.max(0,Math.ceil((this.recoveryDeadline-performance.now())/1000))}s`:this.connected?`${this.ping===null?'Measuring ping':Math.round(this.ping)+' ms'} · ${quality}`:'Offline';
+    if(el.textContent!==text)el.textContent=text;el.dataset.quality=quality;
+    if(this.reconnecting){const count=$('#reconnectSeconds');if(count)count.textContent=Math.max(0,Math.ceil((this.recoveryDeadline-performance.now())/1000));}
+  },
+  resumeConnection() {
+    const resumed=this.reconnecting;
+    this.reconnecting=false;clearInterval(this.recoveryTimer);this.recoveryTimer=null;
+    $('#ovReconnect').hidden=true;
+    if(!resumed)return;
+    if(this.role==='host')this.send({t:'recover',round:G.round,score:G.score,sched:G.sched,phase:G.phase,cfg:B&&['battle','result'].includes(G.phase)?B.cfg:null,snap:B&&G.phase==='battle'?snapshot():null,time:B?.time||0,result:this.lastResult,resultScoreIncluded:this.lastResult&&(G.round!==this.lastResult.round||G.phase!=='battle')});
+    if(G.meReady)this.send({t:'ready',round:G.round,...myCarCfg()});
+    this.check();toast('Connection restored. Match resumed.',true);
   },
   send(o) {
     if (this.conn && this.conn.open)
@@ -16908,8 +17130,33 @@ const Net = {
       } catch (e) {}
   },
   recv(d) {
+    if(!d || typeof d.t!=='string')return;
     switch (d.t) {
+      case 'ping': this.send({t:'pong',at:d.at});break;
+      case 'pong': {
+        const sample=performance.now()-d.at;
+        if(Number.isFinite(sample)&&sample>=0&&sample<30000){this.jitter=this.ping===null?0:this.jitter*.8+Math.abs(sample-this.ping)*.2;this.ping=this.ping===null?sample:this.ping*.7+sample*.3;}break;
+      }
+      case 'recover':
+        if(this.role==='client'){
+          G.score=[d.score[1],d.score[0]];G.sched=d.sched;
+          if(d.cfg&&d.phase==='battle'){G.round=d.round;if(!B || G.phase!=='battle' || B.cfg?.round!==d.round)toBattle({...d.cfg,net:'client',me:1});B.time=d.time;if(d.snap)applySnap(d.snap);}
+          const result=d.result;
+          if(result&&result.round===G.round&&!['result','final','draft','build','replay'].includes(G.phase)){
+            if(d.phase==='result'&&d.cfg&&B?.cfg?.round!==result.round)toBattle({...d.cfg,net:'client',me:1});
+            if(B?.net==='client'){
+              // The result animation awards the point locally once. A completed host score already includes it.
+              if(d.resultScoreIncluded&&result.win!=null)G.score[result.win===1?0:1]-=roundPoints(result.round);
+              clientResult(result);
+            }
+          }
+          updateHUD();
+        }break;
       case 'hello':
+        if(d.v!==NET_PROTOCOL){this.fail('Different game versions. Both players should refresh the game.');this.conn?.close();return;}
+        if(this.remoteToken && (this.remoteToken!==d.token || this.remoteId!==this.conn?.peer)){this.conn?.close();return;}
+        this.remoteToken=d.token;this.remoteId=this.conn?.peer;
+        this.resumeConnection();
         G.oppName = String(d.name || 'Rival').slice(0, 16);
         G.oppPaint = d.paint === G.paint ? PAINTS.find(p => p !== G.paint) : d.paint;
         if (!$('#ovLobby').hidden) lobbyUI();
@@ -16951,7 +17198,7 @@ const Net = {
         clientResult(d);
         break;
       case 'bye':
-        this.lost();
+        this.endDisconnect('Your friend left the match.');
         break;
     }
   },
@@ -16959,6 +17206,8 @@ const Net = {
     if (
       this.role !== 'host' ||
       !G.meReady ||
+      this.reconnecting ||
+      !this.connected ||
       G.phase !== 'wait' ||
       !this.oppReady ||
       this.oppReady.round !== G.round ||
@@ -16982,6 +17231,7 @@ const Net = {
     if (this.conn && this.conn.open) this.send(snap);
   },
   tickClient() {
+    if(this.reconnecting)return;
     const i = readLocal();
     for (const e of i.edges) this.inAcc.add(e);
     const now = performance.now();
@@ -17005,34 +17255,41 @@ const Net = {
     this.inAcc.clear();
   },
   lost() {
-    if (!this.connected && !this.conn) return;
-    const was = this.connected;
-    this.connected = false;
-    this.conn = null;
-    if (!was) {
-      this.fail('Connection failed.');
-      return;
-    }
-    if (!$('#ovLobby').hidden) {
-      this.fail('Your friend left the room.');
-      return;
-    }
-    if (G.mode === 'mp' && G.phase !== 'final' && G.phase !== 'menu') {
-      B = null;
-      G.phase = 'final';
-      $('#arena').hidden = true;
-      $('#build').hidden = false;
-      hideOverlays();
-      $('#resultCard').innerHTML =
-        `<span class="label">Multiplayer</span><h2>Connection lost</h2><p>${esc(G.oppName)} disconnected. Final score ${G.score[0]}–${G.score[1]}.</p><button class="btn" id="btnHome2">Main menu</button>`;
-      $('#ovResult').hidden = false;
-      $('#btnHome2').addEventListener('click', () => {
-        this.close();
-        showMenu();
-      });
-    }
+    if(this.closing||this.reconnecting)return;
+    const old=this.conn;this.connected=false;this.conn=null;
+    clearInterval(this.heartbeat);
+    try{old?.close();}catch(e){}
+    if(G.mode!=='mp'||!G.started||G.phase==='final'||G.phase==='menu')return this.fail('Connection lost. Please join the room again.');
+    this.reconnecting=true;this.recoveryDeadline=performance.now()+RECONNECT_MS;
+    keys.clear();edges.clear();mouse.down=mouse.right=false;
+    if(B){B.remoteIn={...ZERO_IN};B.remoteEdges=new Set();}
+    $('#reconnectCard').innerHTML=`<span class="label">Multiplayer recovery</span><h2>Reconnecting…</h2><p>The match is paused. Waiting for ${esc(G.oppName)}: <b id="reconnectSeconds">30</b>s.</p><p class="small">Keep this page open. Temporary network drops can recover without losing your build.</p><button class="btn ghost" id="reconnectLeave">Leave match</button>`;
+    $('#ovReconnect').hidden=false;
+    $('#reconnectLeave').onclick=()=>{this.close();B=null;G.phase='final';showMenu();};
+    this.recoveryTimer=setInterval(()=>{
+      if(!this.reconnecting)return;
+      if(performance.now()>=this.recoveryDeadline){this.endDisconnect('Reconnect window expired. Your build and final score are shown below.');return;}
+      if(this.role==='client'&&this.peer&&!this.peer.destroyed){
+        if(this.peer.disconnected){try{this.peer.reconnect();}catch(e){}} else if(!this.conn || !this.conn.open){
+          const previous=this.conn;this.conn=null;try{previous?.close();}catch(e){}
+          this.bind(this.peer.connect('scrapduel-'+this.code,{reliable:true,serialization:'json'}));
+        }
+      }
+    },1500);
+  },
+  endDisconnect(reason) {
+    clearInterval(this.heartbeat);clearInterval(this.recoveryTimer);
+    this.reconnecting=false;this.connected=false;this.closing=true;
+    try{this.conn?.close();this.peer?.destroy();}catch(e){}
+    this.conn=null;$('#ovReconnect').hidden=true;
+    if(G.mode!=='mp'||!G.started){this.closing=false;return this.fail(reason);}
+    B=null;G.phase='final';$('#arena').hidden=true;$('#build').hidden=false;hideOverlays();
+    $('#resultCard').innerHTML=`<span class="label">Multiplayer</span><h2>Connection ended</h2><p>${esc(reason)}</p><p>Final score ${G.score[0]}–${G.score[1]}. Your car remains in the garage.</p><button class="btn" id="btnHome2">Main menu</button>`;
+    $('#ovResult').hidden=false;
+    $('#btnHome2').onclick=()=>{this.close();showMenu();};
   },
   close() {
+    this.closing=true;clearInterval(this.heartbeat);clearInterval(this.recoveryTimer);
     try {
       if (this.conn && this.conn.open) this.conn.send({ t: 'bye' });
     } catch (e) {}
@@ -17189,6 +17446,8 @@ function snapshot() {
     dc: B.decoys.map(d => [Math.round(d.x), Math.round(d.y), r2(d.a)]),
     bm: B.bombs.filter(b => b.x !== undefined).map(b => [Math.round(b.x), Math.round(b.y), r2(b.t)]),
     pk: B.pk.map(p => (p.kind === 'power' ? [r2(p.cd), p.p] : r2(p.cd))),
+    clock:r2(B.time),
+    cds:B.cars.map(v=>v.insts.map(I=>[r2(Math.max(0,(I.bcd||0)-B.time)),r2(Math.max(0,(I.pcd||0)-B.time)),r2(Math.max(0,(I.ccd||0)-B.time))])),
     ev: B.ev.splice(0, B.ev.length)
   };
 }
@@ -17196,6 +17455,8 @@ function applySnap(S, silent) {
   B.lag = 0;
   if (!B.replay && B.tape.length < 4000) B.tape.push(S);
   B.t = S.T;
+  if(Number.isFinite(S.clock))B.time=S.clock;
+  if(S.cds)S.cds.forEach((list,i)=>list.forEach((cd,n)=>{const I=B.cars[i]?.insts[n];if(I){I.bcd=B.time+cd[0];I.pcd=B.time+cd[1];I.ccd=B.time+cd[2];}}));
   if (S.ki) B.killInfo = S.ki;
   if (S.sp && B.obj) {
     B.obj.score = [S.sp[0], S.sp[1]];
@@ -17398,6 +17659,9 @@ function applySnap(S, silent) {
           break;
         case 'd':
           debris(e[1], e[2], e[3], e[4]);
+          break;
+        case 'lesson':
+          if (B.replay) B.replayLesson={car:e[1],x:e[2],y:e[3],text:e[4],until:B.time+2.2};
           break;
         case 'h':
           if (e[1] === B.me) B.hitDirs.push({ a: e[2], t: 0.9 });
@@ -17764,7 +18028,7 @@ function startReplay(mode) {
 }
 function replayButtons() {
   const sp = [0.25, 0.5, 1, 2];
-  $('#abtns').innerHTML = `<span class="rplabel">${RP.mode === 'kill' ? 'KILL-CAM' : 'REPLAY'}</span>${sp
+  $('#abtns').innerHTML = `<span class="replay-note" id="replayLesson" aria-live="polite">Watch for red markers: broken connections and exposed cockpits.</span><span class="rplabel">${RP.mode === 'kill' ? 'KILL-CAM' : 'REPLAY'}</span>${sp
     .map(
       s =>
         `<button class="btn ghost${Math.abs(RP.speed - s) < 0.01 ? ' on' : ''}" data-s="${s}">${s}×</button>`
@@ -17784,6 +18048,8 @@ function replayStep(dt) {
   const target = Math.min(RP.to, Math.floor(RP.t * REC_HZ));
   while (RP.i <= target) applySnap(RP.R.tape[RP.i++]);
   stepArena(dt * RP.speed);
+  const lesson=B.replayLesson;
+  $('#replayLesson').textContent=lesson && lesson.until>B.time ? `${B.cars[lesson.car]?.name || 'Vehicle'}: ${lesson.text}` : 'Watch for red markers: broken connections and exposed cockpits.';
   if (RP.i > RP.to) {
     RP.end += dt;
     if (RP.end > 1.2) endReplay();
@@ -17890,7 +18156,9 @@ const packDesign = d => ({
   top: [...d.top].map(([k, e]) => [k, { id: e.id, rot: e.rot, x: e.x, y: e.y }])
 });
 const unpackDesign = p => ({ base: new Map(p.base), top: new Map(p.top) });
-const ptsLeft = () => (ROUNDS * (ROUNDS + 1)) / 2 - (G.round * (G.round + 1)) / 2;
+const roundPoints = r => r === ROUNDS ? 2 : 1;
+const pointsRemaining = r => Array.from({length:Math.max(0,ROUNDS-r)},(_,i)=>roundPoints(r+i+1)).reduce((a,b)=>a+b,0);
+const ptsLeft = () => pointsRemaining(G.round);
 const myCarCfg = () => ({
   design: packDesign(myDesign()),
   tune: [...G.tune],
@@ -17928,7 +18196,7 @@ function makeCfg(opp) {
 }
 
 /** The starter car uses every starter part, so nobody begins the match behind. */
-function defaultCar() {
+function defaultCar(guns = G.starterGuns || ['mg','mg']) {
   const b = new Map(),
     put = (id, x, y) => b.set(key(x, y), { id, rot: 0, x, y });
   put('cockpit', 0, 0);
@@ -17963,8 +18231,8 @@ function defaultCar() {
   put('spike', 1, -2);
   G.base = b;
   G.top = new Map([
-    [key(-1, -1), { id: 'mg', rot: 0, x: -1, y: -1 }],
-    [key(1, -1), { id: 'mg', rot: 0, x: 1, y: -1 }]
+    [key(-1, -1), { id: guns[0], rot: 0, x: -1, y: -1 }],
+    [key(1, -1), { id: guns[1], rot: 0, x: 1, y: -1 }]
   ]);
 }
 function resetProfile() {
@@ -17999,8 +18267,9 @@ function resetProfile() {
   resetWs();
   G.inv.cockpit = 1;
   G.found.add('cockpit');
-  for (const id in STARTER) {
-    G.inv[id] = STARTER[id];
+  const starter=starterKit(); G.starterGuns=starter.guns;
+  for (const id in starter.kit) {
+    G.inv[id] = starter.kit[id];
     G.found.add(id);
   }
   defaultCar();
@@ -18218,9 +18487,9 @@ function showVS(cfg, done) {
     }
   };
   const title = c => esc(titleName((c.look || {}).title));
-  const after = (ROUNDS * (ROUNDS + 1)) / 2 - (cfg.round * (cfg.round + 1)) / 2,
-    mpMe = G.score[0] + cfg.round > G.score[1] + after,
-    mpOp = G.score[1] + cfg.round > G.score[0] + after;
+  const after = pointsRemaining(cfg.round),
+    mpMe = G.score[0] + roundPoints(cfg.round) > G.score[1] + after,
+    mpOp = G.score[1] + roundPoints(cfg.round) > G.score[0] + after;
   const tag =
     cfg.round === ROUNDS
       ? 'FINAL ROUND'
@@ -18235,7 +18504,7 @@ function showVS(cfg, done) {
     `<div class="vs"><div class="side"><img src="${img(me)}" alt="${esc(me.name)}'s car"><span class="nm" style="color:${me.paint}">${esc(me.name)}</span><span class="ttl">${title(me)}</span><span class="small">${G.score[0]} points</span></div>
     <div class="mid">VS</div>
     <div class="side r"><img src="${img(op)}" alt="${esc(op.name)}'s car"><span class="nm" style="color:${op.paint}">${esc(op.name)}</span><span class="ttl">${title(op)}</span><span class="small">${G.score[1]} points</span></div>
-    <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">Round ${cfg.round} of ${ROUNDS} · worth ${cfg.round} point${cfg.round > 1 ? 's' : ''}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span>
+    <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">Round ${cfg.round} of ${ROUNDS} · worth ${roundPoints(cfg.round)} point${roundPoints(cfg.round) > 1 ? 's' : ''}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span>
     ${S ? `<div class="vssp" style="--sc:${S.col}"><span class="spi">${S.icon}</span><div><b>SPECIAL ROUND · ${esc(S.name)}</b><span>${esc(S.blurb)}</span></div></div>` : ''}</div></div>`;
   $('#ovVS').hidden = false;
   sfx('vs');
@@ -18285,8 +18554,8 @@ function setEndBanner() {
     w == null
       ? { text: 'DRAW', col: '#ece8df', t: 0, sub: 'No points this round' }
       : w === B.me
-        ? { text: 'ROUND WON', col: '#5cc38f', t: 0, sub: `+${G.round} point${G.round > 1 ? 's' : ''}` }
-        : { text: 'ROUND LOST', col: '#e2504a', t: 0, sub: `${B.cars[w].name} takes ${G.round}` };
+        ? { text: 'ROUND WON', col: '#5cc38f', t: 0, sub: `+${roundPoints(G.round)} point${roundPoints(G.round) > 1 ? 's' : ''}` }
+        : { text: 'ROUND LOST', col: '#e2504a', t: 0, sub: `${B.cars[w].name} takes ${roundPoints(G.round)}` };
 }
 function endRound(win, why) {
   if (!B || B.seq === 'end') return;
@@ -18310,7 +18579,7 @@ function endRound(win, why) {
     botSay(B.cars[win], 'win');
     botSay(B.cars[1 - win], 'lose');
   }
-  if (B.net === 'host') Net.send({ t: 'result', win, why, stats: B.stats });
+  if (B.net === 'host') {Net.lastResult={t:'result',round:G.round,win,why,stats:B.stats};Net.send(Net.lastResult);}
   sfx(win === B.me ? 'win' : win == null ? 'ui' : 'lose');
   if (!B.demo) $('#abtns').innerHTML = '';
 }
@@ -18352,7 +18621,7 @@ function finishBattle() {
     win = B.win,
     iWon = win === me,
     draw = win == null,
-    pts = G.round,
+    pts = roundPoints(G.round),
     why = B.why,
     special = B.special,
     S = special && SPECIALS[special];
@@ -18417,7 +18686,7 @@ function finishBattle() {
       : lead > 0
         ? 'You have clinched the match. The rest of the points cannot catch you.'
         : `${esc(G.oppName)} has clinched the match.`
-    : `${left} points still on the table. Round ${G.round + 1} alone is worth ${G.round + 1}.`;
+    : `${left} points still on the table. Next round is worth ${roundPoints(G.round + 1)} point${roundPoints(G.round + 1)>1?'s':''}.`;
   const pity = !iWon && !draw && !decided ? pityOptions() : [];
   $('#resultCard').innerHTML =
     `<span class="label">Round ${G.round} of ${ROUNDS}${S ? ' · ' + esc(S.name) : ''}</span><h2 style="color:${iWon ? '#5cc38f' : draw ? '#ece8df' : '#e2504a'}">${iWon ? 'Round won' : draw ? 'Draw' : 'Round lost'}</h2><p>${esc(why || '')}</p>
@@ -18445,7 +18714,7 @@ function finishBattle() {
   $$('#resultCard .pick').forEach(b =>
     b.addEventListener('click', () => {
       if (b.disabled) return;
-      gain(b.dataset.id, 1);
+      gainWithSupport(b.dataset.id, 1);
       sfx('coin');
       $$('#resultCard .pick').forEach(x => {
         x.disabled = true;
@@ -18573,7 +18842,7 @@ function showTip(id) {
 
 /* ===== js/ui/settings.js ===== */
 // Settings (volume, screen shake, damage numbers, hit markers), the pause menu, controls card and hotkeys.
-const SETTINGS = { vol: 1, shake: true, nums: true, marks: true };
+const SETTINGS = { vol: 1, music: .4, shake: true, nums: true, marks: true };
 try {
   Object.assign(SETTINGS, JSON.parse(load('sd.settings') || '{}'));
 } catch (e) {}
@@ -18585,10 +18854,10 @@ function applyVolume() {
 const CONTROLS = [
   ['W A S D', 'Drive and steer'],
   ['Mouse', 'Aim'],
-  ['Left click', 'Fire'],
+  ['Left click / Space', 'Fire (hold)'],
   ['Right click', 'Action: piston, flipper, catapult, tractor'],
   ['Shift', 'Boosters and nitro'],
-  ['Space', 'Jump jets'],
+  ['J', 'Jump jets'],
   ['Q / E', 'Strafe (omni wheels)'],
   ['Z', 'Drop oil, glue, banana peels, mines'],
   ['V', 'Countermeasure: smoke, decoy, jammer, flare, EMP, flash-bang'],
@@ -18610,6 +18879,7 @@ function openSettings(back) {
     `<label class="tgl"><input type="checkbox" id="${id}" ${on ? 'checked' : ''}><span>${esc(label)}</span></label>`;
   c.innerHTML = `<span class="label">Settings</span><h2>Settings</h2>
     <label class="vol"><span>Volume</span><input type="range" id="setVol" min="0" max="1" step="0.05" value="${SETTINGS.vol}"><b id="setVolV">${Math.round(SETTINGS.vol * 100)}%</b></label>
+    <label class="vol"><span>Battle music</span><input type="range" id="setMusic" aria-label="Battle music volume" min="0" max="1" step="0.05" value="${SETTINGS.music}"><b id="setMusicV">${Math.round(SETTINGS.music*100)}%</b></label>
     ${toggle('setMute', 'Mute all sound', MUTE)}
     ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
     ${toggle('setNums', 'Floating damage numbers', SETTINGS.nums)}
@@ -18624,6 +18894,7 @@ function openSettings(back) {
     saveSettings();
   });
   $('#setVol').addEventListener('change', () => sfx('ui'));
+  $('#setMusic').oninput=e=>{SETTINGS.music=+e.target.value;$('#setMusicV').textContent=Math.round(SETTINGS.music*100)+'%';saveSettings();BattleMusic.update();};
   $('#setMute').addEventListener('change', e => {
     MUTE = e.target.checked;
     store('sd.mute', MUTE ? 1 : 0);
@@ -18713,7 +18984,7 @@ document.addEventListener('visibilitychange', () => {
 
 /* ---------- hotkeys outside the arena ---------- */
 addEventListener('keydown', e => {
-  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.target && (['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable)) return;
   if (
     (e.code === 'Escape' || e.code === 'KeyP') &&
     canPause() &&
@@ -18846,12 +19117,12 @@ function showMenu() {
   $('#ovMenu').classList.toggle('live', !resume);
   $('#ovMenu').innerHTML = `<div class="menu2">
     <div class="hero2"><span class="label">Vehicle combat · ${MODS.length} modules</span><h1>SCRAP<br>DUEL</h1>
-      <p>Weld a car together, draft new parts every round and smash your rival. Ten rounds, round N is worth N points, and five of them are special.</p></div>
+      <p>Weld a car together, draft new parts every round and smash your rival. Ten rounds, one point per round, a double-point finale, and five special rounds.</p></div>
     <div class="modes2">
       <div class="mode2" style="--rc:#5cc38f"><div class="mh"><span class="ico">1P</span><h3>Singleplayer</h3></div><p>A bot rival who drafts, shops and builds with the same rules.</p>
         <div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
         <button class="btn" id="mSolo">Play vs bot</button></div>
-      <div class="mode2" style="--rc:#4ea1ff"><div class="mh"><span class="ico">2P</span><h3>Multiplayer</h3></div><p>Peer-to-peer with a four-letter room code.</p>
+      <div class="mode2" style="--rc:#4ea1ff"><div class="mh"><span class="ico">2P</span><h3>Multiplayer</h3></div><p>Peer-to-peer with a four-character room code, ping display and a 30-second reconnect window.</p>
         <input id="mName" class="mname" maxlength="16" value="${esc(G.name)}" aria-label="Your name" placeholder="Your name">
         <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div></div>
       <div class="mode2" style="--rc:#c58bff"><div class="mh"><span class="ico">LAB</span><h3>Sandbox</h3></div><p>Every module, 99 of each, a test arena with dummies.</p>
@@ -18987,6 +19258,8 @@ function loop(t) {
   const dt = Math.min(0.05, Math.max(0, (t - lastT) / 1000));
   lastT = t;
   try {
+    BattleMusic.update();
+    Net.updateStatus();
     if (G.phase === 'replay' && B) {
       replayStep(dt);
       if (B) drawArena();
@@ -18997,13 +19270,13 @@ function loop(t) {
         demoTick(dt);
       }
     } else if ((G.phase === 'wait' || G.phase === 'battle') && B) {
-      if (!B.paused) stepArena(dt);
+      if (!B.paused && !Net.reconnecting) stepArena(dt);
       if (B && B.cars.length) drawArena();
-      if (B && B.rec && G.phase === 'battle' && !B.paused) recTick(dt);
+      if (B && B.rec && G.phase === 'battle' && !B.paused && !Net.reconnecting) recTick(dt);
       if (B && G.phase === 'wait' && G.mode !== 'sandbox' && Math.random() < 0.05) oppStatusUI();
     } else {
       ANIM += dt;
-      if ((building() || G.phase === 'draft') && builderBusy()) {
+      if ((building() || G.phase === 'draft') && $('#ovCrate').hidden && builderBusy()) {
         bfxTick(dt);
         drawBP();
       }
@@ -19025,6 +19298,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   if (d != null && DIFF[+d]) G.diff = +d;
   MUTE = load('sd.mute') == 1;
   loadStyle();
+  try {G.favorites=new Set(JSON.parse(load('sd.favorites')||'[]').filter(id=>MOD[id]));} catch(e){}
 }
 resetWs();
 G.base = new Map([[key(0, 0), { id: 'cockpit', rot: 0, x: 0, y: 0 }]]);
@@ -19037,7 +19311,7 @@ requestAnimationFrame(loop);
 
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
-  window.__SD = { G, MODS, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES };
+  window.__SD = { unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
 
 })();
 </script>
