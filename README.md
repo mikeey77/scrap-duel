@@ -4,6 +4,20 @@ A browser vehicle builder and combat game: draft parts, bolt together a car, and
 
 Play: https://scrap-duel.netlify.app/
 
+## Shapes and branches release
+
+- 190 playable modules, including 50 new designs: ten each for fire, cold, scrap economy, slippery terrain and cables.
+- Real 1×1, 1×2, 1×3, 2×2, 2×3, L and T footprints. Placement, rotation, collision, supports, damage, bots and Auto-place all use the occupied cells. Large drafts include a usable support pad and extra bay space.
+- Animated branch artwork, footprint previews, next synergy bonuses and affordable parts that fit. Decorative motion can be disabled in Settings.
+- Fire trails and fans, chilled connectors and a wind-up ice press, collectible cargo with storage/repair/ammunition choices, drifting skids, visible dropped beads and physical towing cables.
+- New pickups: temporary junk magnet, ghost through loose wreckage and limited repair. Six pickup types in total.
+- Scrap Run: collect junk, bring it to your depot, and race to deliver 20 pieces. All vehicles have basic cargo capacity in this objective; storage modules increase it. Fresh-world scrap rewards are capped at 40 coins per round; spilling and recollecting cargo cannot farm rewards.
+- Four selectable formats for solo and multiplayer: Balanced rounds, Scrap Lives (20 lives, defeat costs 2 + round), Bounty (beat the leader for up to four points and bonus coins), and Hill finale (double-point King of the Hill).
+- Cockpit portraits, cargo feedback, damaged connection warnings and restrained camera shake. Result reports show the first broken part, most damaged part and obstructed weapons, with a garage damage map.
+- New module cooldowns, cargo, cables and match rules synchronize with the peer and replay. This release uses multiplayer protocol 7; both players should refresh after an update.
+
+Weather rules, 2v2 and spectating during building remain future work.
+
 ## Mobile and UI update
 
 - Portrait arena rotates 90 degrees; aiming, steering, camera fitting and offscreen arrows use the same inverse projection. World coordinates and multiplayer protocol stay unchanged.
@@ -30,6 +44,8 @@ Play: https://scrap-duel.netlify.app/
 
 Drive with WASD or arrows. Aim with the mouse; fire with left-click or Space. Jump is J when equipped. Only equipped gadgets appear in the battle reminder, alongside their controls and cooldowns. On touch: left stick drives, right stick aims; push farther to fire. The Fire button shoots while aiming gently. Fullscreen availability depends on the browser.
 
+New gadgets: right-click activates/reels cables; Z drops beads or foam, V releases a decoy duck, H rings the pickup bell, and C toggles grip studs or activates the rescue jack. The scrap conveyor switches between repairs and ammunition when firing begins. Their buttons appear only when equipped.
+
 In the garage: click/drag to place, right-click to remove, R changes the next part's facing, T rotates placed parts, X removes, M mirrors. Ctrl+Z undoes and Ctrl+Y redoes.
 
 ## Run locally
@@ -50,7 +66,7 @@ With Node.js installed:
 node tests/regression.cjs
 ```
 
-The suite checks randomized starters, support grants, functional placement, undo, scoring, controls, filters, crate accounting, replay events, music lifecycle, and two-peer battle recovery including score and cooldown synchronization. The additional mobile checks cover rotated camera/input round trips, independently cancelled twin sticks, equipment cooldowns, and solo-only aim assistance. Browser playtesting covers portrait/landscape layout; previous release testing also covered actual PeerJS connections.
+The suite checks randomized starters, support grants, functional placement, undo, scoring, controls, filters, crate accounting, replay events, music lifecycle, and two-peer battle recovery including score and cooldown synchronization. Mobile checks cover rotated camera/input round trips, independently cancelled twin sticks, equipment cooldowns, and solo-only aim assistance. Shape/content checks cover all 50 modules, four-way footprints, full support requirements, non-anchor removal/replacement, connected Auto-place, combat/render execution, cargo rewards and spills, real tow forces, rescue/press timing, serialized new states, Scrap Run deposits, selectable scoring and layer-specific damage reports. Browser playtesting covers layout and actual PeerJS connections.
 
 ## Deployment
 

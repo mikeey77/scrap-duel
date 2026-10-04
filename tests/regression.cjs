@@ -11,6 +11,7 @@ function runtime(options={}){
     constructor(id=''){this.id=id;this.tagName='DIV';this.hidden=true;this.style={};this.dataset={};this.attrs={};this.listeners={};this.value='';this.clientWidth=720;this.classList={add(){},remove(){},toggle(){}};}
     set innerHTML(h){this.html=h;for(const m of h.matchAll(/id="([^"]+)"/g)){const e=new El(m[1]);e.hidden=false;elements.set(m[1],e);}}
     get innerHTML(){return this.html||'';}
+    insertAdjacentHTML(where,h){this.innerHTML=this.innerHTML+h;}
     addEventListener(k,f){(this.listeners[k]??=[]).push(f);}
     setAttribute(k,v){this.attrs[k]=v;}getAttribute(k){return this.attrs[k];}
     getContext(){return ctx;}toDataURL(){return 'data:image/png;base64,AA';}
@@ -45,7 +46,7 @@ test('catalog loads and every starter is connected, usable and owned',()=>{
     for(const [id,count] of Object.entries(used))assert.equal(count,G.inv[id]);
     signatures.add(G.starterGuns.join(','));
   }
-  assert(signatures.size>10);assert.equal(a.MODS.length,140);
+  assert(signatures.size>10);assert.equal(a.MODS.length,190);
 });
 test('all heavy drafted modules include enough free support',()=>{
   for(const m of a.MODS.filter(m=>m.layer==='t'&&m.mnt===2)){
@@ -210,11 +211,108 @@ test('solo aim assist is optional and never affects multiplayer or night visibil
 test('garage tabs and arena presentation leave world coordinates and protocol intact',()=>{
   const {rr,aa}=mobileRuntime();aa.setMobileTab('parts');assert.equal(rr.elements.get('build').dataset.mobileTab,'parts');aa.setMobileTab('bay');assert.equal(rr.elements.get('build').dataset.mobileTab,'bay');
   const before=aa.getB().cars.map(v=>[v.x,v.y,v.a]);aa.syncPresentation();assert.deepEqual(aa.getB().cars.map(v=>[v.x,v.y,v.a]),before);
-  assert(html.includes('NET_PROTOCOL=6'));assert(html.includes('height:100dvh'));assert(html.includes('Subtle touch aim assist (solo only)'));
+  assert(html.includes('NET_PROTOCOL=7'));assert(html.includes('height:100dvh'));assert(html.includes('Subtle touch aim assist (solo only)'));
 });
 test('open overlays release held touch input and prevent background fire',()=>{
   const {rr,aa}=mobileRuntime();const b=aa.getB();b.aimJoy={x:1,y:0,m:1};aa.keys.add('Space');
   rr.elements.get('ovSettings').hidden=false;const i=aa.readLocal();assert.equal(i.fire,false);assert.equal(i.th,0);assert.equal(b.aimJoy,null);assert.equal(aa.keys.size,0);
   assert.deepEqual({...aa.equippedTouchActions(null)},{});
 });
+test('all fifty designs have unique names, intended shapes, tags and executable mechanics',()=>{
+ const added=a.MODS.filter(m=>m.plan);assert.equal(added.length,50);assert.equal(new Set(a.MODS.map(m=>m.name)).size,190);
+ const counts={};for(const m of added){const b=a.shapeBounds(m);counts[m.shapeName?'special':`${b.w}x${b.h}`]=(counts[m.shapeName?'special':`${b.w}x${b.h}`]||0)+1;assert(m.tags.includes(m.branch));assert(m.desc&&m.con);}
+ assert.deepEqual(counts,{'1x1':15,'1x2':10,'1x3':5,'2x2':10,'2x3':5,special:5});
+});
+test('every new footprint rotates four times without changing occupied area or filling shape holes',()=>{
+ for(const m of a.MODS.filter(m=>m.plan)){for(let rot=0;rot<4;rot++){const cs=a.footprint(m.id,rot,2,3);assert.equal(cs.length,a.cellCount(m));assert.equal(new Set(cs.map(c=>c.join(','))).size,cs.length);const center=a.instCenter({id:m.id,rot,x:2,y:3});assert(center.every(Number.isFinite));}}
+ const l=a.footprint('campfork',0,0,0);assert(!l.some(c=>c[0]===1&&c[1]===0));assert.equal(a.occupancy(new Map([['0,0',{id:'campfork',rot:0,x:0,y:0}]] )).size,3);
+});
+test('multi-cell equipment needs every mount, cannot overlap, and removes as one module from any cell',()=>{
+ start();G.inv.popcorn=2;G.top.clear();G.base.clear();G.base.set('0,0',{id:'cockpit',x:0,y:0,rot:0});
+ for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(x||y)G.base.set(`${x},${y}`,{id:'girder',rot:0,x,y});
+ G.sel='popcorn';G.rot=0;assert.equal(a.canPlaceTop('popcorn',1,1,a.occupancy(G.base)),null);a.act(1,1,'place');assert.equal(G.top.size,1);assert.equal(a.topAt('2,0').id,'popcorn');
+ assert(a.canPlaceTop('popcorn',2,1,a.occupancy(G.base)));G.layerView='both';a.act(2,0,'remove');assert.equal(G.top.size,0);
+ G.base.delete('2,0');assert(a.canPlaceTop('popcorn',1,1,a.occupancy(G.base)));
+});
+test('all fifty drafted modules remain connected and auto-place never creates equipment overlap',()=>{
+ for(const m of a.MODS.filter(m=>m.plan)){start();a.takeOption({type:'module',id:m.id,n:1});a.autoPlace(true);assert([...G.base.values(),...G.top.values()].some(e=>e.id===m.id),m.name+' did not mount');assert(a.designConnected(G.base),m.name);assert.equal(a.blockedList().length,0,m.name);const occupied=a.occupancy(G.top);assert.equal(occupied.size,[...G.top.values()].reduce((n,e)=>n+a.cellCount(a.MOD[e.id]),0),m.name);}
+});
+function planScene(id){
+ const {rr,aa}=mobileRuntime();const b=aa.getB(),base=new Map(),top=new Map();
+ for(let y=-5;y<=3;y++)for(let x=-3;x<=3;x++)base.set(`${x},${y}`,{id:x===0&&y===0?'cockpit':'girder',x,y,rot:0});
+ const m=aa.MOD[id],e={id,x:0,y:-2,rot:0};if(m.layer==='t')top.set('0,-2',e);else {for(const [x,y] of aa.footprint(id,0,0,-2))base.delete(`${x},${y}`);base.set('0,-2',e);}
+ const v=aa.makeCar({base,top},0,700,600,0,{tune:[],name:'Module test',paint:'#fff'});b.cars[0]=v;b.cars[1].x=1500;b.cars[1].y=600;b.st=[];b.objs=[];b.zones=[];b.pk=[];b.seq='play';b.time=1;aa.G.phase='battle';v.fire=true;v.aimX=700;v.aimY=0;return {rr,aa,b,v,I:v.insts.find(i=>i.id===id)};
+}
+test('every new module runs and renders in combat without invalid positions, HP or projectile values',()=>{
+ for(const m of a.MODS.filter(m=>m.plan)){const {aa,b,v,I}=planScene(m.id);assert(I,m.name);for(let n=0;n<45;n++){b.time+=.05;aa.planTick(v,.05);aa.weapons(v,.05);}
+  for(const n of [v.x,v.y,v.c.mass,v.rad,I.hp])assert(Number.isFinite(n),m.name);for(const shot of b.shots)for(const k of ['x','y','vx','vy','life','dmg'])assert(Number.isFinite(shot[k]),m.name+':'+k);
+  aa.drawArena();
+ }
+});
+test('cargo collects world scrap once, rejects own parts and cannot farm spilled cargo rewards',()=>{
+ const {aa,b,v}=planScene('pouch');const o=aa.mkObj('crate',v.x,v.y,0);o.uid=44;assert(aa.planTakeScrap(v,o));assert.equal(v.cargo,1);assert.equal(v.coins,2);assert(!aa.planTakeScrap(v,o));
+ const part={...o,dead:false,kind:'part',uid:45};assert(!aa.planTakeScrap(v,part));
+ aa.planSpill(v,v.x,v.y);assert.equal(v.cargo,0);assert(!aa.planTakeScrap(v,b.objs[0]));const other=b.cars[1];other.has.pouch=1;assert(aa.planTakeScrap(other,b.objs[0]));assert.equal(other.coins,0);
+});
+test('cargo cap limits round rewards and lost storage spills its contents',()=>{
+ const {aa,b,v,I}=planScene('hopper');for(let n=0;n<70;n++){v.cargo=0;const o=aa.mkObj('crate',0,0,0);o.uid=100+n;aa.planTakeScrap(v,o);}assert.equal(v.coins,40);v.cargo=5;aa.killInst(v,I,true);aa.planTick(v,.05);assert.equal(v.cargo,0);assert(b.objs.length>=5);
+});
+test('snowcap cancels only the first fire hit and bottlecap consumes collected scrap',()=>{
+ const s=planScene('snowcap');assert.equal(s.aa.planHurt(s.v,s.I,20,'fire'),0);assert.equal(s.aa.planHurt(s.v,s.I,20,'fire'),20);
+ const t=planScene('bottlecap');t.v.cargo=1;assert.equal(t.aa.planHurt(t.v,t.I,8,'light'),0);assert.equal(t.v.cargo,0);assert.equal(t.aa.planHurt(t.v,t.I,8,'light'),8);
+});
+test('scrap spitter uses real cargo and bell, drops and counter have equipped cooldowns',()=>{
+ const {aa,b,v,I}=planScene('spitter');v.cargo=2;I.cd=0;aa.planWeapon(v,I,.05);assert.equal(v.cargo,1);assert.equal(I.W.dmg,17);v.cargo=0;aa.planWeapon(v,I,.05);assert.equal(I.W.dmg,5);
+ for(const [id,key] of [['soap','KeyZ'],['frostbead','KeyZ'],['foambath','KeyZ'],['rubberduck','KeyV']]){const p=planScene(id);p.aa.planActivate(p.v,key);const n=p.b.zones.length+p.b.decoys.length;p.aa.planActivate(p.v,key);assert.equal(p.b.zones.length+p.b.decoys.length,n);assert(p.I.planCd>p.b.time);assert(p.aa.equippedTouchActions(p.v)[key]);}
+});
+test('dragon announces a real wind-up before firing and has a recovery cooldown',()=>{
+ const {aa,b,v,I}=planScene('dragon');assert(aa.planWeapon(v,I,.6));assert.equal(I.charge,.6);assert.equal(aa.planWeapon(v,I,.7),false);assert(I.planBurst>0);assert(I.planCd>b.time);v.fire=false;I.planBurst=0;assert(aa.planWeapon(v,I,.1));assert.equal(I.charge,0);
+});
+test('new cargo, cable and cooldown states survive snapshot and replay application',()=>{
+ const {aa,b,v,I}=planScene('grapple');v.cargo=2;v.scrapEarned=4;I.planCd=8;I.heat=.7;v.planLinks=[{n:I.n,x:900,y:300,len:200,until:9}];b.scrapSeen=new Set([77]);const snap=aa.snapshot();v.cargo=0;I.planCd=0;v.planLinks=[];aa.applySnap(snap,true);assert.equal(v.cargo,2);assert.equal(I.planCd,8);assert.equal(v.planLinks[0].len,200);assert(b.scrapSeen.has(77));
+});
+test('Scrap Run deposits only carried world scrap and ends at its announced target',()=>{
+ const {aa,b,v}=planScene('pouch');aa.setupSpecial('scrap');b.zones=[{kind:'base',team:0,x:v.x-50,y:v.y-50,w:100,h:100}];v.cargo=5;aa.stepSpecial(.1);assert.equal(b.obj.score[0],5);assert.equal(v.cargo,0);v.cargo=15;aa.stepSpecial(.1);assert.equal(b.win,0);assert.equal(b.seq,'end');
+});
+test('Scrap Run timeout uses delivered scrap rather than health or undelivered cargo',()=>{
+ const {aa,b,v}=planScene('pouch');aa.setupSpecial('scrap');b.obj.score=[4,7];v.cargo=20;const result=aa.specialTimeout();assert.equal(result[0],1);assert.equal(v.cargo,20);b.obj.score=[7,7];assert.equal(aa.specialTimeout(),null);
+});
+test('format choices alter rules and awards while preserving the balanced default',()=>{
+ const rr=runtime(),aa=rr.api;aa.startMatch('solo',null,'lives');assert.deepEqual([...aa.G.lives],[20,20]);assert.equal(aa.roundPoints(10),1);
+ aa.startMatch('solo',null,'bounty');aa.G.score=[1,4];aa.G.bountyStreak=3;assert.deepEqual([...aa.formatAwards()],[4,1]);
+ aa.startMatch('solo',null,'finalehill');assert.equal(aa.G.sched[9],'hill');assert.equal(aa.roundPoints(10),2);
+ aa.startMatch('solo',null,'balanced');assert.equal(aa.roundPoints(10),2);assert.equal(Object.keys(aa.POWERUPS).length,6);
+});
+test('new report tracks the actual damaged layer and first broken connection',()=>{
+ const {aa,b,v,I}=planScene('tinder');aa.hurtInst(v,I,10,'kin',0,0,0,0,1);assert(v.damageMap['t|0,-2']>0);aa.killInst(v,I);assert.equal(v.firstBreak.id,'tinder');assert.equal(v.firstBreak.layer,'t');
+});
+
+test('every new module appears in a real catalog category',()=>{
+ const cats=new Set(a.CATS.map(c=>c.id));for(const m of a.MODS.filter(m=>m.plan))assert(cats.has(m.cat),m.name+':'+m.cat);
+});
+test('replacing a support under a non-anchor equipment cell returns the complete part',()=>{
+ start();G.base.clear();G.top.clear();G.ws=new Set();for(let y=-3;y<=2;y++)for(let x=-3;x<=3;x++){G.ws.add(`${x},${y}`);G.base.set(`${x},${y}`,{id:x||y?'girder':'cockpit',x,y,rot:0});}
+ G.inv.popcorn=1;G.inv.frame=99;G.top.set('1,1',{id:'popcorn',x:1,y:1,rot:0});G.sel='frame';G.layerView='both';a.act(2,0,'place');assert.equal(G.top.size,0);assert.equal(G.base.get('2,0').id,'frame');
+});
+test('new tow cables have separate roots, follow a moving rival and pull both cars',()=>{
+ const {aa,b,v,I}=planScene('towyoke'),enemy=b.cars[1];enemy.x=v.x+200;enemy.y=v.y;v.aimX=enemy.x;v.aimY=enemy.y;aa.planActivate(v,'RMB');assert.equal(v.planLinks.length,2);assert.notEqual(v.planLinks[0].off,v.planLinks[1].off);
+ const old=v.planLinks[0].len;enemy.x+=30;aa.planTick(v,.05);assert.equal(v.planLinks.length,2);assert(v.vx>0);assert(enemy.vx<0);assert.equal(v.planLinks[0].len,old);
+});
+test('rescue jack rights a stopped car and ice press requires a wind-up',()=>{
+ const s=planScene('rescue');s.v.flip=2;s.v.fire=false;s.aa.planActivate(s.v,'KeyC');s.aa.planTick(s.v,.2);assert(s.v.flip<2);assert(s.I.rescueUntil>s.b.time);
+ const p=planScene('glacier');p.I.blocked=false;assert(p.aa.planWeapon(p.v,p.I,.4));assert(p.I.punch>0);assert(p.aa.planWeapon(p.v,p.I,.7));assert(p.I.planCd>p.b.time);
+});
+test('finishing a lives round removes the announced lives and bounty grants its actual points',()=>{
+ for(const format of ['lives','bounty']){const {rr,aa,b}=planScene('tinder');aa.G.mode='mp';aa.G.format=format;aa.G.round=4;aa.G.lives=[20,20];aa.G.score=[0,0];b.cfg={round:4,awards:[4,1]};b.tape=[];aa.endRound(0,'Test duel');aa.finishBattle();assert.equal(aa.G.phase,'result');assert.equal(aa.G.score[0],4);if(format==='lives'){assert.equal(aa.G.lives[1],14);assert(rr.elements.get('resultCard').innerHTML.includes('20–14 lives'));}else assert(rr.elements.get('resultCard').innerHTML.includes('Defeat the leader'));}
+});
+
+test('garage damage map returns to the same report without changing the blueprint',()=>{
+ const {rr,aa,v}=planScene('pouch');const before=JSON.stringify([...aa.G.base]);const st={damage:{'b|0,0':10},first:{id:'cockpit',k:'0,0',layer:'b'}};aa.openGarageReport(st,'b|0,0');assert.equal(aa.G.phase,'review');rr.elements.get('reviewBack').click();assert.equal(aa.G.phase,'result');assert.equal(rr.elements.get('ovResult').hidden,false);assert.equal(JSON.stringify([...aa.G.base]),before);
+});
+test('completed Bounty recovery preserves awarded points and winning streak exactly once',()=>{
+ const {rr,aa,b}=planScene('tinder');aa.G.mode='mp';aa.G.round=1;aa.Net.role='client';b.net='client';b.me=1;b.tape=[];aa.endRound(0,'Recovery');const stats=b.stats;b.seq='play';
+ aa.Net.recv({t:'recover',round:1,score:[4,0],lives:[20,20],format:'bounty',bounty:3,bountyWinner:0,sched:aa.G.sched,phase:'result',result:{round:1,win:0,points:4,stats,why:'Recovery'},resultScoreIncluded:true});
+ aa.finishBattle();assert.deepEqual([...aa.G.score],[0,4]);assert.equal(aa.G.bountyStreak,3);assert.equal(aa.G.bountyWinner,1);
+});
+
 console.log(`\n${passed} regression tests passed.`);
