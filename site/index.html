@@ -3882,6 +3882,37 @@ select {
   background: radial-gradient(circle, rgba(91, 231, 255, 0.1), rgba(5, 10, 20, 0.6) 70%);
   margin-bottom: 4px;
 }
+.bp-share {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.bp-share .btn {
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+}
+.bp-card {
+  max-width: 460px !important;
+}
+.bp-card textarea {
+  width: 100%;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  background: rgba(5, 10, 20, 0.75);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  padding: 8px;
+  resize: vertical;
+  word-break: break-all;
+}
+.bp-prev {
+  width: 180px;
+  height: 180px;
+  align-self: center;
+  background: radial-gradient(circle, rgba(91, 231, 255, 0.1), rgba(5, 10, 20, 0.6) 70%);
+  clip-path: var(--chamfer-s);
+}
 </style>
   </head>
   <body>
@@ -4034,6 +4065,7 @@ select {
               <div>
                 <span class="label">Blueprints</span>
                 <div class="slots" id="slots"></div>
+                <div class="bp-share"><button class="btn ghost" id="bpShare" title="Get a code for this car that a friend can paste">Share this car</button><button class="btn ghost" id="bpImport" title="Paste a car code from a friend">Paste a code</button></div>
               </div>
             </div>
             <div class="pfoot">
@@ -4124,6 +4156,7 @@ select {
     <div class="overlay" id="ovSettings" hidden><div class="card" id="settingsCard"></div></div>
     <div class="overlay" id="ovReconnect" hidden><div class="card" id="reconnectCard"></div></div>
     <div class="overlay" id="ovPause" hidden><div class="card" id="pauseCard"></div></div>
+    <div class="overlay" id="ovBlueprint" hidden><div class="card bp-card" id="bpCard"></div></div>
     <div class="overlay" id="ovAccount" hidden><div class="card account-card" id="accountCard"></div></div>
     <div class="coach" id="coach" hidden></div>
     <div class="feed" id="demoFeed" hidden></div>
@@ -10650,7 +10683,7 @@ $('#btnMirror').addEventListener('click', () => setMirror(!G.mirror));
 $('#btnUndo').addEventListener('click', undo);
 $('#btnRedo').addEventListener('click', redo);
 addEventListener('keydown', e => {
-  if (!building() || (e.target && e.target.tagName === 'INPUT')) return;
+  if (!building() || (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName))) return;
   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
     e.preventDefault();
     e.shiftKey ? redo() : undo();
@@ -10685,7 +10718,7 @@ function store(k, v) {
 /* =================== ACCOUNT (nickname + PIN) ===================
    Optional. Signed-in players keep XP, Garage Style, blueprints and settings on the
    server (Netlify Function + Blobs) and get them back on any device. */
-const ACCOUNT_SYNC = ['sd.prog', 'sd.style', 'sd.bp', 'sd.favorites', 'sd.settings', 'sd.diff', 'sd.paint'];
+const ACCOUNT_SYNC = ['sd.prog', 'sd.style', 'sd.bp0', 'sd.bp1', 'sd.bp2', 'sd.favorites', 'sd.settings', 'sd.diff', 'sd.paint'];
 const Account = {
   name: null,
   token: null,
@@ -10914,6 +10947,142 @@ function renderSlots() {
   );
   $$('#slots [data-l]').forEach(b => b.addEventListener('click', () => loadBlueprint(+b.dataset.l)));
 }
+/* ---------- blueprint codes: share a car as text ----------
+   Format: "SD1." + base64url(deflate(JSON)) when the browser can compress, otherwise
+   "SD1j." + base64url(JSON). The JSON is [[id,rot,x,y]...] for chassis and equipment. */
+const b64u = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = str => Uint8Array.from(atob(str.replace(/-/g, '+').replace(/_/g, '/')), ch => ch.charCodeAt(0));
+async function pipeBytes(bytes, stream) {
+  const out = new Response(new Blob([bytes]).stream().pipeThrough(stream));
+  return new Uint8Array(await out.arrayBuffer());
+}
+function designJSON(base, top) {
+  const pack = m => [...m.values()].map(e => [e.id, e.rot, e.x, e.y]);
+  return JSON.stringify({ b: pack(base), t: pack(top) });
+}
+async function blueprintCode(base = G.base, top = G.top) {
+  const raw = new TextEncoder().encode(designJSON(base, top));
+  if (window.CompressionStream) {
+    try {
+      return 'SD1.' + b64u(await pipeBytes(raw, new CompressionStream('deflate-raw')));
+    } catch (e) {}
+  }
+  return 'SD1j.' + b64u(raw);
+}
+async function parseBlueprintCode(code) {
+  code = String(code || '').trim().replace(/\s+/g, '');
+  const m = code.match(/^SD1(j?)\.([A-Za-z0-9_-]+)$/);
+  if (!m) throw new Error('That is not a Scrap Duel car code. Codes start with SD1.');
+  let bytes = unb64u(m[2]);
+  if (!m[1]) {
+    if (!window.DecompressionStream) throw new Error('This browser cannot open compressed codes.');
+    bytes = await pipeBytes(bytes, new DecompressionStream('deflate-raw'));
+  }
+  const d = JSON.parse(new TextDecoder().decode(bytes));
+  const ok = e => Array.isArray(e) && MOD[e[0]] && [0, 1, 2, 3].includes(e[1]) && Number.isInteger(e[2]) && Number.isInteger(e[3]);
+  if (!d || !Array.isArray(d.b) || !Array.isArray(d.t) || !d.b.every(ok) || !d.t.every(ok) || d.b.length + d.t.length > 600)
+    throw new Error('That code is damaged. Ask for it again.');
+  if (!d.b.some(e => e[0] === 'cockpit')) throw new Error('That car has no cockpit.');
+  const mk = list => new Map(list.map(([id, rot, x, y]) => [key(x, y), { id, rot, x, y }]));
+  return { base: mk(d.b), top: mk(d.t) };
+}
+/** What you still need to build a design: missing parts, their cost, and whether the bay is big enough. */
+function blueprintNeeds(d) {
+  const need = {};
+  for (const [, e] of [...d.base, ...d.top]) need[e.id] = (need[e.id] || 0) + 1;
+  const miss = Object.entries(need)
+    .map(([id, n]) => [id, n - (G.inv[id] || 0)])
+    .filter(([, n]) => n > 0);
+  const buyable = miss.every(([id]) => G.found.has(id) || id === 'frame' || id === 'girder');
+  const cost = miss.reduce((t, [id, n]) => t + MOD[id].price * n, 0);
+  const out = [...d.base.values()].flatMap(e => footprint(e.id, e.rot, e.x, e.y)).filter(([x, y]) => !G.ws.has(key(x, y))).length;
+  return { miss, buyable, cost, out };
+}
+function applyBlueprint(d) {
+  G.hist.push(designKey());
+  G.redo = [];
+  G.base = new Map(d.base);
+  G.top = new Map(d.top);
+  sfx('legend');
+  refreshUI();
+  drawBP();
+}
+function openBlueprintDialog(mode) {
+  const ov = $('#ovBlueprint'),
+    card = $('#bpCard');
+  const close = () => {
+    ov.hidden = true;
+  };
+  if (mode === 'share') {
+    card.innerHTML = `<h2>Share this car</h2><p class="small">Send this code to a friend. They paste it under Blueprints → Paste a code. It only describes the car; it never gives them your parts.</p>
+      <img class="bp-prev" alt="Your car" src="${designURL({ base: G.base, top: G.top }, 220, G.paint, G.style.livery)}">
+      <textarea id="bpCode" readonly rows="3">Making code…</textarea>
+      <div class="rbtns"><button class="btn" id="bpCopy">Copy code</button><button class="btn ghost" id="bpClose">Close</button></div>`;
+    blueprintCode().then(code => {
+      $('#bpCode').value = code;
+      $('#bpCode').select();
+    });
+    $('#bpCopy').onclick = async () => {
+      const code = $('#bpCode').value;
+      try {
+        await navigator.clipboard.writeText(code);
+        $('#bpCopy').textContent = 'Copied';
+      } catch (e) {
+        $('#bpCode').select();
+        $('#bpCopy').textContent = 'Press Ctrl+C';
+      }
+      sfx('ui');
+    };
+  } else {
+    card.innerHTML = `<h2>Paste a car code</h2><p class="small">Codes start with SD1. You can build the car if you own the parts and your bay is big enough. Missing parts you have found can be bought in one go.</p>
+      <textarea id="bpCode" rows="3" placeholder="SD1.…"></textarea><div id="bpCheck"></div>
+      <div class="rbtns"><button class="btn ghost" id="bpClose">Close</button></div>`;
+    let timer;
+    $('#bpCode').oninput = () => {
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        const box = $('#bpCheck'),
+          code = $('#bpCode').value;
+        if (!code.trim()) return (box.innerHTML = '');
+        let d;
+        try {
+          d = await parseBlueprintCode(code);
+        } catch (e) {
+          box.innerHTML = `<p class="ac-msg">${esc(e.message)}</p>`;
+          return;
+        }
+        const n = blueprintNeeds(d);
+        const missHTML = n.miss.length
+          ? `<p class="small">Missing: ${n.miss.map(([id, k]) => `${k}× ${esc(MOD[id].name)}`).join(', ')}</p>`
+          : '<p class="small" style="color:var(--ok)">You own every part.</p>';
+        box.innerHTML = `<img class="bp-prev" alt="Shared car" src="${designURL(d, 220, G.paint, G.style.livery)}">${missHTML}${n.out ? `<p class="ac-msg">Your bay is too small: ${n.out} cells fall outside. Buy a bay expansion first.</p>` : ''}
+          <div class="rbtns">${!n.miss.length && !n.out ? '<button class="btn" id="bpBuild">Build this car</button>' : ''}${n.miss.length && n.buyable && !n.out ? `<button class="btn" id="bpBuy" ${G.coins < n.cost ? 'disabled' : ''}>Buy missing and build · ${n.cost}</button>` : ''}</div>`;
+        const bb = $('#bpBuild');
+        if (bb)
+          bb.onclick = () => {
+            applyBlueprint(d);
+            toast('Car built from the code. Ctrl+Z brings your old car back.', true);
+            close();
+          };
+        const by = $('#bpBuy');
+        if (by)
+          by.onclick = () => {
+            if (G.coins < n.cost) return;
+            addCoins(-n.cost);
+            for (const [id, k] of n.miss) G.inv[id] = (G.inv[id] || 0) + k;
+            applyBlueprint(d);
+            toast(`Bought ${n.miss.reduce((t, [, k]) => t + k, 0)} parts and built the car.`, true);
+            close();
+          };
+      }, 200);
+    };
+    setTimeout(() => $('#bpCode').focus(), 30);
+  }
+  $('#bpClose').onclick = close;
+  ov.hidden = false;
+}
+$('#bpShare').onclick = () => building() && openBlueprintDialog('share');
+$('#bpImport').onclick = () => building() && openBlueprintDialog('import');
 function loadBlueprint(i) {
   if (!building()) return;
   let d;
@@ -21047,7 +21216,8 @@ function hideOverlays() {
     '#ovResult',
     '#ovReady',
     '#ovStyle',
-    '#ovAccount'
+    '#ovAccount',
+    '#ovBlueprint'
   ])
     $(id).hidden = true;
 }
@@ -22140,7 +22310,7 @@ requestAnimationFrame(loop);
 
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
-  window.__SD = { spinWheel, WHEEL_SEGS, GFX, Account, openAccount, showMenu, canPause, togglePause, CATS,blockedFor,reviewHTML,openGarageReport,closeGarageReport,footprint,occupancy,instCenter,cellCount,shapeBounds,shapeLabel,topAt,canPlaceTop,act,returnTopsOn,planCapacity,planTakeScrap,planSpill,planTick,planActivate,planWeapon,planHurt,simulate,weapons,hurtInst,stepCarHazards,mkObj,setupSpecial,stepSpecial,specialTimeout,finishBattle,formatAwards,MATCH_FORMATS,POWERUPS,SPECIALS,drawBP,drawArena, view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
+  window.__SD = { blueprintCode, parseBlueprintCode, blueprintNeeds, applyBlueprint, spinWheel, WHEEL_SEGS, GFX, Account, openAccount, showMenu, canPause, togglePause, CATS,blockedFor,reviewHTML,openGarageReport,closeGarageReport,footprint,occupancy,instCenter,cellCount,shapeBounds,shapeLabel,topAt,canPlaceTop,act,returnTopsOn,planCapacity,planTakeScrap,planSpill,planTick,planActivate,planWeapon,planHurt,simulate,weapons,hurtInst,stepCarHazards,mkObj,setupSpecial,stepSpecial,specialTimeout,finishBattle,formatAwards,MATCH_FORMATS,POWERUPS,SPECIALS,drawBP,drawArena, view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
 
 })();
 </script>

@@ -9,7 +9,7 @@ export const LOCK_MS = 10 * 60 * 1000;
 export const MAX_DATA = 64 * 1024;
 export const MAX_TOKENS = 6;
 // only these keys travel with an account; everything else stays on the device
-export const SYNC_KEYS = ['sd.prog', 'sd.style', 'sd.bp', 'sd.favorites', 'sd.settings', 'sd.diff', 'sd.paint'];
+export const SYNC_KEYS = ['sd.prog', 'sd.style', 'sd.bp0', 'sd.bp1', 'sd.bp2', 'sd.favorites', 'sd.settings', 'sd.diff', 'sd.paint'];
 
 const enc = new TextEncoder();
 const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');

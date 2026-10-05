@@ -21,7 +21,7 @@ function runtime(options={}){
   }
   for(const m of html.matchAll(/id="([^"]+)"/g))elements.set(m[1],new El(m[1]));
   const doc={hidden:false,querySelector:s=>elements.get(s.slice(1))||(elements.set(s.slice(1),new El(s.slice(1))),elements.get(s.slice(1))),querySelectorAll:()=>[],createElement:()=>new El(),head:new El('head'),body:new El('body'),addEventListener(){},fonts:null,documentElement:{clientWidth:1440,clientHeight:900,style:{setProperty(){}}}};
-  const context={console,document:doc,performance:{now:()=>clock},crypto:crypto.webcrypto,Math,Map,Set,WeakMap,JSON,Promise,Uint8Array,Uint8ClampedArray,Float32Array,Image:class{},devicePixelRatio:1,innerWidth:1440,innerHeight:900,
+  const context={console,document:doc,performance:{now:()=>clock},crypto:crypto.webcrypto,atob,btoa,TextEncoder,TextDecoder,Math,Map,Set,WeakMap,JSON,Promise,Uint8Array,Uint8ClampedArray,Float32Array,Image:class{},devicePixelRatio:1,innerWidth:1440,innerHeight:900,
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
     matchMedia:()=>({matches:false,addEventListener(){}}),
     addEventListener:(k,f)=>{(events.get(k)||events.set(k,[]).get(k)).push(f);},
@@ -362,6 +362,17 @@ test('auto-build in the sandbox makes an armed, sensibly sized car',()=>{
  const rr=runtime(),aa=rr.api;aa.startMatch('sandbox');aa.openBuild();aa.autoBuild();
  const tops=[...aa.G.top.values()];
  assert(tops.some(e=>aa.MOD[e.id].wpn),'no weapons');assert(aa.G.base.size<120,'base of '+aa.G.base.size+' parts');assert.equal(aa.blockedList().length,0);assert(aa.designConnected(aa.G.base));
+});
+
+test('car codes round-trip and report missing parts and bay size',()=>{
+ process.on('unhandledRejection',e=>{console.error('FAIL async: '+e.message);process.exit(1);});
+ const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();
+ const json=JSON.stringify({b:[...aa.G.base.values()].map(e=>[e.id,e.rot,e.x,e.y]),t:[...aa.G.top.values()].map(e=>[e.id,e.rot,e.x,e.y])});
+ const code='SD1j.'+Buffer.from(json).toString('base64url');
+ return aa.parseBlueprintCode(code).then(d=>{
+  assert.equal(d.base.size,aa.G.base.size);assert.equal(d.top.size,aa.G.top.size);
+  const n=aa.blueprintNeeds(d);assert.equal(n.miss.length,0);assert.equal(n.out,0);
+ });
 });
 
 console.log(`\n${passed} regression tests passed.`);
