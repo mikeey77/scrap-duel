@@ -3603,6 +3603,247 @@ select {
   font-size: 13px;
   margin-top: 3px;
 }
+/* ---------- gambling ---------- */
+#ovCrate {
+  background: radial-gradient(900px 600px at 50% 45%, rgba(20, 50, 90, 0.85), rgba(3, 6, 14, 0.97)) !important;
+}
+#ovCrate.jackpot {
+  background: radial-gradient(900px 600px at 50% 45%, rgba(120, 85, 10, 0.9), rgba(10, 6, 0, 0.97)) !important;
+}
+.gamble {
+  position: relative;
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
+.gfx {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 3;
+}
+.g-title {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(28px, 4vw, 44px);
+  color: var(--fg);
+  text-shadow: 0 0 24px rgba(91, 231, 255, 0.5);
+}
+#ovCrate.jackpot .g-title {
+  color: #ffd257;
+  text-shadow: 0 0 30px rgba(255, 210, 87, 0.9);
+}
+.g-crate {
+  --glow: 0.2;
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: grid;
+  place-items: center;
+  margin: 20px 0;
+}
+.g-crate img {
+  width: 160px;
+  height: 160px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.6));
+}
+.g-crate .g-glow {
+  position: absolute;
+  inset: -40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(91, 231, 255, var(--glow)), transparent 65%);
+}
+.reel.landed::after {
+  background: var(--rc) !important;
+  box-shadow: 0 0 22px var(--rc) !important;
+  width: 4px !important;
+}
+.reel.landed {
+  border-color: var(--rc) !important;
+  box-shadow: inset 0 0 30px #000, 0 0 40px color-mix(in srgb, var(--rc) 45%, transparent);
+}
+.strip .cell.jack {
+  background: radial-gradient(circle, #fff2b0, #ffb423 55%, #8a5a00) !important;
+  border-color: #ffd257 !important;
+  display: grid;
+  place-items: center;
+}
+.strip .cell.jack span {
+  font-size: 54px;
+  color: #fff;
+  text-shadow: 0 0 18px #fff3c0;
+}
+.g-card {
+  display: grid !important;
+  grid-template-columns: 96px 1fr;
+  gap: 16px;
+  align-items: start;
+  max-width: 560px !important;
+  border-top: 3px solid var(--rc) !important;
+  box-shadow: 0 0 60px -14px var(--rc);
+  animation: pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.g-card .g-icon {
+  width: 96px;
+  height: 96px;
+  filter: drop-shadow(0 0 16px var(--rc));
+}
+.g-card h2 {
+  margin: 4px 0;
+}
+/* the wheel */
+.wheel {
+  --speed: 1.2;
+  --rc: #ffb423;
+  position: relative;
+  width: min(440px, 82vw);
+  aspect-ratio: 1;
+  margin: 18px 0 8px;
+}
+.wheel img {
+  position: absolute;
+  inset: 4%;
+  width: 92%;
+  height: 92%;
+  will-change: transform;
+  filter: drop-shadow(0 0 30px rgba(91, 231, 255, 0.25));
+}
+.w-lights {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 6px solid #13213a;
+  box-shadow: 0 0 0 2px var(--holo-dim), 0 0 40px rgba(91, 231, 255, 0.2);
+}
+.w-lights i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px;
+  border-radius: 50%;
+  background: #ffd257;
+  transform: rotate(calc(var(--i) * 360deg / 28)) translateY(calc(min(440px, 82vw) / -2 + 3px));
+  animation: wlight calc(var(--speed) * 1s) linear infinite;
+  animation-delay: calc(var(--i) * var(--speed) * -0.0357s);
+  opacity: 0.25;
+}
+.wheel.landed .w-lights i {
+  animation: wland 0.35s steps(2) infinite;
+  background: var(--rc);
+}
+@keyframes wlight {
+  0%, 70% { opacity: 0.2; box-shadow: none; }
+  80% { opacity: 1; box-shadow: 0 0 12px #ffd257; }
+  100% { opacity: 0.2; }
+}
+@keyframes wland {
+  50% { opacity: 1; box-shadow: 0 0 14px var(--rc); }
+}
+.w-pointer {
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  width: 30px;
+  height: 42px;
+  margin-left: -15px;
+  background: linear-gradient(180deg, #fff, #ffb423);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+  transform-origin: 50% 10%;
+  z-index: 2;
+}
+.w-pointer.flap {
+  animation: flap 0.12s ease-out;
+}
+@keyframes flap {
+  40% { transform: rotate(-16deg); }
+}
+.w-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--f-display);
+  font-weight: 700;
+  color: #ffb423;
+  font-size: clamp(11px, 2.6vw, 16px);
+  pointer-events: none;
+}
+.wheel.landed img {
+  filter: drop-shadow(0 0 40px var(--rc));
+}
+.wheel {
+  transition: width 0.6s cubic-bezier(0.3, 1.3, 0.5, 1), margin 0.6s;
+}
+.wheel.landed {
+  width: min(300px, 62vw);
+  margin: 6px 0 4px;
+}
+.wheel.landed .w-lights i {
+  transform: rotate(calc(var(--i) * 360deg / 28)) translateY(calc(min(300px, 62vw) / -2 + 3px));
+}
+/* shop cards */
+.gamble-shop {
+  display: grid;
+  gap: 10px;
+}
+.gs {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(255, 180, 35, 0.45);
+  background: linear-gradient(135deg, rgba(120, 85, 10, 0.35), rgba(17, 28, 51, 0.9));
+  clip-path: var(--chamfer-s);
+}
+.gs.wheel-card {
+  border-color: rgba(91, 231, 255, 0.5);
+  background: linear-gradient(135deg, rgba(30, 70, 120, 0.45), rgba(17, 28, 51, 0.9));
+}
+.gs img {
+  width: 64px;
+  height: 64px;
+}
+.gs b {
+  display: block;
+  font-family: var(--f-display);
+  font-size: 17px;
+}
+.gs .small {
+  display: block;
+  margin: 2px 0 6px;
+}
+.gs .odds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+.gs .jp {
+  color: #ffd257;
+  text-shadow: 0 0 8px rgba(255, 210, 87, 0.7);
+}
+.gs .btn {
+  padding: 8px 14px;
+  font-size: 14px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .w-lights i { animation: none; opacity: 0.6; }
+}
 </style>
   </head>
   <body>
@@ -7335,7 +7576,8 @@ const ACHIEVEMENTS = {
   collector: { name: 'Collector', desc: 'Find 50 different modules in one match.' },
   night: { name: 'Night Owl', desc: 'Win a Night Shift round.' },
   sumo: { name: 'Sumo Champ', desc: 'Win a Sumo Ring round.' },
-  powered: { name: 'Juiced', desc: 'Grab three power-ups in one round.' }
+  powered: { name: 'Juiced', desc: 'Grab three power-ups in one round.' },
+  jackpot: { name: 'Jackpot', desc: 'Hit the 1 in 100 jackpot in a Scrap Crate.' }
 };
 const XP = { round: 25, roundWin: 25, specialWin: 15, match: 50, matchWin: 100 };
 const xpForLevel = lvl => 100 + 50 * (lvl - 1); // XP needed to go from lvl to lvl + 1
@@ -10824,7 +11066,7 @@ function renderBin() {
     })
   );
 }
-const CRATE_COST = 80;
+const CRATE_COST = 60;
 function shapePrice(n) {
   return Math.max(30, n * 9);
 }
@@ -10861,9 +11103,13 @@ function renderShop() {
     (a, b) => a.rar - b.rar || a.price - b.price
   );
   $('#leftBody').innerHTML = `
-   <div class="crate"><img alt="" src="${crateURL()}"><div><div style="font-weight:700;font-size:16px">Mystery Crate</div><div class="small">Spin for one random module. Can unlock parts you haven’t found.</div>
-     <div class="odds">${RAR.map((r, i) => `<span style="color:${r.col}">${r.name[0]} ${Math.round(r.w)}%</span>`).join('')}</div>
-     <button class="btn gold" id="bCrate" style="margin-top:8px;padding:8px 12px;font-size:14px" ${G.coins < CRATE_COST ? 'disabled' : ''}>Open · ${CRATE_COST}</button></div></div>
+   <div class="gamble-shop">
+     <div class="gs crate-card"><img alt="" src="${crateURL()}"><div><b>Scrap Crate</b><span class="small">Mostly common parts. One in a hundred hits the golden jackpot.</span>
+       <div class="odds">${CRATE_W.map((w, i) => w ? `<span style="color:${RAR[i].col}">${RAR[i].name[0]} ${w}%</span>` : '').join('')}<span class="jp">★ 1% jackpot</span></div>
+       <button class="btn" id="bCrate" ${G.coins < CRATE_COST ? 'disabled' : ''}>Open · ${CRATE_COST}</button></div></div>
+     <div class="gs wheel-card"><img alt="" src="${wheelURL()}"><div><b>Prize Wheel</b><span class="small">Every slice is Rare or better, with a thin Legendary slice and a tiny MEGA.</span>
+       <button class="btn" id="bWheel" ${G.coins < WHEEL_COST ? 'disabled' : ''}>Spin · ${WHEEL_COST}</button></div></div>
+   </div>
    <div class="shopsec"><span class="label">Bay expansions</span>${
      shapes.length
        ? shapes
@@ -10878,6 +11124,7 @@ function renderShop() {
   bindCatalog('shop',renderShop);
   $('#shopCategory').onchange=e=>{G.binCat=e.target.value;renderShop();};
   $('#bCrate').addEventListener('click', openCrate);
+  $('#bWheel').addEventListener('click', spinWheel);
   $$('#leftBody [data-shape]').forEach(b =>
     b.addEventListener('click', () => {
       const s = SHAPES.find(x => x.id === b.dataset.shape),
@@ -11380,44 +11627,455 @@ function takeOption(o) {
 }
 
 /* =================== MYSTERY CRATE =================== */
+/* =================== GAMBLING: SCRAP CRATE + PRIZE WHEEL ===================
+   Two ways to gamble coins in the shop.
+   - Scrap Crate (cheap): mostly common parts, but 1 in 100 opens the golden JACKPOT.
+   - Prize Wheel (expensive): every slice is rare or better, with a thin Legendary
+     slice and a tiny MEGA slice.
+   The prize is decided and added to your inventory before the show starts, so
+   skipping or closing can never lose or duplicate it. The show itself is long on
+   purpose: shake, lid pop, a slowing reel with ticks and a near-miss, or a spinning
+   wheel with chasing lights and a flapping pointer. */
 let crateBusy = false;
+const WHEEL_COST = 180,
+  CRATE_W = [62, 28, 8.5, 1.5, 0],
+  JACKPOT_P = 0.01,
+  WHEEL_SEGS = [
+    { kind: 'mod', rar: 2, n: 2, w: 3 },
+    { kind: 'mod', rar: 3, n: 1, w: 2 },
+    { kind: 'coins', n: 250, w: 2 },
+    { kind: 'mod', rar: 2, n: 2, w: 3 },
+    { kind: 'mod', rar: 3, n: 1, w: 2 },
+    { kind: 'mod', rar: 4, n: 1, w: 1 },
+    { kind: 'mod', rar: 2, n: 2, w: 3 },
+    { kind: 'coins', n: 400, w: 1 },
+    { kind: 'mod', rar: 3, n: 1, w: 2 },
+    { kind: 'mega', w: 0.6 },
+    { kind: 'mod', rar: 2, n: 2, w: 3 },
+    { kind: 'mod', rar: 3, n: 1, w: 2 }
+  ];
+const segLabel = g => (g.kind === 'coins' ? `${g.n}` : g.kind === 'mega' ? 'MEGA' : g.rar === 4 ? 'LEGEND' : RAR[g.rar].name + (g.n > 1 ? ' ×2' : ''));
+const segCol = g => (g.kind === 'coins' ? '#ffd257' : g.kind === 'mega' ? '#ff5c7a' : RAR[g.rar].col);
+/** Pick a module of a rarity, leaning towards ones you have not found yet. */
+function lootOf(rar) {
+  const all = MODS.filter(m => m.id !== 'cockpit');
+  const fresh = all.filter(m => m.rar === rar && !G.found.has(m.id));
+  if (fresh.length && Math.random() < 0.6) return pick(fresh);
+  return modOfRar(all, rar);
+}
+function grantAch(id) {
+  if (PROG.ach.includes(id)) return false;
+  PROG.ach.push(id);
+  saveProg();
+  return true;
+}
+
+/* ---------- shared particle show on a full-screen canvas ---------- */
+const GFX = {
+  cv: null,
+  parts: [],
+  run: false,
+  start(cv) {
+    this.cv = cv;
+    this.parts = [];
+    const d = dprOf(),
+      r = cv.getBoundingClientRect();
+    cv.width = Math.round(r.width * d);
+    cv.height = Math.round(r.height * d);
+    if (this.run) return;
+    this.run = true;
+    let last = performance.now();
+    const frame = t => {
+      if (!this.cv || !this.cv.isConnected) return (this.run = false);
+      const dt = Math.min(0.05, (t - last) / 1000),
+        c = this.cv.getContext('2d'),
+        d2 = dprOf();
+      last = t;
+      c.setTransform(d2, 0, 0, d2, 0, 0);
+      c.clearRect(0, 0, this.cv.width, this.cv.height);
+      for (let i = this.parts.length - 1; i >= 0; i--) {
+        const p = this.parts[i];
+        p.t += dt;
+        if (p.t > p.life) {
+          this.parts.splice(i, 1);
+          continue;
+        }
+        p.vy += (p.g || 0) * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.a = (p.a || 0) + (p.va || 0) * dt;
+        const k = 1 - p.t / p.life;
+        c.save();
+        c.globalAlpha = Math.min(1, k * 1.5);
+        c.translate(p.x, p.y);
+        c.rotate(p.a);
+        if (p.k === 'ray') {
+          c.globalCompositeOperation = 'lighter';
+          const g = c.createLinearGradient(0, 0, p.len, 0);
+          g.addColorStop(0, p.col);
+          g.addColorStop(1, 'transparent');
+          c.fillStyle = g;
+          c.beginPath();
+          c.moveTo(0, 0);
+          c.lineTo(p.len, -p.wd);
+          c.lineTo(p.len, p.wd);
+          c.closePath();
+          c.fill();
+        } else if (p.k === 'coin') {
+          c.scale(Math.cos(p.t * 9 + p.ph), 1);
+          circ(c, 0, 0, p.r, '#ffd257', '#a87908', 2);
+          c.fillStyle = '#a87908';
+          c.fillRect(-1, -p.r * 0.5, 2, p.r);
+        } else if (p.k === 'conf') {
+          c.fillStyle = p.col;
+          c.fillRect(-p.r, -p.r * 0.4, p.r * 2, p.r * 0.8);
+        } else if (p.k === 'ring') {
+          c.strokeStyle = p.col;
+          c.lineWidth = 4 * k;
+          c.beginPath();
+          c.arc(0, 0, p.r + (1 - k) * p.grow, 0, 7);
+          c.stroke();
+        } else {
+          c.globalCompositeOperation = 'lighter';
+          circ(c, 0, 0, p.r * (0.5 + k * 0.5), p.col);
+        }
+        c.restore();
+      }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  },
+  burst(x, y, col, n = 40, power = 420) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2,
+        sp = power * (0.3 + Math.random());
+      this.parts.push({ k: 'spark', x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 500, life: 0.7 + Math.random() * 0.8, t: 0, r: 2 + Math.random() * 3, col });
+    }
+    this.parts.push({ k: 'ring', x, y, vx: 0, vy: 0, life: 0.7, t: 0, r: 30, grow: 260, col });
+  },
+  rays(x, y, col, n = 14, life = 2.4) {
+    for (let i = 0; i < n; i++) this.parts.push({ k: 'ray', x, y, vx: 0, vy: 0, a: (i / n) * Math.PI * 2, va: 0.6, life, t: 0, len: 420 + Math.random() * 260, wd: 18 + Math.random() * 16, col });
+  },
+  confetti(x, y, n = 80) {
+    const cols = ['#5be7ff', '#ffb423', '#ff5c7a', '#3fe0a0', '#c58bff', '#ffffff'];
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2,
+        sp = 380 + Math.random() * 420;
+      this.parts.push({ k: 'conf', x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 620, a: Math.random() * 6, va: (Math.random() - 0.5) * 16, life: 2 + Math.random(), t: 0, r: 4 + Math.random() * 4, col: pick(cols) });
+    }
+  },
+  coins(w, n = 90) {
+    for (let i = 0; i < n; i++)
+      this.parts.push({ k: 'coin', x: Math.random() * w, y: -20 - Math.random() * 500, vx: (Math.random() - 0.5) * 60, vy: 120 + Math.random() * 160, g: 380, life: 3.2, t: 0, r: 7 + Math.random() * 6, ph: Math.random() * 6 });
+  }
+};
+
+/** The reveal card both shows end in. */
+function gambleResult(prize, again) {
+  const m = prize.mod && MOD[prize.mod],
+    col = prize.jackpot ? '#ffd257' : m ? RAR[m.rar].col : '#ffd257';
+  const body = prize.jackpot
+    ? `<span class="tag" style="color:${col}">JACKPOT · 1 in 100</span><h2>${esc(m.name)} + ${prize.coins} coins</h2><p>${esc(m.desc)}</p><p class="mount-gift">Unlocked the Jackpot Gold livery in Garage Style.</p>`
+    : m
+      ? `<span class="tag" style="color:${col}">${RAR[m.rar].name}${prize.isNew ? ' · NEW MODULE' : ''}</span><h2>${esc(m.name)} ×${prize.n}</h2><p>${esc(m.desc)}</p><div class="opt-meta">${socketBadge(m)}${statChips(m)}</div>${prize.extra ? `<p class="mount-gift">+ ${esc(MOD[prize.extra].name)} (Epic) from the MEGA slice.</p>` : ''}${prize.support ? `<p class="mount-gift">+${prize.support} support block${prize.support > 1 ? 's' : ''} included so you can mount it.</p>` : ''}`
+      : `<span class="tag" style="color:${col}">Coin pot</span><h2>${prize.coins} coins</h2><p>Straight into your pocket.</p>`;
+  $('#reelres').innerHTML = `<div class="card g-card" style="--rc:${col}">${m ? `<img class="g-icon" alt="" src="${iconURL(m.id, 128)}">` : ''}<div>${body}<div class="dfoot"><button class="btn ghost" id="cAgain" ${G.coins < again.cost ? 'disabled' : ''}>${again.label} · ${again.cost}</button><button class="btn" id="cDone">Back to the garage</button></div></div></div>`;
+  $('#cDone').onclick = () => {
+    $('#ovCrate').hidden = true;
+    crateBusy = false;
+    if (m) G.sel = m.id;
+    refreshUI();
+  };
+  $('#cAgain').onclick = () => {
+    crateBusy = false;
+    again.fn();
+  };
+}
+
+/* ---------- Scrap Crate ---------- */
 function openCrate() {
   if (!building() || crateBusy || G.coins < CRATE_COST) return;
   crateBusy = true;
   addCoins(-CRATE_COST);
-  const all = MODS.filter(m => m.id !== 'cockpit'), res = modOfRar(all,rollRar(.15));
-  const n = res.rar <= 1 ? 2 : 1, isNew = !G.found.has(res.id);
-  const support=draftSupportCount(res.id,n);
-  gainWithSupport(res.id,n); // Commit once; skipping or closing cannot lose or duplicate the reward.
-  const stop = 16, cells = Array.from({length:22}, (_,i) => i === stop ? res : pick(all));
+  const all = MODS.filter(m => m.id !== 'cockpit');
+  const jackpot = Math.random() < JACKPOT_P || G.forceJackpot;
+  G.forceJackpot = false;
+  let rar = 0,
+    x = Math.random() * CRATE_W.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < 5; i++) if ((x -= CRATE_W[i]) <= 0) {
+      rar = i;
+      break;
+    }
+  const res = jackpot ? lootOf(4) : modOfRar(all, rar);
+  const n = jackpot ? 1 : res.rar <= 1 ? 2 : 1,
+    isNew = !G.found.has(res.id),
+    support = draftSupportCount(res.id, n);
+  gainWithSupport(res.id, n);
+  const prize = { mod: res.id, n, isNew, support, jackpot, coins: jackpot ? 150 : 0 };
+  if (jackpot) {
+    addCoins(150);
+    grantAch('jackpot');
+  }
+  // the strip: a near miss right before the stop when the prize is ordinary
+  const stop = 34,
+    cells = Array.from({ length: 42 }, (_, i) => (i === stop ? res : pick(all)));
+  if (!jackpot && res.rar < 3) cells[stop + 1] = modOfRar(all, 4);
+  const cellHTML = (m, i) =>
+    i === stop && jackpot
+      ? `<div class="cell jack"><span>★</span></div>`
+      : `<div class="cell" style="--rc:${RAR[m.rar].col}"><img alt="" decoding="async" src="${iconURL(m.id)}"></div>`;
   const ov = $('#ovCrate');
-  ov.innerHTML = `<div class="reelwrap"><span class="label">Mystery Crate</span><div class="reel" id="reel"><div class="strip" id="strip">${cells.map(m => `<div class="cell" style="--rc:${RAR[m.rar].col}"><img alt="" decoding="async" src="${iconURL(m.id)}"></div>`).join('')}</div></div><button class="btn ghost" id="cSkip">Skip animation</button><div class="reelres" id="reelres" aria-live="polite"></div></div>`;
+  ov.innerHTML = `<div class="gamble"><canvas class="gfx" id="gFx"></canvas><div class="reelwrap"><span class="g-title">Scrap Crate</span>
+    <div class="g-crate" id="gCrate"><img alt="" src="${crateURL()}"><i class="g-glow"></i></div>
+    <div class="reel" id="reel" hidden><div class="strip" id="strip">${cells.map(cellHTML).join('')}</div></div>
+    <button class="btn ghost" id="cSkip">Skip</button><div class="reelres" id="reelres" aria-live="polite"></div></div></div>`;
   ov.hidden = false;
-  let finished = false, timer;
+  GFX.start($('#gFx'));
+  const again = { label: 'Open another', cost: CRATE_COST, fn: openCrate };
+  let finished = false,
+    raf = 0;
+  const reelW = () => $('#reel').clientWidth,
+    target = () => stop * 112 + 52 - reelW() / 2;
   const finish = () => {
     if (finished) return;
-    finished = true; clearTimeout(timer);
-    const strip = $('#strip'), col = RAR[res.rar].col;
-    strip.style.setProperty('transition','none','important');
-    strip.style.transform = `translate3d(${-(stop*112+52-$('#reel').clientWidth/2)}px,0,0)`;
+    finished = true;
+    cancelAnimationFrame(raf);
+    $('#gCrate').hidden = true;
+    $('#reel').hidden = false;
+    $('#strip').style.transform = `translate3d(${-target()}px,0,0)`;
     $('#cSkip').hidden = true;
-    $('#reelres').innerHTML = `<div class="card" style="border-top:4px solid ${col};max-width:520px"><span class="tag" style="color:${col}">${RAR[res.rar].name}${isNew ? ' · NEW MODULE' : ''}</span><h2>${esc(res.name)} ×${n}</h2><p>${esc(res.desc)}</p><p class="small">${footprintHTML(res)} ${shapeLabel(res)} · ${res.mass} t · ${esc(mountLine(res))}</p>${support?`<p class="mount-gift">+${support} ${MOD[res.mnt>1?'girder':'frame'].name} support blocks included.</p>`:''}<div class="dfoot"><button class="btn ghost" id="cAgain" ${G.coins < CRATE_COST ? 'disabled' : ''}>Open another · ${CRATE_COST}</button><button class="btn" id="cDone">Back to the garage</button></div></div>`;
-    sfx(res.rar >= 3 ? 'legend' : 'coin');
-    $('#cDone').onclick = () => { ov.hidden=true; crateBusy=false; G.sel=res.id; refreshUI(); };
-    $('#cAgain').onclick = () => { crateBusy=false; openCrate(); };
+    const r = $('#reel').getBoundingClientRect(),
+      cx = r.left + r.width / 2,
+      cy = r.top + r.height / 2,
+      col = jackpot ? '#ffd257' : RAR[res.rar].col;
+    $('#reel').classList.add('landed');
+    $('#reel').style.setProperty('--rc', col);
+    if (jackpot) {
+      ov.classList.add('jackpot');
+      GFX.rays(cx, cy, 'rgba(255,210,87,.55)', 18, 3);
+      GFX.burst(cx, cy, '#ffd257', 90, 620);
+      GFX.coins(innerWidth, 120);
+      sfx('jackpot');
+    } else {
+      if (res.rar >= 2) GFX.rays(cx, cy, col + '88', 10 + res.rar * 3, 1.6 + res.rar * 0.4);
+      GFX.burst(cx, cy, col, 20 + res.rar * 22, 300 + res.rar * 90);
+      if (res.rar >= 3) GFX.confetti(cx, cy, 90);
+      sfx(res.rar >= 3 ? 'legend' : 'reveal');
+    }
+    gambleResult(prize, again);
   };
   $('#cSkip').onclick = finish;
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+  if (SETTINGS.crateSpin === false) return finish();
+  // 1) the crate shakes harder and harder, 2) the lid pops, 3) the reel runs
+  const crate = $('#gCrate'),
+    t0 = performance.now(),
+    SHAKE = 1700,
+    SPIN = 4600;
+  let lastCell = -1,
+    popped = false;
+  sfx('drumroll');
+  const frame = now => {
+    if (finished || ov.isConnected === false || ov.hidden) return;
+    const t = now - t0;
+    if (t < SHAKE) {
+      const k = t / SHAKE,
+        a = 2 + k * k * 14;
+      crate.style.transform = `translate(${(Math.random() - 0.5) * a}px,${(Math.random() - 0.5) * a * 0.6}px) rotate(${(Math.random() - 0.5) * a * 0.4}deg) scale(${1 + k * 0.08})`;
+      crate.style.setProperty('--glow', (0.2 + k * 0.8).toFixed(2));
+      if (Math.random() < k * 0.25) {
+        const r = crate.getBoundingClientRect();
+        GFX.burst(r.left + r.width * Math.random(), r.top + r.height * 0.3, jackpot && k > 0.6 ? '#ffd257' : '#5be7ff', 3, 180);
+      }
+    } else {
+      if (!popped) {
+        popped = true;
+        const r = crate.getBoundingClientRect();
+        GFX.burst(r.left + r.width / 2, r.top + r.height / 2, '#ffffff', 50, 520);
+        sfx('boom');
+        crate.hidden = true;
+        $('#reel').hidden = false;
+      }
+      const k = Math.min(1, (t - SHAKE) / SPIN),
+        e = 1 - Math.pow(1 - k, 4.2),
+        // a long slow tail: the next cell (often a teaser) creeps up to the needle and stops just short
+        x = target() * e;
+      $('#strip').style.transform = `translate3d(${-x}px,0,0)`;
+      const cur = Math.floor((x + reelW() / 2) / 112);
+      if (cur !== lastCell) {
+        lastCell = cur;
+        sfx('tick');
+      }
+      if (k >= 1) return finish();
+    }
+    raf = requestAnimationFrame(frame);
+  };
+  raf = requestAnimationFrame(frame);
+}
+
+/* ---------- Prize Wheel ---------- */
+let _wheelImg = null;
+function wheelURL(size = 520) {
+  if (_wheelImg) return _wheelImg;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  const c = cv.getContext('2d'),
+    R = size / 2,
+    tot = WHEEL_SEGS.reduce((a, g) => a + g.w, 0);
+  c.translate(R, R);
+  let a0 = -Math.PI / 2;
+  WHEEL_SEGS.forEach((g, i) => {
+    const da = (g.w / tot) * Math.PI * 2,
+      col = segCol(g);
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.arc(0, 0, R - 14, a0, a0 + da);
+    c.closePath();
+    const gr = c.createRadialGradient(0, 0, R * 0.15, 0, 0, R);
+    gr.addColorStop(0, i % 2 ? '#0d1a30' : '#132442');
+    gr.addColorStop(1, mix(col, -0.55));
+    c.fillStyle = gr;
+    c.fill();
+    c.strokeStyle = 'rgba(91,231,255,.35)';
+    c.lineWidth = 2;
+    c.stroke();
+    c.save();
+    c.rotate(a0 + da / 2);
+    c.fillStyle = col;
+    c.font = `700 ${g.w < 1 ? 15 : 19}px "Chakra Petch", sans-serif`;
+    c.textAlign = 'right';
+    c.textBaseline = 'middle';
+    c.shadowColor = col;
+    c.shadowBlur = 10;
+    c.fillText(segLabel(g), R - 34, 0);
+    c.restore();
+    a0 += da;
+  });
+  c.beginPath();
+  c.arc(0, 0, R - 8, 0, 7);
+  c.lineWidth = 10;
+  c.strokeStyle = '#1e3052';
+  c.stroke();
+  c.beginPath();
+  c.arc(0, 0, R * 0.16, 0, 7);
+  c.fillStyle = '#0a1020';
+  c.fill();
+  c.lineWidth = 4;
+  c.strokeStyle = '#ffb423';
+  c.stroke();
+  return (_wheelImg = cv.toDataURL());
+}
+function spinWheel() {
+  if (!building() || crateBusy || G.coins < WHEEL_COST) return;
+  crateBusy = true;
+  addCoins(-WHEEL_COST);
+  const tot = WHEEL_SEGS.reduce((a, g) => a + g.w, 0);
+  let x = Math.random() * tot,
+    idx = 0;
+  for (; idx < WHEEL_SEGS.length; idx++) if ((x -= WHEEL_SEGS[idx].w) <= 0) break;
+  idx = Math.min(idx, WHEEL_SEGS.length - 1);
+  if (G.forceWheel != null) {
+    idx = G.forceWheel;
+    G.forceWheel = null;
+  }
+  const g = WHEEL_SEGS[idx];
+  const prize = { n: 1, coins: 0 };
+  if (g.kind === 'coins') {
+    prize.coins = g.n;
+    addCoins(g.n);
+  } else {
+    const m = lootOf(g.kind === 'mega' ? 4 : g.rar);
+    prize.mod = m.id;
+    prize.n = g.kind === 'mega' ? 1 : g.n;
+    prize.isNew = !G.found.has(m.id);
+    prize.support = draftSupportCount(m.id, prize.n);
+    gainWithSupport(m.id, prize.n);
+    if (g.kind === 'mega') {
+      const e = lootOf(3);
+      prize.extra = e.id;
+      gainWithSupport(e.id, 1);
+    }
+  }
+  // where on the slice the pointer lands: never right on an edge
+  let start = 0;
+  for (let i = 0; i < idx; i++) start += WHEEL_SEGS[i].w;
+  const segMid = ((start + WHEEL_SEGS[idx].w * (0.2 + Math.random() * 0.6)) / tot) * 360,
+    finalDeg = 360 * 7 - segMid;
+  const ov = $('#ovCrate');
+  ov.innerHTML = `<div class="gamble wheel-stage"><canvas class="gfx" id="gFx"></canvas><div class="reelwrap"><span class="g-title">Prize Wheel</span>
+    <div class="wheel" id="wheel"><div class="w-lights" id="wLights">${Array.from({ length: 28 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</div><img id="wImg" alt="" src="${wheelURL()}"><div class="w-pointer" id="wPtr"></div><div class="w-hub">SPIN</div></div>
+    <button class="btn ghost" id="cSkip">Skip</button><div class="reelres" id="reelres" aria-live="polite"></div></div></div>`;
+  ov.hidden = false;
+  GFX.start($('#gFx'));
+  const again = { label: 'Spin again', cost: WHEEL_COST, fn: spinWheel };
+  const img = $('#wImg'),
+    ptr = $('#wPtr'),
+    wheel = $('#wheel');
+  let finished = false,
+    raf = 0;
+  const bounds = [];
+  {
+    let acc = 0;
+    for (const s of WHEEL_SEGS) bounds.push((acc += s.w) / tot * 360);
+  }
+  const finish = () => {
     if (finished) return;
-    const strip = $('#strip');
-    if(SETTINGS.crateSpin===false)return finish();
-    strip.style.setProperty('transition','none','important');
-    strip.style.transform='translate3d(0,0,0)';
-    void strip.offsetWidth;
-    strip.style.setProperty('transition','transform 2.2s cubic-bezier(.08,.65,.15,1)','important');
-    strip.style.transform = `translate3d(${-(stop*112+52-$('#reel').clientWidth/2)}px,0,0)`;
-    timer = setTimeout(finish,2250);
-  }));
+    finished = true;
+    cancelAnimationFrame(raf);
+    img.style.transform = `rotate(${finalDeg}deg)`;
+    wheel.classList.remove('spinning');
+    wheel.classList.add('landed');
+    wheel.style.setProperty('--rc', segCol(g));
+    $('#cSkip').hidden = true;
+    const r = wheel.getBoundingClientRect(),
+      cx = r.left + r.width / 2,
+      cy = r.top + r.height * 0.12;
+    const big = g.kind === 'mega' || g.rar === 4 || (g.kind === 'coins' && g.n >= 400);
+    GFX.burst(cx, cy, segCol(g), big ? 120 : 60, big ? 640 : 420);
+    if (big) {
+      GFX.rays(r.left + r.width / 2, r.top + r.height / 2, segCol(g) + '77', 20, 2.6);
+      GFX.confetti(cx, cy, 120);
+      if (g.kind === 'coins') GFX.coins(innerWidth, 90);
+      sfx('jackpot');
+    } else sfx(g.kind === 'coins' ? 'coin' : g.rar >= 3 ? 'legend' : 'reveal');
+    gambleResult(prize, again);
+  };
+  $('#cSkip').onclick = finish;
+  if (SETTINGS.crateSpin === false) return finish();
+  // a short wind-up backwards, then a long spin that slows to a crawl
+  const t0 = performance.now(),
+    WIND = 450,
+    SPIN = 6800;
+  let lastSeg = -1;
+  wheel.classList.add('spinning');
+  sfx('drumroll');
+  const frame = now => {
+    if (finished || ov.isConnected === false || ov.hidden) return;
+    const t = now - t0;
+    let deg;
+    if (t < WIND) deg = -14 * Math.sin((t / WIND) * Math.PI * 0.5);
+    else {
+      const k = Math.min(1, (t - WIND) / SPIN),
+        e = 1 - Math.pow(1 - k, 3.6);
+      deg = -14 + (finalDeg + 14) * e;
+      wheel.style.setProperty('--speed', (0.15 + (1 - e) * 1.6).toFixed(2));
+      if (k >= 1) return finish();
+    }
+    img.style.transform = `rotate(${deg}deg)`;
+    // which slice is under the pointer (pointer at the top)
+    const at = (((-deg % 360) + 360) % 360),
+      seg = bounds.findIndex(b => at < b);
+    if (seg !== lastSeg) {
+      lastSeg = seg;
+      if (t > WIND) {
+        sfx('tick');
+        ptr.classList.remove('flap');
+        void ptr.offsetWidth;
+        ptr.classList.add('flap');
+      }
+    }
+    raf = requestAnimationFrame(frame);
+  };
+  raf = requestAnimationFrame(frame);
 }
 /* =================== CODEX =================== */
 let codexTab = 'mods',
@@ -18686,6 +19344,18 @@ const SFX = {
     [523, 659, 784, 1047].forEach((f, i) => tone('square', f, f, i === 3 ? 0.5 : 0.14, 0.1 * v, i * 0.12));
   },
   tick: v => tone('square', 1800, 1500, 0.025, 0.035 * v),
+  drumroll: v => {
+    for (let i = 0; i < 14; i++) noise(0.06, 0.05 * v * (0.5 + i / 14), 300 + i * 30, 150, 1, i * 0.11);
+  },
+  reveal: v => {
+    tone('triangle', 520, 1040, 0.22, 0.14 * v);
+    tone('sine', 780, 1560, 0.3, 0.08 * v, 0.06);
+  },
+  jackpot: v => {
+    [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone('square', f, f, 0.16, 0.07 * v, i * 0.08));
+    for (let i = 0; i < 10; i++) tone('sine', 2000 + i * 180, 2600, 0.08, 0.03 * v, 0.5 + i * 0.07);
+    noise(0.8, 0.12 * v, 6000, 3000, 0.7, 0.45);
+  },
   heart: v => {
     tone('sine', 70, 50, 0.12, 0.25 * v);
     tone('sine', 66, 46, 0.12, 0.18 * v, 0.18);
@@ -21205,7 +21875,7 @@ requestAnimationFrame(loop);
 
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
-  window.__SD = { Account, openAccount, showMenu, canPause, togglePause, CATS,blockedFor,reviewHTML,openGarageReport,closeGarageReport,footprint,occupancy,instCenter,cellCount,shapeBounds,shapeLabel,topAt,canPlaceTop,act,returnTopsOn,planCapacity,planTakeScrap,planSpill,planTick,planActivate,planWeapon,planHurt,simulate,weapons,hurtInst,stepCarHazards,mkObj,setupSpecial,stepSpecial,specialTimeout,finishBattle,formatAwards,MATCH_FORMATS,POWERUPS,SPECIALS,drawBP,drawArena, view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
+  window.__SD = { spinWheel, WHEEL_SEGS, GFX, Account, openAccount, showMenu, canPause, togglePause, CATS,blockedFor,reviewHTML,openGarageReport,closeGarageReport,footprint,occupancy,instCenter,cellCount,shapeBounds,shapeLabel,topAt,canPlaceTop,act,returnTopsOn,planCapacity,planTakeScrap,planSpill,planTick,planActivate,planWeapon,planHurt,simulate,weapons,hurtInst,stepCarHazards,mkObj,setupSpecial,stepSpecial,specialTimeout,finishBattle,formatAwards,MATCH_FORMATS,POWERUPS,SPECIALS,drawBP,drawArena, view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
 
 })();
 </script>

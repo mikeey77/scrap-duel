@@ -91,8 +91,8 @@ test('weak-link analysis identifies fragile branches',()=>{
 });
 test('crate charges once, grants once and skip cannot duplicate rewards',()=>{
   start();const count=()=>Object.values(G.inv).reduce((x,y)=>x+y,0),before=count();
-  a.openCrate();assert.equal(G.coins,20);const gained=count();assert(gained>before);
-  a.openCrate();assert.equal(G.coins,20);assert.equal(count(),gained);
+  a.openCrate();assert.equal(G.coins,40);const gained=count();assert(gained>before);
+  a.openCrate();assert.equal(G.coins,40);assert.equal(count(),gained);
   r.elements.get('cSkip').click();r.elements.get('cSkip').click();assert.equal(count(),gained);
   r.elements.get('cDone').click();assert(r.elements.get('ovCrate').hidden);
 });
@@ -114,7 +114,7 @@ test('breaking a connector records the detached branch for replay',()=>{
   assert(b.ev.some(e=>e[0]==='lesson'&&e[4].includes('attached part')));
 });
 test('release version contains all requested UI affordances',()=>{
-  for(const text of ['Skip animation','id="btnArcs"','Weak links','Search modules','Battle music','Reconnect window expired','LMB/Space','data-k="KeyJ"'])assert(html.includes(text),text);
+  for(const text of ['id="cSkip"','id="btnArcs"','Weak links','Search modules','Battle music','Reconnect window expired','LMB/Space','data-k="KeyJ"'])assert(html.includes(text),text);
   assert(!html.includes('round N is worth N points'));
 });
 test('two peers recover a dropped battle with authoritative score, clock and cooldowns',()=>{
@@ -318,10 +318,21 @@ test('completed Bounty recovery preserves awarded points and winning streak exac
 test('parts show a single available quantity and an On car state',()=>{
  const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.takeOption({type:'module',id:'pouch',n:2});const content=rr.elements.get('leftBody').innerHTML;assert(content.includes('×2'));assert(content.includes('On car'));assert(!content.includes(' owned'));assert(!content.includes(' loose · '));assert(rr.elements.get('binCount').textContent.includes('available'));
 });
-test('crate visibly rolls before revealing, including when the OS reduces decorative motion',()=>{
- const rr=runtime({matchMedia:()=>({matches:true,addEventListener(){}})}),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.openCrate();const count=()=>Object.values(aa.G.inv).reduce((n,v)=>n+v,0),owned=count();
- for(let n=0;n<3;n++){const frame=rr.rafs.splice(0);for(const f of frame)f(0);}
- assert(rr.elements.get('strip').style.transition.includes('2.2s'));assert.equal(rr.elements.get('reelres').innerHTML,'');rr.advance(2249);assert.equal(rr.elements.get('reelres').innerHTML,'');rr.advance(1);assert(rr.elements.get('reelres').innerHTML.includes('Back to the garage'));assert.equal(count(),owned);rr.elements.get('cSkip').click();assert.equal(count(),owned);
+test('crate shakes, rolls and reveals over several seconds without changing the prize',()=>{
+ const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();const count=()=>Object.values(aa.G.inv).reduce((n,v)=>n+v,0),before=count();aa.openCrate();const owned=count();assert(owned>before);
+ const run=ms=>{for(let t=0;t<ms;t+=16){rr.advance(16);for(const f of rr.rafs.splice(0))f(rr.context.performance.now());}};
+ run(3000);assert.equal(rr.elements.get('reelres').innerHTML,'','revealed too early');
+ run(3600);assert(rr.elements.get('reelres').innerHTML.includes('Back to the garage'));assert.equal(count(),owned);rr.elements.get('cSkip').click();assert.equal(count(),owned);
+});
+test('one in a hundred crates is a jackpot with a legendary, coins and the achievement',()=>{
+ const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.G.forceJackpot=true;aa.openCrate();rr.elements.get('cSkip').click();
+ const html=rr.elements.get('reelres').innerHTML;assert(html.includes('JACKPOT'));assert.equal(aa.G.coins,100-60+150);
+});
+test('the prize wheel charges once, grants its slice and the MEGA slice gives two modules',()=>{
+ const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.G.coins=500;const count=()=>Object.values(aa.G.inv).reduce((n,v)=>n+v,0),before=count();
+ aa.G.forceWheel=aa.WHEEL_SEGS.findIndex(g=>g.kind==='mega');aa.spinWheel();assert.equal(aa.G.coins,320);assert(count()>=before+2);
+ rr.elements.get('cSkip').click();assert(rr.elements.get('reelres').innerHTML.includes('MEGA'));
+ rr.elements.get('cDone').click();const ci=aa.WHEEL_SEGS.findIndex(g=>g.kind==='coins');aa.G.forceWheel=ci;aa.spinWheel();assert.equal(aa.G.coins,320-180+aa.WHEEL_SEGS[ci].n);
 });
 
 test('shop filters discovered parts by search and rarity and exposes their real footprints',()=>{
