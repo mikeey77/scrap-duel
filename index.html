@@ -2630,6 +2630,7 @@ textarea {
 .syn-fit { grid-column:1/-1; font-size:11px; color:#a4d8be; line-height:1.4; }
 .build-report { border:1px solid #7fe0ff44; border-radius:10px; padding:12px; margin:14px 0; display:flex; flex-wrap:wrap; gap:8px; } .build-report b,.build-report p { width:100%; margin:0; }
 .review-return { position:fixed; z-index:20; bottom:calc(var(--host-safe) + 10px); left:50%; transform:translateX(-50%); }
+.review-return:active { transform:translateX(-50%) scale(.97); }
 .reviewing #build > aside, .reviewing .toolbar, .reviewing .mobile-workshop-nav { display:none!important; } .reviewing #bay { display:block!important; width:100%; grid-column:1/-1; }
 body:has(#setMotion:not(:checked)) #bay::before { animation:none; }
 .format-picker { display:grid; gap:7px; font-size:13px; margin:10px 0; color:#c7dfed; } .format-picker select { width:100%; padding:9px; background:#152433; color:#fff; border:1px solid #7fe0ff55; border-radius:7px; } .format-picker small { color:#94aabd; min-height:32px; } .format-status { padding:4px 7px; font-size:10px; color:#c7dfed; border:1px solid #7fe0ff44; border-radius:7px; }
