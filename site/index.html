@@ -3913,6 +3913,84 @@ select {
   background: radial-gradient(circle, rgba(91, 231, 255, 0.1), rgba(5, 10, 20, 0.6) 70%);
   clip-path: var(--chamfer-s);
 }
+/* garage → arena transition */
+.door-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  overflow: hidden;
+}
+.door-fx .d-dark {
+  position: absolute;
+  inset: 0;
+  background: #02040a;
+  opacity: 0;
+}
+.door-fx.lights-out .d-dark {
+  animation: lightsout 0.4s steps(1) forwards, lightsdim 0.4s 0.1s forwards;
+}
+@keyframes lightsout {
+  0% { opacity: 0.6; }
+  30% { opacity: 0.1; }
+  55% { opacity: 0.75; }
+  70% { opacity: 0.3; }
+  100% { opacity: 0.85; }
+}
+@keyframes lightsdim {
+  to { opacity: 0.9; }
+}
+.door-fx .d-l,
+.door-fx .d-r {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.5%;
+  display: grid;
+  align-items: center;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 180, 35, 0.9) 0 22px, rgba(10, 16, 32, 0.95) 22px 44px) top / 100% 26px no-repeat,
+    repeating-linear-gradient(135deg, rgba(255, 180, 35, 0.9) 0 22px, rgba(10, 16, 32, 0.95) 22px 44px) bottom / 100% 26px no-repeat,
+    linear-gradient(90deg, #13213a, #1e3052 60%, #13213a);
+  box-shadow: inset 0 0 0 2px rgba(91, 231, 255, 0.3);
+  transition: transform 0.6s cubic-bezier(0.7, 0, 0.3, 1);
+}
+.door-fx .d-l {
+  left: 0;
+  transform: translateX(-102%);
+  justify-items: end;
+  padding-right: 18px;
+}
+.door-fx .d-r {
+  right: 0;
+  transform: translateX(102%);
+  justify-items: start;
+  padding-left: 18px;
+}
+.door-fx b {
+  font-family: var(--f-display);
+  font-size: clamp(28px, 7vw, 80px);
+  color: var(--hazard);
+  text-shadow: 0 0 24px rgba(255, 180, 35, 0.5);
+}
+.door-fx.closed .d-l,
+.door-fx.closed .d-r {
+  transform: none;
+  transition-duration: 0.35s;
+}
+.door-fx.open .d-l {
+  transform: translateX(-102%);
+  transition-duration: 0.7s;
+}
+.door-fx.open .d-r {
+  transform: translateX(102%);
+  transition-duration: 0.7s;
+}
+.door-fx.open .d-dark {
+  opacity: 0 !important;
+  animation: none;
+  transition: opacity 0.6s;
+}
 </style>
   </head>
   <body>
@@ -4156,6 +4234,7 @@ select {
     <div class="overlay" id="ovSettings" hidden><div class="card" id="settingsCard"></div></div>
     <div class="overlay" id="ovReconnect" hidden><div class="card" id="reconnectCard"></div></div>
     <div class="overlay" id="ovPause" hidden><div class="card" id="pauseCard"></div></div>
+    <div class="door-fx" id="doorFx" hidden aria-hidden="true"><i class="d-dark"></i><i class="d-l"><b>SCRAP</b></i><i class="d-r"><b>DUEL</b></i></div>
     <div class="overlay" id="ovBlueprint" hidden><div class="card bp-card" id="bpCard"></div></div>
     <div class="overlay" id="ovAccount" hidden><div class="card account-card" id="accountCard"></div></div>
     <div class="coach" id="coach" hidden></div>
@@ -10067,11 +10146,22 @@ function drawPiece(c, e, top, scale = 1) {
     [ccx, ccy] = instCenter(e);
   c.save();
   c.translate(cpx(ccx) + cell / 2, cpy(ccy) + cell / 2);
+  const alive = building() && SETTINGS.motion !== false;
+  // engines and thrusters idle with a little shake
+  if (alive && ['engine', 'jet', 'jumpjet'].includes(m.art && m.art.k)) c.translate(Math.sin(ANIM * 47 + ccx * 3) * cell * 0.018, Math.cos(ANIM * 53 + ccy * 2) * cell * 0.018);
   c.scale(scale, scale);
   if (!top && G.layerView === 'top') c.globalAlpha *= .22;
+  const hot = m.tags.includes('fire'),
+    cold = m.tags.includes('cold');
   if (m.glow) {
     c.shadowColor = m.glow;
     c.shadowBlur = cell * 0.35 * (1 + Math.sin(ANIM * 3) * 0.3);
+  } else if (hot && alive) {
+    c.shadowColor = '#ff7a1a';
+    c.shadowBlur = cell * (0.25 + 0.15 * Math.sin(ANIM * 4 + ccx));
+  } else if (cold && alive) {
+    c.shadowColor = '#bfefff';
+    c.shadowBlur = cell * 0.22;
   }
   const b = top ? baseAt(key(e.x, e.y)) : null;
   drawModule(c, e.id, cell * (top ? 0.82 : 0.96), (e.rot * Math.PI) / 2, 'p', {
@@ -10079,7 +10169,134 @@ function drawPiece(c, e, top, scale = 1) {
     turret: top && b && b.id === 'ring',
     paint: G.paint
   });
+  c.shadowBlur = 0;
+  if (cold) drawFrost(c, cell * (top ? 0.82 : 0.96), ccx * 7 + ccy * 3);
+  const scar = G.scars && building() && G.scars[(top ? 't|' : 'b|') + key(e.x, e.y)];
+  if (scar) drawScar(c, cell * (top ? 0.82 : 0.96), scar, ccx * 13 + ccy * 7);
   c.restore();
+}
+/* ---------- living garage helpers ---------- */
+/** A few frost crystals and a pale rim on ice modules. */
+function drawFrost(c, s, seed) {
+  const h = s / 2;
+  c.save();
+  c.strokeStyle = 'rgba(225,248,255,.75)';
+  c.lineWidth = Math.max(1, s * 0.03);
+  for (let k = 0; k < 3; k++) {
+    const x = (cellHash(seed + k, k * 3) - 0.5) * s * 0.8,
+      y = (cellHash(k * 5, seed - k) - 0.5) * s * 0.8,
+      r = s * (0.07 + cellHash(seed, k) * 0.06);
+    c.beginPath();
+    for (let i = 0; i < 3; i++) {
+      const a = (i * Math.PI) / 3;
+      c.moveTo(x - Math.cos(a) * r, y - Math.sin(a) * r);
+      c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
+    }
+    c.stroke();
+  }
+  c.strokeStyle = 'rgba(200,240,255,.35)';
+  c.lineWidth = Math.max(1.5, s * 0.06);
+  c.strokeRect(-h * 0.9, -h * 0.9, h * 1.8, h * 1.8);
+  c.restore();
+}
+/** Dents and scorch marks from the last round. They are cosmetic and clear when the next round starts. */
+function drawScar(c, s, amount, seed) {
+  const h = s / 2,
+    k = clamp(amount / 160, 0.25, 1);
+  c.save();
+  for (let i = 0; i < 1 + Math.round(k * 2); i++) {
+    const x = (cellHash(seed + i, i) - 0.5) * s * 0.7,
+      y = (cellHash(i * 3, seed + i) - 0.5) * s * 0.7,
+      g = c.createRadialGradient(x, y, 0, x, y, h * (0.35 + k * 0.4));
+    g.addColorStop(0, `rgba(20,12,8,${0.55 * k + 0.2})`);
+    g.addColorStop(1, 'rgba(20,12,8,0)');
+    c.fillStyle = g;
+    c.fillRect(-h, -h, s, s);
+  }
+  c.strokeStyle = `rgba(255,255,255,${0.18 + 0.2 * k})`;
+  c.lineWidth = Math.max(1, s * 0.03);
+  const dx = (cellHash(seed, 9) - 0.5) * s * 0.5;
+  c.beginPath();
+  c.arc(dx, (cellHash(9, seed) - 0.5) * s * 0.5, h * 0.28, Math.PI * 0.1, Math.PI * 0.9);
+  c.stroke();
+  if (k > 0.6) {
+    c.strokeStyle = 'rgba(10,6,4,.55)';
+    c.beginPath();
+    c.moveTo(-h * 0.6, -h * 0.2);
+    c.lineTo(-h * 0.1, h * 0.05);
+    c.lineTo(h * 0.15, -h * 0.15);
+    c.lineTo(h * 0.55, h * 0.3);
+    c.stroke();
+  }
+  c.restore();
+}
+/** Rolling tyre treads on every wheel or track, so the car looks ready to go. */
+function drawTreads(c) {
+  if (SETTINGS.motion === false || G.layerView === 'top') return;
+  c.save();
+  for (const e of G.base.values()) {
+    const m = MOD[e.id];
+    if (!m.drive) continue;
+    for (const [x, y] of footprint(e.id, e.rot, e.x, e.y)) {
+      const X = cpx(x),
+        Y = cpy(y),
+        w = cell * 0.34,
+        off = ((ANIM * cell * 1.6) % (cell * 0.26));
+      c.save();
+      c.beginPath();
+      c.rect(X + cell / 2 - w / 2, Y + cell * 0.08, w, cell * 0.84);
+      c.clip();
+      c.strokeStyle = 'rgba(255,255,255,.13)';
+      c.lineWidth = Math.max(1, cell * 0.045);
+      for (let i = -1; i < 5; i++) {
+        const yy = Y + cell * 0.08 + i * cell * 0.26 + off;
+        c.beginPath();
+        c.moveTo(X + cell / 2 - w / 2, yy);
+        c.lineTo(X + cell / 2 + w / 2, yy);
+        c.stroke();
+      }
+      c.restore();
+    }
+  }
+  c.restore();
+}
+/** Holographic look for the part under the cursor: scanlines and a glow on its real footprint. */
+function drawHolo(c, id, rot, x, y, bad) {
+  const col = bad ? '255,92,122' : '91,231,255';
+  c.save();
+  c.globalCompositeOperation = 'lighter';
+  for (const [a, b] of footprint(id, rot, x, y)) {
+    const X = cpx(a),
+      Y = cpy(b);
+    c.fillStyle = `rgba(${col},.12)`;
+    c.fillRect(X + 1, Y + 1, cell - 2, cell - 2);
+    c.fillStyle = `rgba(${col},.22)`;
+    for (let yy = (ANIM * 30) % 4; yy < cell; yy += 4) c.fillRect(X + 1, Y + yy, cell - 2, 1);
+  }
+  c.restore();
+  c.save();
+  c.shadowColor = `rgb(${col})`;
+  c.shadowBlur = cell * 0.4;
+  c.strokeStyle = `rgba(${col},.95)`;
+  c.lineWidth = 2;
+  c.setLineDash([cell * 0.18, cell * 0.08]);
+  c.lineDashOffset = -ANIM * 40;
+  for (const [a, b] of footprint(id, rot, x, y)) c.strokeRect(cpx(a) + 1.5, cpy(b) + 1.5, cell - 3, cell - 3);
+  c.restore();
+}
+/** Idle sparks, exhaust puffs and the white flash when a part clicks into place. */
+function garageAmbient(dt) {
+  if (!building() || SETTINGS.motion === false) return;
+  for (const e of [...G.base.values(), ...G.top.values()]) {
+    const m = MOD[e.id],
+      k = m.art && m.art.k;
+    if (['engine', 'jet', 'booster'].includes(k) && Math.random() < dt * 1.6)
+      bfx.push({ x: e.x + 0.5 + rnd(-0.1, 0.1), y: e.y + 0.95, vx: rnd(-0.3, 0.3), vy: rnd(0.6, 1.2), life: 0.9, max: 0.9, col: 'rgba(180,190,205,.6)', sz: rnd(3, 5), smoke: 1 });
+    if (m.wpn && Math.random() < dt * 0.12)
+      for (let i = 0; i < 4; i++) bfx.push({ x: e.x + 0.5, y: e.y + 0.3, vx: rnd(-2, 2), vy: rnd(-2.5, -0.5), life: 0.3, max: 0.3, col: pick(['#fff3b0', '#ffb423', '#ffffff']), sz: rnd(1.5, 2.5) });
+    if (m.tags.includes('fire') && Math.random() < dt * 2)
+      bfx.push({ x: e.x + 0.5 + rnd(-0.25, 0.25), y: e.y + 0.4, vx: rnd(-0.2, 0.2), vy: rnd(-1.2, -0.6), life: 0.6, max: 0.6, col: pick(['#ffb423', '#ff7a1a', '#ffe27a']), sz: rnd(1.5, 3) });
+  }
 }
 function drawBP() {
   if (!dims) return;
@@ -10185,6 +10402,19 @@ function drawBP() {
     }
     drawPiece(c, e, true, sc);
   }
+  drawTreads(c);
+  // the bright flash when a part clicks into place
+  for (const [pk, t0] of pops) {
+    const t = (performance.now() - t0) / 220;
+    if (t > 1) continue;
+    const e = pk[0] === 'b' ? G.base.get(pk.slice(1)) : G.top.get(pk.slice(1));
+    if (!e) continue;
+    c.save();
+    c.globalCompositeOperation = 'lighter';
+    c.fillStyle = `rgba(220,250,255,${(1 - t) * 0.65})`;
+    for (const [a, b] of footprint(e.id, e.rot, e.x, e.y)) c.fillRect(cpx(a), cpy(b), cell, cell);
+    c.restore();
+  }
   drawSockets(c, occ);
   drawBuilderDiagnostics(c,occ);
   planGarageReport(c);
@@ -10227,6 +10457,7 @@ function drawBP() {
         c.globalAlpha = err ? 0.3 : 0.7;
         drawPiece(c, { id: G.sel, rot: G.rot, x, y }, true);
         c.restore();
+        drawHolo(c, G.sel, G.rot, x, y, !!err);
         c.strokeStyle = err ? '#e2504a' : '#7fe0ff';
         c.beginPath();
         for(const [a,b] of footprint(G.sel,G.rot,x,y))c.rect(cpx(a)+1,cpy(b)+1,cell-2,cell-2);
@@ -10239,6 +10470,7 @@ function drawBP() {
           c.globalAlpha = err ? 0.3 : 0.65;
           drawPiece(c, { id: G.sel, rot: G.rot, x, y }, false);
           c.restore();
+          drawHolo(c, G.sel, G.rot, x, y, !!err);
           c.strokeStyle = err ? '#e2504a' : '#f2b705';
           for (const [a, b] of footprint(G.sel, G.rot, x, y))
             c.strokeRect(cpx(a) + 1, cpy(b) + 1, cell - 2, cell - 2);
@@ -10307,9 +10539,11 @@ function drawBP() {
     c.restore();
   }
   for (const p of bfx) {
-    c.globalAlpha = Math.max(0, p.life / p.max);
+    const k = Math.max(0, p.life / p.max);
+    c.globalAlpha = p.smoke ? k * 0.55 : k;
     c.fillStyle = p.col;
-    c.fillRect(cpx(0) + p.x * cell - 1.5, cpy(0) + p.y * cell - 1.5, p.sz, p.sz);
+    if (p.smoke) circ(c, cpx(0) + p.x * cell, cpy(0) + p.y * cell, p.sz * (1 + (1 - k) * 2.2), p.col);
+    else c.fillRect(cpx(0) + p.x * cell - 1.5, cpy(0) + p.y * cell - 1.5, p.sz, p.sz);
   }
   c.globalAlpha = 1;
 }
@@ -10406,6 +10640,7 @@ function setMobileTab(tab) {
 }
 $$('.mobile-workshop-nav button').forEach(b=>b.onclick=()=>setMobileTab(b.dataset.mobileTab));
 function bfxTick(dt) {
+  garageAmbient(dt);
   for (let i = bfx.length - 1; i >= 0; i--) {
     const p = bfx[i];
     p.life -= dt;
@@ -10418,6 +10653,7 @@ function bfxTick(dt) {
   for (let i = ghosts.length - 1; i >= 0; i--) if (now - ghosts[i].t > 450) ghosts.splice(i, 1);
 }
 const builderBusy = () =>
+  (building() && SETTINGS.motion !== false) ||
   bfx.length ||
   pops.size ||
   ghosts.length ||
@@ -12815,10 +13051,30 @@ $('#btnAuto').addEventListener('click', () => autoPlace());
 $('#btnAutoBuild').addEventListener('click', autoBuild);
 
 /** Before entering the waiting arena: remind the player about loose parts and unspent coins. */
+/* Garage → arena: the lights go out, engines start, the arena door slides open. */
+function enterWaitShow() {
+  const fx = $('#doorFx');
+  if (!fx || SETTINGS.motion === false || !window.matchMedia || matchMedia('(prefers-reduced-motion: reduce)').matches) return enterWait();
+  fx.hidden = false;
+  fx.className = 'door-fx lights-out';
+  sfx('engine');
+  setTimeout(() => {
+    fx.classList.add('closed');
+  }, 380);
+  setTimeout(() => {
+    enterWait();
+    sfx('door');
+    fx.classList.add('open');
+  }, 900);
+  setTimeout(() => {
+    fx.hidden = true;
+    fx.className = 'door-fx';
+  }, 1700);
+}
 function readyCheck() {
   const loose = looseCount(),
     rich = G.coins >= 80;
-  if (G.mode === 'sandbox' || G.skipReadyWarn || (!loose && !rich)) return enterWait();
+  if (G.mode === 'sandbox' || G.skipReadyWarn || (!loose && !rich)) return enterWaitShow();
   const bits = [];
   if (loose) bits.push(`<b>${loose} loose part${loose > 1 ? 's' : ''}</b> in your bin`);
   if (rich) bits.push(`<b class="coin">${G.coins}</b> unspent coins`);
@@ -12836,7 +13092,7 @@ function readyCheck() {
     a.addEventListener('click', () => {
       close();
       autoPlace(true);
-      enterWait();
+      enterWaitShow();
     });
   const s = $('#rwShop');
   if (s)
@@ -12847,7 +13103,7 @@ function readyCheck() {
     });
   $('#rwGo').addEventListener('click', () => {
     close();
-    enterWait();
+    enterWaitShow();
   });
 }
 
@@ -19552,6 +19808,17 @@ const SFX = {
   place: v => {
     tone('square', 520, 260, 0.06, 0.08 * v);
     noise(0.04, 0.1 * v, 3000, 1500, 2);
+    tone('sine', 140, 60, 0.09, 0.18 * v);
+    noise(0.03, 0.12 * v, 900, 400, 1.5, 0.02);
+  },
+  engine: v => {
+    tone('sawtooth', 38, 70, 0.5, 0.12 * v);
+    tone('sawtooth', 55, 110, 1.1, 0.1 * v, 0.35);
+    noise(1.2, 0.08 * v, 160, 90, 0.8, 0.3, 'lowpass');
+  },
+  door: v => {
+    noise(0.9, 0.12 * v, 220, 120, 0.6, 0, 'lowpass');
+    tone('square', 90, 60, 0.12, 0.06 * v, 0.85);
   },
   remove: v => {
     tone('square', 300, 120, 0.08, 0.08 * v);
@@ -21450,6 +21717,7 @@ function showVS(cfg, done) {
   );
 }
 function toBattle(cfg) {
+  G.scars = null; // a fresh round: the repair bay has done its job
   if(cfg.format)G.format=cfg.format;
   G.phase = 'battle';
   G.meReady = false;
@@ -21644,7 +21912,7 @@ function finishBattle() {
     ${decided ? '' : nextUpHTML(G.round + 1)}
     <button class="btn" id="btnNext">${decided ? 'See match result' : 'Pick your next part'}</button>`;
   $('#ovResult').hidden = false;
-  (document.querySelector('#resultCard .nextup')||document.querySelector('#btnNext')||$('#resultCard')).insertAdjacentHTML(document.querySelector('#resultCard .nextup')||document.querySelector('#btnNext')?'beforebegin':'beforeend',reviewHTML(st[me]));
+  G.scars={...(st[me].damage||{})};(document.querySelector('#resultCard .nextup')||document.querySelector('#btnNext')||$('#resultCard')).insertAdjacentHTML(document.querySelector('#resultCard .nextup')||document.querySelector('#btnNext')?'beforebegin':'beforeend',reviewHTML(st[me]));
   $$('#resultCard [data-review]').forEach(b=>b.onclick=()=>openGarageReport(st[me],b.dataset.review));
   sfx('coin');
   let shown = 0;
