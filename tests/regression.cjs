@@ -211,7 +211,7 @@ test('solo aim assist is optional and never affects multiplayer or night visibil
 test('garage tabs and arena presentation leave world coordinates and protocol intact',()=>{
   const {rr,aa}=mobileRuntime();aa.setMobileTab('parts');assert.equal(rr.elements.get('build').dataset.mobileTab,'parts');aa.setMobileTab('bay');assert.equal(rr.elements.get('build').dataset.mobileTab,'bay');
   const before=aa.getB().cars.map(v=>[v.x,v.y,v.a]);aa.syncPresentation();assert.deepEqual(aa.getB().cars.map(v=>[v.x,v.y,v.a]),before);
-  assert(html.includes('NET_PROTOCOL=7'));assert(html.includes('height:100dvh'));assert(html.includes('Subtle touch aim assist (solo only)'));
+  assert(html.includes('NET_PROTOCOL=8'));assert(html.includes('height:100dvh'));assert(html.includes('Subtle touch aim assist (solo only)'));
 });
 test('open overlays release held touch input and prevent background fire',()=>{
   const {rr,aa}=mobileRuntime();const b=aa.getB();b.aimJoy={x:1,y:0,m:1};aa.keys.add('Space');
@@ -279,7 +279,7 @@ test('Scrap Run timeout uses delivered scrap rather than health or undelivered c
 });
 test('format choices alter rules and awards while preserving the balanced default',()=>{
  const rr=runtime(),aa=rr.api;aa.startMatch('solo',null,'lives');assert.deepEqual([...aa.G.lives],[20,20]);assert.equal(aa.roundPoints(10),1);
- aa.startMatch('solo',null,'bounty');aa.G.score=[1,4];aa.G.bountyStreak=3;assert.deepEqual([...aa.formatAwards()],[4,1]);
+ aa.startMatch('solo',null,'bounty');aa.G.score=[1,4];aa.G.bountyStreak=3;assert.deepEqual([...aa.formatAwards()],[2,1]);aa.G.bountyStreak=6;assert.deepEqual([...aa.formatAwards()],[3,1]);aa.G.score=[3,4];assert.deepEqual([...aa.formatAwards()],[1,1]);
  aa.startMatch('solo',null,'finalehill');assert.equal(aa.G.sched[9],'hill');assert.equal(aa.roundPoints(10),2);
  aa.startMatch('solo',null,'balanced');assert.equal(aa.roundPoints(10),2);assert.equal(Object.keys(aa.POWERUPS).length,6);
 });
@@ -345,6 +345,12 @@ test('one Escape closes the codex without also opening the pause menu',()=>{
  const ev={code:'Escape',key:'Escape',target:{tagName:'BODY'},defaultPrevented:false,preventDefault(){this.defaultPrevented=true;},stopPropagation(){}};
  rr.event('keydown',ev);
  assert.equal(rr.elements.get('ovCodex').hidden,true);assert.equal(rr.elements.get('ovPause').hidden,true);assert.notEqual(aa.getB().paused,true);
+});
+
+test('auto-build in the sandbox makes an armed, sensibly sized car',()=>{
+ const rr=runtime(),aa=rr.api;aa.startMatch('sandbox');aa.openBuild();aa.autoBuild();
+ const tops=[...aa.G.top.values()];
+ assert(tops.some(e=>aa.MOD[e.id].wpn),'no weapons');assert(aa.G.base.size<120,'base of '+aa.G.base.size+' parts');assert.equal(aa.blockedList().length,0);assert(aa.designConnected(aa.G.base));
 });
 
 console.log(`\n${passed} regression tests passed.`);

@@ -12,9 +12,9 @@ Play: https://scrap-duel.netlify.app/
 - Fire trails and fans, chilled connectors and a wind-up ice press, collectible cargo with storage/repair/ammunition choices, drifting skids, visible dropped beads and physical towing cables.
 - New pickups: temporary junk magnet, ghost through loose wreckage and limited repair. Six pickup types in total.
 - Scrap Run: collect junk, bring it to your depot, and race to deliver 20 pieces. All vehicles have basic cargo capacity in this objective; storage modules increase it. Fresh-world scrap rewards are capped at 40 coins per round; spilling and recollecting cargo cannot farm rewards.
-- Four selectable formats for solo and multiplayer: Balanced rounds, Scrap Lives (20 lives, defeat costs 2 + round), Bounty (beat the leader for up to four points and bonus coins), and Hill finale (double-point King of the Hill).
+- Four selectable formats for solo and multiplayer: Balanced rounds, Scrap Lives (20 lives, defeat costs 2 + round), Bounty (beating the leader pays up to two bonus points, never more than the gap, plus bonus coins), and Hill finale (double-point King of the Hill).
 - Cockpit portraits, cargo feedback, damaged connection warnings and restrained camera shake. Result reports show the first broken part, most damaged part and obstructed weapons, with a garage damage map.
-- New module cooldowns, cargo, cables and match rules synchronize with the peer and replay. This release uses multiplayer protocol 7; both players should refresh after an update.
+- New module cooldowns, cargo, cables and match rules synchronize with the peer and replay. This release uses multiplayer protocol 8; both players should refresh after an update.
 - Parts cards show one available quantity badge, or “On car” when all copies are mounted. Mystery crates visibly roll for 2.2 seconds before the reveal; Skip and the separate “Animate mystery crates” setting remain available.
 - Shop search, category, rarity, favorites and mount filters narrow the discovered parts. Shop rows and crate rewards show occupied footprints, weight and mount requirements.
 

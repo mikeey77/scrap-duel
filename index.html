@@ -2991,7 +2991,14 @@ body:has(#ovLobby:not([hidden])) #demoFeed {
 // Shared helpers: DOM shortcuts, math, grid keys, weighted random.
 const $ = s => document.querySelector(s),
   $$ = s => [...document.querySelectorAll(s)];
-const dprOf = () => Math.min(2, window.devicePixelRatio || 1);
+// Performance mode renders the arena at 1x: big savings on high-density phone screens.
+const dprOf = () => {
+  let perf = false;
+  try {
+    perf = !!SETTINGS.perf; // SETTINGS is declared further down; during start-up it is not ready yet
+  } catch (e) {}
+  return perf ? 1 : Math.min(2, window.devicePixelRatio || 1);
+};
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v),
   rnd = (a, b) => a + Math.random() * (b - a),
   pick = a => a[Math.floor(Math.random() * a.length)];
@@ -10575,16 +10582,19 @@ function botBuild(P) {
     if (!putB(['nitro', 'booster'], 0, x, y))
       if (!putB(['jump', 'gyro', 'engine'], 0, x, y)) putB(BOT_IN.concat('scaffold'), 0, x, y);
   }
-  for(const m of MODS.filter(m=>m.plan&&m.layer==='b'))while(inv[m.id]>0){let placed=false;for(const k of ws){const [x,y]=unkey(k);for(const rot of [0,1,3,2])if(canBase(m.id,rot,x,y)){inv[m.id]--;base.set(k,{id:m.id,rot,x,y});placed=true;break;}if(placed)break;}if(!placed)break;}
-  for(const m of MODS.filter(m=>m.plan&&m.layer==='t'&&cellCount(m)>1))while(inv[m.id]>0){let done=false;
+  // special base parts: a few of each, so huge inventories (sandbox, late game) still leave room for guns
+  let planBudget=10;
+  for(const m of MODS.filter(m=>m.plan&&m.layer==='b')){let perId=4;while(inv[m.id]>0&&perId>0&&planBudget>0){perId--;planBudget--;let placed=false;for(const k of ws){const [x,y]=unkey(k);for(const rot of [0,1,3,2])if(canBase(m.id,rot,x,y)){const was=blockedFor(base,top).length;base.set(k,{id:m.id,rot,x,y});if(blockedFor(base,top).length>was){base.delete(k);continue;}inv[m.id]--;placed=true;break;}if(placed)break;}if(!placed)break;}}
+  let bigBudget=4;
+  for(const m of MODS.filter(m=>m.plan&&m.layer==='t'&&cellCount(m)>1)){let perBig=2;while(inv[m.id]>0&&perBig-->0&&bigBudget>0){let done=false;
     for(const k of ws){const [x,y]=unkey(k);for(const rot of [0,1,3,2]){const cells=footprint(m.id,rot,x,y),o=occ(),sid=m.mnt>1?'girder':'frame';
       if(!cells.every(([a,b])=>ws.has(key(a,b))&&!topAt(key(a,b),top)&&(!o.has(key(a,b))||MOD[base.get(o.get(key(a,b))).id].mnt>=m.mnt)))continue;
       const missing=cells.filter(([a,b])=>!o.has(key(a,b)));if((inv[sid]||0)<missing.length)continue;
       for(const [a,b] of missing)base.set(key(a,b),{id:sid,rot:0,x:a,y:b});top.set(k,{id:m.id,rot,x,y});
       if(!designConnected(base)||blockedFor(base,top).length){for(const [a,b] of missing)base.delete(key(a,b));top.delete(k);continue;}
-      inv[sid]-=missing.length;inv[m.id]--;done=true;break;
+      inv[sid]-=missing.length;inv[m.id]--;bigBudget--;done=true;break;
     }if(done)break;}if(!done)break;
-  }
+  }}
   // tops
   const o = occ(),
     mountAt = k => {
@@ -10606,8 +10616,9 @@ function botBuild(P) {
     }
     const behind = top.get(key(x, y + 1));
     if (behind && MOD[behind.id].front) return false;
+    const was=blockedFor(base,top).length;
     inv[id]--;
-    top.set(k,{id,rot:0,x,y});if(blockedFor(base,top).length){top.delete(k);inv[id]++;return false;}
+    top.set(k,{id,rot:0,x,y});if(blockedFor(base,top).length>was){top.delete(k);inv[id]++;return false;}
     return true;
   };
   if (ring) {
@@ -10726,7 +10737,8 @@ function autoBuild() {
   G.hist.push(before);
   G.redo = [];
   fixAutoDirections();
-  autoPlace(true);
+  // the sandbox owns 99 of everything: bolting all of it on made 800-tonne bricks with no guns
+  if (G.mode !== 'sandbox') autoPlace(true);
   G.hist.length = historyLength; G.hist.push(before);
   sfx('legend');
   window.__toast('Rebuilt from everything you own. Ctrl+Z brings your old car back.', true);
@@ -17561,7 +17573,7 @@ function loadPeer() {
   });
 }
 const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const NET_PROTOCOL=7, RECONNECT_MS=30000;
+const NET_PROTOCOL=8, RECONNECT_MS=30000;
 const connectionToken=()=>crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
 const Net = {
   peer: null,
@@ -18770,11 +18782,14 @@ const packDesign = d => ({
   top: [...d.top].map(([k, e]) => [k, { id: e.id, rot: e.rot, x: e.x, y: e.y }])
 });
 const unpackDesign = p => ({ base: new Map(p.base), top: new Map(p.top) });
-const MATCH_FORMATS={balanced:{name:'Balanced rounds',desc:'One point per round; double-point finale.'},lives:{name:'Scrap Lives',desc:'20 lives each. A loss costs 2 + round number. Zero lives ends the match.'},bounty:{name:'Bounty',desc:'Beating the leader pays up to 3 bonus points and 45 bonus coins.'},finalehill:{name:'Hill finale',desc:'Balanced scoring with a King of the Hill final round.'}};
+const MATCH_FORMATS={balanced:{name:'Balanced rounds',desc:'One point per round; double-point finale.'},lives:{name:'Scrap Lives',desc:'20 lives each. A loss costs 2 + round number. Zero lives ends the match.'},bounty:{name:'Bounty',desc:'Beating the leader pays up to 2 bonus points (never more than the gap) and 45 bonus coins.'},finalehill:{name:'Hill finale',desc:'Balanced scoring with a King of the Hill final round.'}};
 let chosenFormat='balanced';
 const formatSelect=(id,value=chosenFormat)=>`<label class="format-picker">Match format<select id="${id}" aria-label="Match format">${Object.entries(MATCH_FORMATS).map(([k,f])=>`<option value="${k}" ${k===value?'selected':''}>${f.name}</option>`).join('')}</select><small>${esc(MATCH_FORMATS[value].desc)}</small></label>`;
 const roundPoints = r => G.format==='lives'||G.format==='bounty'?1:r===ROUNDS?2:1;
-function formatAwards(){if(G.format!=='bounty')return [roundPoints(G.round),roundPoints(G.round)];return [G.score[0]<G.score[1]?1+Math.min(3,G.bountyStreak||1):1,G.score[1]<G.score[0]?1+Math.min(3,G.bountyStreak||1):1];}
+/** Bounty: beating the leader pays 1 point plus up to 2 more for a long leader streak,
+    but never more than the gap, so one upset can catch you up without erasing a string of losses. */
+function bountyFor(gap){return gap<=0?1:Math.max(1,Math.min(1+Math.min(2,Math.floor((G.bountyStreak||1)/2)),gap));}
+function formatAwards(){if(G.format!=='bounty')return [roundPoints(G.round),roundPoints(G.round)];return [bountyFor(G.score[1]-G.score[0]),bountyFor(G.score[0]-G.score[1])];}
 
 function stakeLine(r){return G.format==='lives'?`Defeat costs ${2+r} lives`:G.format==='bounty'?`Bounty · you ${formatAwards()[0]} / rival ${formatAwards()[1]} pts`:`worth ${roundPoints(r)} pt${roundPoints(r)>1?'s':''}`;}
 
@@ -19310,7 +19325,7 @@ function finishBattle() {
   const lostHtml = Object.entries(cnt)
     .map(([id, n]) => `<span>${esc(MOD[id] ? MOD[id].name : id)}${n > 1 ? ' ×' + n : ''}</span>`)
     .join('');
-  const outlook = G.format==='lives'?(decided?'The lives contest is over.':`${G.lives[0]}–${G.lives[1]} lives left. Next defeat costs ${3+G.round} lives.`):G.format==='bounty'?(decided?'That was the last round.':`Defeat the leader for up to 4 points and bonus scrap. ${ROUNDS-G.round} rounds left.`):decided
+  const outlook = G.format==='lives'?(decided?'The lives contest is over.':`${G.lives[0]}–${G.lives[1]} lives left. Next defeat costs ${3+G.round} lives.`):G.format==='bounty'?(decided?'That was the last round.':`Defeat the leader for up to 3 points (never more than the gap) and bonus scrap. ${ROUNDS-G.round} rounds left.`):decided
     ? G.round >= ROUNDS
       ? 'That was the last round.'
       : lead > 0
@@ -19320,7 +19335,7 @@ function finishBattle() {
   const pity = !iWon && !draw && !decided ? pityOptions() : [];
   $('#resultCard').innerHTML =
     `<span class="label">Round ${G.round} of ${ROUNDS}${S ? ' · ' + esc(S.name) : ''}</span><h2 style="color:${iWon ? '#5cc38f' : draw ? '#ece8df' : '#e2504a'}">${iWon ? 'Round won' : draw ? 'Draw' : 'Round lost'}</h2><p>${esc(why || '')}</p>
-    <div class="score" style="justify-content:center;font-size:28px"><span class="sw" style="background:${G.paint};width:14px;height:14px"></span><span class="me">${G.score[0]}</span>–<span class="op">${G.score[1]}</span><span class="sw" style="background:${G.oppPaint};width:14px;height:14px"></span></div>
+    <div class="score" style="justify-content:center;font-size:28px"><span class="sw" style="background:${G.paint};width:14px;height:14px"></span><span class="me">${G.format==='lives'?'♥ '+G.lives[0]:G.score[0]}</span>–<span class="op">${G.format==='lives'?G.lives[1]+' ♥':G.score[1]}</span><span class="sw" style="background:${G.oppPaint};width:14px;height:14px"></span></div>
     <p class="small" style="text-align:center">${outlook}</p>
     <div class="rbtns">${hadWreck ? '<button class="btn ghost" id="btnKillcam">Kill-cam</button>' : ''}<button class="btn ghost" id="btnReplay">Watch replay</button></div>
     <div class="bigcoin" id="coinCount">+0</div>
@@ -19388,9 +19403,9 @@ function showFinal() {
       .join(' + ') || 'Scrap';
   $('#resultCard').innerHTML =
     `<span class="label">${esc(MATCH_FORMATS[G.format].name)} · Match over${tie ? ' · tie broken on damage dealt' : ''}</span><h2 style="color:${won ? '#5cc38f' : '#e2504a'}">${won ? 'Victory' : 'Defeat'}</h2>
-    <div class="score" style="justify-content:center;font-size:34px"><span class="me">${s[0]}</span>–<span class="op">${s[1]}</span></div>
-    <p>${G.format==='lives'?`Lives remaining: ${G.lives[0]}–${G.lives[1]}. `:''}${esc(G.name)} vs ${esc(G.oppName)}. You won ${tot.w} of ${G.log.length} rounds with a ${esc(br)} build, dealt ${tot.d.toLocaleString()} damage and took ${tot.t.toLocaleString()}.</p>
-    <div class="ledger">${G.log.map(r => `<div><span>Round ${r.round}${r.special ? ' · ' + esc(SPECIALS[r.special].name) : ''}</span><span>${r.win ? 'won +' + r.pts : r.draw ? 'draw' : 'lost'} · ${r.dealt} dmg</span></div>`).join('')}</div>
+    <div class="score" style="justify-content:center;font-size:34px"><span class="me">${G.format==='lives'?'♥ '+G.lives[0]:s[0]}</span>–<span class="op">${G.format==='lives'?G.lives[1]+' ♥':s[1]}</span></div>
+    <p>${G.format==='lives'?`Lives remaining (♥): ${G.lives[0]}–${G.lives[1]}, rounds won ${s[0]}–${s[1]}. `:''}${esc(G.name)} vs ${esc(G.oppName)}. You won ${tot.w} of ${G.log.length} rounds with a ${esc(br)} build, dealt ${tot.d.toLocaleString()} damage and took ${tot.t.toLocaleString()}.</p>
+    <div class="ledger">${G.log.map(r => `<div><span>Round ${r.round}${r.special ? ' · ' + esc(SPECIALS[r.special].name) : ''}</span><span>${G.format==='lives'?(r.win ? `won · rival −${2 + r.round} ♥` : r.draw ? 'draw' : `lost · −${2 + r.round} ♥`):(r.win ? 'won +' + r.pts : r.draw ? 'draw' : 'lost')} · ${r.dealt} dmg</span></div>`).join('')}</div>
     ${(() => {
       const mvp = topSource(G.srcTotals);
       return mvp
@@ -19474,7 +19489,7 @@ function showTip(id) {
 
 /* ===== js/ui/settings.js ===== */
 // Settings (volume, screen shake, damage numbers, hit markers), the pause menu, controls card and hotkeys.
-const SETTINGS = { vol: 1, music: .4, shake: true, nums: true, marks: true, rotatePortrait:true, touchControls:'auto',touchAssist:false, motion:true,crateSpin:true };
+const SETTINGS = { vol: 1, music: .4, shake: true, nums: true, marks: true, rotatePortrait:true, touchControls:'auto',touchAssist:false, motion:true,crateSpin:true, perf:false };
 try {
   Object.assign(SETTINGS, JSON.parse(load('sd.settings') || '{}'));
 } catch (e) {}
@@ -19520,6 +19535,7 @@ function openSettings(back) {
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
     <label class="vol"><span>Controls</span><select id="setTouch" aria-label="Control style"><option value="auto" ${SETTINGS.touchControls==='auto'?'selected':''}>Automatic</option><option value="on" ${SETTINGS.touchControls==='on'?'selected':''}>Touch sticks</option><option value="off" ${SETTINGS.touchControls==='off'?'selected':''}>Mouse &amp; keyboard</option></select></label>
     ${toggle('setPortrait','Rotate arena in portrait',SETTINGS.rotatePortrait)}
+    ${toggle('setPerf','Performance mode (lower resolution, smoother on older phones)',SETTINGS.perf)}
     ${toggle('setTouchAssist','Subtle touch aim assist (solo only)',SETTINGS.touchAssist)}
     <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Garage Style progress</button></div>
     <button class="btn" id="setDone">Done</button>`;
@@ -19539,7 +19555,7 @@ function openSettings(back) {
   for (const [id, k] of [
     ['setMotion','motion'],['setCrateSpin','crateSpin'],['setShake', 'shake'],
     ['setNums', 'nums'],
-    ['setMarks', 'marks'],['setPortrait','rotatePortrait'],['setTouchAssist','touchAssist']
+    ['setMarks', 'marks'],['setPortrait','rotatePortrait'],['setTouchAssist','touchAssist'],['setPerf','perf']
   ])
     $('#' + id).addEventListener('change', e => {
       SETTINGS[k] = e.target.checked;
