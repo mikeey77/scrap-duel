@@ -2565,7 +2565,6 @@ textarea {
   .abtns { flex-wrap: wrap; max-width: calc(100% - 24px); }
   .net-status { flex-basis: 100%; }
 }
-@media (prefers-reduced-motion: reduce) { .strip { transition: none !important; } }
 
 
 /* Mobile workshop and arena presentation. No world or networking rules change. */
@@ -2637,6 +2636,7 @@ body:has(#setMotion:not(:checked)) #bay::before { animation:none; }
 @media(max-width:920px){body.in-arena .arena-tools,body.in-arena #arena:has(#waitcard:not([hidden])) .arena-tools { top:auto!important; bottom:24px; left:50%; transform:translateX(-50%); width:90px; flex-direction:column; gap:4px; }body.in-arena .arena-tools button { min-height:28px; padding:4px; font-size:10px; }}
 @media(max-width:920px) and (orientation:landscape){body.in-arena .arena-tools,body.in-arena #arena:has(#waitcard:not([hidden])) .arena-tools { bottom:68px; }}
 .reduced-motion #bay::before { animation:none; }
+#shopCategory { width:100%; min-height:40px; padding:8px; background:#152433; color:#fff; border:1px solid #7fe0ff55; border-radius:7px; }
 </style>
   </head>
   <body>
@@ -9052,7 +9052,7 @@ function hintFor() {
   const m = MOD[G.sel];
   if (!hover)
     return G.tool === 'place'
-      ? `${m.name}: ${left(G.sel)} in bin. ${m.layer === 't' ? 'Dashed squares can hold it.' : 'Dots mark where it can attach.'}`
+      ? `${m.name}: ${left(G.sel)} available. ${m.layer === 't' ? 'Dashed squares can hold it.' : 'Dots mark where it can attach.'}`
       : G.tool === 'rotate'
         ? 'Click a part to turn it 90°. Top modules turn first.'
         : 'Click a part to put it back in the bin. Top modules come off first.';
@@ -9495,14 +9495,14 @@ function renderBin() {
   );
   let loose = 0;
   for (const id in G.inv) if (id !== 'cockpit') loose += Math.max(0, left(id));
-  $('#binCount').textContent = `${loose} loose`;
+  $('#binCount').textContent = `${loose} available`;
   $('#leftBody').innerHTML =
     `${catalogFilters("bin", G.catalogQ)}<div class="chips">${[{ id: 'all', name: 'All' }, ...CATS].map(c => `<button class="chip" data-cat="${c.id}" aria-pressed="${G.binCat === c.id}">${c.name}</button>`).join('')}</div>
    <div class="bin">${
      ids
        .map(m => {
          const l = left(m.id);
-         return `<div class="tilewrap"><button class="tile r${m.rar}${l <= 0 ? ' empty' : ''}" style="--rc:${RAR[m.rar].col}" data-id="${m.id}" aria-pressed="${G.sel === m.id}" title="${esc(m.name)} · ${RAR[m.rar].name}"><span class="ly">${m.layer === 't' ? 'TOP' : 'BASE'}</span><img alt="" src="${iconURL(m.id)}"><span class="n">${esc(m.name)}</span><span class="q${l <= 0 ? ' zero' : ''}">${l} loose · ${G.inv[m.id]} owned</span><i class="rb"></i></button><button class="favorite" data-fav="${m.id}" aria-label="Favorite ${esc(m.name)}" aria-pressed="${G.favorites.has(m.id)}">${G.favorites.has(m.id) ? '★' : '☆'}</button></div>`;
+         return `<div class="tilewrap"><button class="tile r${m.rar}${l <= 0 ? ' empty' : ''}" style="--rc:${RAR[m.rar].col}" data-id="${m.id}" aria-pressed="${G.sel === m.id}" title="${esc(m.name)} · ${l} available to place"><span class="ly">${m.layer === 't' ? 'TOP' : 'BASE'}</span><img alt="" src="${iconURL(m.id)}"><span class="n">${esc(m.name)}</span><span class="q${l <= 0 ? ' zero' : ''}" aria-label="${l} available to place">${l>0?'×'+l:'On car'}</span><i class="rb"></i></button><button class="favorite" data-fav="${m.id}" aria-label="Favorite ${esc(m.name)}" aria-pressed="${G.favorites.has(m.id)}">${G.favorites.has(m.id) ? '★' : '☆'}</button></div>`;
        })
        .join('') || '<p class="small" style="grid-column:1/-1">Nothing here yet.</p>'
    }</div>
@@ -9558,7 +9558,7 @@ function shapeURL(cells) {
 function renderShop() {
   $('#binCount').innerHTML = `<span class="coin">${G.coins}</span>`;
   const shapes = SHAPES.map(s => ({ s, cells: shapeCells(s) })).filter(x => x.cells.size);
-  const owned = MODS.filter(m => m.id !== 'cockpit' && (G.found.has(m.id) || m.id === 'girder' || m.id === 'frame')).sort(
+  const owned = MODS.filter(m => m.id !== 'cockpit' && (G.found.has(m.id) || m.id === 'girder' || m.id === 'frame') && (G.binCat==='all'||m.cat===G.binCat) && catalogMatches(m)).sort(
     (a, b) => a.rar - b.rar || a.price - b.price
   );
   $('#leftBody').innerHTML = `
@@ -9575,7 +9575,9 @@ function renderShop() {
            .join('')
        : '<p class="small">The bay is at its maximum size.</p>'
    }</div>
-   <div class="shopsec"><span class="label">Restock parts you’ve found</span>${owned.map(m => `<div class="srow"><img alt="" src="${iconURL(m.id)}"><div><div class="nm" style="color:${RAR[m.rar].col}">${esc(m.name)}</div><div class="ds">${RAR[m.rar].name} · ${left(m.id)} in bin · sells for ${Math.floor(m.price / 2)}</div></div><button class="buy" data-buy="${m.id}" ${G.coins < m.price ? 'disabled' : ''}><span class="coin">${m.price}</span></button></div>`).join('')}</div>`;
+   <div class="shopsec"><span class="label">Find parts</span>${catalogFilters('shop',G.catalogQ)}<select id="shopCategory" aria-label="Shop category"><option value="all">All categories</option>${CATS.map(c=>`<option value="${c.id}" ${G.binCat===c.id?'selected':''}>${c.name}</option>`).join('')}</select><span class="label">Restock parts you’ve found · ${owned.length}</span>${owned.map(m => `<div class="srow"><img alt="" src="${iconURL(m.id)}"><div><div class="nm" style="color:${RAR[m.rar].col}">${esc(m.name)}</div><div class="ds">${footprintHTML(m)} ${shapeLabel(m)} · ${m.mass} t</div><div class="ds">${esc(mountLine(m))}</div><div class="ds">${left(m.id)} available · sells for ${Math.floor(m.price / 2)}</div></div><button class="buy" aria-label="Buy ${esc(m.name)} for ${m.price} coins" data-buy="${m.id}" ${G.coins < m.price ? 'disabled' : ''}><span class="coin">${m.price}</span></button></div>`).join('')||'<p class="small">No discovered parts match these filters.</p>'}</div>`;
+  bindCatalog('shop',renderShop);
+  $('#shopCategory').onchange=e=>{G.binCat=e.target.value;renderShop();};
   $('#bCrate').addEventListener('click', openCrate);
   $$('#leftBody [data-shape]').forEach(b =>
     b.addEventListener('click', () => {
@@ -9616,7 +9618,7 @@ function renderInspect() {
     `<div class="art" style="--rc:${col}"><img alt="" src="${iconURL(m.id)}"></div><div><span class="tag" style="color:${col}">${RAR[m.rar].name} · ${CATNAME[m.cat]}</span><h4>${esc(m.name)}</h4><p>${esc(m.desc)}</p><p class="con">− ${esc(m.con)}</p>
    <div class="tags"><span class="btag mount">${esc(mountLine(m))}</span><span class="btag footprint-tag">${shapeLabel(m)}</span>${footprintHTML(m)}${m.tags.map(t => `<span class="btag">${TAGS[t]}</span>`).join('')}${m.dir ? `<span class="btag">Facing ${'▲▶▼◀'[G.rot]}</span>` : ''}</div></div>
    <div class="stl">${esc(statLine(m))}</div>
-   <div class="trade"><span class="small">${left(m.id)} in bin · worth <span class="coin">${m.price}</span></span><span class="grow"></span>${G.found.has(m.id) && m.id !== 'cockpit' ? `<button class="buy" id="iBuy" ${G.coins < m.price ? 'disabled' : ''}>Buy +1</button><button class="buy" id="iSell" ${left(m.id) <= 0 ? 'disabled' : ''}>Sell 1 · ${Math.floor(m.price / 2)}</button>` : ''}</div>`;
+   <div class="trade"><span class="small">${left(m.id)} available · worth <span class="coin">${m.price}</span></span><span class="grow"></span>${G.found.has(m.id) && m.id !== 'cockpit' ? `<button class="buy" id="iBuy" ${G.coins < m.price ? 'disabled' : ''}>Buy +1</button><button class="buy" id="iSell" ${left(m.id) <= 0 ? 'disabled' : ''}>Sell 1 · ${Math.floor(m.price / 2)}</button>` : ''}</div>`;
   const ib = $('#iBuy');
   if (ib) ib.addEventListener('click', () => buy(m.id));
   const is = $('#iSell');
@@ -10068,8 +10070,9 @@ function openCrate() {
   addCoins(-CRATE_COST);
   const all = MODS.filter(m => m.id !== 'cockpit'), res = modOfRar(all,rollRar(.15));
   const n = res.rar <= 1 ? 2 : 1, isNew = !G.found.has(res.id);
+  const support=draftSupportCount(res.id,n);
   gainWithSupport(res.id,n); // Commit once; skipping or closing cannot lose or duplicate the reward.
-  const stop = 12, cells = Array.from({length:18}, (_,i) => i === stop ? res : pick(all));
+  const stop = 16, cells = Array.from({length:22}, (_,i) => i === stop ? res : pick(all));
   const ov = $('#ovCrate');
   ov.innerHTML = `<div class="reelwrap"><span class="label">Mystery Crate</span><div class="reel" id="reel"><div class="strip" id="strip">${cells.map(m => `<div class="cell" style="--rc:${RAR[m.rar].col}"><img alt="" decoding="async" src="${iconURL(m.id)}"></div>`).join('')}</div></div><button class="btn ghost" id="cSkip">Skip animation</button><div class="reelres" id="reelres" aria-live="polite"></div></div>`;
   ov.hidden = false;
@@ -10078,10 +10081,10 @@ function openCrate() {
     if (finished) return;
     finished = true; clearTimeout(timer);
     const strip = $('#strip'), col = RAR[res.rar].col;
-    strip.style.transition = 'none';
+    strip.style.setProperty('transition','none','important');
     strip.style.transform = `translate3d(${-(stop*112+52-$('#reel').clientWidth/2)}px,0,0)`;
     $('#cSkip').hidden = true;
-    $('#reelres').innerHTML = `<div class="card" style="border-top:4px solid ${col};max-width:520px"><span class="tag" style="color:${col}">${RAR[res.rar].name}${isNew ? ' · NEW MODULE' : ''}</span><h2>${esc(res.name)} ×${n}</h2><p>${esc(res.desc)}</p><p class="small">${esc(mountLine(res))}. Required support blocks are included when needed.</p><div class="dfoot"><button class="btn ghost" id="cAgain" ${G.coins < CRATE_COST ? 'disabled' : ''}>Open another · ${CRATE_COST}</button><button class="btn" id="cDone">Back to the garage</button></div></div>`;
+    $('#reelres').innerHTML = `<div class="card" style="border-top:4px solid ${col};max-width:520px"><span class="tag" style="color:${col}">${RAR[res.rar].name}${isNew ? ' · NEW MODULE' : ''}</span><h2>${esc(res.name)} ×${n}</h2><p>${esc(res.desc)}</p><p class="small">${footprintHTML(res)} ${shapeLabel(res)} · ${res.mass} t · ${esc(mountLine(res))}</p>${support?`<p class="mount-gift">+${support} ${MOD[res.mnt>1?'girder':'frame'].name} support blocks included.</p>`:''}<div class="dfoot"><button class="btn ghost" id="cAgain" ${G.coins < CRATE_COST ? 'disabled' : ''}>Open another · ${CRATE_COST}</button><button class="btn" id="cDone">Back to the garage</button></div></div>`;
     sfx(res.rar >= 3 ? 'legend' : 'coin');
     $('#cDone').onclick = () => { ov.hidden=true; crateBusy=false; G.sel=res.id; refreshUI(); };
     $('#cAgain').onclick = () => { crateBusy=false; openCrate(); };
@@ -10090,9 +10093,13 @@ function openCrate() {
   requestAnimationFrame(() => requestAnimationFrame(() => {
     if (finished) return;
     const strip = $('#strip');
-    strip.style.transition = 'transform 1.35s cubic-bezier(.12,.65,.15,1)';
+    if(SETTINGS.crateSpin===false)return finish();
+    strip.style.setProperty('transition','none','important');
+    strip.style.transform='translate3d(0,0,0)';
+    void strip.offsetWidth;
+    strip.style.setProperty('transition','transform 2.2s cubic-bezier(.08,.65,.15,1)','important');
     strip.style.transform = `translate3d(${-(stop*112+52-$('#reel').clientWidth/2)}px,0,0)`;
-    timer = setTimeout(finish, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1400);
+    timer = setTimeout(finish,2250);
   }));
 }
 /* =================== CODEX =================== */
@@ -10145,7 +10152,7 @@ function renderCodex() {
               const tn = TUNE.filter(t => t.mod === m.id)
                 .map(t => t.name)
                 .join(', ');
-              return `<div class="centry${own ? '' : ' locked'}" style="--rc:${RAR[m.rar].col}"><img alt="" src="${iconURL(m.id)}"><div><div class="nm">${esc(m.name)}</div><div class="meta">${RAR[m.rar].name} · ${m.price ? `${m.price} coins` : 'free'}</div><div class="ds">${esc(m.desc)}</div><div class="cn">− ${esc(m.con)}</div><div class="st">${esc(mountLine(m))}</div><div class="st">${esc(statLine(m))}</div>${tn ? `<div class="st">Tunings: ${esc(tn)}</div>` : ''}<div class="own">${own ? `Found · ${G.inv[m.id] || 0} owned` : 'Not found yet'}</div></div></div>`;
+              return `<div class="centry${own ? '' : ' locked'}" style="--rc:${RAR[m.rar].col}"><img alt="" src="${iconURL(m.id)}"><div><div class="nm">${esc(m.name)}</div><div class="meta">${RAR[m.rar].name} · ${m.price ? `${m.price} coins` : 'free'}</div><div class="ds">${esc(m.desc)}</div><div class="cn">− ${esc(m.con)}</div><div class="st">${esc(mountLine(m))}</div><div class="st">${esc(statLine(m))}</div>${tn ? `<div class="st">Tunings: ${esc(tn)}</div>` : ''}<div class="own">${own ? 'Found' : 'Not found yet'}</div></div></div>`;
             })
             .join('')}</div></section>`;
         })
@@ -19334,7 +19341,7 @@ function showTip(id) {
 
 /* ===== js/ui/settings.js ===== */
 // Settings (volume, screen shake, damage numbers, hit markers), the pause menu, controls card and hotkeys.
-const SETTINGS = { vol: 1, music: .4, shake: true, nums: true, marks: true, rotatePortrait:true, touchControls:'auto',touchAssist:false, motion:true };
+const SETTINGS = { vol: 1, music: .4, shake: true, nums: true, marks: true, rotatePortrait:true, touchControls:'auto',touchAssist:false, motion:true,crateSpin:true };
 try {
   Object.assign(SETTINGS, JSON.parse(load('sd.settings') || '{}'));
 } catch (e) {}
@@ -19374,6 +19381,7 @@ function openSettings(back) {
     <label class="vol"><span>Battle music</span><input type="range" id="setMusic" aria-label="Battle music volume" min="0" max="1" step="0.05" value="${SETTINGS.music}"><b id="setMusicV">${Math.round(SETTINGS.music*100)}%</b></label>
     ${toggle('setMute', 'Mute all sound', MUTE)}
     ${toggle('setMotion','Decorative motion',SETTINGS.motion)}
+    ${toggle('setCrateSpin','Animate mystery crates',SETTINGS.crateSpin)}
     ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
     ${toggle('setNums', 'Floating damage numbers', SETTINGS.nums)}
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
@@ -19396,7 +19404,7 @@ function openSettings(back) {
     store('sd.mute', MUTE ? 1 : 0);
   });
   for (const [id, k] of [
-    ['setMotion','motion'],['setShake', 'shake'],
+    ['setMotion','motion'],['setCrateSpin','crateSpin'],['setShake', 'shake'],
     ['setNums', 'nums'],
     ['setMarks', 'marks'],['setPortrait','rotatePortrait'],['setTouchAssist','touchAssist']
   ])

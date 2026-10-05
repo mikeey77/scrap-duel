@@ -8,7 +8,7 @@ function runtime(options={}){
   const gradient={addColorStop(){}};
   const ctx=new Proxy({createLinearGradient:()=>gradient,createRadialGradient:()=>gradient,createPattern:()=>({}),measureText:t=>({width:String(t).length*7}),getImageData:()=>({data:new Uint8ClampedArray(16)}),createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)})},{get:(o,k)=>k in o?o[k]:(()=>{}),set:(o,k,v)=>(o[k]=v,true)});
   class El{
-    constructor(id=''){this.id=id;this.tagName='DIV';this.hidden=true;this.style={};this.dataset={};this.attrs={};this.listeners={};this.value='';this.clientWidth=720;this.classList={add(){},remove(){},toggle(){}};}
+    constructor(id=''){this.id=id;this.tagName='DIV';this.hidden=true;this.style={setProperty(k,v){this[k]=v;}};this.dataset={};this.attrs={};this.listeners={};this.value='';this.clientWidth=720;this.classList={add(){},remove(){},toggle(){}};}
     set innerHTML(h){this.html=h;for(const m of h.matchAll(/id="([^"]+)"/g)){const e=new El(m[1]);e.hidden=false;elements.set(m[1],e);}}
     get innerHTML(){return this.html||'';}
     insertAdjacentHTML(where,h){this.innerHTML=this.innerHTML+h;}
@@ -313,6 +313,20 @@ test('completed Bounty recovery preserves awarded points and winning streak exac
  const {rr,aa,b}=planScene('tinder');aa.G.mode='mp';aa.G.round=1;aa.Net.role='client';b.net='client';b.me=1;b.tape=[];aa.endRound(0,'Recovery');const stats=b.stats;b.seq='play';
  aa.Net.recv({t:'recover',round:1,score:[4,0],lives:[20,20],format:'bounty',bounty:3,bountyWinner:0,sched:aa.G.sched,phase:'result',result:{round:1,win:0,points:4,stats,why:'Recovery'},resultScoreIncluded:true});
  aa.finishBattle();assert.deepEqual([...aa.G.score],[0,4]);assert.equal(aa.G.bountyStreak,3);assert.equal(aa.G.bountyWinner,1);
+});
+
+test('parts show a single available quantity and an On car state',()=>{
+ const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.takeOption({type:'module',id:'pouch',n:2});const content=rr.elements.get('leftBody').innerHTML;assert(content.includes('×2'));assert(content.includes('On car'));assert(!content.includes(' owned'));assert(!content.includes(' loose · '));assert(rr.elements.get('binCount').textContent.includes('available'));
+});
+test('crate visibly rolls before revealing, including when the OS reduces decorative motion',()=>{
+ const rr=runtime({matchMedia:()=>({matches:true,addEventListener(){}})}),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.openCrate();const count=()=>Object.values(aa.G.inv).reduce((n,v)=>n+v,0),owned=count();
+ for(let n=0;n<3;n++){const frame=rr.rafs.splice(0);for(const f of frame)f(0);}
+ assert(rr.elements.get('strip').style.transition.includes('2.2s'));assert.equal(rr.elements.get('reelres').innerHTML,'');rr.advance(2249);assert.equal(rr.elements.get('reelres').innerHTML,'');rr.advance(1);assert(rr.elements.get('reelres').innerHTML.includes('Back to the garage'));assert.equal(count(),owned);rr.elements.get('cSkip').click();assert.equal(count(),owned);
+});
+
+test('shop filters discovered parts by search and rarity and exposes their real footprints',()=>{
+ const rr=runtime(),aa=rr.api;aa.startMatch('sandbox');aa.G.leftTab='shop';aa.G.catalogQ='Dragon Bellows';aa.refreshUI();let content=rr.elements.get('leftBody').innerHTML;assert(content.includes('data-buy="dragon"'));assert(!content.includes('data-buy="pouch"'));assert(content.includes('2×3 · 6 cells'));
+ aa.G.catalogRarity='0';aa.refreshUI();content=rr.elements.get('leftBody').innerHTML;assert(!content.includes('data-buy="dragon"'));assert(content.includes('No discovered parts match'));
 });
 
 console.log(`\n${passed} regression tests passed.`);

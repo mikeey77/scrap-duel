@@ -15,6 +15,8 @@ Play: https://scrap-duel.netlify.app/
 - Four selectable formats for solo and multiplayer: Balanced rounds, Scrap Lives (20 lives, defeat costs 2 + round), Bounty (beat the leader for up to four points and bonus coins), and Hill finale (double-point King of the Hill).
 - Cockpit portraits, cargo feedback, damaged connection warnings and restrained camera shake. Result reports show the first broken part, most damaged part and obstructed weapons, with a garage damage map.
 - New module cooldowns, cargo, cables and match rules synchronize with the peer and replay. This release uses multiplayer protocol 7; both players should refresh after an update.
+- Parts cards show one available quantity badge, or “On car” when all copies are mounted. Mystery crates visibly roll for 2.2 seconds before the reveal; Skip and the separate “Animate mystery crates” setting remain available.
+- Shop search, category, rarity, favorites and mount filters narrow the discovered parts. Shop rows and crate rewards show occupied footprints, weight and mount requirements.
 
 Weather rules, 2v2 and spectating during building remain future work.
 
