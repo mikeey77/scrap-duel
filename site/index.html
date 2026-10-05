@@ -3479,6 +3479,36 @@ select {
     transition: none;
   }
 }
+/* Wide screens: the four modes sit in one row under the title, no scrolling. */
+@media (min-width: 1180px) {
+  #ovMenu .menu2 {
+    width: min(1280px, 100%);
+    margin: auto auto 0 0;
+    padding-bottom: 36px;
+  }
+  #ovMenu .modes2 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  #ovMenu .mode2 {
+    justify-content: flex-start;
+  }
+  #ovMenu .mode2 > .btn,
+  #ovMenu .mode2 > .row {
+    margin-top: auto;
+  }
+  #ovMenu.live {
+    background:
+      linear-gradient(0deg, rgba(6, 10, 20, 0.96) 0%, rgba(6, 10, 20, 0.7) 42%, rgba(6, 10, 20, 0.1) 75%),
+      linear-gradient(90deg, rgba(6, 10, 20, 0.7) 0%, rgba(6, 10, 20, 0) 45%);
+  }
+  #ovMenu .mfoot {
+    justify-content: flex-start;
+  }
+  body:has(#ovMenu.live:not([hidden])) #demoFeed {
+    bottom: auto;
+    top: 118px;
+  }
+}
 </style>
   </head>
   <body>
@@ -3674,7 +3704,7 @@ select {
       </main>
     </div>
 
-    <div class="overlay" id="ovIntro">
+    <div class="overlay" id="ovIntro" hidden>
       <div class="card">
         <span class="label">Vehicle combat · builder preview</span>
         <h1>SCRAP DUEL</h1>
@@ -3706,7 +3736,7 @@ select {
           Ten rounds per match. Each round is worth one point; the final round is worth two. Play a bot rival, a
           friend online, or mess around in the sandbox.
         </p>
-        <button class="btn" id="btnStart">Main menu</button>
+        <button class="btn" id="btnStart">Back to the menu</button>
       </div>
     </div>
     <div class="overlay" id="ovMenu" hidden></div>
@@ -10905,7 +10935,7 @@ function updateHUD() {
     : `Round ${Math.min(G.round, ROUNDS)} · ${stakeLine(G.round)}`;
   $('#tStake').hidden = sb;
   $('#formatStatus').textContent=G.format==='lives'?`♥ ${G.lives[0]} – ${G.lives[1]}`:MATCH_FORMATS[G.format||'balanced'].name;
-  $('#formatStatus').hidden=!G.started;
+  $('#formatStatus').hidden=!G.started||(G.format||'balanced')==='balanced';
   $('#tParts').textContent = G.base.size + G.top.size;
   $('#tFound').textContent = `${G.found.size} / ${MODS.length}`;
   const p = $('#tPhase');
@@ -20828,7 +20858,7 @@ function showMenu() {
     <div class="modes2">
       <div class="mode2" style="--rc:#5cc38f"><div class="mh"><span class="ico">1P</span><h3>Singleplayer</h3></div><p>A bot rival who drafts, shops and builds with the same rules.</p>
         <div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
-        ${formatSelect('mFormat')}<button class="btn" id="mSolo">Play vs bot</button></div>
+        <button class="btn" id="mSolo">Play vs bot</button></div>
       <div class="mode2" style="--rc:#4ea1ff"><div class="mh"><span class="ico">2P</span><h3>Multiplayer</h3></div><p>Peer-to-peer with a four-character room code, ping display and a 30-second reconnect window.</p>
         <input id="mName" class="mname" maxlength="16" value="${esc(G.name)}" aria-label="Your name" placeholder="Your name">
         <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div></div>
@@ -20852,7 +20882,6 @@ function showMenu() {
     $('#mName').disabled = true;
     $('#mName').title = 'Your account nickname';
   }
-  $('#mFormat').onchange=e=>{chosenFormat=e.target.value;e.target.parentElement.querySelector('small').textContent=MATCH_FORMATS[chosenFormat].desc;};
   $$('#diffSeg button').forEach(b =>
     b.addEventListener('click', () => {
       G.diff = +b.dataset.i;
@@ -20938,16 +20967,15 @@ function lobbyUI() {
           : '<p>Opening a room…</p>'
         : '<p>Connecting…</p>';
   c.innerHTML = `<span class="label">${host ? 'Hosting' : 'Joining'} a room</span><h2>Multiplayer</h2>
-    <div class="code">${esc(n.code || '····')}</div>${st}${host?formatSelect('lFormat'):''}
+    <div class="code">${esc(n.code || '····')}</div>${st}
     <div class="lstat"><span><span class="dot on"></span>${esc(G.name)}</span><span><span class="dot${n.connected ? ' on' : ''}"></span>${n.connected ? esc(G.oppName) : 'Friend'}</span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>Start match</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Cancel</button></div>`;
   const s = $('#lStart');
-  if(host)$('#lFormat').onchange=e=>{chosenFormat=e.target.value;e.target.parentElement.querySelector('small').textContent=MATCH_FORMATS[chosenFormat].desc;};
   if (s)
     s.addEventListener('click', () => {
       if (!n.connected) return;
       const sched = makeSchedule();
-      const format=$('#lFormat').value||chosenFormat;
+      const format='balanced'; // only the balanced format is offered
       Net.send({ t: 'begin', sched,format });
       beginMP(sched,format);
     });
@@ -21042,7 +21070,9 @@ G.inv = { cockpit: 1 };
 G.found.add('cockpit');
 sizeBP();
 refreshUI();
-demoStart();
+// the site opens straight on the main menu; "How to play" is one click away there
+$('#ovIntro').hidden = true;
+showMenu();
 requestAnimationFrame(loop);
 
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
