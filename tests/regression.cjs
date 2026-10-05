@@ -329,4 +329,22 @@ test('shop filters discovered parts by search and rarity and exposes their real 
  aa.G.catalogRarity='0';aa.refreshUI();content=rr.elements.get('leftBody').innerHTML;assert(!content.includes('data-buy="dragon"'));assert(content.includes('No discovered parts match'));
 });
 
+test('opening the menu pauses a solo battle and closing it resumes play',()=>{
+ const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();
+ const cfg=aa.makeCfg(aa.myCarCfg());aa.toBattle({...cfg,me:0,net:null});aa.getB().seq='play';
+ aa.G.started=true;aa.showMenu();assert.equal(aa.getB().paused,true,'bot kept fighting behind the menu');
+ const t=aa.getB().t;for(let n=0;n<5;n++){rr.advance(16);for(const f of rr.rafs.splice(0))f(rr.context.performance.now());}
+ assert.equal(aa.getB().t,t);
+ rr.elements.get('ovMenu').hidden=true;for(let n=0;n<5;n++){rr.advance(16);for(const f of rr.rafs.splice(0))f(rr.context.performance.now());}
+ assert.equal(aa.getB().paused,false);
+});
+test('one Escape closes the codex without also opening the pause menu',()=>{
+ const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();
+ const cfg=aa.makeCfg(aa.myCarCfg());aa.toBattle({...cfg,me:0,net:null});aa.getB().seq='play';
+ rr.elements.get('ovCodex').hidden=false;rr.elements.get('ovPause').hidden=true;
+ const ev={code:'Escape',key:'Escape',target:{tagName:'BODY'},defaultPrevented:false,preventDefault(){this.defaultPrevented=true;},stopPropagation(){}};
+ rr.event('keydown',ev);
+ assert.equal(rr.elements.get('ovCodex').hidden,true);assert.equal(rr.elements.get('ovPause').hidden,true);assert.notEqual(aa.getB().paused,true);
+});
+
 console.log(`\n${passed} regression tests passed.`);

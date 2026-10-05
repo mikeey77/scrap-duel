@@ -1833,14 +1833,35 @@ textarea {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-@media (max-width: 1320px) {
+@media (max-width: 1540px) {
   .hide-md {
     display: none !important;
   }
 }
-@media (max-width: 1080px) {
+@media (max-width: 1280px) {
   .hide-sm {
     display: none !important;
+  }
+}
+/* Top bar never pushes Codex/Menu off screen: the long labels shrink first. */
+#hud .stake,
+#hud .format-status {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#hud .hbtn {
+  flex-shrink: 0;
+}
+@media (max-width: 1180px) {
+  #hud .brand {
+    font-size: 0;
+    gap: 0;
+  }
+  #hud .format-status {
+    display: none;
   }
 }
 @media (max-width: 920px) {
@@ -2521,7 +2542,7 @@ textarea {
 }
 
 /* Playtest update: accessible workshop, safe-area controls and lightweight reels. */
-:root { --host-safe: 54px; }
+:root { --host-safe: 0px; } /* Netlify adds no badge on production; only the device safe area is reserved. */
 #app { padding-bottom: calc(var(--host-safe) + env(safe-area-inset-bottom)); }
 .overlay { padding-bottom: calc(var(--host-safe) + 16px); }
 .toolbar { flex-wrap: wrap; justify-content: center; overflow: visible; width: max-content; }
@@ -2638,6 +2659,88 @@ body:has(#setMotion:not(:checked)) #bay::before { animation:none; }
 @media(max-width:920px) and (orientation:landscape){body.in-arena .arena-tools,body.in-arena #arena:has(#waitcard:not([hidden])) .arena-tools { bottom:68px; }}
 .reduced-motion #bay::before { animation:none; }
 #shopCategory { width:100%; min-height:40px; padding:8px; background:#152433; color:#fff; border:1px solid #7fe0ff55; border-radius:7px; }
+/* ---------- polish pass (Oct 2026) ---------- */
+/* The live menu sits over the demo battle: hide the match HUD and arena buttons behind it. */
+body:has(#ovMenu.live:not([hidden])) #hud,
+body:has(#ovMenu.live:not([hidden])) .arena-tools,
+body:has(#ovIntro:not([hidden])) .arena-tools {
+  visibility: hidden;
+}
+/* Bay: keep the grid clear of the layer buttons (top) and the toolbar + hint (bottom). */
+#bayScroll {
+  padding-top: 40px;
+  padding-bottom: calc(var(--tb-h, 54px) + 2px);
+}
+#bayHint {
+  bottom: calc(var(--tb-h, 54px) + 20px);
+}
+@container bay (max-width: 780px) {
+  .toolbar button {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  .toolbar .kbd {
+    display: none;
+  }
+}
+#bay {
+  container: bay / inline-size;
+}
+/* Pause button only matters in the arena. */
+#btnPause {
+  display: none;
+}
+body.in-arena #btnPause {
+  display: inline-flex;
+  letter-spacing: -2px;
+}
+/* Phones in battle: no Forfeit or view buttons under your thumbs; both live in the pause menu. */
+body.touch-enabled.arena-battle .arena-tools,
+body.touch-enabled.arena-battle #bEnd {
+  display: none !important;
+}
+/* Phones in the waiting arena: Start/Back sit under the ready card, clear of the thumb buttons. */
+@media (max-width: 920px) {
+  body.in-arena.touch-enabled:not(.arena-battle) .abtns {
+    top: 168px;
+    bottom: auto;
+    left: 10px;
+    right: 10px;
+  }
+}
+@media (max-width: 920px) and (orientation: landscape) {
+  body.in-arena.touch-enabled:not(.arena-battle) .abtns {
+    top: 58px;
+    left: 160px;
+    right: 160px;
+  }
+}
+/* Phones in the arena: one compact HUD row. */
+@media (max-width: 920px) {
+  body.in-arena #hud {
+    flex-wrap: nowrap;
+  }
+  body.in-arena #hud .hbtn {
+    padding: 6px 10px;
+    min-height: 34px;
+  }
+  body.in-arena #hud .format-status {
+    display: none;
+  }
+  body.in-arena #hud .pill {
+    max-width: 104px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+/* The menu's live ticker belongs to the menu: hide it under codex, settings and style screens. */
+body:has(#ovCodex:not([hidden])) #demoFeed,
+body:has(#ovSettings:not([hidden])) #demoFeed,
+body:has(#ovStyle:not([hidden])) #demoFeed,
+body:has(#ovLobby:not([hidden])) #demoFeed {
+  display: none;
+}
 </style>
   </head>
   <body>
@@ -2670,6 +2773,7 @@ body:has(#setMotion:not(:checked)) #bay::before { animation:none; }
           <span class="label">Modules found</span><span class="v" id="tFound">0 / 100</span>
         </div>
         <button class="hbtn" id="btnCodex">Codex <span class="kbd">K</span></button
+        ><button class="hbtn" id="btnPause" title="Pause (Esc)" aria-label="Pause">❚❚</button
         ><button class="hbtn" id="btnMenu">Menu</button>
       </header>
       <main>
@@ -8643,7 +8747,11 @@ function bayDims() {
   return { x0: b.x0 - 1, x1: b.x1 + 1, y0: b.y0 - 1, y1: b.y1 + 1 };
 }
 function sizeBP() {
-  const r = bayScroll.getBoundingClientRect(),
+  // fit inside the padded area, so the grid never hides under the layer buttons or toolbar
+  const cs = (window.getComputedStyle && getComputedStyle(bayScroll)) || {},
+    pad = k => parseFloat(cs[k]) || 0,
+    r0 = bayScroll.getBoundingClientRect(),
+    r = { width: r0.width - pad('paddingLeft') - pad('paddingRight'), height: r0.height - pad('paddingTop') - pad('paddingBottom') },
     d = dprOf();
   dims = bayDims();
   const cols = dims.x1 - dims.x0 + 1,
@@ -8664,6 +8772,17 @@ function sizeBP() {
 function setZoom(z) {
   G.zoom = clamp(z, 0.6, 2.6);
   sizeBP();
+}
+if (window.ResizeObserver) {
+  const tb = $('#bay .toolbar');
+  if (tb)
+    new ResizeObserver(() => {
+      const h = Math.round(tb.getBoundingClientRect().height);
+      if (h && $('#bay').style.getPropertyValue('--tb-h') !== h + 'px') {
+        $('#bay').style.setProperty('--tb-h', h + 'px');
+        if (building()) sizeBP();
+      }
+    }).observe(tb);
 }
 $('#zIn').addEventListener('click', () => setZoom(G.zoom * 1.2));
 $('#zOut').addEventListener('click', () => setZoom(G.zoom / 1.2));
@@ -9798,7 +9917,7 @@ function planAmbient(c){
  for(let i=0;i<7;i++){c.globalAlpha=.12+.12*Math.sin(ANIM*1.2+i);circ(c,WM+i*(AW-2*WM)/6,WM*.45,7,'#f2b705');}
  c.restore();
 }
-function planPortrait(c,v,x,y){c.save();c.translate(x,y);circ(c,0,0,12,'#172332',v.paint,2);c.fillStyle=v.paint;c.fillRect(-6,-5,12,9);c.fillStyle='#d9f4ff';c.fillRect(-4,-4,8,3);c.fillStyle='#fff';c.fillRect(-4,2,2,2);c.fillRect(2,2,2,2);c.restore();}
+function planPortrait(c,v,x,y){c.save();c.translate(x,y);circ(c,0,0,11,'#172332',v.paint,2);c.fillStyle=v.paint;c.fillRect(-6,-5,12,9);c.fillStyle='#d9f4ff';c.fillRect(-4,-4,8,3);c.fillStyle='#fff';c.fillRect(-4,2,2,2);c.fillRect(2,2,2,2);c.restore();}
 
 function renderSynergy() {
   const ids = [...G.base.values(), ...G.top.values()].map(e => e.id);
@@ -10847,9 +10966,10 @@ function sizeArena() {
 }
 let presentationKey='';
 function syncPresentation() {
-  const active=!!B&&!B.demo&&['wait','battle','replay'].includes(G.phase),touch=!!B&&B.touch&&!B.replay;
+  const active=!!B&&!B.demo&&['wait','battle','replay'].includes(G.phase),touch=active&&!!B&&B.touch&&!B.replay; // the menu demo never shows thumbsticks
   document.body.classList.toggle('reduced-motion',SETTINGS.motion===false);
-  const key=active+' '+touch+' '+innerWidth+' '+innerHeight;
+  document.body.classList.toggle('arena-battle',active&&G.phase==='battle');
+  const key=active+' '+touch+' '+G.phase+' '+innerWidth+' '+innerHeight;
   if(key===presentationKey)return;
   presentationKey=key;
   document.body.classList.toggle('in-arena',active);
@@ -15920,21 +16040,30 @@ function drawDemoHUD(c) {
     c.restore();
   }
 }
-function bars(c, x, y, w, rows, right) {
+/** Stacked labelled bars. `inset` leaves room on the first row for the cockpit portrait. */
+function bars(c, x, y, w, rows, right, inset = 0) {
   c.fillStyle = 'rgba(20,16,12,.72)';
   c.fillRect(x, y, w, 8 + rows.length * 26);
   rows.forEach(([l, val, col], i) => {
-    const yy = y + 6 + i * 26;
+    const yy = y + 6 + i * 26,
+      ins = i ? 0 : inset;
     c.fillStyle = '#c9ced3';
     c.font = '700 11px "Barlow Semi Condensed", sans-serif';
     c.textBaseline = 'top';
     c.textAlign = right ? 'right' : 'left';
-    c.fillText(l, right ? x + w - 8 : x + 8, yy);
+    // long names and power-up lines are cut short instead of running into the percentage
+    let lab = String(l);
+    const room = w - 16 - ins - 34;
+    if (c.measureText(lab).width > room) {
+      while (lab.length > 2 && c.measureText(lab + '…').width > room) lab = lab.slice(0, -1);
+      lab += '…';
+    }
+    c.fillText(lab, right ? x + w - 8 - ins : x + 8 + ins, yy);
     c.textAlign = right ? 'left' : 'right';
     c.fillStyle = '#97a0a8';
     c.fillText(Math.round(clamp(val, 0, 1) * 100) + '%', right ? x + 8 : x + w - 8, yy);
-    const bx = x + 8,
-      bw = w - 16;
+    const bx = x + 8 + (right ? 0 : ins),
+      bw = w - 16 - ins;
     c.fillStyle = 'rgba(255,255,255,.1)';
     c.fillRect(bx, yy + 14, bw, 6);
     c.fillStyle = col;
@@ -15989,13 +16118,13 @@ function drawHUD(c) {
     pw = Math.min(250, W * (narrow ? 0.44 : 0.4));
   const fragile=v.insts.find(I=>I.alive&&I.layer==='b'&&['frame','girder','junction','shackle'].includes(I.id)&&I.hp/I.max<.25);
   if(fragile)rows.push(['CONNECTION NEAR BREAKING',fragile.hp/fragile.max,'#ff8268']);
-  bars(c, 12, 12, pw, rows, false);
-  planPortrait(c,v,26,30);
+  bars(c, 12, 12, pw, rows, false, 26);
+  planPortrait(c,v,32,28);
   const e = B.cars.find(x => x !== v);
   if (e) {
     const r2 = [[e.name.toUpperCase(), e.dead ? 0 : integrity(e), e.paint]];
-    bars(c, W - 12 - pw, 12, pw, r2, true);
-    planPortrait(c,e,W-26,30);
+    bars(c, W - 12 - pw, 12, pw, r2, true, 26);
+    planPortrait(c,e,W-32,28);
   }
   c.textAlign = 'center';
   c.textBaseline = 'top';
@@ -16285,6 +16414,7 @@ addEventListener('keydown', e => {
     return;
   }
   if (e.code === 'Escape' && !$('#ovCodex').hidden) {
+    e.preventDefault(); // one Esc closes the codex; it must not also open the pause menu
     closeCodex();
     return;
   }
@@ -17007,7 +17137,9 @@ function simulate(dt) {
       endRound(
         w,
         w == null
-          ? 'Time ran out with both cars equally battered.'
+          ? ia > 0.99 && ib > 0.99
+            ? 'Time ran out and neither car took real damage. Nobody scores.'
+            : 'Time ran out with both cars equally battered.'
           : `Time! ${B.cars[w].name} had more car left (${Math.round(Math.max(ia, ib) * 100)}% vs ${Math.round(Math.min(ia, ib) * 100)}%).`
       );
     }
@@ -19456,11 +19588,17 @@ function togglePause(force) {
   const forfeit = G.phase === 'battle' && G.mode === 'solo';
   $('#pauseCard').innerHTML =
     `<span class="label">${online ? 'Online match · still running' : 'Paused'}</span><h2>${online ? 'Menu' : 'Paused'}</h2>
-    <div class="pbtns"><button class="btn" id="pResume">Resume</button><button class="btn ghost" id="pControls">Controls</button><button class="btn ghost" id="pSettings">Settings</button>
+    <div class="pbtns"><button class="btn" id="pResume">Resume</button><button class="btn ghost" id="pControls">Controls</button><button class="btn ghost" id="pSettings">Settings</button>${document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen ? `<button class="btn ghost" id="pFull">${document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen'}</button>` : ''}
     ${forfeit ? '<button class="btn ghost" id="pForfeit">Forfeit round</button>' : ''}${G.phase === 'wait' ? '<button class="btn ghost" id="pGarage">Back to garage</button>' : ''}<button class="btn ghost" id="pMenu">Main menu</button></div>
     <div id="pExtra"></div>`;
   $('#ovPause').hidden = false;
   $('#pResume').addEventListener('click', () => togglePause(false));
+  const pf = $('#pFull');
+  if (pf)
+    pf.addEventListener('click', async () => {
+      await $('#btnFullscreen').onclick();
+      togglePause(false);
+    });
   $('#pControls').addEventListener('click', () => ($('#pExtra').innerHTML = controlsHtml()));
   $('#pSettings').addEventListener('click', () => {
     $('#ovPause').hidden = true;
@@ -19490,11 +19628,19 @@ document.addEventListener('visibilitychange', () => {
 /* ---------- hotkeys outside the arena ---------- */
 addEventListener('keydown', e => {
   if (e.target && (['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable)) return;
+  if (e.defaultPrevented) return;
+  if (e.code === 'Escape' && !$('#ovMenu').hidden && inMatch()) {
+    // Esc on the in-match menu works like "Resume match"
+    e.preventDefault();
+    $('#ovMenu').hidden = true;
+    return;
+  }
   if (
     (e.code === 'Escape' || e.code === 'KeyP') &&
     canPause() &&
     $('#ovCodex').hidden &&
-    $('#ovSettings').hidden
+    $('#ovSettings').hidden &&
+    $('#ovMenu').hidden
   ) {
     e.preventDefault();
     togglePause();
@@ -19618,6 +19764,11 @@ function showMenu() {
     G.phase = 'menu';
     updateHUD();
     demoStart();
+  } else if (B && !B.demo && G.mode !== 'mp' && (G.phase === 'battle' || G.phase === 'wait') && !B.paused) {
+    // solo: the bot must not keep shooting while you browse the menu
+    B.paused = true;
+    B.menuPaused = true;
+    clearArenaInput && clearArenaInput();
   }
   const L = levelInfo();
   $('#ovMenu').classList.toggle('live', !resume);
@@ -19760,6 +19911,11 @@ $('#btnMenu').addEventListener('click', () => {
   sfx('ui');
   showMenu();
 });
+$('#btnPause').addEventListener('click', () => {
+  sfx('ui');
+  if (canPause()) togglePause(true);
+  else showMenu();
+});
 
 /* ---------- main loop ---------- */
 $('#reviewBack').onclick=closeGarageReport;
@@ -19781,6 +19937,10 @@ function loop(t) {
         demoTick(dt);
       }
     } else if ((G.phase === 'wait' || G.phase === 'battle') && B) {
+      if (B.menuPaused && ['#ovMenu', '#ovCodex', '#ovSettings', '#ovStyle', '#ovIntro', '#ovPause'].every(id => $(id).hidden)) {
+        B.menuPaused = false;
+        B.paused = false;
+      }
       if (!B.paused && !Net.reconnecting) stepArena(dt);
       if (B && B.cars.length) drawArena();
       if (B && B.rec && G.phase === 'battle' && !B.paused && !Net.reconnecting) recTick(dt);
@@ -19822,7 +19982,7 @@ requestAnimationFrame(loop);
 
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
-  window.__SD = { CATS,blockedFor,reviewHTML,openGarageReport,closeGarageReport,footprint,occupancy,instCenter,cellCount,shapeBounds,shapeLabel,topAt,canPlaceTop,act,returnTopsOn,planCapacity,planTakeScrap,planSpill,planTick,planActivate,planWeapon,planHurt,simulate,weapons,hurtInst,stepCarHazards,mkObj,setupSpecial,stepSpecial,specialTimeout,finishBattle,formatAwards,MATCH_FORMATS,POWERUPS,SPECIALS,drawBP,drawArena, view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
+  window.__SD = { showMenu, canPause, togglePause, CATS,blockedFor,reviewHTML,openGarageReport,closeGarageReport,footprint,occupancy,instCenter,cellCount,shapeBounds,shapeLabel,topAt,canPlaceTop,act,returnTopsOn,planCapacity,planTakeScrap,planSpill,planTick,planActivate,planWeapon,planHurt,simulate,weapons,hurtInst,stepCarHazards,mkObj,setupSpecial,stepSpecial,specialTimeout,finishBattle,formatAwards,MATCH_FORMATS,POWERUPS,SPECIALS,drawBP,drawArena, view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
 
 })();
 </script>
