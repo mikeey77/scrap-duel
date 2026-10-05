@@ -3509,6 +3509,100 @@ select {
     top: 118px;
   }
 }
+/* round report: inline damage map */
+.rep-grid {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 14px;
+  align-items: start;
+  width: 100%;
+}
+.rep-map {
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(91, 231, 255, 0.08), rgba(5, 10, 20, 0.7) 70%);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+}
+.rep-list {
+  display: grid;
+  gap: 6px;
+}
+.rep {
+  margin: 0;
+  padding-left: 18px;
+  position: relative;
+  font-size: 14px;
+}
+.rep::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 5px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid;
+}
+.rep.first::before { border-color: #fff; }
+.rep.heat::before { background: rgba(255, 72, 60, 0.85); border-color: rgba(255, 72, 60, 0.85); }
+.rep.block::before { border-color: #ffb423; }
+.rep.tip { color: #9fd2ea; padding-left: 0; }
+.rep.tip::before { display: none; }
+.rep-open {
+  justify-self: start;
+  font-size: 12px !important;
+  padding: 5px 10px !important;
+}
+@media (max-width: 520px) {
+  .rep-grid { grid-template-columns: 110px 1fr; }
+  .rep-map { width: 110px; height: 110px; }
+}
+.nextup {
+  --sc: var(--holo);
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  margin: 4px 0 10px;
+  border: 1px solid var(--sc);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--sc) 16%, transparent), rgba(5, 10, 20, 0.4));
+  clip-path: var(--chamfer-s);
+}
+.nextup .nx-ico {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--sc);
+  border: 1px solid var(--sc);
+  background: rgba(5, 10, 20, 0.6);
+  clip-path: var(--chamfer-s);
+}
+.nextup .nx-k {
+  font-family: var(--f-display);
+  font-size: 12px;
+  color: var(--sc);
+}
+.nextup b {
+  display: block;
+  font-family: var(--f-display);
+  font-size: 20px;
+  margin: 1px 0 3px;
+}
+.nextup p {
+  margin: 0;
+  font-size: 14px;
+  color: #c1d4ec;
+}
+.nextup .nx-tip {
+  color: #8da3c2;
+  font-size: 13px;
+  margin-top: 3px;
+}
 </style>
   </head>
   <body>
@@ -7025,6 +7119,17 @@ function makeSchedule(rounds = ROUNDS) {
 }
 const specialOf = round => (G.sched && G.sched[round - 1]) || null;
 /** Small HTML banner announcing a special round (used in the draft, garage and waiting arena). */
+/** "Next up" card on the round report: which round, what kind, what it is worth. */
+function nextUpHTML(round) {
+  const id = specialOf(round),
+    S = id && SPECIALS[id],
+    pts = roundPoints(round),
+    fin = round === ROUNDS;
+  const head = `Round ${round} of ${ROUNDS}${fin ? ' · final round' : ''}`;
+  if (S)
+    return `<div class="nextup special" style="--sc:${S.col}"><span class="nx-ico">${S.icon}</span><div><span class="nx-k">${head} · ${pts} point${pts > 1 ? 's' : ''}</span><b>${esc(S.name)}</b><p>${esc(S.blurb)}</p><p class="nx-tip">${esc(S.tip)}</p></div></div>`;
+  return `<div class="nextup"><span class="nx-ico">⚔</span><div><span class="nx-k">${head} · ${pts} point${pts > 1 ? 's' : ''}</span><b>${fin ? 'Final duel: double points' : 'Normal duel'}</b><p>Wreck the rival's cockpit or have more car left when time runs out.</p></div></div>`;
+}
 function specialNote(round) {
   const id = specialOf(round);
   if (!id) return '';
@@ -9132,7 +9237,7 @@ function drawStaticThemed(c, s, theme) {
   }
 }
 /* Render a design (for VS cards, blueprint thumbnails) */
-function designURL(design, size, paint, livery) {
+function designURL(design, size, paint, livery, overlay) {
   const cells = [];
   for (const [, e] of design.base) cells.push(...footprint(e.id, e.rot, e.x, e.y));
   let x0 = 0,
@@ -9171,6 +9276,7 @@ function designURL(design, size, paint, livery) {
     drawModule(c, e.id, cs * 0.82, (e.rot * Math.PI) / 2, 'p', { builder: 1 });
     c.restore();
   }
+  if (overlay) overlay(c, ox, oy, cs);
   return cv.toDataURL();
 }
 
@@ -9832,8 +9938,11 @@ function drawBP() {
       }
     }
   }
-  {
-    const C = calc(designItems());
+  // Balance point: only shown when the car is noticeably lopsided (it then pulls to that side).
+  const C0 = calc(designItems()),
+    off = Math.hypot(C0.cx, C0.cy);
+  if (off > 0.75 || G.showArcs) {
+    const C = C0;
     const X = cpx(C.cx) + cell / 2,
       Y = cpy(C.cy) + cell / 2;
     c.strokeStyle = '#ff6fae';
@@ -9848,7 +9957,7 @@ function drawBP() {
     c.fillStyle = '#ff6fae';
     c.font = `700 ${Math.max(9, cell * 0.2)}px sans-serif`;
     c.textAlign = 'left';
-    c.fillText('CoM', X + cell * 0.25, Y - cell * 0.25);
+    c.fillText(off > 0.75 ? 'Heavy side' : 'Balance', X + cell * 0.25, Y - cell * 0.25);
   }
   if (G.mirror) {
     c.strokeStyle = 'rgba(127,224,255,.8)';
@@ -10968,12 +11077,30 @@ function planGarageReport(c){
  for(const [k,n] of Object.entries(report.damage||{})){const e=reportPart(k);if(!e)continue;for(const [x,y] of footprint(e.id,e.rot,e.x,e.y)){c.fillStyle=`rgba(255,92,70,${.15+.55*n/max})`;c.fillRect(cpx(x)+2,cpy(y)+2,cell-4,cell-4);}}
  const e=G.reviewFocus&&reportPart(G.reviewFocus);if(e){c.strokeStyle='#fff2a0';c.lineWidth=3;for(const [x,y] of footprint(e.id,e.rot,e.x,e.y))c.strokeRect(cpx(x)+1,cpy(y)+1,cell-2,cell-2);}
 }
+/* The round report shows the damage map right away: your car with red heat where hits landed,
+   a white outline on the first part that broke and amber on any blocked weapon, plus one tip. */
 function reviewHTML(st){
- const first=st.first,damage=Object.entries(st.damage||{}).sort((a,b)=>b[1]-a[1])[0],blocked=(st.blocked||[])[0],rows=[];
- if(first)rows.push([first.layer+'|'+first.k,`First break: ${MOD[first.id]?.name||first.id}`]);
- if(damage){const e=reportPart(damage[0]);rows.push([damage[0],`Most damage: ${e?MOD[e.id].name:'connection'} · ${Math.round(damage[1])}`]);}
- if(blocked)rows.push([blocked.layer+'|'+blocked.k,`Blocked weapon: ${MOD[blocked.id]?.name}`]);
- return `<div class="build-report"><b>Learn from this round</b><p class="small">Open a marked part in your garage. Red cells show where damage landed.</p>${rows.map(([k,label])=>`<button class="btn ghost" data-review="${esc(k)}">${esc(label)}</button>`).join('')}<button class="btn ghost" data-review="">View damage map</button></div>`;
+ const first=st.first,damage=Object.entries(st.damage||{}).sort((a,b)=>b[1]-a[1])[0],blocked=(st.blocked||[])[0];
+ const max=Math.max(1,...Object.values(st.damage||{}));
+ let img='';
+ try{
+  img=designURL({base:G.base,top:G.top},260,G.paint,null,(c,ox,oy,cs)=>{
+   const cellsOf=e=>footprint(e.id,e.rot,e.x,e.y);
+   for(const [k,n] of Object.entries(st.damage||{})){const e=reportPart(k);if(!e)continue;for(const [x,y] of cellsOf(e)){c.fillStyle=`rgba(255,72,60,${.18+.6*n/max})`;c.fillRect(ox+x*cs+1,oy+y*cs+1,cs-2,cs-2);}}
+   const ring=(k,col)=>{const e=k&&reportPart(k);if(!e)return;c.strokeStyle=col;c.lineWidth=Math.max(2,cs*.09);for(const [x,y] of cellsOf(e))c.strokeRect(ox+x*cs+1.5,oy+y*cs+1.5,cs-3,cs-3);};
+   if(blocked)ring(blocked.layer+'|'+blocked.k,'#ffb423');
+   if(first)ring(first.layer+'|'+first.k,'#ffffff');
+  });
+ }catch(e){}
+ const rows=[];
+ if(first)rows.push(['first',`<b>${esc(MOD[first.id]?.name||first.id)}</b> broke first`]);
+ if(damage){const e=reportPart(damage[0]);rows.push(['heat',`<b>${e?esc(MOD[e.id].name):'A connection'}</b> took the most damage (${Math.round(damage[1])})`]);}
+ if(blocked)rows.push(['block',`<b>${esc(MOD[blocked.id]?.name||'')}</b> could not fire: something sits in front of it`]);
+ const fid=first&&first.id, tip=blocked?'Turn blocked weapons so they face out, or move what sits in front of them.'
+   :fid==='cockpit'?'Your cockpit was hit directly. Put armor on the side the hits came from.'
+   :fid&&['frame','mesh','girder','junction','shackle'].includes(fid)?'A connection broke and parts fell off. Add a second path to the cockpit, or armor that block.'
+   :damage?'Armor the red side first: that is where your rival aims.':'Nothing broke. Spend coins on firepower next.';
+ return `<div class="build-report"><b>What happened to your car</b><div class="rep-grid">${img?`<img class="rep-map" src="${img}" alt="Damage map of your car">`:''}<div class="rep-list">${rows.map(([k,t])=>`<p class="rep ${k}">${t}</p>`).join('')}<p class="rep tip">${esc(tip)}</p><button class="btn ghost rep-open" data-review="">Inspect in the garage</button></div></div></div>`;
 }
 function openGarageReport(st,k){
  G.reviewReport=st;G.reviewFocus=k;G.phase='review';$('#ovResult').hidden=true;$('#build').hidden=false;setMobileTab('bay');document.body.classList.add('reviewing');
@@ -20409,9 +20536,10 @@ function finishBattle() {
     ${pity.length ? `<span class="label">Underdog pick · take one part for free</span><div class="pity">${pity.map(m => `<button class="pick r${m.rar}" data-id="${m.id}" style="--rc:${RAR[m.rar].col}"><img src="${iconURL(m.id, 64)}" alt=""><b>${esc(m.name)}</b><span>${esc(RAR[m.rar].name)}</span></button>`).join('')}</div>` : ''}
     ${lostHtml ? `<span class="label">Destroyed this round</span><div class="lostlist">${lostHtml}</div>` : ''}
     ${progressHtml(prog)}
-    <button class="btn" id="btnNext">${decided ? 'See match result' : 'Draft · win or lose, everyone picks'}</button>`;
+    ${decided ? '' : nextUpHTML(G.round + 1)}
+    <button class="btn" id="btnNext">${decided ? 'See match result' : 'Pick your next part'}</button>`;
   $('#ovResult').hidden = false;
-  $('#resultCard').insertAdjacentHTML('beforeend',reviewHTML(st[me]));
+  (document.querySelector('#resultCard .nextup')||document.querySelector('#btnNext')||$('#resultCard')).insertAdjacentHTML(document.querySelector('#resultCard .nextup')||document.querySelector('#btnNext')?'beforebegin':'beforeend',reviewHTML(st[me]));
   $$('#resultCard [data-review]').forEach(b=>b.onclick=()=>openGarageReport(st[me],b.dataset.review));
   sfx('coin');
   let shown = 0;
