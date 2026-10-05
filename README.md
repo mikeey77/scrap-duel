@@ -50,22 +50,26 @@ New gadgets: right-click activates/reels cables; Z drops beads or foam, V releas
 
 In the garage: click/drag to place, right-click to remove, R changes the next part's facing, T rotates placed parts, X removes, M mirrors. Ctrl+Z undoes and Ctrl+Y redoes.
 
+## Accounts
+
+Players can stay a guest or sign in with a nickname and a 4–6 digit PIN. Signed-in players keep their XP, Garage Style, blueprints, favorites and settings on the server and get them back on any device. The API is one Netlify Function (`netlify/functions/account.mjs`, logic in `netlify/lib/account-core.mjs`) storing profiles in Netlify Blobs. PINs are salted and hashed with PBKDF2; five wrong PINs lock sign-in for ten minutes.
+
 ## Run locally
 
-No build step or dependencies are needed. Serve this folder, for example:
+The game is one static page in `site/`. Serve that folder, for example:
 
 ```sh
-python -m http.server 8765
+python -m http.server 8765 --directory site
 ```
 
-Open http://localhost:8765/ in a browser. Internet access is required for multiplayer matchmaking.
+Open http://localhost:8765/ in a browser. Accounts need the Netlify Function (`netlify dev`); everything else works without it. Internet access is required for multiplayer matchmaking.
 
 ## Regression checks
 
 With Node.js installed:
 
 ```sh
-node tests/regression.cjs
+npm test
 ```
 
 The suite checks randomized starters, support grants, functional placement, undo, scoring, controls, filters, crate accounting, replay events, music lifecycle, and two-peer battle recovery including score and cooldown synchronization. Mobile checks cover rotated camera/input round trips, independently cancelled twin sticks, equipment cooldowns, and solo-only aim assistance. Shape/content checks cover all 50 modules, four-way footprints, full support requirements, non-anchor removal/replacement, connected Auto-place, combat/render execution, cargo rewards and spills, real tow forces, rescue/press timing, serialized new states, Scrap Run deposits, selectable scoring and layer-specific damage reports. Browser playtesting covers layout and actual PeerJS connections.

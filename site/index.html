@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -2790,6 +2790,695 @@ body:has(#ovLobby:not([hidden])) #demoFeed {
     bottom: 6px;
   }
 }
+/* =====================================================================
+   HOLO-WORKSHOP THEME (Oct 2026)
+   A scrapyard seen through a workshop HUD: blue-black glass panels with
+   chamfered corners and cyan corner brackets; amber is kept for the one
+   action that matters on each screen. Layout rules above stay untouched;
+   this layer only changes surfaces, type and colour.
+   ===================================================================== */
+:root {
+  --bg: #0a1020;
+  --bg-2: #070c18;
+  --panel: #111c33;
+  --panel-2: #172642;
+  --panel-3: #1e3052;
+  --line: #263b60;
+  --line-2: #34507e;
+  --fg: #e6f1ff;
+  --muted: #8da3c2;
+  --holo: #5be7ff;
+  --holo-dim: rgba(91, 231, 255, 0.28);
+  --hazard: #ffb423;
+  --hazard-ink: #1a1100;
+  --danger: #ff5c7a;
+  --ok: #3fe0a0;
+  --info: #5be7ff;
+  --coin: #ffd257;
+  --blueprint: #0b1a33;
+  --bp-line: rgba(91, 231, 255, 0.08);
+  --bp-ink: #a8e9ff;
+  --f-display: 'Chakra Petch', 'Barlow Semi Condensed', 'Arial Narrow', sans-serif;
+  --cut: 12px;
+  --cut-s: 7px;
+  --chamfer: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+  --chamfer-s: polygon(var(--cut-s) 0, 100% 0, 100% calc(100% - var(--cut-s)), calc(100% - var(--cut-s)) 100%, 0 100%, 0 var(--cut-s));
+  /* two corner brackets (top right, bottom left), drawn as backgrounds so no pseudo-elements are needed */
+  --brackets:
+    linear-gradient(var(--holo), var(--holo)) top right / 16px 2px no-repeat,
+    linear-gradient(var(--holo), var(--holo)) top right / 2px 16px no-repeat,
+    linear-gradient(var(--holo), var(--holo)) bottom left / 16px 2px no-repeat,
+    linear-gradient(var(--holo), var(--holo)) bottom left / 2px 16px no-repeat;
+}
+body {
+  background:
+    radial-gradient(1200px 600px at 78% -10%, rgba(91, 231, 255, 0.09), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(255, 180, 35, 0.05), transparent 60%),
+    linear-gradient(rgba(91, 231, 255, 0.035) 1px, transparent 1px) 0 0 / 100% 32px,
+    var(--bg);
+  background-attachment: fixed;
+}
+::selection {
+  background: rgba(91, 231, 255, 0.35);
+}
+:focus-visible {
+  outline: 2px solid var(--holo);
+  outline-offset: 2px;
+}
+h1, h2, h3, h4 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.label {
+  font-family: var(--f-display);
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7fb8d6;
+}
+
+/* ---------- surfaces ---------- */
+#hud,
+.panel,
+.overlay > .card,
+.overlay .card,
+.mode2,
+.codex,
+.waitcard {
+  background: var(--brackets), linear-gradient(180deg, rgba(23, 38, 66, 0.92), rgba(14, 24, 44, 0.94));
+  border: 1px solid var(--line);
+  border-radius: 0;
+  clip-path: var(--chamfer);
+  box-shadow: inset 0 1px 0 rgba(91, 231, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+#hud {
+  background: var(--brackets), linear-gradient(180deg, rgba(20, 34, 60, 0.95), rgba(12, 20, 38, 0.95));
+  border-bottom-color: var(--holo-dim);
+}
+.overlay {
+  background: radial-gradient(800px 500px at 50% 30%, rgba(17, 40, 70, 0.75), rgba(5, 9, 18, 0.9));
+}
+#ovMenu.live {
+  background: linear-gradient(90deg, rgba(6, 10, 20, 0.95) 0%, rgba(6, 10, 20, 0.82) 38%, rgba(6, 10, 20, 0.2) 70%, rgba(6, 10, 20, 0.05) 100%);
+}
+.phead h3,
+.panel h3 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--holo);
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.03em;
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  background: linear-gradient(180deg, #ffc44d, var(--hazard) 55%, #e89a0c);
+  color: var(--hazard-ink);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+  transition: filter 0.12s, transform 0.08s;
+}
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.btn:disabled {
+  filter: grayscale(0.7) brightness(0.6);
+}
+.btn.ghost {
+  font-family: var(--f-display);
+  font-weight: 600;
+  background: rgba(91, 231, 255, 0.06);
+  color: #cfeeff;
+  border: 1px solid var(--holo-dim);
+  box-shadow: none;
+}
+.btn.ghost:hover:not(:disabled) {
+  background: rgba(91, 231, 255, 0.14);
+  border-color: var(--holo);
+  filter: none;
+}
+.btn.ok {
+  background: linear-gradient(180deg, #6ff0bd, var(--ok));
+  color: #032417;
+}
+.hbtn {
+  background: rgba(91, 231, 255, 0.06);
+  border: 1px solid var(--holo-dim);
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  color: #d6f3ff;
+  font-family: var(--f-display);
+  font-weight: 600;
+}
+.hbtn:hover {
+  border-color: var(--holo);
+  background: rgba(91, 231, 255, 0.14);
+}
+.pill {
+  font-family: var(--f-display);
+  letter-spacing: 0.08em;
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  background: var(--panel-3);
+}
+
+/* ---------- tabs, chips, segmented controls ---------- */
+.tabs,
+.seg {
+  background: rgba(5, 10, 20, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  padding: 3px;
+  display: inline-flex;
+  gap: 2px;
+}
+.tabs button,
+.seg button {
+  border-radius: 0;
+  font-family: var(--f-display);
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+}
+.tabs button[aria-pressed='true'],
+.seg button[aria-pressed='true'] {
+  background: linear-gradient(180deg, rgba(91, 231, 255, 0.25), rgba(91, 231, 255, 0.1));
+  color: #eafaff;
+  box-shadow: inset 0 -2px 0 var(--holo);
+}
+.chip {
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  border-color: var(--line);
+  font-family: var(--f-display);
+  font-weight: 600;
+}
+.chip[aria-pressed='true'] {
+  background: rgba(91, 231, 255, 0.16);
+  color: #eafaff;
+  border-color: var(--holo);
+}
+input,
+select {
+  font-family: var(--f-body);
+}
+.catalog-filters input[type='search'],
+.catalog-filters select,
+.mname,
+.codein,
+#shopCategory,
+.format-picker select,
+.ac-form input {
+  background: rgba(5, 10, 20, 0.7) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  color: var(--fg) !important;
+}
+.catalog-filters input[type='search']:focus,
+.mname:focus,
+.codein:focus,
+.ac-form input:focus {
+  border-color: var(--holo) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(91, 231, 255, 0.15);
+}
+
+/* ---------- menu ---------- */
+.hero2 h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(56px, 9vw, 112px);
+  line-height: 0.84;
+  letter-spacing: -0.01em;
+  transform: none;
+  color: transparent;
+  background: linear-gradient(180deg, #fff6dd 0%, var(--hazard) 46%, #c97a00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: none;
+  filter: drop-shadow(0 0 22px rgba(255, 180, 35, 0.28));
+}
+.hero2 h1::after {
+  content: '';
+  display: block;
+  height: 2px;
+  width: 64%;
+  margin-top: 14px;
+  background: linear-gradient(90deg, var(--holo), transparent);
+}
+.hero2 p {
+  color: #b9cde6;
+  font-size: 17px;
+  max-width: 34ch;
+}
+.mode2 {
+  border-top: 1px solid var(--line);
+  box-shadow: inset 0 2px 0 var(--rc);
+}
+.mode2 .mh .ico {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  padding: 5px 7px;
+  border-radius: 0;
+  border-width: 1px;
+  background: rgba(5, 10, 20, 0.5);
+}
+.mode2:hover {
+  transform: none;
+  box-shadow: inset 0 2px 0 var(--rc), 0 0 0 1px rgba(91, 231, 255, 0.25);
+}
+.xpbar {
+  background: rgba(5, 10, 20, 0.7);
+  border-radius: 0;
+}
+.xpbar i {
+  background: linear-gradient(90deg, var(--holo), #b6f5ff);
+}
+
+/* ---------- account ---------- */
+.acct-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 10px;
+  margin-bottom: 4px;
+  font-family: var(--f-display);
+  font-size: 13px;
+  color: #cfeeff;
+  background: rgba(91, 231, 255, 0.07);
+  border: 1px solid var(--holo-dim);
+  clip-path: var(--chamfer-s);
+  cursor: pointer;
+}
+.acct-chip:hover {
+  border-color: var(--holo);
+}
+.acct-chip b {
+  color: var(--fg);
+}
+.acct-chip > b:last-child {
+  color: var(--hazard);
+  margin-left: 4px;
+}
+.ac-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 8px var(--ok);
+}
+.ac-dot.off {
+  background: var(--muted);
+  box-shadow: none;
+}
+.ac-dot.warn {
+  background: var(--hazard);
+  box-shadow: 0 0 8px var(--hazard);
+}
+.account-card {
+  max-width: 420px !important;
+}
+.ac-form {
+  display: grid;
+  gap: 12px;
+}
+.ac-form label {
+  display: grid;
+  gap: 5px;
+  font-family: var(--f-display);
+  font-size: 13px;
+  color: #9fd2ea;
+}
+.ac-form input {
+  padding: 11px 12px;
+  font-size: 17px;
+}
+.ac-form input[type='password'] {
+  letter-spacing: 0.4em;
+  font-family: var(--f-mono);
+}
+.ac-msg {
+  margin: 0;
+  color: var(--danger);
+  font-size: 14px;
+}
+.ac-tabs {
+  align-self: flex-start;
+}
+
+/* ---------- garage ---------- */
+#bay {
+  border-radius: 0;
+  clip-path: var(--chamfer);
+  background-color: var(--blueprint);
+  background-image:
+    radial-gradient(600px 400px at 50% 40%, rgba(91, 231, 255, 0.07), transparent 70%),
+    linear-gradient(var(--bp-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bp-line) 1px, transparent 1px);
+  background-size: auto, 16px 16px, 16px 16px;
+  border: 1px solid var(--line);
+}
+.toolbar {
+  background: rgba(7, 14, 28, 0.94);
+  border: 1px solid var(--holo-dim);
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+}
+.toolbar button {
+  border-radius: 0;
+  font-family: var(--f-display);
+  font-weight: 600;
+}
+.toolbar button[aria-pressed='true'] {
+  background: var(--hazard);
+  color: var(--hazard-ink);
+  clip-path: var(--chamfer-s);
+}
+.toolbar button.icon-only {
+  padding: 7px 9px;
+}
+.toolbar button.icon-only svg {
+  width: 16px;
+  height: 16px;
+}
+.toolbar .sep {
+  background: var(--line);
+}
+.layer-controls {
+  align-items: center;
+  gap: 6px !important;
+}
+.layer-controls .seg button {
+  padding: 4px 9px;
+  font-size: 12px;
+}
+.layer-controls > button {
+  border-radius: 0 !important;
+  clip-path: var(--chamfer-s);
+  font-family: var(--f-display);
+  font-weight: 600;
+  background: rgba(5, 10, 20, 0.72) !important;
+  border: 1px solid var(--line) !important;
+}
+.layer-controls > button[aria-pressed='true'] {
+  color: var(--holo) !important;
+  border-color: var(--holo) !important;
+}
+#bayHint {
+  font-family: var(--f-display);
+  color: #bfefff;
+}
+.baytag {
+  color: #7fb8d6;
+}
+.tile {
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  background: linear-gradient(180deg, rgba(30, 48, 82, 0.85), rgba(17, 28, 51, 0.9));
+  border: 1px solid var(--line);
+}
+.tile[aria-pressed='true'] {
+  border-color: var(--hazard);
+  background: linear-gradient(180deg, rgba(255, 180, 35, 0.2), rgba(17, 28, 51, 0.9));
+}
+.tile .n {
+  font-family: var(--f-display);
+  font-weight: 600;
+}
+.tile .ly {
+  font-size: 13px !important;
+  font-weight: 700;
+  color: var(--holo);
+  opacity: 0.9;
+}
+.tile .ly.base {
+  color: #9aaecb;
+}
+.tile .q {
+  font-family: var(--f-mono);
+}
+.inspect .art,
+.opt .art {
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  background: radial-gradient(circle at 50% 45%, rgba(91, 231, 255, 0.12), rgba(5, 10, 20, 0.85) 70%);
+}
+.meter {
+  border-radius: 0;
+  background: rgba(5, 10, 20, 0.8);
+}
+.meter b {
+  background: linear-gradient(90deg, var(--holo), #b6f5ff) !important;
+  box-shadow: 0 0 8px rgba(91, 231, 255, 0.5);
+}
+.spec .v,
+.specs .v {
+  font-family: var(--f-mono);
+}
+
+/* sockets, stat chips, legend */
+.si {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.chip-s {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: #cfe3ff;
+  background: rgba(5, 10, 20, 0.6);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+}
+.chip-s .si {
+  color: var(--holo);
+}
+.chip-s b {
+  font-weight: 600;
+}
+.sock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-family: var(--f-display);
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--holo-dim);
+  color: var(--holo);
+  background: rgba(91, 231, 255, 0.08);
+  clip-path: var(--chamfer-s);
+}
+.sock.s2 {
+  color: #ffd27a;
+  border-color: rgba(255, 180, 35, 0.45);
+  background: rgba(255, 180, 35, 0.08);
+}
+.sock.none {
+  color: var(--muted);
+  border-color: var(--line);
+  background: transparent;
+}
+.stl {
+  margin-top: 6px;
+}
+.opt-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  margin-top: 2px;
+}
+.opt .why {
+  color: #9fd2ea;
+}
+.build-legend {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: rgba(5, 10, 20, 0.45);
+  clip-path: var(--chamfer-s);
+  font-size: 13px;
+  color: #a9bdd8;
+}
+.build-legend div {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.build-legend i {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-weight: 700;
+}
+.lg-chassis {
+  background: linear-gradient(135deg, #6f7f99, #3b4a63);
+  border: 1px solid #8fa3c4;
+}
+.lg-sock {
+  color: var(--holo);
+  font-size: 18px;
+  text-shadow: 0 0 8px rgba(91, 231, 255, 0.7);
+}
+.lg-sock.heavy {
+  color: #ffd27a;
+  text-shadow: 0 0 8px rgba(255, 180, 35, 0.6);
+}
+.lg-equip {
+  border-radius: 50%;
+  background: radial-gradient(circle, #9fe9ff 0 25%, #2a4a70 26% 60%, #10203a 61%);
+  border: 1px solid var(--holo);
+}
+.build-legend b {
+  color: var(--fg);
+}
+#hud .hstat.icostat {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  color: var(--holo);
+}
+.icostat .si {
+  width: 15px;
+  height: 15px;
+}
+.icostat .v {
+  color: var(--fg);
+}
+
+/* ---------- draft ---------- */
+.draft h2 {
+  font-family: var(--f-display);
+  font-weight: 700;
+}
+.opt {
+  border-radius: 0;
+  background: var(--brackets), linear-gradient(180deg, rgba(23, 38, 66, 0.96), rgba(12, 21, 40, 0.97));
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--rc);
+  box-shadow: 0 0 0 0 transparent;
+}
+.opt:hover,
+.opt:focus-visible {
+  box-shadow: 0 0 0 1px var(--rc), 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+.opt h3 {
+  font-family: var(--f-display);
+  font-weight: 700;
+}
+.opt .slot {
+  font-family: var(--f-display);
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+.opt .kind {
+  text-transform: none;
+  letter-spacing: 0.03em;
+  font-family: var(--f-display);
+}
+.opt .new {
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  font-family: var(--f-display);
+}
+
+/* ---------- results, VS ---------- */
+#resultCard h2 {
+  font-size: 40px;
+}
+.bigcoin {
+  font-family: var(--f-display);
+  font-weight: 700;
+}
+.ledger div {
+  border-color: rgba(91, 231, 255, 0.12) !important;
+}
+.vs .mid {
+  font-family: var(--f-display);
+  font-weight: 700;
+  color: var(--holo);
+  text-shadow: 0 0 30px rgba(91, 231, 255, 0.6);
+}
+.vs .nm {
+  font-family: var(--f-display);
+  font-weight: 700;
+}
+
+/* ---------- arena overlays ---------- */
+.touchpad button {
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 50% 35%, rgba(30, 52, 88, 0.92), rgba(8, 14, 28, 0.92)) !important;
+  border: 1px solid var(--holo-dim) !important;
+  font-family: var(--f-display);
+}
+.arena-tools button,
+.abtns .btn.ghost {
+  clip-path: var(--chamfer-s);
+  border-radius: 0 !important;
+}
+.feed div {
+  border-radius: 0 !important;
+  clip-path: var(--chamfer-s);
+  background: rgba(8, 14, 28, 0.85) !important;
+  border-left: 2px solid var(--holo) !important;
+  font-family: var(--f-display);
+}
+#toast {
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  font-family: var(--f-display);
+}
+.mobile-workshop-nav {
+  border-radius: 0 !important;
+  clip-path: var(--chamfer-s);
+  background: rgba(10, 18, 34, 0.96) !important;
+}
+.mobile-workshop-nav button {
+  border-radius: 0 !important;
+  font-family: var(--f-display);
+}
+.mobile-workshop-nav button[aria-pressed='true'] {
+  color: #eafaff !important;
+  background: linear-gradient(180deg, rgba(91, 231, 255, 0.24), rgba(91, 231, 255, 0.08)) !important;
+  border-color: var(--holo) !important;
+}
+#build > .panel .pfoot {
+  border-radius: 0 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .tile,
+  .opt {
+    transition: none;
+  }
+}
 </style>
   </head>
   <body>
@@ -2816,10 +3505,10 @@ body:has(#ovLobby:not([hidden])) #demoFeed {
         <span class="stake hide-sm" id="tStake"></span>
         <div class="grow"></div>
         <div class="hstat hide-md icostat" title="Parts on your car">
-          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z" opacity=".85"/></svg><span class="v" id="tParts">0</span>
+          <svg class="si" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z" opacity=".85"/></svg><span class="v" id="tParts">0</span>
         </div>
         <div class="hstat hide-md icostat" title="Modules discovered">
-          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M3 2h8l2 2v10H3zM5 6h6v1.5H5zM5 9h6v1.5H5z"/></svg><span class="v" id="tFound">0 / 100</span>
+          <svg class="si" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M3 2h8l2 2v10H3zM5 6h6v1.5H5zM5 9h6v1.5H5z"/></svg><span class="v" id="tFound">0 / 100</span>
         </div>
         <button class="hbtn" id="btnCodex">Codex <span class="kbd">K</span></button
         ><button class="hbtn" id="btnPause" title="Pause (Esc)" aria-label="Pause">❚❚</button
@@ -8794,7 +9483,7 @@ const ICO = {
   cells: '<path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2z"/>',
   coin: '<circle cx="8" cy="8" r="6"/>'
 };
-const ico = (k, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">${ICO[k]}</svg>`;
+const ico = (k, cls = '') => `<svg class="si ${cls}" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">${ICO[k]}</svg>`;
 /** Stat chips with icons; the text label lives in the title for hover and screen readers. */
 function statChips(m) {
   const c = [['hp', `${m.hp}`, 'Hit points']];
@@ -15163,7 +15852,7 @@ function drawSpecialZone(c, z) {
     c.setLineDash([]);
     c.translate(z.x + z.w / 2, z.y + z.h / 2);
     if (z.kind === 'goal') c.rotate(-Math.PI / 2);
-    c.font = '18px Bungee, Impact, sans-serif';
+    c.font = '700 18px "Chakra Petch", Impact, sans-serif';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.fillStyle = 'rgba(0,0,0,.45)';
@@ -15187,7 +15876,7 @@ function drawSpecialZone(c, z) {
     c.arc(z.x, z.y, z.r, 0, 7);
     c.stroke();
     c.setLineDash([]);
-    c.font = '20px Bungee, Impact, sans-serif';
+    c.font = '700 20px "Chakra Petch", Impact, sans-serif';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.globalAlpha = 0.5;
@@ -15857,7 +16546,7 @@ function drawPickup(c, p) {
     c.stroke();
     c.rotate(-ANIM * 1.5);
     c.fillStyle = P.col;
-    c.font = '14px Bungee, Impact, sans-serif';
+    c.font = '700 14px "Chakra Petch", Impact, sans-serif';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.fillText(P.icon, 0, 1);
@@ -16330,7 +17019,7 @@ function edgeArrow(c, wx, wy, s, col, label) {
   c.save();
   c.translate(px, py);
   circ(c, 0, 0, 13, 'rgba(20,16,12,.8)', col, 2);
-  c.font = '12px Bungee, Impact, sans-serif';
+  c.font = '700 12px "Chakra Petch", Impact, sans-serif';
   c.textAlign = 'center';
   c.textBaseline = 'middle';
   c.fillStyle = col;
@@ -16382,7 +17071,7 @@ function drawDemoHUD(c) {
   });
   c.textAlign = 'right';
   c.textBaseline = 'top';
-  c.font = '14px Bungee, Impact, sans-serif';
+  c.font = '700 14px "Chakra Petch", Impact, sans-serif';
   c.fillStyle = Math.sin(ANIM * 4) > 0 ? '#ff4d4d' : '#a33';
   c.fillText('● LIVE', W - 16, 14);
   if (B.banner) {
@@ -16390,7 +17079,7 @@ function drawDemoHUD(c) {
     c.save();
     c.globalAlpha = Math.min(1, t * 3) * 0.85;
     c.textAlign = 'right';
-    c.font = `${Math.min(40, W * 0.05)}px Bungee, Impact, sans-serif`;
+    c.font = `700 ${Math.min(40, W * 0.05)}px "Chakra Petch", Impact, sans-serif`;
     c.fillStyle = B.banner.col;
     c.fillText(B.banner.text, W - 16, 38);
     c.restore();
@@ -16490,7 +17179,7 @@ function drawHUD(c) {
     c.fillStyle = 'rgba(20,16,12,.78)';
     rr(c, W / 2 - 92, ty, 184, 50, 8);
     c.fill();
-    c.font = '22px Bungee, Impact, sans-serif';
+    c.font = '700 22px "Chakra Petch", Impact, sans-serif';
     c.fillStyle = B.t < 30 && !B.obj ? '#ff8a6a' : '#ece8df';
     c.fillText(fmt(Math.max(0, B.t)), W / 2, ty + 4);
     c.font = '600 12px "Barlow Semi Condensed", sans-serif';
@@ -16509,7 +17198,7 @@ function drawHUD(c) {
     }
     if (B.replay && RP) {
       c.textAlign = 'left';
-      c.font = '16px Bungee, Impact, sans-serif';
+      c.font = '700 16px "Chakra Petch", Impact, sans-serif';
       c.fillStyle = Math.sin(ANIM * 5) > 0 ? '#ff4d4d' : '#ece8df';
       c.fillText(`● ${RP.mode === 'kill' ? 'KILL-CAM' : 'REPLAY'} ${RP.speed}×`, 16, H - 120);
       c.textAlign = 'center';
@@ -16571,7 +17260,7 @@ function drawHUD(c) {
     c.save();
     c.translate(W / 2, H / 2);
     c.scale(sc, sc);
-    c.font = `${Math.min(110, W * 0.16)}px Bungee, Impact, sans-serif`;
+    c.font = `700 ${Math.min(110, W * 0.16)}px "Chakra Petch", Impact, sans-serif`;
     c.fillStyle = 'rgba(0,0,0,.35)';
     c.fillText(n, 4, 4);
     c.fillStyle = '#f2b705';
@@ -16601,7 +17290,7 @@ function drawHUD(c) {
     c.globalAlpha = Math.min(1, t * 4);
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.font = `${Math.min(84, W * 0.11)}px Bungee, Impact, sans-serif`;
+    c.font = `700 ${Math.min(84, W * 0.11)}px "Chakra Petch", Impact, sans-serif`;
     c.fillStyle = 'rgba(0,0,0,.5)';
     c.fillText(B.banner.text, 5, 5);
     c.fillStyle = B.banner.col;
