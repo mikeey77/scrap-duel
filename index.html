@@ -2668,8 +2668,10 @@ body:has(#ovIntro:not([hidden])) .arena-tools {
 }
 /* Bay: keep the grid clear of the layer buttons (top) and the toolbar + hint (bottom). */
 #bayScroll {
+  bottom: 0;
   padding-top: 40px;
-  padding-bottom: calc(var(--tb-h, 54px) + 2px);
+  /* toolbar (12px from the bottom) + the hint line above it */
+  padding-bottom: calc(var(--tb-h, 54px) + 52px);
 }
 #bayHint {
   bottom: calc(var(--tb-h, 54px) + 20px);
@@ -2740,6 +2742,53 @@ body:has(#ovSettings:not([hidden])) #demoFeed,
 body:has(#ovStyle:not([hidden])) #demoFeed,
 body:has(#ovLobby:not([hidden])) #demoFeed {
   display: none;
+}
+/* Landscape phones: the build actions become one slim row so the bay stays visible. */
+@media (max-width: 920px) and (orientation: landscape) {
+  #build > .panel .pfoot {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    padding: 5px !important;
+    gap: 5px !important;
+  }
+  #build > .panel .pfoot .autorow {
+    display: contents;
+  }
+  #build > .panel .pfoot .btn {
+    padding: 6px 4px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+  #app {
+    padding-bottom: calc(52px + env(safe-area-inset-bottom)) !important;
+  }
+  .mobile-workshop-nav {
+    padding: 4px;
+  }
+  .mobile-workshop-nav button {
+    min-height: 32px;
+  }
+  #bay {
+    height: calc(100dvh - 178px) !important;
+    min-height: 180px !important;
+  }
+  #bayHint {
+    display: none;
+  }
+  #bay .layer-controls {
+    top: 6px;
+    left: 160px;
+    right: 190px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  #bayScroll {
+    top: 34px;
+    padding-top: 6px;
+    padding-bottom: calc(var(--tb-h, 44px) + 12px);
+  }
+  #bay .toolbar {
+    bottom: 6px;
+  }
 }
 </style>
   </head>
