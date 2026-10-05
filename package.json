@@ -1,0 +1,12 @@
+{
+  "name": "scrap-duel",
+  "private": true,
+  "type": "module",
+  "description": "Static game plus one Netlify Function for nickname + PIN accounts.",
+  "scripts": {
+    "test": "node tests/regression.cjs && node tests/account.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.3"
+  }
+}

@@ -2815,11 +2815,11 @@ body:has(#ovLobby:not([hidden])) #demoFeed {
         </div>
         <span class="stake hide-sm" id="tStake"></span>
         <div class="grow"></div>
-        <div class="hstat hide-md">
-          <span class="label">Parts on car</span><span class="v" id="tParts">0</span>
+        <div class="hstat hide-md icostat" title="Parts on your car">
+          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z" opacity=".85"/></svg><span class="v" id="tParts">0</span>
         </div>
-        <div class="hstat hide-md">
-          <span class="label">Modules found</span><span class="v" id="tFound">0 / 100</span>
+        <div class="hstat hide-md icostat" title="Modules discovered">
+          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M3 2h8l2 2v10H3zM5 6h6v1.5H5zM5 9h6v1.5H5z"/></svg><span class="v" id="tFound">0 / 100</span>
         </div>
         <button class="hbtn" id="btnCodex">Codex <span class="kbd">K</span></button
         ><button class="hbtn" id="btnPause" title="Pause (Esc)" aria-label="Pause">❚❚</button
@@ -2853,19 +2853,20 @@ body:has(#ovLobby:not([hidden])) #demoFeed {
             </div>
             <div id="bayHint"></div>
             <div class="layer-controls" aria-label="Builder view">
-              <button data-layer="both" aria-pressed="true">Both layers</button>
-              <button data-layer="base" aria-pressed="false">Chassis</button>
-              <button data-layer="top" aria-pressed="false">Equipment</button>
-              <button id="btnArcs" aria-pressed="false">Firing arcs</button>
-              <button id="btnLinks" aria-pressed="false">Weak links</button>
+              <span class="seg" role="group" aria-label="Layers"
+                ><button data-layer="both" aria-pressed="true" title="Show chassis and equipment">All</button
+                ><button data-layer="base" aria-pressed="false" title="Show only the chassis blocks">▦ Chassis</button
+                ><button data-layer="top" aria-pressed="false" title="Show equipment and every free socket">⬢ Sockets</button></span
+              ><button id="btnArcs" aria-pressed="false" title="Show where each weapon can shoot">⌔ Arcs</button
+              ><button id="btnLinks" aria-pressed="false" title="Show blocks that would drop parts off if destroyed">⚠ Weak links</button>
             </div>
             <div class="toolbar" role="toolbar" aria-label="Builder tools">
-              <button data-tool="place" aria-pressed="true">
+              <button data-tool="place" aria-pressed="true" title="Place (B)">
                 <svg viewBox="0 0 16 16">
                   <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" fill="none" /></svg
-                >Place <span class="kbd">B</span>
+                >Place
               </button>
-              <button data-tool="rotate" aria-pressed="false">
+              <button data-tool="rotate" aria-pressed="false" title="Rotate a placed part (T)">
                 <svg viewBox="0 0 16 16">
                   <path
                     d="M13 8a5 5 0 1 1-1.5-3.5M13 2v3h-3"
@@ -2873,25 +2874,25 @@ body:has(#ovLobby:not([hidden])) #demoFeed {
                     stroke-width="2"
                     fill="none"
                   /></svg
-                >Rotate <span class="kbd">T</span>
+                >Rotate
               </button>
-              <button data-tool="remove" aria-pressed="false">
+              <button data-tool="remove" aria-pressed="false" title="Remove (X or right-click)">
                 <svg viewBox="0 0 16 16">
                   <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" fill="none" /></svg
-                >Remove <span class="kbd">X</span>
+                >Remove
               </button>
               <span class="sep"></span>
-              <button id="btnRot" title="Turn the next part">
+              <button id="btnRot" title="Turn the next part (R)">
                 <svg viewBox="0 0 16 16" id="rotIcon">
                   <path d="M8 2l4 5H9v7H7V7H4z" fill="currentColor" /></svg
-                >Facing <span class="kbd">R</span>
+                >Facing
               </button>
               <span class="sep"></span>
-              <button id="btnMirror" title="Mirror placements left/right">
-                Mirror <span class="kbd">M</span>
+              <button id="btnMirror" class="icon-only" title="Mirror placements left/right (M)" aria-label="Mirror">
+                <svg viewBox="0 0 16 16"><path d="M8 1v14" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2" fill="none"/><path d="M6 4L1 8l5 4zM10 4l5 4-5 4z" fill="currentColor"/></svg>
               </button>
-              <button id="btnUndo" title="Undo (Ctrl+Z)">Undo</button>
-              <button id="btnRedo" title="Redo (Ctrl+Y)">Redo</button>
+              <button id="btnUndo" class="icon-only" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 16 16"><path d="M5 3L1 7l4 4M1 7h9a4 4 0 0 1 0 8H7" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
+              <button id="btnRedo" class="icon-only" title="Redo (Ctrl+Y)" aria-label="Redo"><svg viewBox="0 0 16 16"><path d="M11 3l4 4-4 4M15 7H6a4 4 0 0 0 0 8h3" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
             </div>
             <div id="toast" role="status"></div>
           </div>
@@ -3031,6 +3032,7 @@ body:has(#ovLobby:not([hidden])) #demoFeed {
     <div class="overlay" id="ovSettings" hidden><div class="card" id="settingsCard"></div></div>
     <div class="overlay" id="ovReconnect" hidden><div class="card" id="reconnectCard"></div></div>
     <div class="overlay" id="ovPause" hidden><div class="card" id="pauseCard"></div></div>
+    <div class="overlay" id="ovAccount" hidden><div class="card account-card" id="accountCard"></div></div>
     <div class="coach" id="coach" hidden></div>
     <div class="feed" id="demoFeed" hidden></div>
     <script>
@@ -8773,12 +8775,43 @@ function statLine(m) {
   if (m.dir) a.push('directional');
   return a.join(' · ');
 }
+const SOCKET = ['', '○', '⬢'];
 function mountLine(m) {
   return m.layer === 't'
-    ? `Top · needs a ${MOUNTNAME[m.mnt]}`
+    ? `Equipment · needs a ${SOCKET[m.mnt]} ${MOUNTNAME[m.mnt]}`
     : m.mnt
-      ? `Base · holds a ${MOUNTNAME[m.mnt]}`
-      : 'Base · nothing mounts on it';
+      ? `Chassis · gives a ${SOCKET[m.mnt]} ${MOUNTNAME[m.mnt]}`
+      : 'Chassis · nothing mounts on it';
+}
+/* ---------- small icon set for stat chips (inline SVG, inherits text colour) ---------- */
+const ICO = {
+  hp: '<path d="M8 14s-5-3.2-5-7a3 3 0 0 1 5-2.2A3 3 0 0 1 13 7c0 3.8-5 7-5 7z"/>',
+  mass: '<path d="M5 6h6l2 8H3zM8 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>',
+  dps: '<path d="M8 1l1.6 4.4L14 6l-3.4 2.8L11.8 14 8 11.4 4.2 14l1.2-5.2L2 6l4.4-.6z"/>',
+  rng: '<circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="1.6"/><path d="M8 0v3M8 13v3M0 8h3M13 8h3" stroke="currentColor" stroke-width="1.6"/>',
+  drive: '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="8" r="2"/>',
+  dir: '<path d="M8 1l5 7H9.5v7h-3V8H3z"/>',
+  cells: '<path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2z"/>',
+  coin: '<circle cx="8" cy="8" r="6"/>'
+};
+const ico = (k, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">${ICO[k]}</svg>`;
+/** Stat chips with icons; the text label lives in the title for hover and screen readers. */
+function statChips(m) {
+  const c = [['hp', `${m.hp}`, 'Hit points']];
+  c.push(['mass', `${m.mass}t`, 'Weight']);
+  if (cellCount(m) > 1) c.push(['cells', shapeLabel(m).split(' ·')[0], 'Footprint']);
+  const d = dpsOf(m.id, {});
+  if (d) c.push(['dps', `${Math.round(d)}`, 'Damage per second']);
+  if (m.wpn && m.wpn.rng) c.push(['rng', `${Math.round(wstat(m.id).rng)}`, 'Range']);
+  if (m.drive) c.push(['drive', `${m.drive.p}`, 'Drive power']);
+  if (m.dir) c.push(['dir', '', 'Fires the way it faces']);
+  return `<span class="chips">${c.map(([k, v, t]) => `<span class="chip-s" title="${t}">${ico(k)}${v ? `<b>${v}</b>` : ''}</span>`).join('')}</span>`;
+}
+/** One socket badge: what a part needs (equipment) or gives (chassis). */
+function socketBadge(m) {
+  const t = mountLine(m);
+  if (m.layer === 't') return `<span class="sock need s${m.mnt}" title="${esc(t)}">${SOCKET[m.mnt]} needs ${m.mnt > 1 ? 'heavy' : 'light'}</span>`;
+  return m.mnt ? `<span class="sock give s${m.mnt}" title="${esc(t)}">${SOCKET[m.mnt]} gives ${m.mnt > 1 ? 'heavy' : 'light'}</span>` : `<span class="sock none" title="${esc(t)}">no socket</span>`;
 }
 
 /* =================== BUILDER =================== */
@@ -8930,18 +8963,7 @@ function drawBP() {
     selTop = MOD[G.sel] && MOD[G.sel].layer === 't';
   if (building() && G.tool === 'place') {
     if (selTop) {
-      for (const [k, a] of occ) {
-        if (topAt(k)) continue;
-        const bm = MOD[G.base.get(a).id];
-        if (bm.mnt >= MOD[G.sel].mnt) {
-          const [x, y] = unkey(k);
-          c.strokeStyle = 'rgba(242,183,5,.6)';
-          c.lineWidth = 1.5;
-          c.setLineDash([3, 3]);
-          c.strokeRect(cpx(x) + 3, cpy(y) + 3, cell - 6, cell - 6);
-          c.setLineDash([]);
-        }
-      }
+      /* sockets are drawn on top of the chassis further down (drawSockets) */
     } else {
       c.fillStyle = 'rgba(169,203,232,.55)';
       for (const k of G.ws) {
@@ -9012,6 +9034,7 @@ function drawBP() {
     }
     drawPiece(c, e, true, sc);
   }
+  drawSockets(c, occ);
   drawBuilderDiagnostics(c,occ);
   planGarageReport(c);
   for (const [k, e] of [...G.base, ...G.top]) {
@@ -9136,6 +9159,61 @@ function drawBP() {
   }
   c.globalAlpha = 1;
 }
+/** Free sockets on the chassis that can hold equipment needing `need` (1 light, 2 heavy). */
+function freeSockets(need) {
+  const occ = occupancy(G.base);
+  let n = 0;
+  for (const [k, a] of occ) if (!topAt(k) && MOD[G.base.get(a).id].mnt >= need) n++;
+  return n;
+}
+/* Sockets drawn on the chassis: ○ light, ⬢ heavy. While equipment is selected the ones that
+   fit glow and the ones too weak for it are crossed out, so it is obvious where it can go. */
+function drawSockets(c, occ) {
+  if (!building()) return;
+  const sel = MOD[G.sel],
+    placing = G.tool === 'place' && sel && sel.layer === 't',
+    show = placing || G.layerView === 'top';
+  if (!show) return;
+  const need = placing ? sel.mnt : 0,
+    pulse = 0.65 + Math.sin(ANIM * 4) * 0.25;
+  c.save();
+  for (const [k, a] of occ) {
+    if (topAt(k)) continue;
+    const mnt = MOD[G.base.get(a).id].mnt;
+    if (!mnt) continue;
+    const [x, y] = unkey(k),
+      X = cpx(x) + cell / 2,
+      Y = cpy(y) + cell / 2,
+      r = cell * (mnt > 1 ? 0.2 : 0.15),
+      fits = !need || mnt >= need;
+    c.lineWidth = Math.max(1.5, cell * 0.05);
+    c.strokeStyle = fits ? (need ? `rgba(91,231,255,${pulse})` : 'rgba(91,231,255,.55)') : 'rgba(255,92,122,.75)';
+    c.fillStyle = fits ? (need ? 'rgba(91,231,255,.22)' : 'rgba(91,231,255,.1)') : 'rgba(255,92,122,.12)';
+    c.beginPath();
+    if (mnt > 1) for (let i = 0; i < 6; i++) c.lineTo(X + Math.cos(i * Math.PI / 3 + Math.PI / 6) * r, Y + Math.sin(i * Math.PI / 3 + Math.PI / 6) * r);
+    else c.arc(X, Y, r, 0, Math.PI * 2);
+    c.closePath();
+    if (fits && need) {
+      c.shadowColor = '#5be7ff';
+      c.shadowBlur = cell * 0.35;
+    }
+    c.fill();
+    c.stroke();
+    c.shadowBlur = 0;
+    if (!fits) {
+      c.beginPath();
+      c.moveTo(X - r * 0.7, Y + r * 0.7);
+      c.lineTo(X + r * 0.7, Y - r * 0.7);
+      c.stroke();
+    } else {
+      c.fillStyle = fits && need ? '#dffaff' : 'rgba(223,250,255,.6)';
+      c.beginPath();
+      c.arc(X, Y, Math.max(1.5, r * 0.28), 0, Math.PI * 2);
+      c.fill();
+    }
+  }
+  c.restore();
+}
 function weakLinks() {
   const links=[];
   for (const [k,e] of G.base) {
@@ -9228,7 +9306,14 @@ function hintFor() {
   const m = MOD[G.sel];
   if (!hover)
     return G.tool === 'place'
-      ? `${m.name}: ${left(G.sel)} available. ${m.layer === 't' ? 'Dashed squares can hold it.' : 'Dots mark where it can attach.'}`
+      ? m.layer === 't'
+        ? (() => {
+            const free = freeSockets(m.mnt);
+            return free
+              ? `${m.name} needs a ${SOCKET[m.mnt]} ${MOUNTNAME[m.mnt]}. ${free} glowing socket${free > 1 ? 's' : ''} on your chassis fit it.`
+              : `${m.name} needs a ${SOCKET[m.mnt]} ${MOUNTNAME[m.mnt]}. None free: place a ${m.mnt > 1 ? 'Steel Girder' : 'Scrap Frame'} first.`;
+          })()
+        : `${m.name}: ${left(G.sel)} available. Dots mark where it can attach.`
       : G.tool === 'rotate'
         ? 'Click a part to turn it 90°. Top modules turn first.'
         : 'Click a part to put it back in the bin. Top modules come off first.';
@@ -9239,7 +9324,7 @@ function hintFor() {
     b = baseAt(k);
   if (!t && !b) return G.tool === 'place' ? `${m.name} · ${statLine(m)}` : '';
   return [
-    b && `${MOD[b.id].name} (${MOD[b.id].mnt ? MOUNTNAME[MOD[b.id].mnt] : 'no mount'})`,
+    b && `${MOD[b.id].name} (${MOD[b.id].mnt ? SOCKET[MOD[b.id].mnt] + ' ' + MOUNTNAME[MOD[b.id].mnt] : 'no socket'})`,
     t && `topped with ${MOD[t.id].name}`
   ]
     .filter(Boolean)
@@ -9472,6 +9557,211 @@ function store(k, v) {
   try {
     localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
   } catch (e) {}
+  try {
+    if (ACCOUNT_SYNC.includes(k)) Account.queueSave();
+  } catch (e) {} // account code is not initialised yet during start-up
+}
+/* =================== ACCOUNT (nickname + PIN) ===================
+   Optional. Signed-in players keep XP, Garage Style, blueprints and settings on the
+   server (Netlify Function + Blobs) and get them back on any device. */
+const ACCOUNT_SYNC = ['sd.prog', 'sd.style', 'sd.bp', 'sd.favorites', 'sd.settings', 'sd.diff', 'sd.paint'];
+const Account = {
+  name: null,
+  token: null,
+  state: 'idle', // idle | saving | saved | offline
+  saveT: 0,
+  init() {
+    try {
+      const a = JSON.parse(localStorage.getItem('sd.account') || 'null');
+      if (a && a.name && a.token) Object.assign(this, { name: a.name, token: a.token });
+    } catch (e) {}
+    if (this.name) G.name = this.name;
+  },
+  available: () => /^https?:$/.test(location.protocol),
+  async call(action, body) {
+    if (!this.available()) throw new Error('Accounts work on the hosted game, not from a local file.');
+    let r;
+    try {
+      r = await fetch('/api/account', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action, ...body }),
+        keepalive: action === 'save'
+      });
+    } catch (e) {
+      throw new Error('No connection to the account server. Check your internet and try again.');
+    }
+    let d = {};
+    try {
+      d = await r.json();
+    } catch (e) {}
+    if (!r.ok) {
+      const er = new Error(d.error || 'The account server is not available right now.');
+      er.status = r.status;
+      throw er;
+    }
+    return d;
+  },
+  localData() {
+    const d = {};
+    for (const k of ACCOUNT_SYNC) {
+      const v = load(k);
+      if (v != null) d[k] = v;
+    }
+    return d;
+  },
+  remember(name, token) {
+    Object.assign(this, { name, token });
+    try {
+      localStorage.setItem('sd.account', JSON.stringify({ name, token }));
+      localStorage.setItem('sd.name', JSON.stringify(name).slice(1, -1));
+    } catch (e) {}
+    G.name = name;
+  },
+  /** New player: the progress already on this device becomes the account's first save. */
+  async register(name, pin) {
+    const d = await this.call('register', { name, pin, data: this.localData() });
+    this.remember(d.name, d.token);
+    this.state = 'saved';
+    return d;
+  },
+  /** Existing player: the account's save replaces this device's progress (then the game reloads). */
+  async login(name, pin) {
+    const d = await this.call('login', { name, pin });
+    this.remember(d.name, d.token);
+    const keys = Object.keys(d.data || {});
+    if (!keys.length) {
+      await this.saveNow();
+      return { reload: false };
+    }
+    try {
+      for (const k of ACCOUNT_SYNC) {
+        if (k in d.data) localStorage.setItem(k, d.data[k]);
+      }
+    } catch (e) {}
+    return { reload: true };
+  },
+  async logout() {
+    const { name, token } = this;
+    Object.assign(this, { name: null, token: null, state: 'idle' });
+    try {
+      localStorage.removeItem('sd.account');
+    } catch (e) {}
+    try {
+      if (name) await this.call('logout', { name, token });
+    } catch (e) {}
+  },
+  queueSave() {
+    if (!this.token) return;
+    clearTimeout(this.saveT);
+    this.saveT = setTimeout(() => this.saveNow(), 2500);
+  },
+  async saveNow() {
+    if (!this.token) return;
+    clearTimeout(this.saveT);
+    this.state = 'saving';
+    accountChip();
+    try {
+      await this.call('save', { name: this.name, token: this.token, data: this.localData() });
+      this.state = 'saved';
+    } catch (e) {
+      this.state = 'offline';
+      if (e.status === 401) {
+        Object.assign(this, { name: null, token: null });
+        try {
+          localStorage.removeItem('sd.account');
+        } catch (er) {}
+        toast('You were signed out. Sign in again to keep saving.');
+      }
+    }
+    accountChip();
+  }
+};
+/** Small status chip in the menu: who is signed in and whether the save is up to date. */
+function accountChip() {
+  const el = $('#acctChip');
+  if (!el) return;
+  if (!Account.name) {
+    el.innerHTML = `<span class="ac-dot off"></span><span>Playing as guest</span><b>Sign in</b>`;
+    el.title = 'Sign in with a nickname and PIN to keep your progress on every device';
+    return;
+  }
+  const st = { saving: 'saving…', saved: 'saved', offline: 'not saved yet', idle: 'signed in' }[Account.state];
+  el.innerHTML = `<span class="ac-dot ${Account.state === 'offline' ? 'warn' : ''}"></span><span><b>${esc(Account.name)}</b> · ${st}</span>`;
+  el.title = 'Account';
+}
+function openAccount(back) {
+  const ov = $('#ovAccount'),
+    card = $('#accountCard');
+  const signedIn = !!Account.name;
+  let mode = 'login',
+    typed = G.name !== 'Player' ? G.name : '';
+  const draw = msg => {
+    if (Account.name) {
+      card.innerHTML = `<h2>${esc(Account.name)}</h2>
+        <p>Your XP, Garage Style, blueprints and settings are saved to this nickname. Sign in on another device with the same PIN to continue there.</p>
+        <p class="small">Last status: ${{ saving: 'saving…', saved: 'saved', offline: 'not saved yet (no connection)', idle: 'signed in' }[Account.state]}</p>
+        <div class="rbtns"><button class="btn" id="acSave">Save now</button><button class="btn ghost" id="acOut">Sign out</button><button class="btn ghost" id="acBack">Back</button></div>`;
+      $('#acSave').onclick = async () => {
+        await Account.saveNow();
+        draw();
+      };
+      $('#acOut').onclick = async () => {
+        await Account.logout();
+        sfx('ui');
+        draw();
+      };
+    } else {
+      card.innerHTML = `<h2>${mode === 'login' ? 'Sign in' : 'New player'}</h2>
+        <div class="seg ac-tabs"><button data-m="login" aria-pressed="${mode === 'login'}">Sign in</button><button data-m="register" aria-pressed="${mode === 'register'}">New player</button></div>
+        <p class="small">${mode === 'login' ? 'Your saved progress replaces the progress on this device.' : 'Pick a nickname and a PIN you will remember. Your current progress comes with you.'}</p>
+        <form id="acForm" class="ac-form" autocomplete="off">
+          <label>Nickname<input id="acName" maxlength="16" autocomplete="username" value="${esc(typed)}" required></label>
+          <label>PIN<input id="acPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" required></label>
+          ${msg ? `<p class="ac-msg" role="alert">${esc(msg)}</p>` : ''}
+          <div class="rbtns"><button class="btn" type="submit" id="acGo">${mode === 'login' ? 'Sign in' : 'Create player'}</button><button class="btn ghost" type="button" id="acBack">Back</button></div>
+        </form>
+        ${Account.available() ? '' : '<p class="small">Accounts work on the hosted game (scrap-duel.netlify.app).</p>'}`;
+      $$('.ac-tabs button').forEach(b => (b.onclick = () => ((mode = b.dataset.m), draw())));
+      $('#acForm').onsubmit = async e => {
+        e.preventDefault();
+        const name = $('#acName').value.trim(),
+          pin = $('#acPin').value.trim();
+        typed = name;
+        $('#acGo').disabled = true;
+        $('#acGo').textContent = mode === 'login' ? 'Signing in…' : 'Creating…';
+        try {
+          if (mode === 'register') {
+            await Account.register(name, pin);
+            sfx('legend');
+            toast(`Welcome, ${Account.name}. Your progress is saved.`, true);
+            draw();
+          } else {
+            const r = await Account.login(name, pin);
+            sfx('legend');
+            if (r.reload) {
+              card.innerHTML = '<h2>Loading your garage…</h2>';
+              setTimeout(() => location.reload(), 300);
+              return;
+            }
+            toast(`Signed in as ${Account.name}.`, true);
+            draw();
+          }
+        } catch (er) {
+          draw(er.message);
+        }
+      };
+      setTimeout(() => ($('#acName').value ? $('#acPin') : $('#acName')).focus(), 30);
+    }
+    const bk = $('#acBack');
+    if (bk)
+      bk.onclick = () => {
+        ov.hidden = true;
+        if (back) back();
+      };
+  };
+  draw();
+  ov.hidden = false;
 }
 function load(k) {
   try {
@@ -9678,11 +9968,16 @@ function renderBin() {
      ids
        .map(m => {
          const l = left(m.id);
-         return `<div class="tilewrap"><button class="tile r${m.rar}${l <= 0 ? ' empty' : ''}" style="--rc:${RAR[m.rar].col}" data-id="${m.id}" aria-pressed="${G.sel === m.id}" title="${esc(m.name)} · ${l} available to place"><span class="ly">${m.layer === 't' ? 'TOP' : 'BASE'}</span><img alt="" src="${iconURL(m.id)}"><span class="n">${esc(m.name)}</span><span class="q${l <= 0 ? ' zero' : ''}" aria-label="${l} available to place">${l>0?'×'+l:'On car'}</span><i class="rb"></i></button><button class="favorite" data-fav="${m.id}" aria-label="Favorite ${esc(m.name)}" aria-pressed="${G.favorites.has(m.id)}">${G.favorites.has(m.id) ? '★' : '☆'}</button></div>`;
+         return `<div class="tilewrap"><button class="tile r${m.rar}${l <= 0 ? ' empty' : ''}" style="--rc:${RAR[m.rar].col}" data-id="${m.id}" aria-pressed="${G.sel === m.id}" title="${esc(m.name)} · ${l} available to place"><span class="ly ${m.layer === 't' ? 'top' : 'base'}" title="${m.layer === 't' ? 'Equipment: needs a ' + SOCKET[m.mnt] + ' ' + MOUNTNAME[m.mnt] : 'Chassis block'}">${m.layer === 't' ? SOCKET[m.mnt] : '▦'}</span><img alt="" src="${iconURL(m.id)}"><span class="n">${esc(m.name)}</span><span class="q${l <= 0 ? ' zero' : ''}" aria-label="${l} available to place">${l>0?'×'+l:'On car'}</span><i class="rb"></i></button><button class="favorite" data-fav="${m.id}" aria-label="Favorite ${esc(m.name)}" aria-pressed="${G.favorites.has(m.id)}">${G.favorites.has(m.id) ? '★' : '☆'}</button></div>`;
        })
        .join('') || '<p class="small" style="grid-column:1/-1">Nothing here yet.</p>'
    }</div>
-   <p class="small">BASE parts form the chassis. TOP parts bolt onto support blocks: light mounts (frames, armor, cockpit) or heavy mounts (girders, junctions, rings, heavy plate). Wheels and melee can’t hold anything.</p>`;
+   <div class="build-legend" aria-label="How building works">
+     <div><i class="lg-chassis"></i><span><b>Chassis</b> blocks connect to your cockpit.</span></div>
+     <div><i class="lg-sock">○</i><span>Frames, armor and the cockpit give a <b>light</b> socket.</span></div>
+     <div><i class="lg-sock heavy">⬢</i><span>Girders, junctions and rings give a <b>heavy</b> socket.</span></div>
+     <div><i class="lg-equip"></i><span><b>Equipment</b> sits on a free socket that is strong enough.</span></div>
+   </div>`;
   bindCatalog('bin', renderBin);
   $$('#leftBody [data-fav]').forEach(b => b.addEventListener('click', () => { toggleFavorite(b.dataset.fav); renderBin(); }));
   $$('#leftBody .chip').forEach(b =>
@@ -9792,8 +10087,8 @@ function renderInspect() {
     col = RAR[m.rar].col;
   $('#inspect').innerHTML =
     `<div class="art" style="--rc:${col}"><img alt="" src="${iconURL(m.id)}"></div><div><span class="tag" style="color:${col}">${RAR[m.rar].name} · ${CATNAME[m.cat]}</span><h4>${esc(m.name)}</h4><p>${esc(m.desc)}</p><p class="con">− ${esc(m.con)}</p>
-   <div class="tags"><span class="btag mount">${esc(mountLine(m))}</span><span class="btag footprint-tag">${shapeLabel(m)}</span>${footprintHTML(m)}${m.tags.map(t => `<span class="btag">${TAGS[t]}</span>`).join('')}${m.dir ? `<span class="btag">Facing ${'▲▶▼◀'[G.rot]}</span>` : ''}</div></div>
-   <div class="stl">${esc(statLine(m))}</div>
+   <div class="tags">${socketBadge(m)}${cellCount(m) > 1 ? footprintHTML(m) : ''}${m.tags.map(t => `<span class="btag">${TAGS[t]}</span>`).join('')}${m.dir ? `<span class="btag" title="Next placement faces this way (R)">${'▲▶▼◀'[G.rot]}</span>` : ''}</div></div>
+   <div class="stl">${statChips(m)}</div>
    <div class="trade"><span class="small">${left(m.id)} available · worth <span class="coin">${m.price}</span></span><span class="grow"></span>${G.found.has(m.id) && m.id !== 'cockpit' ? `<button class="buy" id="iBuy" ${G.coins < m.price ? 'disabled' : ''}>Buy +1</button><button class="buy" id="iSell" ${left(m.id) <= 0 ? 'disabled' : ''}>Sell 1 · ${Math.floor(m.price / 2)}</button>` : ''}</div>`;
   const ib = $('#iBuy');
   if (ib) ib.addEventListener('click', () => buy(m.id));
@@ -10135,7 +10430,7 @@ function optView(o) {
       kind: `${R.name} module`,
       img: `<img alt="" src="${iconURL(m.id, 184)}"><span class="x">×${o.n}</span>`,
       title: m.name,
-      body: `<p>${esc(m.desc)}</p><p class="con">− ${esc(m.con)}</p>${draftSupportCount(m.id,o.n) ? `<p class="mount-gift">Includes ${draftSupportCount(m.id,o.n)} ${m.mnt > 1 ? 'heavy' : 'light'} support block(s), ready to mount.</p>` : ''}<p class="small">${footprintHTML(m)} ${shapeLabel(m)} · ${m.mass} t · ${esc(mountLine(m))} · worth <span class="coin">${m.price}</span> each</p>`,
+      body: `<p>${esc(m.desc)}</p><p class="con">− ${esc(m.con)}</p>${draftSupportCount(m.id,o.n) ? `<p class="mount-gift">Includes ${draftSupportCount(m.id,o.n)} ${m.mnt > 1 ? 'heavy' : 'light'} support block(s), ready to mount.</p>` : ''}<div class="opt-meta">${socketBadge(m)}${statChips(m)}</div>`,
       isNew: o.isNew
     };
   }
@@ -10188,7 +10483,7 @@ function openDraft(fresh = true) {
   <div class="opts">${opts
     .map((o, i) => {
       const v = optView(o);
-      return `<button class="opt r${o.rar}" data-i="${i}" style="--rc:${RAR[o.rar].col};--i:${i}">${v.isNew ? '<span class="new">NEW</span>' : ''}<span class="top"><span class="slot">${esc(o.slot)}</span><span class="kind">${esc(v.kind)}</span></span><span class="art">${v.img}</span><h3>${esc(v.title)}</h3>${v.body}<p class="small">${esc(o.why)}</p><span class="take">Take it →</span></button>`;
+      return `<button class="opt r${o.rar}" data-i="${i}" style="--rc:${RAR[o.rar].col};--i:${i}">${v.isNew ? '<span class="new">NEW</span>' : ''}<span class="top"><span class="slot">${esc(o.slot)}</span><span class="kind">${esc(v.kind)}</span></span><span class="art">${v.img}</span><h3>${esc(v.title)}</h3>${v.body}<p class="small why">${esc(o.why)}</p></button>`;
     })
     .join('')}</div>
   <div class="dfoot"><button class="btn ghost" id="btnReroll" ${G.coins < cost ? 'disabled' : ''}>${free ? `Free reroll (${G.freeRerolls} left)` : `Reroll all three · <span class="coin">${cost}</span>`}</button>${first ? '' : `<button class="btn ghost" id="btnSkip">Skip and take <span class="coin">35</span></button>`}<span class="small">You have <span class="coin">${G.coins}</span></span></div></div>`;
@@ -16463,7 +16758,7 @@ const CTRL = [
 ];
 addEventListener('keydown', e => {
   if (e.target && (['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable)) return;
-  if ((G.phase === 'wait' || G.phase === 'battle') && B && !B.paused && !Net.reconnecting && ['#ovMenu','#ovCodex','#ovSettings','#ovPause'].every(id=>$(id).hidden) && CTRL.includes(e.code)) {
+  if ((G.phase === 'wait' || G.phase === 'battle') && B && !B.paused && !Net.reconnecting && ['#ovMenu','#ovCodex','#ovSettings','#ovPause','#ovAccount'].every(id=>$(id).hidden) && CTRL.includes(e.code)) {
     e.preventDefault();
     if (!e.repeat) edges.add(e.code);
     keys.add(e.code);
@@ -16495,7 +16790,7 @@ const toWorld=(cx,cy)=>{
   const [x,y]=screenVectorToWorld((cx-r.left-view.w/2)/s,(cy-r.top-view.h/2)/s);
   return [x+cam.x,y+cam.y];
 };
-function arenaInputBlocked(){return ['#ovMenu','#ovCodex','#ovSettings','#ovPause'].some(id=>!$(id).hidden);}
+function arenaInputBlocked(){return ['#ovMenu','#ovCodex','#ovSettings','#ovPause','#ovAccount'].some(id=>!$(id).hidden);}
 function pointerIsTouch(ev){return SETTINGS.touchControls==='on'||(ev.pointerType==='touch'&&SETTINGS.touchControls!=='off');}
 function moveStick(stick,ev){
   const r=ac.getBoundingClientRect(),x=(ev.clientX-r.left-stick.sx)/54,y=(ev.clientY-r.top-stick.sy)/54,m=Math.hypot(x,y),f=m>1?1/m:1;
@@ -18970,7 +19265,8 @@ function hideOverlays() {
     '#ovCodex',
     '#ovResult',
     '#ovReady',
-    '#ovStyle'
+    '#ovStyle',
+    '#ovAccount'
   ])
     $(id).hidden = true;
 }
@@ -19838,8 +20134,8 @@ function showMenu() {
   const L = levelInfo();
   $('#ovMenu').classList.toggle('live', !resume);
   $('#ovMenu').innerHTML = `<div class="menu2">
-    <div class="hero2"><span class="label">Vehicle combat · ${MODS.length} modules</span><h1>SCRAP<br>DUEL</h1>
-      <p>Weld a car together, draft new parts every round and smash your rival. Ten rounds, one point per round, a double-point finale, and five special rounds.</p></div>
+    <div class="hero2"><button class="acct-chip" id="acctChip" type="button"></button><h1>SCRAP<br>DUEL</h1>
+      <p>Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
     <div class="modes2">
       <div class="mode2" style="--rc:#5cc38f"><div class="mh"><span class="ico">1P</span><h3>Singleplayer</h3></div><p>A bot rival who drafts, shops and builds with the same rules.</p>
         <div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
@@ -19854,9 +20150,19 @@ function showMenu() {
         <button class="btn" id="mStyle">Customize</button></div>
     </div>
     <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button></div>
-    <p class="small mnote">Multiplayer needs the game hosted on a normal website (like Netlify). Inside the Claude preview, browsers block peer-to-peer connections.</p>
   </div>`;
   $('#ovMenu').hidden = false;
+  accountChip();
+  $('#acctChip').onclick = () => {
+    sfx('ui');
+    $('#ovMenu').hidden = true;
+    openAccount(showMenu);
+  };
+  if (Account.name) {
+    $('#mName').value = Account.name;
+    $('#mName').disabled = true;
+    $('#mName').title = 'Your account nickname';
+  }
   $('#mFormat').onchange=e=>{chosenFormat=e.target.value;e.target.parentElement.querySelector('small').textContent=MATCH_FORMATS[chosenFormat].desc;};
   $$('#diffSeg button').forEach(b =>
     b.addEventListener('click', () => {
@@ -20002,7 +20308,7 @@ function loop(t) {
         demoTick(dt);
       }
     } else if ((G.phase === 'wait' || G.phase === 'battle') && B) {
-      if (B.menuPaused && ['#ovMenu', '#ovCodex', '#ovSettings', '#ovStyle', '#ovIntro', '#ovPause'].every(id => $(id).hidden)) {
+      if (B.menuPaused && ['#ovMenu', '#ovCodex', '#ovSettings', '#ovStyle', '#ovIntro', '#ovPause', '#ovAccount'].every(id => $(id).hidden)) {
         B.menuPaused = false;
         B.paused = false;
       }
@@ -20035,7 +20341,12 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   MUTE = load('sd.mute') == 1;
   loadStyle();
   try {G.favorites=new Set(JSON.parse(load('sd.favorites')||'[]').filter(id=>MOD[id]));} catch(e){}
+  Account.init();
 }
+// last chance to save when the tab closes or the phone switches apps
+addEventListener('pagehide', () => {
+  if (Account.token && Account.saveT) Account.saveNow();
+});
 resetWs();
 G.base = new Map([[key(0, 0), { id: 'cockpit', rot: 0, x: 0, y: 0 }]]);
 G.inv = { cockpit: 1 };
@@ -20047,7 +20358,7 @@ requestAnimationFrame(loop);
 
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
-  window.__SD = { showMenu, canPause, togglePause, CATS,blockedFor,reviewHTML,openGarageReport,closeGarageReport,footprint,occupancy,instCenter,cellCount,shapeBounds,shapeLabel,topAt,canPlaceTop,act,returnTopsOn,planCapacity,planTakeScrap,planSpill,planTick,planActivate,planWeapon,planHurt,simulate,weapons,hurtInst,stepCarHazards,mkObj,setupSpecial,stepSpecial,specialTimeout,finishBattle,formatAwards,MATCH_FORMATS,POWERUPS,SPECIALS,drawBP,drawArena, view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
+  window.__SD = { Account, openAccount, showMenu, canPause, togglePause, CATS,blockedFor,reviewHTML,openGarageReport,closeGarageReport,footprint,occupancy,instCenter,cellCount,shapeBounds,shapeLabel,topAt,canPlaceTop,act,returnTopsOn,planCapacity,planTakeScrap,planSpill,planTick,planActivate,planWeapon,planHurt,simulate,weapons,hurtInst,stepCarHazards,mkObj,setupSpecial,stepSpecial,specialTimeout,finishBattle,formatAwards,MATCH_FORMATS,POWERUPS,SPECIALS,drawBP,drawArena, view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
 
 })();
 </script>

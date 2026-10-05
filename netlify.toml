@@ -1,5 +1,11 @@
+# The game is one static page in site/. The only server code is the account API
+# (netlify/functions/account.mjs), which keeps nickname + PIN profiles in Netlify Blobs.
 [build]
-  publish = "."
+  publish = "site"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
 
 [[headers]]
   for = "/"

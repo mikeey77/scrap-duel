@@ -1,5 +1,5 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-const html=fs.readFileSync(__dirname+'/../index.html','utf8');
+const html=fs.readFileSync(__dirname+'/../site/index.html','utf8');
 const source=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n');
 new vm.Script(source);
 
@@ -114,7 +114,7 @@ test('breaking a connector records the detached branch for replay',()=>{
   assert(b.ev.some(e=>e[0]==='lesson'&&e[4].includes('attached part')));
 });
 test('release version contains all requested UI affordances',()=>{
-  for(const text of ['Skip animation','Firing arcs','Weak links','Search modules','Battle music','Reconnect window expired','LMB/Space','data-k="KeyJ"'])assert(html.includes(text),text);
+  for(const text of ['Skip animation','id="btnArcs"','Weak links','Search modules','Battle music','Reconnect window expired','LMB/Space','data-k="KeyJ"'])assert(html.includes(text),text);
   assert(!html.includes('round N is worth N points'));
 });
 test('two peers recover a dropped battle with authoritative score, clock and cooldowns',()=>{
