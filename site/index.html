@@ -2542,7 +2542,7 @@ textarea {
 }
 
 /* Playtest update: accessible workshop, safe-area controls and lightweight reels. */
-:root { --host-safe: 0px; } /* Netlify adds no badge on production; only the device safe area is reserved. */
+:root { --host-safe: 56px; } /* room for the 'Powered by Netlify' badge (iframe #nl-badge-frame, bottom right) */
 #app { padding-bottom: calc(var(--host-safe) + env(safe-area-inset-bottom)); }
 .overlay { padding-bottom: calc(var(--host-safe) + 16px); }
 .toolbar { flex-wrap: wrap; justify-content: center; overflow: visible; width: max-content; }
@@ -2759,7 +2759,7 @@ body:has(#ovLobby:not([hidden])) #demoFeed {
     min-height: 32px;
   }
   #app {
-    padding-bottom: calc(52px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(52px + var(--host-safe) + env(safe-area-inset-bottom)) !important;
   }
   .mobile-workshop-nav {
     padding: 4px;
@@ -2768,7 +2768,7 @@ body:has(#ovLobby:not([hidden])) #demoFeed {
     min-height: 32px;
   }
   #bay {
-    height: calc(100dvh - 178px) !important;
+    height: calc(100dvh - 178px - var(--host-safe)) !important;
     min-height: 180px !important;
   }
   #bayHint {
