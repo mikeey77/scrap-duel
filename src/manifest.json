@@ -19,7 +19,7 @@
   "16-results-vs.css",
   "17-arena-overlays.css",
   "18-gambling.css",
-  "19-lightning-pause-menu-online-rooms-round-.css"
+  "19-extras.css"
  ],
  "js": [
   "js/core/utils.js",
@@ -53,6 +53,7 @@
   "js/render/cosmetics-render.js",
   "js/game/replay.js",
   "js/game/match.js",
+  "js/game/gauntlet.js",
   "js/ui/effects.js",
   "js/ui/tutorial.js",
   "js/ui/settings.js",

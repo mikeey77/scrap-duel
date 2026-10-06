@@ -1581,6 +1581,7 @@ function store(k, v) {
    Optional. Signed-in players keep XP, Garage Style, blueprints and settings on the
    server (Netlify Function + Blobs) and get them back on any device. */
 const ACCOUNT_SYNC = [
+  'sd.runBest',
   'sd.prog',
   'sd.style',
   'sd.bp0',
@@ -2421,6 +2422,7 @@ $('#btnReady').addEventListener('click', () => {
   if (building()) readyCheck();
 });
 function updateHUD() {
+  if (G.run) return updateRunHUD();
   $('#tRoundLbl').textContent = G.mode === 'sandbox' ? 'Sandbox' : `Round ${Math.min(G.round, ROUNDS)} of ${ROUNDS}`;
   $('#segs').innerHTML =
     G.mode === 'sandbox'

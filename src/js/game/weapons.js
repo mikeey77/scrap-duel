@@ -791,7 +791,9 @@ function weapons(v, dt) {
   if (v.emp > 0) v.emp -= dt;
   if (v.blind > 0) v.blind -= dt;
   const emp = v.emp > 0;
-  const fireK = buffOf(v, 'overdrive') ? 1.6 : 1;
+  const fireK = (buffOf(v, 'overdrive') ? 1.6 : 1) * (v.rateMul || 1);
+  if (v.regen && !v.dead && B.seq === 'play')
+    for (const I of v.insts) if (I.alive && I.hp < I.max) I.hp = Math.min(I.max, I.hp + I.max * v.regen * dt);
   const jam = v.jam > 0,
     sensor = !!v.has.sensor && !jam,
     cone = sensor ? 0.44 : 0.14,

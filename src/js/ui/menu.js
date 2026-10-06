@@ -28,6 +28,9 @@ function showMenu() {
         <input id="mName" class="mname" maxlength="16" value="${esc(G.name)}" aria-label="Your name" placeholder="Your name">
         <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
         <div class="rooms"><span class="rooms-h">Open 1v1 rooms</span><div id="roomList"></div></div></div>
+      <div class="mode2" style="--rc:#ff5c7a"><div class="mh"><span class="ico">☠</span><h3>Scrap Gauntlet</h3></div><p>Survive wave after wave with three hearts. A boss every fifth wave drops a relic.</p>
+        <span class="small runbest">Best run: ${runBest() ? 'wave ' + runBest() : 'none yet'}</span>
+        <button class="btn" id="mRun">Start a run</button></div>
       <div class="mode2" style="--rc:#c58bff"><div class="mh"><span class="ico">LAB</span><h3>Sandbox</h3></div><p>Every module, 99 of each, a test arena with dummies.</p>
         <button class="btn" id="mSand">Open sandbox</button></div>
       <div class="mode2" style="--rc:#ffd257"><div class="mh"><span class="ico">${L.lvl}</span><h3>Garage Style</h3></div><p>${esc(titleName(G.style.title))} · ${unlockedCount()} of ${totalCosmetics()} unlocked</p>
@@ -82,6 +85,12 @@ function showMenu() {
   };
   $('#mSolo').addEventListener('click', go('solo'));
   $('#mSand').addEventListener('click', go('sandbox'));
+  $('#mRun').addEventListener('click', () => {
+    sfx('ui');
+    leave();
+    G.started = true;
+    startRun();
+  });
   $('#mHost').addEventListener('click', () => {
     sfx('ui');
     leave();
@@ -297,6 +306,12 @@ requestAnimationFrame(loop);
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
   window.__SD = {
+    prepareBot,
+    botCarCfg,
+    startRun,
+    runNext,
+    runMods,
+    openRelicPick,
     validBadge,
     parseBadge,
     funAwards,

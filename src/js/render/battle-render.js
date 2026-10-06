@@ -1215,7 +1215,13 @@ function drawHUD(c) {
     c.fillText(fmt(Math.max(0, B.t)), W / 2, ty + 4);
     c.font = '600 12px "Barlow Semi Condensed", sans-serif';
     c.fillStyle = '#ffd257';
-    c.fillText(`Round ${G.round} · ${stakeLine(G.round)} · ${G.score[0]}–${G.score[1]}`, W / 2, ty + 31);
+    c.fillText(
+      G.run
+        ? `Wave ${G.round} · ${'♥'.repeat(Math.max(0, G.run.hearts))}${G.run.boss ? ' · BOSS' : ''}`
+        : `Round ${G.round} · ${stakeLine(G.round)} · ${G.score[0]}–${G.score[1]}`,
+      W / 2,
+      ty + 31
+    );
     let y = ty + 56;
     y = drawSpecialHUD(c, W, y);
     if (B.ring && B.seq === 'play' && B.special !== 'sumo') {
@@ -1314,7 +1320,7 @@ function drawHUD(c) {
     c.textBaseline = 'middle';
     c.font = '600 18px "Barlow Semi Condensed", sans-serif';
     c.fillStyle = '#bff';
-    c.fillText(`Round ${G.round} · ${B.theme.name}`, W / 2, H * 0.78);
+    c.fillText(`${G.run ? 'Wave' : 'Round'} ${G.round} · ${B.theme.name}`, W / 2, H * 0.78);
   }
   if (B.seq === 'out') {
     c.textAlign = 'center';

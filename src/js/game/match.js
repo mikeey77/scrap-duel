@@ -135,6 +135,7 @@ const pointsRemaining = r =>
   Array.from({ length: Math.max(0, ROUNDS - r) }, (_, i) => roundPoints(r + i + 1)).reduce((a, b) => a + b, 0);
 const ptsLeft = () => pointsRemaining(G.round);
 const myCarCfg = () => ({
+  ...(G.run ? { run: runMods() } : {}),
   design: packDesign(myDesign()),
   tune: [...G.tune],
   name: G.name,
@@ -153,6 +154,7 @@ function carFromCfg(c, i) {
   v.style = c.style;
   v.diff = c.diff;
   v.look = { ...DEFAULT_STYLE, ...(c.look || {}) };
+  applyCarMods(v, c);
   return v;
 }
 function carsFromCfg(cfg) {
@@ -281,6 +283,10 @@ function hideOverlays() {
     $(id).hidden = true;
 }
 function startMatch(mode, sched, format = chosenFormat, rounds) {
+  if (G.run) {
+    G.diff = G.run.prevDiff;
+    G.run = null;
+  }
   setRounds(mode === 'mp' ? rounds || 10 : mode === 'solo' ? G.rounds || 10 : 10);
   G.format = MATCH_FORMATS[format] ? format : 'balanced';
   G.lives = [20, 20];
@@ -566,7 +572,8 @@ const botCarCfg = () => ({
   ctrl: 'bot',
   style: G.bot.style,
   diff: G.diff,
-  look: G.oppLook
+  look: G.oppLook,
+  ...runBotExtras()
 });
 
 /* ---------- waiting arena ---------- */
@@ -703,7 +710,7 @@ function showVS(cfg, done) {
     `<div class="vs"><div class="side"><img src="${img(me)}" alt="${esc(me.name)}'s car"><span class="nm" style="color:${me.paint}">${esc(me.name)}</span><span class="ttl">${title(me)}</span><span class="small">${G.score[0]} points</span></div>
     <div class="mid">VS</div>
     <div class="side r"><img src="${img(op)}" alt="${esc(op.name)}'s car"><span class="nm" style="color:${op.paint}">${esc(op.name)}</span><span class="ttl">${title(op)}</span><span class="small">${G.score[1]} points</span></div>
-    <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">Round ${cfg.round} of ${ROUNDS} · ${stakeLine(cfg.round)}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span>
+    <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">${G.run ? `Scrap Gauntlet · wave ${cfg.round}${G.run.boss ? ' · BOSS' : ''}` : `Round ${cfg.round} of ${ROUNDS} · ${stakeLine(cfg.round)}`}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span>
     ${S ? `<div class="vssp" style="--sc:${S.col}"><span class="spi">${S.icon}</span><div><b>SPECIAL ROUND · ${esc(S.name)}</b><span>${esc(S.blurb)}</span></div></div>` : ''}</div></div>`;
   $('#ovVS').hidden = false;
   sfx('vs');
@@ -751,6 +758,12 @@ function toBattle(cfg) {
   setButtons();
   sfx('tele');
   setTimeout(() => B && !B.demo && G.phase === 'battle' && Announcer.round(G.round), 350);
+  const bossCar = B.cars.find(c => c.boss);
+  if (bossCar) {
+    B.banner = { text: 'BOSS FIGHT', col: '#ff5c7a', t: 0, sub: bossCar.name };
+    B.shake = 8;
+    sfx('vs');
+  }
   showTip(cfg.special ? 'specialFight' : 'battle');
 }
 
@@ -883,7 +896,7 @@ function finishBattle() {
   const base = (draw ? 95 : iWon ? 110 : 80) + (iWon && G.format === 'bounty' ? Math.max(0, pts - 1) * 15 : 0),
     bonus = Math.min(40, Math.floor(st[me].dealt / 40)),
     found = st[me].coins,
-    mult = (1 + 0.25 * lucky) * econ * ((S && S.coins) || 1),
+    mult = (1 + 0.25 * lucky) * econ * ((S && S.coins) || 1) * (G.run && G.run.relics.includes('dice') ? 1.3 : 1),
     total = Math.round((base + bonus + found) * mult);
   addCoins(total);
   if (!iWon && !draw) G.freeRerolls++;
@@ -919,18 +932,21 @@ function finishBattle() {
   updateHUD();
   $('#arena').hidden = true;
   $('#build').hidden = false;
+  const runInfo = G.run ? runWaveDone(iWon, draw) : null;
   const lead = G.score[0] - G.score[1],
-    left = ptsLeft(),
-    decided =
-      G.round >= ROUNDS ||
-      (G.format === 'lives' ? Math.min(...G.lives) <= 0 : G.format === 'bounty' ? false : Math.abs(lead) > left);
+    left = runInfo ? 99 : ptsLeft(),
+    decided = runInfo
+      ? runInfo.over
+      : G.round >= ROUNDS ||
+        (G.format === 'lives' ? Math.min(...G.lives) <= 0 : G.format === 'bounty' ? false : Math.abs(lead) > left);
   const cnt = {};
   for (const id of st[me].lost) cnt[id] = (cnt[id] || 0) + 1;
   const lostHtml = Object.entries(cnt)
     .map(([id, n]) => `<span>${esc(MOD[id] ? MOD[id].name : id)}${n > 1 ? ' ×' + n : ''}</span>`)
     .join('');
-  const outlook =
-    G.format === 'lives'
+  const outlook = runInfo
+    ? runInfo.text
+    : G.format === 'lives'
       ? decided
         ? 'The lives contest is over.'
         : `${G.lives[0]}–${G.lives[1]} lives left. Next defeat costs ${3 + G.round} lives.`
@@ -946,9 +962,15 @@ function finishBattle() {
               : `${esc(G.oppName)} has clinched the match.`
           : `${left} points still on the table. Next round is worth ${roundPoints(G.round + 1)} point${roundPoints(G.round + 1) > 1 ? 's' : ''}.`;
   const pity = !iWon && !draw && !decided ? pityOptions() : [];
+  const roundLbl = G.run
+      ? `Scrap Gauntlet · wave ${G.round}${G.run.boss ? ' · BOSS' : ''}`
+      : `Round ${G.round} of ${ROUNDS}`,
+    scoreHTML = G.run
+      ? heartsHTML()
+      : `<span class="sw" style="background:${G.paint};width:14px;height:14px"></span><span class="me">${G.format === 'lives' ? '♥ ' + G.lives[0] : G.score[0]}</span>–<span class="op">${G.format === 'lives' ? G.lives[1] + ' ♥' : G.score[1]}</span><span class="sw" style="background:${G.oppPaint};width:14px;height:14px"></span>`;
   $('#resultCard').innerHTML =
-    `<span class="label">Round ${G.round} of ${ROUNDS}${S ? ' · ' + esc(S.name) : ''}</span><h2 style="color:${iWon ? '#5cc38f' : draw ? '#ece8df' : '#e2504a'}">${iWon ? 'Round won' : draw ? 'Draw' : 'Round lost'}</h2><p>${esc(why || '')}</p>
-    <div class="score" style="justify-content:center;font-size:28px"><span class="sw" style="background:${G.paint};width:14px;height:14px"></span><span class="me">${G.format === 'lives' ? '♥ ' + G.lives[0] : G.score[0]}</span>–<span class="op">${G.format === 'lives' ? G.lives[1] + ' ♥' : G.score[1]}</span><span class="sw" style="background:${G.oppPaint};width:14px;height:14px"></span></div>
+    `<span class="label">${roundLbl}${S ? ' · ' + esc(S.name) : ''}</span><h2 style="color:${iWon ? '#5cc38f' : draw ? '#ece8df' : '#e2504a'}">${iWon ? (G.run ? 'Wave cleared' : 'Round won') : draw ? 'Draw' : G.run ? 'Wave lost' : 'Round lost'}</h2><p>${esc(why || '')}</p>
+    <div class="score" style="justify-content:center;font-size:28px">${scoreHTML}</div>
     <p class="small" style="text-align:center">${outlook}</p>
     <div class="rbtns">${hadWreck ? '<button class="btn ghost" id="btnKillcam">Kill-cam</button>' : ''}<button class="btn ghost" id="btnReplay">Watch replay</button></div>
     <div class="bigcoin" id="coinCount">+0</div>
@@ -958,8 +980,8 @@ function finishBattle() {
     ${pity.length ? `<span class="label">Underdog pick · take one part for free</span><div class="pity">${pity.map(m => `<button class="pick r${m.rar}" data-id="${m.id}" style="--rc:${RAR[m.rar].col}"><img src="${iconURL(m.id, 64)}" alt=""><b>${esc(m.name)}</b><span>${esc(RAR[m.rar].name)}</span></button>`).join('')}</div>` : ''}
     ${lostHtml ? `<span class="label">Destroyed this round</span><div class="lostlist">${lostHtml}</div>` : ''}
     ${progressHtml(prog)}
-    ${decided ? '' : nextUpHTML(G.round + 1)}
-    <button class="btn" id="btnNext">${decided ? 'See match result' : 'Pick your next part'}</button>`;
+    ${decided ? '' : G.run ? runNextUpHTML() : nextUpHTML(G.round + 1)}
+    <button class="btn" id="btnNext">${decided ? (G.run ? 'See how far you got' : 'See match result') : runInfo && runInfo.relic ? 'Claim your relic' : 'Pick your next part'}</button>`;
   $('#ovResult').hidden = false;
   G.scars = { ...(st[me].damage || {}) };
   (
@@ -997,7 +1019,8 @@ function finishBattle() {
   $('#btnNext').addEventListener('click', () => {
     sfx('ui');
     $('#ovResult').hidden = true;
-    if (decided) showFinal();
+    if (runInfo) runNext(decided, runInfo.relic);
+    else if (decided) showFinal();
     else {
       G.round++;
       updateHUD();

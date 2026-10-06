@@ -5046,6 +5046,92 @@ img.badge {
   animation: none;
   filter: none;
 }
+
+/* ---- Scrap Gauntlet ---- */
+.hearts {
+  font-size: 15px;
+  letter-spacing: 1px;
+  margin: 0 4px;
+}
+.relics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.relic {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  background: rgba(255, 92, 122, 0.06);
+  border: 1px solid rgba(255, 92, 122, 0.4);
+  color: var(--fg);
+  cursor: pointer;
+  clip-path: var(--chamfer-s);
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+}
+.relic:hover,
+.relic:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--hazard);
+}
+.relic i {
+  font-style: normal;
+  font-size: 34px;
+}
+.relic span {
+  font-size: 12px;
+  color: #b6c8e0;
+  text-align: center;
+}
+.runstats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+.runstats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  background: rgba(91, 231, 255, 0.05);
+  border: 1px solid rgba(91, 231, 255, 0.2);
+}
+.runstats b {
+  font: 700 30px var(--f-display);
+  color: var(--hazard);
+}
+.runstats span {
+  font-size: 12px;
+  color: #b6c8e0;
+}
+.relicrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+.relicrow span {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 180, 35, 0.35);
+}
+.runbest {
+  color: var(--hazard);
+}
+@media (min-width: 1180px) {
+  #ovMenu .modes2 {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+  #ovMenu .menu2 {
+    width: min(1400px, 96vw) !important;
+  }
+}
 </style>
   </head>
   <body>
@@ -9717,6 +9803,9 @@ const COSMETICS = {
   ]
 };
 const ACHIEVEMENTS = {
+  boss_slayer: { name: 'Boss Slayer', desc: 'Beat a boss in the Scrap Gauntlet.' },
+  wave10: { name: 'Marathon', desc: 'Reach wave 10 in the Scrap Gauntlet.' },
+  wave25: { name: 'Unkillable', desc: 'Reach wave 25 in the Scrap Gauntlet.' },
   first_win: { name: 'First Blood', desc: 'Win a round.' },
   match_win: { name: 'Winner Winner', desc: 'Win a match.' },
   hard_win: { name: 'Hardened', desc: 'Win a match against a Hard bot.' },
@@ -13265,6 +13354,7 @@ function store(k, v) {
    Optional. Signed-in players keep XP, Garage Style, blueprints and settings on the
    server (Netlify Function + Blobs) and get them back on any device. */
 const ACCOUNT_SYNC = [
+  'sd.runBest',
   'sd.prog',
   'sd.style',
   'sd.bp0',
@@ -14105,6 +14195,7 @@ $('#btnReady').addEventListener('click', () => {
   if (building()) readyCheck();
 });
 function updateHUD() {
+  if (G.run) return updateRunHUD();
   $('#tRoundLbl').textContent = G.mode === 'sandbox' ? 'Sandbox' : `Round ${Math.min(G.round, ROUNDS)} of ${ROUNDS}`;
   $('#segs').innerHTML =
     G.mode === 'sandbox'
@@ -17091,6 +17182,8 @@ function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   const m = I.m;
   let a = amt * (1 + v.fragile);
   const attacker = att != null && att >= 0 ? B.cars[att] : null;
+  if (attacker && attacker.dmgOut) a *= attacker.dmgOut;
+  if (v.dmgIn) a *= v.dmgIn;
   if (m.res && m.res[type] !== undefined && !(type === 'light' && attacker && CT(attacker, 'apround')))
     a *= 1 - m.res[type];
   if (v.has.gnome && v.insts.some(g => g.id === 'gnome' && g.alive)) a *= 0.92;
@@ -19407,7 +19500,9 @@ function weapons(v, dt) {
   if (v.emp > 0) v.emp -= dt;
   if (v.blind > 0) v.blind -= dt;
   const emp = v.emp > 0;
-  const fireK = buffOf(v, 'overdrive') ? 1.6 : 1;
+  const fireK = (buffOf(v, 'overdrive') ? 1.6 : 1) * (v.rateMul || 1);
+  if (v.regen && !v.dead && B.seq === 'play')
+    for (const I of v.insts) if (I.alive && I.hp < I.max) I.hp = Math.min(I.max, I.hp + I.max * v.regen * dt);
   const jam = v.jam > 0,
     sensor = !!v.has.sensor && !jam,
     cone = sensor ? 0.44 : 0.14,
@@ -22620,7 +22715,13 @@ function drawHUD(c) {
     c.fillText(fmt(Math.max(0, B.t)), W / 2, ty + 4);
     c.font = '600 12px "Barlow Semi Condensed", sans-serif';
     c.fillStyle = '#ffd257';
-    c.fillText(`Round ${G.round} · ${stakeLine(G.round)} · ${G.score[0]}–${G.score[1]}`, W / 2, ty + 31);
+    c.fillText(
+      G.run
+        ? `Wave ${G.round} · ${'♥'.repeat(Math.max(0, G.run.hearts))}${G.run.boss ? ' · BOSS' : ''}`
+        : `Round ${G.round} · ${stakeLine(G.round)} · ${G.score[0]}–${G.score[1]}`,
+      W / 2,
+      ty + 31
+    );
     let y = ty + 56;
     y = drawSpecialHUD(c, W, y);
     if (B.ring && B.seq === 'play' && B.special !== 'sumo') {
@@ -22719,7 +22820,7 @@ function drawHUD(c) {
     c.textBaseline = 'middle';
     c.font = '600 18px "Barlow Semi Condensed", sans-serif';
     c.fillStyle = '#bff';
-    c.fillText(`Round ${G.round} · ${B.theme.name}`, W / 2, H * 0.78);
+    c.fillText(`${G.run ? 'Wave' : 'Round'} ${G.round} · ${B.theme.name}`, W / 2, H * 0.78);
   }
   if (B.seq === 'out') {
     c.textAlign = 'center';
@@ -24291,6 +24392,7 @@ const Announcer = {
     } catch (e) {}
   },
   round(r) {
+    if (G.run) return this.say(G.run.boss ? 'Boss fight' : 'Wave ' + (NUM_WORDS[r] || r));
     this.say(r === ROUNDS && ROUNDS > 1 ? 'Final round' : 'Round ' + (NUM_WORDS[r] || r));
   }
 };
@@ -26132,6 +26234,7 @@ const pointsRemaining = r =>
   Array.from({ length: Math.max(0, ROUNDS - r) }, (_, i) => roundPoints(r + i + 1)).reduce((a, b) => a + b, 0);
 const ptsLeft = () => pointsRemaining(G.round);
 const myCarCfg = () => ({
+  ...(G.run ? { run: runMods() } : {}),
   design: packDesign(myDesign()),
   tune: [...G.tune],
   name: G.name,
@@ -26150,6 +26253,7 @@ function carFromCfg(c, i) {
   v.style = c.style;
   v.diff = c.diff;
   v.look = { ...DEFAULT_STYLE, ...(c.look || {}) };
+  applyCarMods(v, c);
   return v;
 }
 function carsFromCfg(cfg) {
@@ -26278,6 +26382,10 @@ function hideOverlays() {
     $(id).hidden = true;
 }
 function startMatch(mode, sched, format = chosenFormat, rounds) {
+  if (G.run) {
+    G.diff = G.run.prevDiff;
+    G.run = null;
+  }
   setRounds(mode === 'mp' ? rounds || 10 : mode === 'solo' ? G.rounds || 10 : 10);
   G.format = MATCH_FORMATS[format] ? format : 'balanced';
   G.lives = [20, 20];
@@ -26563,7 +26671,8 @@ const botCarCfg = () => ({
   ctrl: 'bot',
   style: G.bot.style,
   diff: G.diff,
-  look: G.oppLook
+  look: G.oppLook,
+  ...runBotExtras()
 });
 
 /* ---------- waiting arena ---------- */
@@ -26700,7 +26809,7 @@ function showVS(cfg, done) {
     `<div class="vs"><div class="side"><img src="${img(me)}" alt="${esc(me.name)}'s car"><span class="nm" style="color:${me.paint}">${esc(me.name)}</span><span class="ttl">${title(me)}</span><span class="small">${G.score[0]} points</span></div>
     <div class="mid">VS</div>
     <div class="side r"><img src="${img(op)}" alt="${esc(op.name)}'s car"><span class="nm" style="color:${op.paint}">${esc(op.name)}</span><span class="ttl">${title(op)}</span><span class="small">${G.score[1]} points</span></div>
-    <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">Round ${cfg.round} of ${ROUNDS} · ${stakeLine(cfg.round)}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span>
+    <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">${G.run ? `Scrap Gauntlet · wave ${cfg.round}${G.run.boss ? ' · BOSS' : ''}` : `Round ${cfg.round} of ${ROUNDS} · ${stakeLine(cfg.round)}`}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span>
     ${S ? `<div class="vssp" style="--sc:${S.col}"><span class="spi">${S.icon}</span><div><b>SPECIAL ROUND · ${esc(S.name)}</b><span>${esc(S.blurb)}</span></div></div>` : ''}</div></div>`;
   $('#ovVS').hidden = false;
   sfx('vs');
@@ -26748,6 +26857,12 @@ function toBattle(cfg) {
   setButtons();
   sfx('tele');
   setTimeout(() => B && !B.demo && G.phase === 'battle' && Announcer.round(G.round), 350);
+  const bossCar = B.cars.find(c => c.boss);
+  if (bossCar) {
+    B.banner = { text: 'BOSS FIGHT', col: '#ff5c7a', t: 0, sub: bossCar.name };
+    B.shake = 8;
+    sfx('vs');
+  }
   showTip(cfg.special ? 'specialFight' : 'battle');
 }
 
@@ -26880,7 +26995,7 @@ function finishBattle() {
   const base = (draw ? 95 : iWon ? 110 : 80) + (iWon && G.format === 'bounty' ? Math.max(0, pts - 1) * 15 : 0),
     bonus = Math.min(40, Math.floor(st[me].dealt / 40)),
     found = st[me].coins,
-    mult = (1 + 0.25 * lucky) * econ * ((S && S.coins) || 1),
+    mult = (1 + 0.25 * lucky) * econ * ((S && S.coins) || 1) * (G.run && G.run.relics.includes('dice') ? 1.3 : 1),
     total = Math.round((base + bonus + found) * mult);
   addCoins(total);
   if (!iWon && !draw) G.freeRerolls++;
@@ -26916,18 +27031,21 @@ function finishBattle() {
   updateHUD();
   $('#arena').hidden = true;
   $('#build').hidden = false;
+  const runInfo = G.run ? runWaveDone(iWon, draw) : null;
   const lead = G.score[0] - G.score[1],
-    left = ptsLeft(),
-    decided =
-      G.round >= ROUNDS ||
-      (G.format === 'lives' ? Math.min(...G.lives) <= 0 : G.format === 'bounty' ? false : Math.abs(lead) > left);
+    left = runInfo ? 99 : ptsLeft(),
+    decided = runInfo
+      ? runInfo.over
+      : G.round >= ROUNDS ||
+        (G.format === 'lives' ? Math.min(...G.lives) <= 0 : G.format === 'bounty' ? false : Math.abs(lead) > left);
   const cnt = {};
   for (const id of st[me].lost) cnt[id] = (cnt[id] || 0) + 1;
   const lostHtml = Object.entries(cnt)
     .map(([id, n]) => `<span>${esc(MOD[id] ? MOD[id].name : id)}${n > 1 ? ' ×' + n : ''}</span>`)
     .join('');
-  const outlook =
-    G.format === 'lives'
+  const outlook = runInfo
+    ? runInfo.text
+    : G.format === 'lives'
       ? decided
         ? 'The lives contest is over.'
         : `${G.lives[0]}–${G.lives[1]} lives left. Next defeat costs ${3 + G.round} lives.`
@@ -26943,9 +27061,15 @@ function finishBattle() {
               : `${esc(G.oppName)} has clinched the match.`
           : `${left} points still on the table. Next round is worth ${roundPoints(G.round + 1)} point${roundPoints(G.round + 1) > 1 ? 's' : ''}.`;
   const pity = !iWon && !draw && !decided ? pityOptions() : [];
+  const roundLbl = G.run
+      ? `Scrap Gauntlet · wave ${G.round}${G.run.boss ? ' · BOSS' : ''}`
+      : `Round ${G.round} of ${ROUNDS}`,
+    scoreHTML = G.run
+      ? heartsHTML()
+      : `<span class="sw" style="background:${G.paint};width:14px;height:14px"></span><span class="me">${G.format === 'lives' ? '♥ ' + G.lives[0] : G.score[0]}</span>–<span class="op">${G.format === 'lives' ? G.lives[1] + ' ♥' : G.score[1]}</span><span class="sw" style="background:${G.oppPaint};width:14px;height:14px"></span>`;
   $('#resultCard').innerHTML =
-    `<span class="label">Round ${G.round} of ${ROUNDS}${S ? ' · ' + esc(S.name) : ''}</span><h2 style="color:${iWon ? '#5cc38f' : draw ? '#ece8df' : '#e2504a'}">${iWon ? 'Round won' : draw ? 'Draw' : 'Round lost'}</h2><p>${esc(why || '')}</p>
-    <div class="score" style="justify-content:center;font-size:28px"><span class="sw" style="background:${G.paint};width:14px;height:14px"></span><span class="me">${G.format === 'lives' ? '♥ ' + G.lives[0] : G.score[0]}</span>–<span class="op">${G.format === 'lives' ? G.lives[1] + ' ♥' : G.score[1]}</span><span class="sw" style="background:${G.oppPaint};width:14px;height:14px"></span></div>
+    `<span class="label">${roundLbl}${S ? ' · ' + esc(S.name) : ''}</span><h2 style="color:${iWon ? '#5cc38f' : draw ? '#ece8df' : '#e2504a'}">${iWon ? (G.run ? 'Wave cleared' : 'Round won') : draw ? 'Draw' : G.run ? 'Wave lost' : 'Round lost'}</h2><p>${esc(why || '')}</p>
+    <div class="score" style="justify-content:center;font-size:28px">${scoreHTML}</div>
     <p class="small" style="text-align:center">${outlook}</p>
     <div class="rbtns">${hadWreck ? '<button class="btn ghost" id="btnKillcam">Kill-cam</button>' : ''}<button class="btn ghost" id="btnReplay">Watch replay</button></div>
     <div class="bigcoin" id="coinCount">+0</div>
@@ -26955,8 +27079,8 @@ function finishBattle() {
     ${pity.length ? `<span class="label">Underdog pick · take one part for free</span><div class="pity">${pity.map(m => `<button class="pick r${m.rar}" data-id="${m.id}" style="--rc:${RAR[m.rar].col}"><img src="${iconURL(m.id, 64)}" alt=""><b>${esc(m.name)}</b><span>${esc(RAR[m.rar].name)}</span></button>`).join('')}</div>` : ''}
     ${lostHtml ? `<span class="label">Destroyed this round</span><div class="lostlist">${lostHtml}</div>` : ''}
     ${progressHtml(prog)}
-    ${decided ? '' : nextUpHTML(G.round + 1)}
-    <button class="btn" id="btnNext">${decided ? 'See match result' : 'Pick your next part'}</button>`;
+    ${decided ? '' : G.run ? runNextUpHTML() : nextUpHTML(G.round + 1)}
+    <button class="btn" id="btnNext">${decided ? (G.run ? 'See how far you got' : 'See match result') : runInfo && runInfo.relic ? 'Claim your relic' : 'Pick your next part'}</button>`;
   $('#ovResult').hidden = false;
   G.scars = { ...(st[me].damage || {}) };
   (
@@ -26994,7 +27118,8 @@ function finishBattle() {
   $('#btnNext').addEventListener('click', () => {
     sfx('ui');
     $('#ovResult').hidden = true;
-    if (decided) showFinal();
+    if (runInfo) runNext(decided, runInfo.relic);
+    else if (decided) showFinal();
     else {
       G.round++;
       updateHUD();
@@ -27139,6 +27264,271 @@ function topSource(src) {
     m ? m.name : { crash: 'Crashes', expl: 'Explosions', fire: 'Fire', melee: 'Blades' }[best[0]] || best[0],
     Math.round(best[1])
   ];
+}
+/* ===== js/game/gauntlet.js ===== */
+// Scrap Gauntlet: a roguelike run. Survive wave after wave of bots with three hearts.
+// Every fifth wave is a boss with a beefed-up car; beating one gives a heart back and a relic.
+// The run reuses the solo flow (draft → garage → battle → report); `G.run` holds the run state.
+
+const RUN_HEARTS = 3;
+const RUN_RELICS = {
+  tape: { icon: '🩹', name: 'Industrial Duct Tape', desc: 'Every part gets +20% HP.', hp: 0.2 },
+  coffee: { icon: '☕', name: 'Nitro Coffee', desc: '+15% top speed and acceleration.', speed: 0.15 },
+  trigger: { icon: '🔫', name: 'Hair Trigger', desc: 'Weapons fire 15% faster.', rate: 0.15 },
+  spite: { icon: '😤', name: 'Pure Spite', desc: 'Deal 15% more damage.', dmgOut: 0.15 },
+  skin: { icon: '🐢', name: 'Thick Skin', desc: 'Take 12% less damage.', dmgIn: 0.12 },
+  drone: { icon: '🛸', name: 'Pocket Repair Drone', desc: 'Parts slowly repair themselves in battle.', regen: 0.006 },
+  dice: { icon: '🎲', name: 'Loaded Dice', desc: '+30% coins after every wave.', coins: 0.3 },
+  heart: { icon: '❤️', name: 'Spare Heart', desc: 'One extra heart, right now.', heart: 1 },
+  magnet: { icon: '🧲', name: 'Coupon Magnet', desc: 'Start every wave with 40 bonus coins.', bonus: 40 },
+  insurance: { icon: '📄', name: 'Dodgy Insurance', desc: 'The first loss after a boss costs no heart.', shield: 1 }
+};
+const BOSSES = [
+  {
+    name: 'Mega Mauler',
+    style: 'rammer',
+    likes: ['melee', 'pinball', 'flip'],
+    paint: '#e2504a',
+    taunt: 'I eat bumpers for breakfast.'
+  },
+  {
+    name: 'Grandma Tank',
+    style: 'gunner',
+    likes: ['gun', 'def'],
+    paint: '#c58bff',
+    taunt: 'Back in my day we built cars out of WALLS.'
+  },
+  {
+    name: 'The Shredder 3000',
+    style: 'rammer',
+    likes: ['melee', 'hook'],
+    paint: '#ff8a3a',
+    taunt: 'Your warranty ends here.'
+  },
+  {
+    name: 'Professor Overkill',
+    style: 'gunner',
+    likes: ['expl', 'gun'],
+    paint: '#4ea1ff',
+    taunt: 'For science! Mostly explosions.'
+  },
+  {
+    name: 'Inferno Ingrid',
+    style: 'gunner',
+    likes: ['fire', 'gun'],
+    paint: '#ff5c7a',
+    taunt: 'It is getting hot in here. Because of me.'
+  },
+  {
+    name: 'King Kongcrete',
+    style: 'rammer',
+    likes: ['def', 'melee'],
+    paint: '#8a8f96',
+    taunt: 'I am 90% concrete and 10% attitude.'
+  }
+];
+const isBossWave = w => w % 5 === 0;
+const runBest = () => +(load('sd.runBest') || 0);
+
+function startRun() {
+  const prevDiff = G.diff;
+  startMatch('solo', [], 'balanced');
+  ROUNDS = 999;
+  G.run = { wave: 1, hearts: RUN_HEARTS, relics: [], bosses: 0, prevDiff, shield: 0, coinsWon: 0 };
+  G.sched = [];
+  setupWaveBot();
+  updateHUD();
+}
+/** A fresh rival for the current wave, built up to roughly where you are. */
+function setupWaveBot() {
+  const R = G.run,
+    w = R.wave,
+    boss = isBossWave(w);
+  G.diff = w <= 2 ? 0 : w <= 6 ? 1 : 2;
+  const bot = makeBot(G.diff);
+  if (boss) {
+    const B_ = BOSSES[(w / 5 - 1) % BOSSES.length];
+    Object.assign(bot, { name: B_.name, style: B_.style, likes: B_.likes, paint: B_.paint, say: [B_.taunt] });
+  }
+  bot.coins += 40 * (w - 1) + (boss ? 220 + 60 * (w / 5) : 0);
+  for (let i = 1; i < w + (boss ? 2 : 0); i++) {
+    botDraft(bot);
+    if (i % 2 === 0) botShop(bot);
+  }
+  G.bot = bot;
+  G.botRound = -1;
+  G.botDesign = null;
+  G.oppName = bot.name;
+  G.oppPaint = bot.paint === G.paint ? PAINTS.find(p => p !== G.paint) : bot.paint;
+  G.oppLook = randomLook(boss ? 2 : G.diff);
+  G.oppBadge = G.oppLook.badge;
+  R.boss = boss ? { hp: 1.5 + 0.35 * (w / 5), dmg: 1.08 + 0.07 * (w / 5) } : null;
+  if (R.relics.includes('magnet')) addCoins(RUN_RELICS.magnet.bonus);
+}
+/** Extra fields for the bot's battle config: boss multipliers. */
+const runBotExtras = () => (G.run && G.run.boss ? { boss: G.run.boss } : {});
+/** Run perks for the player's own car config. */
+function runMods() {
+  if (!G.run) return null;
+  const m = { hp: 0, speed: 0, rate: 0, dmgOut: 0, dmgIn: 0, regen: 0 };
+  for (const id of G.run.relics) for (const k in m) m[k] += RUN_RELICS[id][k] || 0;
+  return m;
+}
+/** Applies boss or relic multipliers to a freshly built car. */
+function applyCarMods(v, c) {
+  const hp = c.boss ? c.boss.hp : c.run ? 1 + c.run.hp : 1;
+  if (hp !== 1) {
+    for (const I of v.insts) {
+      I.max *= hp;
+      I.hp *= hp;
+    }
+    v.total *= hp;
+  }
+  if (c.boss) {
+    v.boss = true;
+    v.dmgOut = c.boss.dmg;
+  }
+  if (c.run) {
+    v.dmgOut = 1 + c.run.dmgOut;
+    v.dmgIn = 1 - c.run.dmgIn;
+    v.rateMul = 1 + c.run.rate;
+    v.regen = c.run.regen;
+    if (c.run.speed) {
+      v.c.topCap *= 1 + c.run.speed;
+      v.c.accel *= 1 + c.run.speed;
+    }
+  }
+}
+
+/** Called by finishBattle: hearts, rewards and what happens next. */
+function runWaveDone(iWon, draw) {
+  const R = G.run;
+  let text;
+  if (iWon) {
+    R.cleared = R.wave;
+    if (R.boss) {
+      R.bosses++;
+      R.hearts = Math.min(RUN_HEARTS + 2, R.hearts + 1);
+      text = `Boss down! +1 heart and a relic. ${pick(['The crowd goes wild.', 'Someone call a tow truck.', 'That one will need a new chassis.'])}`;
+      grantAch('boss_slayer');
+    } else
+      text = pick([
+        'Wave cleared. Next!',
+        'Easy. Probably.',
+        'Another one for the scrap pile.',
+        'Keep that engine warm.'
+      ]);
+  } else if (draw) text = 'A draw costs nothing. Phew.';
+  else if (R.shield) {
+    R.shield = 0;
+    text = 'Dodgy Insurance paid out. No heart lost. Do not ask how.';
+  } else {
+    R.hearts--;
+    text =
+      R.hearts > 0 ? `Ouch. ${R.hearts} heart${R.hearts > 1 ? 's' : ''} left.` : 'Out of hearts. The run ends here.';
+  }
+  if (R.wave >= 10) grantAch('wave10');
+  if (R.wave >= 25) grantAch('wave25');
+  return { over: R.hearts <= 0, text, relic: iWon && !!R.boss };
+}
+/** "Next up" card for the run. */
+function runNextUpHTML() {
+  const w = G.run.wave + 1,
+    boss = isBossWave(w),
+    toBoss = 5 - (w % 5);
+  return `<div class="nextup${boss ? ' sp' : ''}" style="--sc:${boss ? '#ff5c7a' : '#5be7ff'}"><span class="nu-ico">${boss ? '☠' : w}</span><div><span class="label">Next up · wave ${w}</span><b>${boss ? 'BOSS: ' + esc(BOSSES[(w / 5 - 1) % BOSSES.length].name) : 'A new rival'}</b><span class="small">${boss ? 'A beefed-up car with extra armour and damage. Beat it for a heart and a relic.' : `Boss in ${toBoss} wave${toBoss > 1 ? 's' : ''}.`}</span></div></div>`;
+}
+function updateRunHUD() {
+  const w = G.round,
+    base = Math.floor((w - 1) / 5) * 5;
+  $('#tRoundLbl').textContent = `Wave ${w} · best ${Math.max(runBest(), w)}`;
+  $('#segs').innerHTML = Array.from({ length: 5 }, (_, i) => {
+    const n = base + i + 1,
+      r = G.log[n - 1];
+    return `<i class="${r ? (r.win ? 'w' : r.draw ? 'd' : 'l') : n === w ? 'now' : ''}${isBossWave(n) ? ' sp' : ''}"${isBossWave(n) ? ` style="--sc:#ff5c7a" title="Wave ${n}: boss"` : ''}>${isBossWave(n) ? '☠' : ''}</i>`;
+  }).join('');
+  $('#tCoins').textContent = G.coins;
+  $('#tScore').innerHTML = `${badgeHTML(G.style.badge, 18)}${heartsHTML()}${badgeHTML(G.oppBadge, 18)}`;
+  $('#tScoreLbl').textContent = `Gauntlet vs ${G.oppName}`;
+  const toBoss = 5 - (w % 5);
+  $('#tStake').textContent = G.run.boss ? 'BOSS WAVE' : `Wave ${w} · boss in ${toBoss % 5 || 5}`;
+  $('#tStake').hidden = false;
+  $('#formatStatus').hidden = true;
+  $('#tParts').textContent = G.base.size + G.top.size;
+  $('#tFound').textContent = `${G.found.size} / ${MODS.length}`;
+  const p = $('#tPhase');
+  p.className = 'pill ' + ({ build: 'build', battle: 'battle', wait: 'wait', draft: 'draft' }[G.phase] || '');
+  p.textContent =
+    {
+      build: 'Build',
+      battle: 'Battle',
+      wait: 'Waiting arena',
+      draft: 'Draft',
+      result: 'Repair bay',
+      final: 'Run over'
+    }[G.phase] || '';
+}
+function heartsHTML(n = G.run.hearts) {
+  return `<span class="hearts" aria-label="${n} hearts">${'❤️'.repeat(Math.max(0, n))}${'🖤'.repeat(Math.max(0, RUN_HEARTS - n))}</span>`;
+}
+/** Continue after the wave report. */
+function runNext(over, relic) {
+  if (over) return showRunOver();
+  const go = () => {
+    G.round++;
+    G.run.wave++;
+    setupWaveBot();
+    updateHUD();
+    openDraft();
+  };
+  if (relic) openRelicPick(go);
+  else go();
+}
+function openRelicPick(done) {
+  const own = G.run.relics,
+    pool = Object.keys(RUN_RELICS).filter(id => !own.includes(id) || id === 'heart'),
+    picks = [];
+  while (picks.length < 3 && pool.length) picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  $('#resultCard').innerHTML =
+    `<span class="label">Boss loot · pick one relic</span><h2>Choose a relic</h2><p class="small">Relics last for the rest of the run.</p>
+    <div class="relics">${picks.map(id => `<button class="relic" data-id="${id}"><i>${RUN_RELICS[id].icon}</i><b>${esc(RUN_RELICS[id].name)}</b><span>${esc(RUN_RELICS[id].desc)}</span></button>`).join('')}</div>`;
+  $('#ovResult').hidden = false;
+  sfx('reveal');
+  $$('#resultCard .relic').forEach(b =>
+    b.addEventListener('click', () => {
+      const id = b.dataset.id,
+        r = RUN_RELICS[id];
+      G.run.relics.push(id);
+      if (r.heart) G.run.hearts++;
+      if (r.shield) G.run.shield = 1;
+      sfx('legend');
+      $('#ovResult').hidden = true;
+      done();
+    })
+  );
+}
+function showRunOver() {
+  const R = G.run,
+    reached = R.wave,
+    best = runBest(),
+    record = reached > best;
+  if (record) store('sd.runBest', reached);
+  const prog = grant(20 + R.cleared * 12 + R.bosses * 40, []);
+  G.phase = 'final';
+  $('#resultCard').innerHTML =
+    `<span class="label">Scrap Gauntlet · run over</span><h2 style="color:${record ? '#3fe0a0' : '#ff5c7a'}">${record ? 'New record!' : 'Run over'}</h2>
+    <div class="runstats"><div><b>${reached}</b><span>wave reached</span></div><div><b>${R.bosses}</b><span>bosses beaten</span></div><div><b>${Math.max(best, reached)}</b><span>best ever</span></div></div>
+    ${R.relics.length ? `<div class="relicrow">${R.relics.map(id => `<span title="${esc(RUN_RELICS[id].desc)}">${RUN_RELICS[id].icon} ${esc(RUN_RELICS[id].name)}</span>`).join('')}</div>` : ''}
+    <p class="small">${esc(pick(['Your car has been donated to science.', 'The scrapyard thanks you for your contribution.', 'Somewhere, a mechanic is crying.', 'Not bad for a pile of bolts.']))}</p>
+    ${progressHtml(prog)}
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="runAgain">Run it back</button><button class="btn ghost" id="runHome">Main menu</button></div>`;
+  $('#ovResult').hidden = false;
+  Announcer.say(record ? 'New record' : 'Game over');
+  sfx(record ? 'win' : 'lose');
+  G.diff = R.prevDiff;
+  G.run = null;
+  $('#runAgain').onclick = () => startRun();
+  $('#runHome').onclick = () => showMenu();
 }
 /* ===== js/ui/effects.js ===== */
 /* Holo lightning: a brief electric crackle along a random edge of a panel. */
@@ -27584,6 +27974,9 @@ function showMenu() {
         <input id="mName" class="mname" maxlength="16" value="${esc(G.name)}" aria-label="Your name" placeholder="Your name">
         <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
         <div class="rooms"><span class="rooms-h">Open 1v1 rooms</span><div id="roomList"></div></div></div>
+      <div class="mode2" style="--rc:#ff5c7a"><div class="mh"><span class="ico">☠</span><h3>Scrap Gauntlet</h3></div><p>Survive wave after wave with three hearts. A boss every fifth wave drops a relic.</p>
+        <span class="small runbest">Best run: ${runBest() ? 'wave ' + runBest() : 'none yet'}</span>
+        <button class="btn" id="mRun">Start a run</button></div>
       <div class="mode2" style="--rc:#c58bff"><div class="mh"><span class="ico">LAB</span><h3>Sandbox</h3></div><p>Every module, 99 of each, a test arena with dummies.</p>
         <button class="btn" id="mSand">Open sandbox</button></div>
       <div class="mode2" style="--rc:#ffd257"><div class="mh"><span class="ico">${L.lvl}</span><h3>Garage Style</h3></div><p>${esc(titleName(G.style.title))} · ${unlockedCount()} of ${totalCosmetics()} unlocked</p>
@@ -27638,6 +28031,12 @@ function showMenu() {
   };
   $('#mSolo').addEventListener('click', go('solo'));
   $('#mSand').addEventListener('click', go('sandbox'));
+  $('#mRun').addEventListener('click', () => {
+    sfx('ui');
+    leave();
+    G.started = true;
+    startRun();
+  });
   $('#mHost').addEventListener('click', () => {
     sfx('ui');
     leave();
@@ -27853,6 +28252,12 @@ requestAnimationFrame(loop);
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
   window.__SD = {
+    prepareBot,
+    botCarCfg,
+    startRun,
+    runNext,
+    runMods,
+    openRelicPick,
     validBadge,
     parseBadge,
     funAwards,

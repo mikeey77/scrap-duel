@@ -407,6 +407,21 @@ test('all seventeen arenas generate, run their gimmicks and stay finite',()=>{
   a.drawArena();
  }
 });
+test('Scrap Gauntlet: hearts, boss every fifth wave, relics and run over',()=>{
+ const r=runtime(),a=r.api,G=a.G;G.diff=1;
+ a.startRun();assert(G.run&&G.run.wave===1&&G.run.hearts===3);assert.equal(G.diff,0,'wave 1 is easy');
+ const play=(win)=>{a.openBuild();a.toBattle({...a.makeCfg(a.myCarCfg()),me:0,net:null});const b=a.getB();b.seq='play';a.endRound(win,'test');a.finishBattle();};
+ for(let w=1;w<5;w++){play(0);assert(!r.elements.get('ovResult').hidden);a.runNext(false,false);}
+ assert.equal(G.run.wave,5);assert(G.run.boss&&G.run.boss.hp>1);
+ a.openBuild();a.prepareBot();const cfg=a.makeCfg(a.botCarCfg());assert(cfg.cars[1].boss);a.toBattle({...cfg,me:0,net:null});
+ const boss=a.getB().cars[1];assert(boss.boss&&boss.dmgOut>1);
+ a.getB().seq='play';a.endRound(0,'boss down');a.finishBattle();assert.equal(G.run.bosses,1);assert.equal(G.run.hearts,4);
+ a.runNext(false,true);const relic=r.elements.get('resultCard').innerHTML;assert(relic.includes('relic'));
+ a.openRelicPick(()=>{});G.run.relics.push('tape','skin');const mods=a.runMods();assert(mods.hp>0&&mods.dmgIn>0);
+ a.openBuild();a.toBattle({...a.makeCfg(a.myCarCfg()),me:0,net:null});const me=a.getB().cars[0];assert(me.dmgIn<1);
+ G.run.hearts=1;a.getB().seq='play';a.endRound(1,'ouch');a.finishBattle();a.runNext(true,false);
+ assert.equal(G.run,null);assert.equal(G.diff,1,'difficulty restored');assert(r.elements.get('resultCard').innerHTML.includes('wave reached'));
+});
 test('car codes round-trip and report missing parts and bay size',()=>{
  process.on('unhandledRejection',e=>{console.error('FAIL async: '+e.message);process.exit(1);});
  const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();

@@ -57,6 +57,7 @@ const Announcer = {
     } catch (e) {}
   },
   round(r) {
+    if (G.run) return this.say(G.run.boss ? 'Boss fight' : 'Wave ' + (NUM_WORDS[r] || r));
     this.say(r === ROUNDS && ROUNDS > 1 ? 'Final round' : 'Round ' + (NUM_WORDS[r] || r));
   }
 };

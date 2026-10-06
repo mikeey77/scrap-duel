@@ -916,6 +916,8 @@ function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   const m = I.m;
   let a = amt * (1 + v.fragile);
   const attacker = att != null && att >= 0 ? B.cars[att] : null;
+  if (attacker && attacker.dmgOut) a *= attacker.dmgOut;
+  if (v.dmgIn) a *= v.dmgIn;
   if (m.res && m.res[type] !== undefined && !(type === 'light' && attacker && CT(attacker, 'apround')))
     a *= 1 - m.res[type];
   if (v.has.gnome && v.insts.some(g => g.id === 'gnome' && g.alive)) a *= 0.92;

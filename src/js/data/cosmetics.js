@@ -105,6 +105,9 @@ const COSMETICS = {
   ]
 };
 const ACHIEVEMENTS = {
+  boss_slayer: { name: 'Boss Slayer', desc: 'Beat a boss in the Scrap Gauntlet.' },
+  wave10: { name: 'Marathon', desc: 'Reach wave 10 in the Scrap Gauntlet.' },
+  wave25: { name: 'Unkillable', desc: 'Reach wave 25 in the Scrap Gauntlet.' },
   first_win: { name: 'First Blood', desc: 'Win a round.' },
   match_win: { name: 'Winner Winner', desc: 'Win a match.' },
   hard_win: { name: 'Hardened', desc: 'Win a match against a Hard bot.' },

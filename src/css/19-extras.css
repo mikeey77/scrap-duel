@@ -467,3 +467,89 @@ img.badge {
   animation: none;
   filter: none;
 }
+
+/* ---- Scrap Gauntlet ---- */
+.hearts {
+  font-size: 15px;
+  letter-spacing: 1px;
+  margin: 0 4px;
+}
+.relics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.relic {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  background: rgba(255, 92, 122, 0.06);
+  border: 1px solid rgba(255, 92, 122, 0.4);
+  color: var(--fg);
+  cursor: pointer;
+  clip-path: var(--chamfer-s);
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+}
+.relic:hover,
+.relic:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--hazard);
+}
+.relic i {
+  font-style: normal;
+  font-size: 34px;
+}
+.relic span {
+  font-size: 12px;
+  color: #b6c8e0;
+  text-align: center;
+}
+.runstats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 10px 0;
+}
+.runstats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  background: rgba(91, 231, 255, 0.05);
+  border: 1px solid rgba(91, 231, 255, 0.2);
+}
+.runstats b {
+  font: 700 30px var(--f-display);
+  color: var(--hazard);
+}
+.runstats span {
+  font-size: 12px;
+  color: #b6c8e0;
+}
+.relicrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+.relicrow span {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 180, 35, 0.35);
+}
+.runbest {
+  color: var(--hazard);
+}
+@media (min-width: 1180px) {
+  #ovMenu .modes2 {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+  #ovMenu .menu2 {
+    width: min(1400px, 96vw) !important;
+  }
+}
