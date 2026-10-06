@@ -805,6 +805,27 @@ function spark(x, y, n, col) {
   }
 }
 const txt = (x, y, t, col, life = 0.9) => fx({ k: 'text', x, y, txt: t, life, max: life, col });
+const HIT_QUIPS = [
+  'CRUNCH!',
+  'OOF!',
+  'KER-PLUNK!',
+  'BONK!',
+  'That will buff out',
+  'Ouchie',
+  'Bolts everywhere!',
+  'RIP paint job',
+  'CLONK!',
+  'Insurance denied'
+];
+const DUMMY_QUIPS = [
+  'Ow!',
+  'Not the face!',
+  'I have a family!',
+  'Is that all?',
+  'I am just a dummy!',
+  'Union break!',
+  'Tickles.'
+];
 function coinPop(x, y, n, car) {
   if (car) car.coins += n;
   txt(x, y - 18, `+${n} coins`, '#ffd257', 1.2);
@@ -817,6 +838,10 @@ function coinPop(x, y, n, car) {
 function dmgObj(o, amt, type, att) {
   if (o.dead || amt <= 0) return;
   if (o.frozen > 0) amt *= 1.25;
+  if (o.kind === 'dummy' && amt > 8 && (o.quipT || 0) < (B.time || 0) && Math.random() < 0.25) {
+    o.quipT = (B.time || 0) + 2.5;
+    txt(o.x, o.y - o.r - 18, pick(DUMMY_QUIPS), '#ece8df', 1.2);
+  }
   if (o.d.flammable && type === 'fire') amt *= 3;
   const byCar = att != null && att >= 0 ? B.cars[att] : null;
   if (byCar && o.junk) amt *= 1 + (byCar.aura.junk || 0); // Scrap synergy
@@ -906,7 +931,14 @@ function killText(v) {
   if (!by) return `${v.name} fell apart`;
   const src = v.lastBy.src,
     m = MOD[src];
-  return `${by.name} wrecked ${v.name} with ${m ? 'the ' + m.name : SRC_NAMES[src] || src}`;
+  const w = m ? 'the ' + m.name : SRC_NAMES[src] || src;
+  return pick([
+    `${by.name} wrecked ${v.name} with ${w}`,
+    `${by.name} turned ${v.name} into a coffee table with ${w}`,
+    `${v.name} was recycled by ${by.name}'s ${m ? m.name : w}`,
+    `${by.name} filed ${v.name} under "scrap" using ${w}`,
+    `${v.name} met ${w}. It did not go well.`
+  ]);
 }
 function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   if (!I.alive || v.dead || amt <= 0 || B.seq === 'in' || B.seq === 'count' || v.spawnT > 0) return;
@@ -921,6 +953,8 @@ function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   if (m.res && m.res[type] !== undefined && !(type === 'light' && attacker && CT(attacker, 'apround')))
     a *= 1 - m.res[type];
   if (v.has.gnome && v.insts.some(g => g.id === 'gnome' && g.alive)) a *= 0.92;
+  if (a >= 70 && Math.random() < 0.3 && SETTINGS.nums !== false)
+    txt(v.x + rnd(-30, 30), v.y - v.rad - 20, pick(HIT_QUIPS), '#ffd257', 1.1);
   if (type === 'fire') {
     for (const b of I.cells.length ? I.cells : [v.grid.get(I.k)])
       if (b)

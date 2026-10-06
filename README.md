@@ -2,7 +2,15 @@
 
 A browser vehicle builder and combat game: draft parts, bolt together a car, and duel a bot or a friend across ten rounds.
 
-Play: https://scrap-duel.netlify.app/
+Play: https://scrap-duel.netlify.app/ — installable as an app (Add to Home Screen / Install app in the menu).
+
+## Gauntlet & arenas release
+
+- **Scrap Gauntlet** (roguelike): survive endless waves with three hearts. Rivals grow stronger every wave; every fifth wave is a boss (extra HP and damage) that drops a heart and a relic (Duct Tape, Nitro Coffee, Hair Trigger, Thick Skin, Repair Drone, …). Your best wave is saved to your account.
+- **17 arenas**: ten new ones with gimmicks — Volcano Forge (lava), Space Station (low gravity, air vents), Car Wash (soap, blowers), Desert Canyon (sandstorm gusts), Haunted Mansion (lights out), Toy Room, Robot Factory (conveyor belts), Pinball Table (bumpers), Giant Kitchen (stove plates) and Soggy Swamp (mud).
+- **Installable app**: web manifest, icons and a service worker (`site/sw.js`); solo and sandbox work offline.
+- Richer sound: room reverb, stereo position, pitch variation and reworked hits, explosions and UI clicks.
+- More jokes: bot banter, hit quips, talking test dummies, kill messages, menu taglines, a cockpit that dozes off when you leave the garage.
 
 ## Shapes and branches release
 
@@ -62,6 +70,8 @@ The source is split by feature in `src/`:
 - `src/css/` — stylesheets, in load order
 - `src/js/` — game code by area (`data/`, `garage/`, `game/`, `render/`, `audio/`, `net/`, `ui/`, `ai/`, `core/`)
 - `src/manifest.json` — the order the files are bundled in (all scripts share one scope)
+
+Static files that are not built (icons, `manifest.webmanifest`, `sw.js`) live directly in `site/`.
 
 `npm run build` (or `node build.mjs`) bundles everything into the single page `site/index.html`, which is what Netlify serves and what the tests load. `npm run format` runs Prettier. Edit files in `src/`, never `site/index.html` directly.
 

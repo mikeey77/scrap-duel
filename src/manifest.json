@@ -58,6 +58,7 @@
   "js/ui/tutorial.js",
   "js/ui/settings.js",
   "js/ui/menu-demo.js",
+  "js/ui/install.js",
   "js/ui/menu.js"
  ]
 }

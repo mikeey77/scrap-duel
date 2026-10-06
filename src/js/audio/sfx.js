@@ -15,7 +15,25 @@ function audio() {
     MASTER = AC.createGain();
     MASTER.gain.value = 0.45 * SETTINGS.vol;
     const comp = AC.createDynamicsCompressor();
+    if (comp.threshold) comp.threshold.value = -18;
+    if (comp.ratio) comp.ratio.value = 4;
     MASTER.connect(comp);
+    try {
+      // a short garage-sized room: everything gets a little tail so the hits feel physical
+      const verb = AC.createConvolver(),
+        wet = AC.createGain(),
+        len = Math.floor(AC.sampleRate * 1.1),
+        ir = AC.createBuffer(2, len, AC.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = ir.getChannelData(ch);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+      }
+      verb.buffer = ir;
+      wet.gain.value = 0.16;
+      MASTER.connect(verb);
+      verb.connect(wet);
+      wet.connect(comp);
+    } catch (e) {}
     comp.connect(AC.destination);
     NOISE = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
     const d = NOISE.getChannelData(0);
@@ -30,6 +48,9 @@ const unlock = () => {
   if (a && a.state === 'suspended') a.resume();
 };
 addEventListener('pointerdown', unlock, true);
+// remember the last input so the garage cockpit can doze off when you walk away
+for (const ev of ['pointerdown', 'pointermove', 'keydown', 'wheel'])
+  addEventListener(ev, () => (G.lastInput = performance.now()), { passive: true, capture: true });
 addEventListener('keydown', unlock, true);
 const BattleMusic = {
   bus: null,
@@ -154,11 +175,23 @@ const BattleMusic = {
   }
 };
 
+/* Per-sound variation: a random pitch nudge and stereo position (set by playSfx). */
+let SND_PITCH = 1,
+  SND_PAN = 0;
+function out(a) {
+  if (!SND_PAN || !a.createStereoPanner) return MASTER;
+  const p = a.createStereoPanner();
+  p.pan.value = SND_PAN;
+  p.connect(MASTER);
+  return p;
+}
 function tone(type, f0, f1, dur, vol, delay = 0) {
   const a = AC,
     t = a.currentTime + delay,
     o = a.createOscillator(),
     g = a.createGain();
+  f0 *= SND_PITCH;
+  f1 *= SND_PITCH;
   o.type = type;
   o.frequency.setValueAtTime(f0, t);
   o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
@@ -166,7 +199,7 @@ function tone(type, f0, f1, dur, vol, delay = 0) {
   g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.connect(g);
-  g.connect(MASTER);
+  g.connect(out(a));
   o.start(t);
   o.stop(t + dur + 0.02);
 }
@@ -180,6 +213,8 @@ function noise(dur, vol, f0, f1, q = 1, delay = 0, type = 'bandpass') {
   s.loop = true;
   f.type = type;
   f.Q.value = q;
+  f0 *= SND_PITCH;
+  f1 *= SND_PITCH;
   f.frequency.setValueAtTime(f0, t);
   f.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
   g.gain.setValueAtTime(0.0001, t);
@@ -187,14 +222,16 @@ function noise(dur, vol, f0, f1, q = 1, delay = 0, type = 'bandpass') {
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   s.connect(f);
   f.connect(g);
-  g.connect(MASTER);
+  g.connect(out(a));
   s.start(t, Math.random() * 0.5);
   s.stop(t + dur + 0.02);
 }
 const SFX = {
   gun: v => {
-    noise(0.06, 0.3 * v, 3000, 900, 1.2);
+    noise(0.012, 0.35 * v, 6000, 4000, 0.7, 0, 'highpass');
+    noise(0.07, 0.3 * v, 3000, 800, 1.2);
     tone('square', 190, 70, 0.05, 0.08 * v);
+    tone('sine', 110, 50, 0.07, 0.12 * v);
   },
   shotgun: v => {
     noise(0.16, 0.45 * v, 2200, 300, 0.8);
@@ -230,8 +267,10 @@ const SFX = {
   },
   splat: v => noise(0.14, 0.25 * v, 900, 200, 1.5),
   boom: v => {
-    noise(0.45, 0.6 * v, 1200, 60, 0.6, 0, 'lowpass');
-    tone('sine', 90, 30, 0.4, 0.35 * v);
+    noise(0.02, 0.5 * v, 5000, 2000, 0.5, 0, 'highpass');
+    noise(0.5, 0.6 * v, 1400, 50, 0.6, 0, 'lowpass');
+    tone('sine', 90, 28, 0.45, 0.4 * v);
+    for (let i = 0; i < 5; i++) noise(0.03, 0.12 * v, rnd(1500, 4000), 800, 3, 0.08 + i * rnd(0.04, 0.09));
   },
   bigboom: v => {
     noise(1.2, 0.9 * v, 1500, 40, 0.5, 0, 'lowpass');
@@ -246,6 +285,8 @@ const SFX = {
   crash: v => {
     noise(0.3, 0.55 * v, 2000, 200, 0.5);
     tone('square', 140, 50, 0.2, 0.15 * v);
+    tone('triangle', rnd(700, 1100), rnd(400, 600), 0.22, 0.06 * v, 0.03);
+    noise(0.12, 0.15 * v, 5000, 3000, 4, 0.06);
   },
   punch: v => {
     tone('sine', 160, 50, 0.15, 0.35 * v);
@@ -259,15 +300,24 @@ const SFX = {
     tone('square', 2400, 1800, 0.04, 0.06 * v);
   },
   coin: v => {
-    tone('square', 988, 988, 0.07, 0.09 * v);
-    tone('square', 1319, 1319, 0.18, 0.09 * v, 0.07);
+    tone('square', 988, 988, 0.07, 0.08 * v);
+    tone('square', 1319, 1319, 0.2, 0.08 * v, 0.07);
+    tone('sine', 2637, 2637, 0.25, 0.03 * v, 0.07);
   },
   repair: v => {
     [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, f, 0.12, 0.12 * v, i * 0.07));
   },
   horn: v => {
-    tone('sawtooth', 370, 360, 0.45, 0.15 * v);
-    tone('sawtooth', 466, 456, 0.45, 0.12 * v);
+    const k = Math.random();
+    if (k < 0.6) {
+      tone('sawtooth', 370, 360, 0.45, 0.15 * v);
+      tone('sawtooth', 466, 456, 0.45, 0.12 * v);
+    } else if (k < 0.8)
+      [523, 440, 523, 659].forEach((f, i) => tone('square', f, f, 0.1, 0.09 * v, i * 0.11)); // beep-beep
+    else {
+      tone('sawtooth', 300, 180, 0.5, 0.14 * v); // sad trombone-ish wobble
+      tone('sine', 6, 6, 0.5, 0.0001);
+    }
   },
   tele: v => {
     tone('sine', 300, 1800, 0.5, 0.12 * v);
@@ -315,7 +365,10 @@ const SFX = {
     tone('square', 300, 120, 0.08, 0.08 * v);
     noise(0.08, 0.1 * v, 1500, 400);
   },
-  ui: v => tone('triangle', 880, 1100, 0.05, 0.07 * v),
+  ui: v => {
+    noise(0.015, 0.06 * v, 4000, 3000, 1, 0, 'highpass');
+    tone('triangle', 880, 1180, 0.05, 0.06 * v);
+  },
   flip: v => {
     noise(0.08, 0.12 * v, 2500, 5000, 2);
     tone('triangle', 600, 900, 0.06, 0.05 * v);
@@ -392,6 +445,23 @@ const SFX = {
     [392, 330, 262, 196].forEach((f, i) => tone('triangle', f, f * 0.97, i === 3 ? 0.6 : 0.2, 0.12 * v, i * 0.16));
   }
 };
+// melodic jingles keep their exact pitch
+const STEADY = new Set([
+  'coin',
+  'legend',
+  'count',
+  'go',
+  'win',
+  'lose',
+  'jackpot',
+  'reveal',
+  'repair',
+  'tick',
+  'drumroll',
+  'heart',
+  'beep',
+  'vs'
+]);
 const THROT = {
   tick: 0.06,
   heart: 0.5,
@@ -417,9 +487,13 @@ function playSfx(name, x, y) {
     v = clamp(1.15 - d / 1500, 0.12, 1);
   }
   if (B && B.demo) v *= 0.2; // the menu battle is background noise
+  SND_PAN = x != null && B && (G.phase === 'battle' || G.phase === 'wait') ? clamp((x - cam.x) / 900, -0.8, 0.8) : 0;
+  SND_PITCH = STEADY.has(name) ? 1 : 1 + (Math.random() - 0.5) * 0.09;
   try {
     SFX[name](v);
   } catch (e) {}
+  SND_PAN = 0;
+  SND_PITCH = 1;
 }
 function sfx(name, x, y) {
   if (NET_REPLAY) return;

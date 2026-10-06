@@ -1,5 +1,16 @@
 // Main menu (over a live bot battle), multiplayer lobby, the main loop and start-up.
 const inMatch = () => !['intro', 'menu', 'final'].includes(G.phase) && G.mode !== undefined && G.started;
+const TAGLINES = [
+  'Weld a car from scrap, draft a new part every round, smash your rival.',
+  'Now with 40% more duct tape.',
+  'Every bolt counts. Most of them are loose.',
+  'Build it. Break it. Blame the bot.',
+  'The only racing game where you are the race track.',
+  'Certified road-illegal since forever.',
+  'Warning: may contain traces of flying fridges.',
+  'Your mechanic called. He is crying.',
+  'Pick parts. Hit things. Repeat until victorious or on fire.'
+];
 function showMenu() {
   hideOverlays();
   if (G.phase === 'review') closeGarageReport();
@@ -18,7 +29,7 @@ function showMenu() {
   $('#ovMenu').classList.toggle('live', !resume);
   $('#ovMenu').innerHTML = `<div class="menu2">
     <div class="hero2"><button class="acct-chip" id="acctChip" type="button"></button><span class="online-chip" id="onlineChip" hidden><i></i><b id="onlineN">1</b> online</span><h1>SCRAP<br>DUEL</h1>
-      <p>Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
+      <p id="tagline">Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
     <div class="modes2">
       <div class="mode2" style="--rc:#5cc38f"><div class="mh"><span class="ico">1P</span><h3>Singleplayer</h3></div><p>A bot rival who drafts, shops and builds with the same rules.</p>
         <div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
@@ -37,9 +48,21 @@ function showMenu() {
         <div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">Scrap Cred level ${L.lvl} · ${L.into}/${L.need} XP</span>
         <button class="btn" id="mStyle">Customize</button></div>
     </div>
-    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button></div>
+    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button><button class="btn ghost" id="mInstall" hidden>📲 Install app</button></div>
   </div>`;
   $('#ovMenu').hidden = false;
+  Install.render();
+  $('#mInstall').onclick = () => Install.run();
+  clearInterval(showMenu.tag);
+  showMenu.tag = setInterval(() => {
+    const t = $('#tagline');
+    if (!t || $('#ovMenu').hidden) return clearInterval(showMenu.tag);
+    t.classList.add('swap');
+    setTimeout(() => {
+      t.textContent = pick(TAGLINES);
+      t.classList.remove('swap');
+    }, 350);
+  }, 7000);
   Lobby.render();
   Lobby.ping();
   accountChip();
@@ -287,6 +310,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   } catch (e) {}
   Account.init();
   Lobby.start();
+  Install.init();
 }
 // last chance to save when the tab closes or the phone switches apps
 addEventListener('pagehide', () => {

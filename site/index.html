@@ -8,6 +8,14 @@
       content="Scrap Duel: build a battle car from scrap, draft new parts every round and duel a bot or a friend."
     />
     <title>Scrap Duel</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0a1020" />
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Scrap Duel" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -5131,6 +5139,16 @@ img.badge {
   #ovMenu .menu2 {
     width: min(1400px, 96vw) !important;
   }
+}
+
+#tagline {
+  transition:
+    opacity 0.35s,
+    transform 0.35s;
+}
+#tagline.swap {
+  opacity: 0;
+  transform: translateY(6px);
 }
 </style>
   </head>
@@ -12336,7 +12354,12 @@ function drawPiece(c, e, top, scale = 1) {
     builder: 1,
     turret: top && b && b.id === 'ring',
     paint: G.paint,
-    ...(e.id === 'cockpit' ? { badge: G.style.badge, mood: G.scars ? 'hurt' : 'idle' } : null)
+    ...(e.id === 'cockpit'
+      ? {
+          badge: G.style.badge,
+          mood: performance.now() - (G.lastInput || performance.now()) > 20000 ? 'sleep' : G.scars ? 'hurt' : 'idle'
+        }
+      : null)
   });
   c.shadowBlur = 0;
   if (cold) drawFrost(c, cell * (top ? 0.82 : 0.96), ccx * 7 + ccy * 3);
@@ -12359,7 +12382,21 @@ function drawEyes(c, h, st) {
       r = h * (mood === 'hurt' ? 0.19 : 0.16);
     c.save();
     c.translate(x, y);
-    if (mood === 'dead') {
+    if (mood === 'sleep') {
+      c.strokeStyle = '#1a1a1a';
+      c.lineWidth = h * 0.06;
+      c.beginPath();
+      c.arc(0, -r * 0.1, r * 0.7, Math.PI * 0.15, Math.PI * 0.85);
+      c.stroke();
+      if (sx > 0) {
+        c.fillStyle = '#e6faff';
+        c.font = `700 ${h * 0.3}px "Chakra Petch", sans-serif`;
+        const z = (t * 0.6) % 1;
+        c.globalAlpha = 1 - z;
+        c.fillText('z', r * 1.3 + z * h * 0.3, -r - z * h * 0.6);
+        c.globalAlpha = 1;
+      }
+    } else if (mood === 'dead') {
       line(c, [-r * 0.7, -r * 0.7, r * 0.7, r * 0.7], '#1a1a1a', h * 0.07);
       line(c, [r * 0.7, -r * 0.7, -r * 0.7, r * 0.7], '#1a1a1a', h * 0.07);
     } else if (mood === 'happy') {
@@ -17071,6 +17108,27 @@ function spark(x, y, n, col) {
   }
 }
 const txt = (x, y, t, col, life = 0.9) => fx({ k: 'text', x, y, txt: t, life, max: life, col });
+const HIT_QUIPS = [
+  'CRUNCH!',
+  'OOF!',
+  'KER-PLUNK!',
+  'BONK!',
+  'That will buff out',
+  'Ouchie',
+  'Bolts everywhere!',
+  'RIP paint job',
+  'CLONK!',
+  'Insurance denied'
+];
+const DUMMY_QUIPS = [
+  'Ow!',
+  'Not the face!',
+  'I have a family!',
+  'Is that all?',
+  'I am just a dummy!',
+  'Union break!',
+  'Tickles.'
+];
 function coinPop(x, y, n, car) {
   if (car) car.coins += n;
   txt(x, y - 18, `+${n} coins`, '#ffd257', 1.2);
@@ -17083,6 +17141,10 @@ function coinPop(x, y, n, car) {
 function dmgObj(o, amt, type, att) {
   if (o.dead || amt <= 0) return;
   if (o.frozen > 0) amt *= 1.25;
+  if (o.kind === 'dummy' && amt > 8 && (o.quipT || 0) < (B.time || 0) && Math.random() < 0.25) {
+    o.quipT = (B.time || 0) + 2.5;
+    txt(o.x, o.y - o.r - 18, pick(DUMMY_QUIPS), '#ece8df', 1.2);
+  }
   if (o.d.flammable && type === 'fire') amt *= 3;
   const byCar = att != null && att >= 0 ? B.cars[att] : null;
   if (byCar && o.junk) amt *= 1 + (byCar.aura.junk || 0); // Scrap synergy
@@ -17172,7 +17234,14 @@ function killText(v) {
   if (!by) return `${v.name} fell apart`;
   const src = v.lastBy.src,
     m = MOD[src];
-  return `${by.name} wrecked ${v.name} with ${m ? 'the ' + m.name : SRC_NAMES[src] || src}`;
+  const w = m ? 'the ' + m.name : SRC_NAMES[src] || src;
+  return pick([
+    `${by.name} wrecked ${v.name} with ${w}`,
+    `${by.name} turned ${v.name} into a coffee table with ${w}`,
+    `${v.name} was recycled by ${by.name}'s ${m ? m.name : w}`,
+    `${by.name} filed ${v.name} under "scrap" using ${w}`,
+    `${v.name} met ${w}. It did not go well.`
+  ]);
 }
 function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   if (!I.alive || v.dead || amt <= 0 || B.seq === 'in' || B.seq === 'count' || v.spawnT > 0) return;
@@ -17187,6 +17256,8 @@ function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   if (m.res && m.res[type] !== undefined && !(type === 'light' && attacker && CT(attacker, 'apround')))
     a *= 1 - m.res[type];
   if (v.has.gnome && v.insts.some(g => g.id === 'gnome' && g.alive)) a *= 0.92;
+  if (a >= 70 && Math.random() < 0.3 && SETTINGS.nums !== false)
+    txt(v.x + rnd(-30, 30), v.y - v.rad - 20, pick(HIT_QUIPS), '#ffd257', 1.1);
   if (type === 'fire') {
     for (const b of I.cells.length ? I.cells : [v.grid.get(I.k)])
       if (b)
@@ -23921,7 +23992,25 @@ function audio() {
     MASTER = AC.createGain();
     MASTER.gain.value = 0.45 * SETTINGS.vol;
     const comp = AC.createDynamicsCompressor();
+    if (comp.threshold) comp.threshold.value = -18;
+    if (comp.ratio) comp.ratio.value = 4;
     MASTER.connect(comp);
+    try {
+      // a short garage-sized room: everything gets a little tail so the hits feel physical
+      const verb = AC.createConvolver(),
+        wet = AC.createGain(),
+        len = Math.floor(AC.sampleRate * 1.1),
+        ir = AC.createBuffer(2, len, AC.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = ir.getChannelData(ch);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+      }
+      verb.buffer = ir;
+      wet.gain.value = 0.16;
+      MASTER.connect(verb);
+      verb.connect(wet);
+      wet.connect(comp);
+    } catch (e) {}
     comp.connect(AC.destination);
     NOISE = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
     const d = NOISE.getChannelData(0);
@@ -23936,6 +24025,9 @@ const unlock = () => {
   if (a && a.state === 'suspended') a.resume();
 };
 addEventListener('pointerdown', unlock, true);
+// remember the last input so the garage cockpit can doze off when you walk away
+for (const ev of ['pointerdown', 'pointermove', 'keydown', 'wheel'])
+  addEventListener(ev, () => (G.lastInput = performance.now()), { passive: true, capture: true });
 addEventListener('keydown', unlock, true);
 const BattleMusic = {
   bus: null,
@@ -24060,11 +24152,23 @@ const BattleMusic = {
   }
 };
 
+/* Per-sound variation: a random pitch nudge and stereo position (set by playSfx). */
+let SND_PITCH = 1,
+  SND_PAN = 0;
+function out(a) {
+  if (!SND_PAN || !a.createStereoPanner) return MASTER;
+  const p = a.createStereoPanner();
+  p.pan.value = SND_PAN;
+  p.connect(MASTER);
+  return p;
+}
 function tone(type, f0, f1, dur, vol, delay = 0) {
   const a = AC,
     t = a.currentTime + delay,
     o = a.createOscillator(),
     g = a.createGain();
+  f0 *= SND_PITCH;
+  f1 *= SND_PITCH;
   o.type = type;
   o.frequency.setValueAtTime(f0, t);
   o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
@@ -24072,7 +24176,7 @@ function tone(type, f0, f1, dur, vol, delay = 0) {
   g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.connect(g);
-  g.connect(MASTER);
+  g.connect(out(a));
   o.start(t);
   o.stop(t + dur + 0.02);
 }
@@ -24086,6 +24190,8 @@ function noise(dur, vol, f0, f1, q = 1, delay = 0, type = 'bandpass') {
   s.loop = true;
   f.type = type;
   f.Q.value = q;
+  f0 *= SND_PITCH;
+  f1 *= SND_PITCH;
   f.frequency.setValueAtTime(f0, t);
   f.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
   g.gain.setValueAtTime(0.0001, t);
@@ -24093,14 +24199,16 @@ function noise(dur, vol, f0, f1, q = 1, delay = 0, type = 'bandpass') {
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   s.connect(f);
   f.connect(g);
-  g.connect(MASTER);
+  g.connect(out(a));
   s.start(t, Math.random() * 0.5);
   s.stop(t + dur + 0.02);
 }
 const SFX = {
   gun: v => {
-    noise(0.06, 0.3 * v, 3000, 900, 1.2);
+    noise(0.012, 0.35 * v, 6000, 4000, 0.7, 0, 'highpass');
+    noise(0.07, 0.3 * v, 3000, 800, 1.2);
     tone('square', 190, 70, 0.05, 0.08 * v);
+    tone('sine', 110, 50, 0.07, 0.12 * v);
   },
   shotgun: v => {
     noise(0.16, 0.45 * v, 2200, 300, 0.8);
@@ -24136,8 +24244,10 @@ const SFX = {
   },
   splat: v => noise(0.14, 0.25 * v, 900, 200, 1.5),
   boom: v => {
-    noise(0.45, 0.6 * v, 1200, 60, 0.6, 0, 'lowpass');
-    tone('sine', 90, 30, 0.4, 0.35 * v);
+    noise(0.02, 0.5 * v, 5000, 2000, 0.5, 0, 'highpass');
+    noise(0.5, 0.6 * v, 1400, 50, 0.6, 0, 'lowpass');
+    tone('sine', 90, 28, 0.45, 0.4 * v);
+    for (let i = 0; i < 5; i++) noise(0.03, 0.12 * v, rnd(1500, 4000), 800, 3, 0.08 + i * rnd(0.04, 0.09));
   },
   bigboom: v => {
     noise(1.2, 0.9 * v, 1500, 40, 0.5, 0, 'lowpass');
@@ -24152,6 +24262,8 @@ const SFX = {
   crash: v => {
     noise(0.3, 0.55 * v, 2000, 200, 0.5);
     tone('square', 140, 50, 0.2, 0.15 * v);
+    tone('triangle', rnd(700, 1100), rnd(400, 600), 0.22, 0.06 * v, 0.03);
+    noise(0.12, 0.15 * v, 5000, 3000, 4, 0.06);
   },
   punch: v => {
     tone('sine', 160, 50, 0.15, 0.35 * v);
@@ -24165,15 +24277,24 @@ const SFX = {
     tone('square', 2400, 1800, 0.04, 0.06 * v);
   },
   coin: v => {
-    tone('square', 988, 988, 0.07, 0.09 * v);
-    tone('square', 1319, 1319, 0.18, 0.09 * v, 0.07);
+    tone('square', 988, 988, 0.07, 0.08 * v);
+    tone('square', 1319, 1319, 0.2, 0.08 * v, 0.07);
+    tone('sine', 2637, 2637, 0.25, 0.03 * v, 0.07);
   },
   repair: v => {
     [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, f, 0.12, 0.12 * v, i * 0.07));
   },
   horn: v => {
-    tone('sawtooth', 370, 360, 0.45, 0.15 * v);
-    tone('sawtooth', 466, 456, 0.45, 0.12 * v);
+    const k = Math.random();
+    if (k < 0.6) {
+      tone('sawtooth', 370, 360, 0.45, 0.15 * v);
+      tone('sawtooth', 466, 456, 0.45, 0.12 * v);
+    } else if (k < 0.8)
+      [523, 440, 523, 659].forEach((f, i) => tone('square', f, f, 0.1, 0.09 * v, i * 0.11)); // beep-beep
+    else {
+      tone('sawtooth', 300, 180, 0.5, 0.14 * v); // sad trombone-ish wobble
+      tone('sine', 6, 6, 0.5, 0.0001);
+    }
   },
   tele: v => {
     tone('sine', 300, 1800, 0.5, 0.12 * v);
@@ -24221,7 +24342,10 @@ const SFX = {
     tone('square', 300, 120, 0.08, 0.08 * v);
     noise(0.08, 0.1 * v, 1500, 400);
   },
-  ui: v => tone('triangle', 880, 1100, 0.05, 0.07 * v),
+  ui: v => {
+    noise(0.015, 0.06 * v, 4000, 3000, 1, 0, 'highpass');
+    tone('triangle', 880, 1180, 0.05, 0.06 * v);
+  },
   flip: v => {
     noise(0.08, 0.12 * v, 2500, 5000, 2);
     tone('triangle', 600, 900, 0.06, 0.05 * v);
@@ -24298,6 +24422,23 @@ const SFX = {
     [392, 330, 262, 196].forEach((f, i) => tone('triangle', f, f * 0.97, i === 3 ? 0.6 : 0.2, 0.12 * v, i * 0.16));
   }
 };
+// melodic jingles keep their exact pitch
+const STEADY = new Set([
+  'coin',
+  'legend',
+  'count',
+  'go',
+  'win',
+  'lose',
+  'jackpot',
+  'reveal',
+  'repair',
+  'tick',
+  'drumroll',
+  'heart',
+  'beep',
+  'vs'
+]);
 const THROT = {
   tick: 0.06,
   heart: 0.5,
@@ -24323,9 +24464,13 @@ function playSfx(name, x, y) {
     v = clamp(1.15 - d / 1500, 0.12, 1);
   }
   if (B && B.demo) v *= 0.2; // the menu battle is background noise
+  SND_PAN = x != null && B && (G.phase === 'battle' || G.phase === 'wait') ? clamp((x - cam.x) / 900, -0.8, 0.8) : 0;
+  SND_PITCH = STEADY.has(name) ? 1 : 1 + (Math.random() - 0.5) * 0.09;
   try {
     SFX[name](v);
   } catch (e) {}
+  SND_PAN = 0;
+  SND_PITCH = 1;
 }
 function sfx(name, x, y) {
   if (NET_REPLAY) return;
@@ -27943,9 +28088,69 @@ function demoTick(dt) {
   ];
   demoFeed(pick(lines));
 }
+/* ===== js/ui/install.js ===== */
+// Installable app: registers the service worker and offers an "Install app" button in the menu.
+const Install = {
+  prompt: null,
+  installed: false,
+  init() {
+    if (typeof navigator === 'undefined') return;
+    try {
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost'))
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    } catch (e) {}
+    this.installed =
+      matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone === true;
+    addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      this.prompt = e;
+      this.render();
+    });
+    addEventListener('appinstalled', () => {
+      this.installed = true;
+      this.prompt = null;
+      this.render();
+      window.__toast && window.__toast('Scrap Duel is installed. Find it on your home screen.', true);
+    });
+  },
+  /** iPhone/iPad Safari has no install prompt: we explain the Share → Add to Home Screen route instead. */
+  ios() {
+    if (typeof navigator === 'undefined') return false;
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !this.installed;
+  },
+  available() {
+    return !this.installed && (!!this.prompt || this.ios());
+  },
+  render() {
+    const b = $('#mInstall');
+    if (b) b.hidden = !this.available();
+  },
+  async run() {
+    sfx('ui');
+    if (this.prompt) {
+      this.prompt.prompt();
+      try {
+        await this.prompt.userChoice;
+      } catch (e) {}
+      this.prompt = null;
+      this.render();
+    } else if (this.ios()) window.__toast('On iPhone: tap the Share button, then "Add to Home Screen".', true);
+  }
+};
 /* ===== js/ui/menu.js ===== */
 // Main menu (over a live bot battle), multiplayer lobby, the main loop and start-up.
 const inMatch = () => !['intro', 'menu', 'final'].includes(G.phase) && G.mode !== undefined && G.started;
+const TAGLINES = [
+  'Weld a car from scrap, draft a new part every round, smash your rival.',
+  'Now with 40% more duct tape.',
+  'Every bolt counts. Most of them are loose.',
+  'Build it. Break it. Blame the bot.',
+  'The only racing game where you are the race track.',
+  'Certified road-illegal since forever.',
+  'Warning: may contain traces of flying fridges.',
+  'Your mechanic called. He is crying.',
+  'Pick parts. Hit things. Repeat until victorious or on fire.'
+];
 function showMenu() {
   hideOverlays();
   if (G.phase === 'review') closeGarageReport();
@@ -27964,7 +28169,7 @@ function showMenu() {
   $('#ovMenu').classList.toggle('live', !resume);
   $('#ovMenu').innerHTML = `<div class="menu2">
     <div class="hero2"><button class="acct-chip" id="acctChip" type="button"></button><span class="online-chip" id="onlineChip" hidden><i></i><b id="onlineN">1</b> online</span><h1>SCRAP<br>DUEL</h1>
-      <p>Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
+      <p id="tagline">Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
     <div class="modes2">
       <div class="mode2" style="--rc:#5cc38f"><div class="mh"><span class="ico">1P</span><h3>Singleplayer</h3></div><p>A bot rival who drafts, shops and builds with the same rules.</p>
         <div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
@@ -27983,9 +28188,21 @@ function showMenu() {
         <div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">Scrap Cred level ${L.lvl} · ${L.into}/${L.need} XP</span>
         <button class="btn" id="mStyle">Customize</button></div>
     </div>
-    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button></div>
+    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button><button class="btn ghost" id="mInstall" hidden>📲 Install app</button></div>
   </div>`;
   $('#ovMenu').hidden = false;
+  Install.render();
+  $('#mInstall').onclick = () => Install.run();
+  clearInterval(showMenu.tag);
+  showMenu.tag = setInterval(() => {
+    const t = $('#tagline');
+    if (!t || $('#ovMenu').hidden) return clearInterval(showMenu.tag);
+    t.classList.add('swap');
+    setTimeout(() => {
+      t.textContent = pick(TAGLINES);
+      t.classList.remove('swap');
+    }, 350);
+  }, 7000);
   Lobby.render();
   Lobby.ping();
   accountChip();
@@ -28233,6 +28450,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   } catch (e) {}
   Account.init();
   Lobby.start();
+  Install.init();
 }
 // last chance to save when the tab closes or the phone switches apps
 addEventListener('pagehide', () => {

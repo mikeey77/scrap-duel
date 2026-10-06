@@ -563,7 +563,12 @@ function drawPiece(c, e, top, scale = 1) {
     builder: 1,
     turret: top && b && b.id === 'ring',
     paint: G.paint,
-    ...(e.id === 'cockpit' ? { badge: G.style.badge, mood: G.scars ? 'hurt' : 'idle' } : null)
+    ...(e.id === 'cockpit'
+      ? {
+          badge: G.style.badge,
+          mood: performance.now() - (G.lastInput || performance.now()) > 20000 ? 'sleep' : G.scars ? 'hurt' : 'idle'
+        }
+      : null)
   });
   c.shadowBlur = 0;
   if (cold) drawFrost(c, cell * (top ? 0.82 : 0.96), ccx * 7 + ccy * 3);
@@ -586,7 +591,21 @@ function drawEyes(c, h, st) {
       r = h * (mood === 'hurt' ? 0.19 : 0.16);
     c.save();
     c.translate(x, y);
-    if (mood === 'dead') {
+    if (mood === 'sleep') {
+      c.strokeStyle = '#1a1a1a';
+      c.lineWidth = h * 0.06;
+      c.beginPath();
+      c.arc(0, -r * 0.1, r * 0.7, Math.PI * 0.15, Math.PI * 0.85);
+      c.stroke();
+      if (sx > 0) {
+        c.fillStyle = '#e6faff';
+        c.font = `700 ${h * 0.3}px "Chakra Petch", sans-serif`;
+        const z = (t * 0.6) % 1;
+        c.globalAlpha = 1 - z;
+        c.fillText('z', r * 1.3 + z * h * 0.3, -r - z * h * 0.6);
+        c.globalAlpha = 1;
+      }
+    } else if (mood === 'dead') {
       line(c, [-r * 0.7, -r * 0.7, r * 0.7, r * 0.7], '#1a1a1a', h * 0.07);
       line(c, [r * 0.7, -r * 0.7, -r * 0.7, r * 0.7], '#1a1a1a', h * 0.07);
     } else if (mood === 'happy') {
