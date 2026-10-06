@@ -6271,7 +6271,7 @@ D(
   'Small blasts.',
   ['expl'],
   { k: 'mortar', c: '#5a5a3a' },
-  { ...W({ kind: 'lob', dmg: 34, rate: 1, rng: 540, min: 90, splash: 50, dt: 'expl', cls: 'expl' }) }
+  { ...W({ kind: 'lob', dmg: 27, rate: 1, rng: 540, min: 90, splash: 50, dt: 'expl', cls: 'expl' }) }
 );
 D(
   'inferno',
@@ -6748,7 +6748,7 @@ const PLAN_ROWS=[
  ['firebreak','Firebreak Rail','def','b',1,{fireAura:1,res:{fire:.8,expl:-.2}},'A long fireproof flank clears flames along its cells.','Heavy and vulnerable to blasts.'],
  ['popcorn','Popcorn Burner','weap','t',2,{wpn:{kind:'bounce',cls:'fire',rng:380,spd:420,dmg:8,rate:1.3}},'A scatter of hot bouncing kernels.','Wide spread and short range.'],
  ['kilnram','Kiln Ram','melee','b',2,{mel:{dps:18,reach:1.4}},'Contact heats the ram until it scorches the enemy.','Heavy nose; needs time to heat.'],
- ['dragon','Dragon Bellows','weap','t',3,{wpn:{kind:'flame',cls:'fire',rng:280,dps:65}},'Charges a broad, short blast of fire.','Visible wind-up and sluggish turning while charging.'],
+ ['dragon','Dragon Bellows','weap','t',3,{wpn:{kind:'flame',cls:'fire',rng:280,dps:115}},'Charges a broad, short blast of fire.','Visible wind-up and sluggish turning while charging.'],
  ['campfork','Campfire Fork','melee','b',2,{mel:{dps:12,reach:1}},'Both arms burn parts touching the occupied corner cells.','Open corner leaves a weak spot.'],
  ['frostbead','Frost Bead','chaos','b',0,{},'Drop a single ice bead that trips the first passing wheel.','Small area; one use per bead.'],
  ['snowcap','Snowcap Plate','def','b',0,{res:{fire:.3}},'Melts to cancel the first fire hit on this plate.','One fire save per round.'],
@@ -6776,7 +6776,7 @@ const PLAN_ROWS=[
  ['soaproller','Soap Roller','move','b',1,{drive:{p:3,g:.65,top:350}},'At speed, drops a narrow soap trail.','Your own trail can trip you.'],
  ['driftfin','Drift Fin','move','b',1,{turn:.18},'Stabilizes angular drift at speed without stopping the slide.','Fragile and ineffective when slow.'],
  ['squeegee','Squeegee Rail','def','b',1,{},'Clears oil, soap and slush along its occupied cells.','Does not clear mines.'],
- ['curling','Curling Stone','weap','t',2,{wpn:{kind:'bounce',cls:'ballistic',rng:620,spd:240,dmg:10,rate:.36,knock:8}},'Fire sends a slow sliding stone that shoves cars aside.','Slow shot; little damage.'],
+ ['curling','Curling Stone','weap','t',2,{wpn:{kind:'bounce',cls:'ballistic',rng:620,spd:240,dmg:20,rate:.36,knock:8}},'Fire sends a slow sliding stone that shoves cars aside.','Slow shot; little damage.'],
  ['foambath','Foam Bath','chaos','b',2,{},'Drop creates a round soap zone with visible bubbles.','Brief effect; affects you too.'],
  ['zamboni','Zamboni Deck','move','b',3,{drive:{p:7,g:.9,top:270}},'A large cleaning deck leaves slippery ice behind.','Heavy and slow to accelerate.'],
  ['driftcradle','Drift Cradle','move','b',2,{drive:{p:3,g:.6,top:350,slide:1}},'Side impacts become controlled spins around the corner skid.','Little protection from frontal hits.'],
@@ -6798,6 +6798,31 @@ PLAN_ROWS.forEach((r,i)=>{
  if(i===29||i===49)shape.splice(0,shape.length,[0,0],[-1,-1],[0,-1],[1,-1]);
  const cells=shape.length,front=!!(props.wpn||props.mel),mnt=layer==='t'?(cells>=4?2:1):cat==='move'||cat==='melee'||cat==='chaos'?0:1;
  D(id,name,({weap:'weapon',def:'defense',util:'utility'}[cat]||cat),rar,layer,mnt,Math.round((cat==='def'?68:48)*Math.sqrt(cells)),Math.round((cat==='move'?1.8:1.3)*cells*10)/10,desc,con,[tag,...(props.mel?['melee']:cat==='def'?['def']:[])],{k:'plan',c:PLAN_COLORS[tag]},{...props,...(props.wpn?{wpn:{dt:'kin',...props.wpn}}:{}),size:cells,shape,shapeName:i%10===9?(i===29||i===49?'T 3×2':'L 2×2'):null,dir:front?1:0,front:front?1:0,plan:true,branch:tag});
+});
+
+/* Odd parts: strange junk that still makes physical sense. Each has its own shape and glyph. */
+const ODD_ROWS=[
+ // id, name, cat, rar, layer, props, shape, glyph, color, desc, con
+ ['kazoo','Kazoo Horn','weapon',0,'t',{wpn:{kind:'bullet',cls:'ballistic',dt:'kin',dmg:2.5,rate:7,rng:300,spd:520,spr:.32}},[[0,0]],'🎺','#e5d06c','Sprays tiny brass pellets and an unbearable noise.','Pellets barely scratch armour.'],
+ ['bubbler','Bubble Blower','weapon',0,'t',{wpn:{kind:'bounce',cls:'ballistic',dt:'kin',dmg:7,rate:1.6,rng:360,spd:200,knock:3}},[[0,0]],'🫧','#8bdeed','Slow soapy bubbles that bounce around and nudge cars.','Slow enough to dodge while yawning.'],
+ ['mattress','Mattress Plate','defense',0,'b',{res:{kin:.3,melee:.35}},[[0,0],[1,0]],'🛏','#c9b7ff','A wide springy plate that soaks up rams and bullets.','Burns like, well, a mattress.'],
+ ['nailbat','Nail Bat','melee',1,'b',{mel:{dps:22,reach:1.3}},[[0,0],[0,1],[0,2]],'🏏','#ff9a5c','A three-cell bat full of nails. Point it forward.','Long and easy to snap off.'],
+ ['teapot','Teapot Turret','weapon',1,'t',{wpn:{kind:'flame',cls:'fire',dt:'fire',dps:30,rng:170}},[[0,0]],'🫖','#ff824b','Scalding steam at close range. Very British.','Short reach; tea time takes a while.'],
+ ['shopcart','Shopping Cart','move',1,'b',{drive:{p:5,g:.45,top:440}},[[0,0],[1,0],[0,1],[1,1]],'🛒','#9fb6c8','A 2×2 cart: fast, light, and one wheel always wobbles.','Poor grip in corners.'],
+ ['fridge','Fridge Door','defense',2,'b',{res:{fire:.7,kin:.2}},[[0,0],[0,1],[0,2]],'🧊','#8bdeed','A tall 1×3 slab that shrugs off fire. Still cold inside.','Heavy; explosions crack it.'],
+ ['tuba','Tuba Cannon','weapon',2,'t',{wpn:{kind:'shell',cls:'ballistic',dt:'kin',dmg:36,rate:.8,rng:600,spd:650,knock:7}},[[0,0],[0,-1],[1,0],[1,-1]],'📯','#ffb423','A 2×2 brass cannon. Every shot plays one low note.','Needs a heavy socket.'],
+ ['zipsaw','Zipper Saw','melee',2,'b',{mel:{dps:38,reach:1.2}},[[0,0],[1,0],[2,0]],'🪚','#cdd6df','A wide 3×1 saw blade that zips across the whole nose.','Wide nose is also a wide target.'],
+ ['mirrorball','Mirror Ball Turret','weapon',3,'t',{wpn:{kind:'bullet',cls:'energy',dt:'kin',dmg:12,rate:9,rng:380,spd:700,spr:.9}},[[0,0],[1,0],[0,-1],[1,-1]],'🪩','#ff6ad5','Fires light shards in every direction. Party in the arena.','Aim? Never heard of her.'],
+ ['piano','Piano Dropper','weapon',3,'t',{wpn:{kind:'lob',cls:'expl',dt:'expl',dmg:48,rate:.32,rng:700,min:180,splash:66}},[[0,0],[1,0],[2,0],[1,-1]],'🎹','#f2f6fc','Lobs a whole upright piano. The landing is out of tune.','Very slow reload; minimum range.'],
+ ['anvil','Anvil Ballast','defense',3,'b',{res:{expl:.45,kin:.3}},[[0,0],[-1,-1],[0,-1],[1,-1]],'⚒','#7d8896','A T-shaped anvil that eats explosions and anchors the car.','Enormously heavy.'],
+ ['toaster','Toaster Cannon','weapon',4,'t',{wpn:{kind:'bounce',cls:'fire',dt:'fire',dmg:44,rate:1.5,rng:520,spd:430,knock:4}},[[0,0],[1,0]],'🍞','#ff9a3c','Launches two scorching slices of toast that bounce off walls.','Smells amazing; reveals your position.'],
+ ['hamster','Hamster Wheel','move',4,'b',{drive:{p:10,g:.85,top:500}},[[0,0],[0,-1],[0,1]],'🐹','#ffcf8a','A 1×3 wheel powered by a very motivated hamster.','Hamster demands snacks between rounds.'],
+ ['gnome','Lucky Gnome','defense',4,'t',{res:{kin:.25,fire:.25,expl:.25,melee:.25}},[[0,0]],'🧙','#3fe0a0','While the gnome stands, your whole car takes 8% less damage. Nobody knows why.','Tiny, fragile and the first thing everyone shoots.']
+];
+ODD_ROWS.forEach(([id,name,cat,rar,layer,props,shape,glyph,col,desc,con])=>{
+ const cells=shape.length,front=!!props.mel,mnt=layer==='t'?(cells>=4?2:1):cat==='move'||cat==='melee'?0:1;
+ const tags=[props.wpn?.cls==='fire'||id==='teapot'?'fire':null,id==='fridge'||id==='bubbler'?'cold':null,props.mel?'melee':null,cat==='defense'?'def':null,props.wpn?.cls==='expl'?'expl':null].filter(Boolean);
+ D(id,name,cat,rar,layer,mnt,Math.round((cat==='defense'?78:52)*Math.sqrt(cells)),Math.round((id==='anvil'?4:cat==='move'?1.6:1.3)*cells*10)/10,desc,con,tags,{k:'plan',c:col},{...props,size:cells,shape:shape.map(c=>c.slice()),dir:front?1:0,front:front?1:0,plan:true,branch:'odd',glyph,odd:true});
 });
 
 const MOD = Object.fromEntries(MODS.map(m => [m.id, m]));
@@ -14137,6 +14162,7 @@ function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   const attacker = att != null && att >= 0 ? B.cars[att] : null;
   if (m.res && m.res[type] !== undefined && !(type === 'light' && attacker && CT(attacker, 'apround')))
     a *= 1 - m.res[type];
+  if (v.has.gnome && v.insts.some(g => g.id === 'gnome' && g.alive)) a *= 0.92;
   if (type === 'fire') {
     for (const b of I.cells.length ? I.cells : [v.grid.get(I.k)])
       if (b)
@@ -15270,12 +15296,12 @@ function planWeapon(v,I,dt){
   I.planBurst=Math.max(0,(I.planBurst||0)-dt);if(I.planBurst>0)return false;
   if(!v.fire||I.planCd>B.time){I.charge=0;return true;}
   if(!I.charge)sfx('charge',...ipos(v,I));I.charge+=dt;v.w*=Math.exp(-2*dt);
-  if(I.charge>=1.2){I.charge=0;I.planBurst=.7;I.planCd=B.time+4;sfx('flame',...ipos(v,I));return false;}return true;
+  if(I.charge>=1.2){I.charge=0;I.planBurst=.8;I.planCd=B.time+3;sfx('flame',...ipos(v,I));return false;}return true;
  }
  if(I.id==='popcorn'||I.id==='curling'){
   if(v.fire&&!I.blocked&&planReady(I,I.id==='popcorn'?.75:2.8)){
    const a=faceAng(v,I),n=I.id==='popcorn'?3:1;
-   for(let i=0;i<n;i++)planShot(v,I,a+rnd(-.26,.26),'bounce',I.id==='popcorn'?8*(1+(v.aura.dmg_fire||0)):10,I.id==='popcorn'?420:240,I.id==='popcorn'?380:620,{bounces:2,ang:0,dt:I.id==='popcorn'?'fire':'kin',knock:I.id==='curling'?8:1});
+   for(let i=0;i<n;i++)planShot(v,I,a+rnd(-.26,.26),'bounce',I.id==='popcorn'?8*(1+(v.aura.dmg_fire||0)):20,I.id==='popcorn'?420:240,I.id==='popcorn'?380:620,{bounces:2,ang:0,dt:I.id==='popcorn'?'fire':'kin',knock:I.id==='curling'?8:1});
    sfx('thump',...ipos(v,I));
   }return true;
  }
@@ -15386,6 +15412,7 @@ function planDrawModule(c,m,s,ang,st){
  else if(m.branch==='hook'){for(let i=0;i<3;i++)circ(c,0,0,s*(.08+i*.05),null,col,s*.025);line(c,[0,0,0,-s*.43],col,s*.035);}
  else if(m.branch==='econ'){rr(c,-s*.21,-s*.15,s*.42,s*.3,s*.04);c.fillStyle=col;c.fill();line(c,[-s*.15,-s*.2,s*.15,-s*.2],col,s*.04);}
  else if(m.branch==='slip'){for(let i=0;i<3;i++)circ(c,Math.cos(i*2.1)*s*.12,Math.sin(i*2.1)*s*.12,s*.07,null,col,s*.025);}
+ else if(m.glyph){c.rotate(-t*.5-ang);c.font=`${s*.36}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(m.glyph,0,s*.02);}
  else {c.beginPath();c.moveTo(-s*.15,s*.15);c.quadraticCurveTo(-s*.22,-s*.05,0,-s*.25);c.quadraticCurveTo(s*.25,s*.05,s*.1,s*.15);c.closePath();c.fillStyle=col;c.fill();}
  c.restore();
  if(m.wpn||m.mel){line(c,[0,-s*.18,0,-s*.48],col,s*.12);}

@@ -46,7 +46,7 @@ test('catalog loads and every starter is connected, usable and owned',()=>{
     for(const [id,count] of Object.entries(used))assert.equal(count,G.inv[id]);
     signatures.add(G.starterGuns.join(','));
   }
-  assert(signatures.size>10);assert.equal(a.MODS.length,190);
+  assert(signatures.size>10);assert.equal(a.MODS.length,205);
 });
 test('all heavy drafted modules include enough free support',()=>{
   for(const m of a.MODS.filter(m=>m.layer==='t'&&m.mnt===2)){
@@ -219,9 +219,16 @@ test('open overlays release held touch input and prevent background fire',()=>{
   assert.deepEqual({...aa.equippedTouchActions(null)},{});
 });
 test('all fifty designs have unique names, intended shapes, tags and executable mechanics',()=>{
- const added=a.MODS.filter(m=>m.plan);assert.equal(added.length,50);assert.equal(new Set(a.MODS.map(m=>m.name)).size,190);
+ const added=a.MODS.filter(m=>m.plan&&!m.odd);assert.equal(added.length,50);assert.equal(new Set(a.MODS.map(m=>m.name)).size,205);
  const counts={};for(const m of added){const b=a.shapeBounds(m);counts[m.shapeName?'special':`${b.w}x${b.h}`]=(counts[m.shapeName?'special':`${b.w}x${b.h}`]||0)+1;assert(m.tags.includes(m.branch));assert(m.desc&&m.con);}
  assert.deepEqual(counts,{'1x1':15,'1x2':10,'1x3':5,'2x2':10,'2x3':5,special:5});
+});
+test('odd parts cover every rarity, have glyphs and unusual shapes',()=>{
+ const odd=a.MODS.filter(m=>m.odd);assert.equal(odd.length,15);assert.equal(new Set(a.MODS.map(m=>m.id)).size,a.MODS.length);
+ for(let r=0;r<5;r++)assert.equal(odd.filter(m=>m.rar===r).length,3);
+ assert(odd.every(m=>m.glyph&&m.desc&&m.con&&m.art.k==='plan'));
+ assert(odd.filter(m=>a.cellCount(m)>1).length>=10);
+ const sh=new Set(odd.map(m=>{const b=a.shapeBounds(m);return b.w+'x'+b.h+':'+a.cellCount(m);}));assert(sh.size>=6);
 });
 test('every new footprint rotates four times without changing occupied area or filling shape holes',()=>{
  for(const m of a.MODS.filter(m=>m.plan)){for(let rot=0;rot<4;rot++){const cs=a.footprint(m.id,rot,2,3);assert.equal(cs.length,a.cellCount(m));assert.equal(new Set(cs.map(c=>c.join(','))).size,cs.length);const center=a.instCenter({id:m.id,rot,x:2,y:3});assert(center.every(Number.isFinite));}}
