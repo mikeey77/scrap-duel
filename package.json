@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Static game plus one Netlify Function for nickname + PIN accounts.",
   "scripts": {
-    "test": "node tests/regression.cjs && node tests/account.mjs"
+    "test": "node tests/regression.cjs && node tests/account.mjs && node tests/lobby.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.3"

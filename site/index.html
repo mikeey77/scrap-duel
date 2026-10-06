@@ -3991,6 +3991,34 @@ select {
   animation: none;
   transition: opacity 0.6s;
 }
+
+/* ---- lightning, pause menu, online, rooms, round picker ---- */
+#zapLayer{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;overflow:visible}
+#zapLayer .zap{animation:zapFlick .5s steps(1,end) forwards}
+#zapLayer .zg{fill:none;stroke:var(--holo);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;opacity:.35;filter:blur(3px)}
+#zapLayer .zc{fill:none;stroke:#eaffff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+@keyframes zapFlick{0%{opacity:1}12%{opacity:.25}22%{opacity:1}40%{opacity:.6}55%{opacity:1}75%{opacity:.35}100%{opacity:0}}
+#pauseCard.pause2{max-width:360px;width:min(360px,92vw);background:var(--brackets),linear-gradient(180deg,rgba(91,231,255,.06),transparent 40%),var(--panel,#111a2e)}
+#pauseCard.pause2 h2{margin:2px 0 14px}
+.pmenu{display:flex;flex-direction:column;gap:8px}
+.pmenu .btn{display:flex;align-items:center;gap:12px;justify-content:flex-start;width:100%;text-align:left;padding-left:16px}
+.pmenu .btn i{font-style:normal;width:20px;text-align:center;opacity:.85}
+.pmenu .btn.quit{margin-top:6px;border-color:rgba(255,92,122,.45);color:#ffb3c1}
+.pmenu .btn.warn{color:var(--hazard)}
+.format-status[hidden],#btnFS[hidden]{display:none!important}
+#btnFS{font-size:18px;min-width:44px}
+.online-chip{display:inline-flex;align-items:center;gap:7px;font:600 13px var(--f-mono,monospace);color:var(--ok);background:rgba(63,224,160,.08);border:1px solid rgba(63,224,160,.35);padding:4px 10px;clip-path:var(--chamfer-s);margin:0 0 6px}
+.online-chip[hidden]{display:none}
+.online-chip i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:pulse 1.6s ease-in-out infinite}
+.rooms{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.rooms-h{font-size:12px;color:var(--holo);letter-spacing:.04em}
+#roomList{display:flex;flex-direction:column;gap:6px;max-height:150px;overflow:auto}
+#roomList .room{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:6px 8px;background:rgba(91,231,255,.05);border:1px solid rgba(91,231,255,.2)}
+#roomList .room .btn{padding:6px 14px;min-height:0}
+.rseg{margin:6px 0}
+.lpub{justify-content:center;margin:6px 0 10px;font-size:14px}
+#lRounds{justify-content:center;display:flex}
+@media (hover:hover) and (pointer:fine){.arena-tools #btnFullscreen{display:none}}
 </style>
   </head>
   <body>
@@ -4023,6 +4051,7 @@ select {
           <svg class="si" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M3 2h8l2 2v10H3zM5 6h6v1.5H5zM5 9h6v1.5H5z"/></svg><span class="v" id="tFound">0 / 100</span>
         </div>
         <button class="hbtn" id="btnCodex">Codex <span class="kbd">K</span></button
+        ><button class="hbtn" id="btnFS" title="Fullscreen (F11)" aria-label="Fullscreen">⛶</button
         ><button class="hbtn" id="btnPause" title="Pause (Esc)" aria-label="Pause">❚❚</button
         ><button class="hbtn" id="btnMenu">Menu</button>
       </header>
@@ -7402,7 +7431,9 @@ const DIFF = [
   { name: 'Hard', jitter: 14, lead: 1, react: 0.1, bonus: 40, build: 1 }
 ];
 const PAINTS = ['#f2b705', '#e2504a', '#4ea1ff', '#5cc38f', '#c58bff', '#ff8fc7', '#ece8df', '#ff8a3a'];
-const ROUNDS = 10;
+let ROUNDS = 10;
+const ROUND_CHOICES = [5, 10, 25];
+const setRounds = n => (ROUNDS = ROUND_CHOICES.includes(+n) ? +n : 10);
 const MATCH_IDEAS = [
   [
     'Balanced rounds',
@@ -7509,7 +7540,7 @@ const SPECIALS = {
 SPECIALS.scrap={name:'Scrap Run',icon:'♻',col:'#72d79d',kind:'objective',time:100,target:20,blurb:'Collect world scrap and deliver 20 pieces to your depot.',tip:'Cargo slows you down. Deliver often; wrecking drops your load.'};
 const OBJECTIVES = Object.keys(SPECIALS).filter(k => SPECIALS[k].kind === 'objective');
 const MODIFIERS = Object.keys(SPECIALS).filter(k => SPECIALS[k].kind === 'modifier');
-const SPECIAL_COUNT = 5;
+const specialCount = rounds => (rounds <= 5 ? 2 : rounds <= 10 ? 5 : 9);
 
 /** Picks which rounds are special (never round 1), favouring objectives and never repeating a type back to back. */
 function makeSchedule(rounds = ROUNDS) {
@@ -7519,7 +7550,7 @@ function makeSchedule(rounds = ROUNDS) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  const picked = pool.slice(0, Math.min(SPECIAL_COUNT, pool.length)).sort((a, b) => a - b);
+  const picked = pool.slice(0, Math.min(specialCount(rounds), pool.length)).sort((a, b) => a - b);
   const sched = Array(rounds).fill(null);
   let last = null,
     objectives = 0;
@@ -10312,6 +10343,14 @@ function drawHolo(c, id, rot, x, y, bad) {
 /** Idle sparks, exhaust puffs and the white flash when a part clicks into place. */
 function garageAmbient(dt) {
   if (!building() || SETTINGS.motion === false) return;
+  G.zapT = (G.zapT ?? 3) - dt;
+  if (G.zapT <= 0) {
+    G.zapT = 3.5 + Math.random() * 6;
+    try {
+      const els = [...document.querySelectorAll('#build .panel, #bayScroll, #hud')].filter(e => e.offsetParent !== null);
+      if (els.length) zap(pick(els));
+    } catch (e) {}
+  }
   for (const e of [...G.base.values(), ...G.top.values()]) {
     const m = MOD[e.id],
       k = m.art && m.art.k;
@@ -13374,7 +13413,9 @@ $('#btnFullscreen').onclick=async()=>{
   clearArenaInput();presentationKey='';syncPresentation();
 };
 $('#btnPortrait').onclick=()=>{SETTINGS.rotatePortrait=!SETTINGS.rotatePortrait;saveSettings();clearArenaInput();sizeArena();cam.z=cam.tz=1;};
-document.addEventListener('fullscreenchange',()=>{presentationKey='';syncPresentation();$('#btnFullscreen').textContent=document.fullscreenElement?'⛶ Exit fullscreen':'⛶ Fullscreen';});
+$('#btnFS').onclick=()=>{sfx('ui');$('#btnFullscreen').onclick();};
+if(!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen))$('#btnFS').hidden=true;
+document.addEventListener('fullscreenchange',()=>{$('#btnFS').setAttribute('aria-pressed',!!document.fullscreenElement);presentationKey='';syncPresentation();$('#btnFullscreen').textContent=document.fullscreenElement?'⛶ Exit fullscreen':'⛶ Fullscreen';});
 window.visualViewport?.addEventListener('resize',()=>{presentationKey='';syncPresentation();});
 function makeGround(th, kind) {
   ground = document.createElement('canvas');
@@ -18473,7 +18514,7 @@ function updateTouchControls(v) {
   const enabled=equippedTouchActions(v);
   $$('#touchpad button').forEach(b=>{
     const k=b.dataset.k,cd=touchActionCooldown(v,k),state=k==='KeyC'&&v.anchored?'active':cd>0?'cooling':'ready';
-    b.hidden=!enabled[k];
+    b.hidden=!enabled[k]||k==='Space'; // the right stick already aims and fires
     const label=(k==='RMB'&&v.has.harpoon?'Reel / action':k==='KeyC'&&v.anchored?'Lift anchor':TOUCH_LABELS[k])+(cd>0?'\n'+cd.toFixed(1)+'s':'');
     if(b.textContent!==label){b.textContent=label;b.setAttribute('aria-label',label.replace('\n',', '));}
     if(b.dataset.state!==state)b.dataset.state=state;
@@ -18592,10 +18633,10 @@ function drawHUD(c) {
     }
   }
   if (B.seq === 'count') {
-    const n = B.seqT < 0.5 ? '3' : B.seqT < 0.9 ? '2' : B.seqT < 1.2 ? '1' : 'GO';
+    const n = B.seqT < 0.9 ? '3' : B.seqT < 1.8 ? '2' : B.seqT < 2.7 ? '1' : 'GO';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    const sc = 1 + ((B.seqT * 2.5) % 1) * 0.3;
+    const sc = n === 'GO' ? 1.15 + (B.seqT - 2.7) * 0.5 : 1.35 - Math.min(1, (B.seqT % 0.9) / 0.25) * 0.35;
     c.save();
     c.translate(W / 2, H / 2);
     c.scale(sc, sc);
@@ -19272,6 +19313,7 @@ function stepArena(rdt) {
   stepFx(dt);
   B.shake *= Math.exp(-8 * rdt);
 }
+const COUNT_T = 3.2; // 3, 2, 1 at 0.9 s each, then GO
 function seqHost(rdt) {
   if (B.seq === 'in') {
     if (B.seqT > 1.1) {
@@ -19280,7 +19322,7 @@ function seqHost(rdt) {
       if (B.seq === 'count') sfx('count');
     }
   } else if (B.seq === 'count') {
-    if (B.seqT > 1.4) {
+    if (B.seqT > COUNT_T) {
       B.seq = 'play';
       B.seqT = 0;
       sfx('go');
@@ -19860,7 +19902,7 @@ const SFX = {
     [523, 659, 784, 1047, 1319].forEach((f, i) => tone('square', f, f, 0.25, 0.07 * v, i * 0.08));
   },
   count: v => {
-    [0, 0.5, 0.9].forEach(d => tone('square', 440, 440, 0.12, 0.1 * v, d));
+    [0, 0.9, 1.8].forEach(d => { tone('square', 440, 440, 0.14, 0.1 * v, d); tone('sine', 110, 70, 0.3, 0.18 * v, d); });
   },
   go: v => {
     tone('square', 880, 880, 0.3, 0.12 * v);
@@ -19968,7 +20010,7 @@ function loadPeer() {
   });
 }
 const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const NET_PROTOCOL=8, RECONNECT_MS=30000;
+const NET_PROTOCOL=9, RECONNECT_MS=30000;
 const connectionToken=()=>crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
 const Net = {
   peer: null,
@@ -20179,7 +20221,7 @@ const Net = {
         this.fail('That room already has two players.');
         break;
       case 'begin':
-        if (this.role === 'client') beginMP(Array.isArray(d.sched) ? d.sched : null,d.format);
+        if (this.role === 'client') beginMP(Array.isArray(d.sched) ? d.sched : null,d.format,ROUND_CHOICES.includes(d.rounds)?d.rounds:10);
         break;
       case 'ready':
         this.oppReady = d;
@@ -20303,6 +20345,7 @@ const Net = {
     $('#btnHome2').onclick=()=>{this.close();showMenu();};
   },
   close() {
+    try { Lobby.unlist(); } catch (e) {}
     this.closing=true;clearInterval(this.heartbeat);clearInterval(this.recoveryTimer);
     try {
       if (this.conn && this.conn.open) this.conn.send({ t: 'bye' });
@@ -21515,7 +21558,8 @@ function hideOverlays() {
   ])
     $(id).hidden = true;
 }
-function startMatch(mode, sched,format=chosenFormat) {
+function startMatch(mode, sched,format=chosenFormat,rounds) {
+  setRounds(mode === 'mp' ? rounds || 10 : mode === 'solo' ? G.rounds || 10 : 10);
   G.format=MATCH_FORMATS[format]?format:'balanced';G.lives=[20,20];G.bountyStreak=0;G.bountyWinner=null;G.synRound=null;
   demoStop();
   hideOverlays();
@@ -21773,10 +21817,38 @@ function toBattle(cfg) {
   cam.z = cam.tz = 1.8;
   setButtons();
   sfx('tele');
+  setTimeout(() => B && !B.demo && G.phase === 'battle' && Announcer.round(G.round), 350);
   showTip(cfg.special ? 'specialFight' : 'battle');
 }
 
 /* ---------- round end ---------- */
+/* Deep arena announcer (browser speech, pitched way down) plus a sub-bass hit so it lands. */
+const NUM_WORDS = ['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty','twenty one','twenty two','twenty three','twenty four','twenty five'];
+const Announcer = {
+  voice: null,
+  pick() {
+    const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
+    const en = vs.filter(v => /^en/i.test(v.lang));
+    this.voice = en.find(v => /male|daniel|david|alex|fred|george|guy|ryan|arthur|james/i.test(v.name) && !/female/i.test(v.name)) || en[0] || null;
+  },
+  say(text) {
+    if (MUTE || SETTINGS.voice === false || !SETTINGS.vol) return;
+    try { sfx('boom'); } catch (e) {}
+    if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return;
+    if (!this.voice) this.pick();
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      if (this.voice) u.voice = this.voice;
+      u.pitch = 0.05;
+      u.rate = 0.78;
+      u.volume = Math.min(1, SETTINGS.vol * 1.1);
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  },
+  round(r) { this.say(r === ROUNDS && ROUNDS > 1 ? 'Final round' : 'Round ' + (NUM_WORDS[r] || r)); }
+};
+try { if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => Announcer.pick(); } catch (e) {}
 function setEndBanner() {
   const w = B.win,points=B.points??roundPoints(G.round),loss=2+G.round;
   B.banner =
@@ -21785,6 +21857,7 @@ function setEndBanner() {
       : w === B.me
         ? { text: 'ROUND WON', col: '#5cc38f', t: 0, sub:G.format==='lives'?`${B.cars[1-B.me].name} loses ${loss} lives`:`+${points} point${points>1?'s':''}` }
         : { text: 'ROUND LOST', col: '#e2504a', t: 0, sub:G.format==='lives'?`You lose ${loss} lives`:`${B.cars[w].name} takes ${points}` };
+  if (!B.demo && !B.replay) Announcer.say(w == null ? 'Draw' : w === B.me ? 'Round won' : 'Round lost');
 }
 function endRound(win, why) {
   if (!B || B.seq === 'end') return;
@@ -22081,7 +22154,7 @@ function showTip(id) {
 
 /* ===== js/ui/settings.js ===== */
 // Settings (volume, screen shake, damage numbers, hit markers), the pause menu, controls card and hotkeys.
-const SETTINGS = { vol: 1, music: .4, shake: true, nums: true, marks: true, rotatePortrait:true, touchControls:'auto',touchAssist:false, motion:true,crateSpin:true, perf:false };
+const SETTINGS = { vol: 1, music: .4, shake: true, nums: true, marks: true, rotatePortrait:true, touchControls:'auto',touchAssist:false, voice:true, motion:true,crateSpin:true, perf:false };
 try {
   Object.assign(SETTINGS, JSON.parse(load('sd.settings') || '{}'));
 } catch (e) {}
@@ -22120,6 +22193,7 @@ function openSettings(back) {
     <label class="vol"><span>Volume</span><input type="range" id="setVol" min="0" max="1" step="0.05" value="${SETTINGS.vol}"><b id="setVolV">${Math.round(SETTINGS.vol * 100)}%</b></label>
     <label class="vol"><span>Battle music</span><input type="range" id="setMusic" aria-label="Battle music volume" min="0" max="1" step="0.05" value="${SETTINGS.music}"><b id="setMusicV">${Math.round(SETTINGS.music*100)}%</b></label>
     ${toggle('setMute', 'Mute all sound', MUTE)}
+    ${toggle('setVoice', 'Announcer voice', SETTINGS.voice !== false)}
     ${toggle('setMotion','Decorative motion',SETTINGS.motion)}
     ${toggle('setCrateSpin','Animate mystery crates',SETTINGS.crateSpin)}
     ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
@@ -22145,7 +22219,7 @@ function openSettings(back) {
     store('sd.mute', MUTE ? 1 : 0);
   });
   for (const [id, k] of [
-    ['setMotion','motion'],['setCrateSpin','crateSpin'],['setShake', 'shake'],
+    ['setVoice','voice'],['setMotion','motion'],['setCrateSpin','crateSpin'],['setShake', 'shake'],
     ['setNums', 'nums'],
     ['setMarks', 'marks'],['setPortrait','rotatePortrait'],['setTouchAssist','touchAssist'],['setPerf','perf']
   ])
@@ -22195,10 +22269,19 @@ function togglePause(force) {
   sfx('pause');
   const forfeit = G.phase === 'battle' && G.mode === 'solo';
   $('#pauseCard').innerHTML =
-    `<span class="label">${online ? 'Online match · still running' : 'Paused'}</span><h2>${online ? 'Menu' : 'Paused'}</h2>
-    <div class="pbtns"><button class="btn" id="pResume">Resume</button><button class="btn ghost" id="pControls">Controls</button><button class="btn ghost" id="pSettings">Settings</button>${document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen ? `<button class="btn ghost" id="pFull">${document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen'}</button>` : ''}
-    ${forfeit ? '<button class="btn ghost" id="pForfeit">Forfeit round</button>' : ''}${G.phase === 'wait' ? '<button class="btn ghost" id="pGarage">Back to garage</button>' : ''}<button class="btn ghost" id="pMenu">Main menu</button></div>
+    `<span class="label">${online ? 'Online match · still running' : 'Game paused'}</span><h2>${online ? 'Menu' : 'Paused'}</h2>
+    <div class="pmenu">
+      <button class="btn" id="pResume"><i>▶</i>Resume</button>
+      ${G.phase === 'wait' ? '<button class="btn ghost" id="pGarage"><i>⚒</i>Back to garage</button>' : ''}
+      <button class="btn ghost" id="pSettings"><i>⚙</i>Settings</button>
+      <button class="btn ghost" id="pControls"><i>⌨</i>Controls</button>
+      ${document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen ? `<button class="btn ghost" id="pFull"><i>⛶</i>${document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen'}</button>` : ''}
+      ${forfeit ? '<button class="btn ghost warn" id="pForfeit"><i>⚑</i>Forfeit round</button>' : ''}
+      <button class="btn ghost quit" id="pMenu"><i>⏏</i>Main menu</button>
+    </div>
     <div id="pExtra"></div>`;
+  $('#pauseCard').classList.add('pause2');
+  setTimeout(() => !$('#ovPause').hidden && zap($('#pauseCard')), 60);
   $('#ovPause').hidden = false;
   $('#pResume').addEventListener('click', () => togglePause(false));
   const pf = $('#pFull');
@@ -22381,15 +22464,17 @@ function showMenu() {
   const L = levelInfo();
   $('#ovMenu').classList.toggle('live', !resume);
   $('#ovMenu').innerHTML = `<div class="menu2">
-    <div class="hero2"><button class="acct-chip" id="acctChip" type="button"></button><h1>SCRAP<br>DUEL</h1>
+    <div class="hero2"><button class="acct-chip" id="acctChip" type="button"></button><span class="online-chip" id="onlineChip" hidden><i></i><b id="onlineN">1</b> online</span><h1>SCRAP<br>DUEL</h1>
       <p>Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
     <div class="modes2">
       <div class="mode2" style="--rc:#5cc38f"><div class="mh"><span class="ico">1P</span><h3>Singleplayer</h3></div><p>A bot rival who drafts, shops and builds with the same rules.</p>
         <div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
+        <div class="seg rseg" id="roundSeg" aria-label="Match length">${ROUND_CHOICES.map(n => `<button data-n="${n}" aria-pressed="${n === (G.rounds || 10)}">${n} rounds</button>`).join('')}</div>
         <button class="btn" id="mSolo">Play vs bot</button></div>
-      <div class="mode2" style="--rc:#4ea1ff"><div class="mh"><span class="ico">2P</span><h3>Multiplayer</h3></div><p>Peer-to-peer with a four-character room code, ping display and a 30-second reconnect window.</p>
+      <div class="mode2" style="--rc:#4ea1ff"><div class="mh"><span class="ico">2P</span><h3>Multiplayer</h3></div><p>Host a room for a friend, or jump into an open 1v1.</p>
         <input id="mName" class="mname" maxlength="16" value="${esc(G.name)}" aria-label="Your name" placeholder="Your name">
-        <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div></div>
+        <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
+        <div class="rooms"><span class="rooms-h">Open 1v1 rooms</span><div id="roomList"></div></div></div>
       <div class="mode2" style="--rc:#c58bff"><div class="mh"><span class="ico">LAB</span><h3>Sandbox</h3></div><p>Every module, 99 of each, a test arena with dummies.</p>
         <button class="btn" id="mSand">Open sandbox</button></div>
       <div class="mode2" style="--rc:#ffd257"><div class="mh"><span class="ico">${L.lvl}</span><h3>Garage Style</h3></div><p>${esc(titleName(G.style.title))} · ${unlockedCount()} of ${totalCosmetics()} unlocked</p>
@@ -22399,6 +22484,8 @@ function showMenu() {
     <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button></div>
   </div>`;
   $('#ovMenu').hidden = false;
+  Lobby.render();
+  Lobby.ping();
   accountChip();
   $('#acctChip').onclick = () => {
     sfx('ui');
@@ -22415,6 +22502,14 @@ function showMenu() {
       G.diff = +b.dataset.i;
       $$('#diffSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
       store('sd.diff', G.diff);
+      sfx('ui');
+    })
+  );
+  $$('#roundSeg button').forEach(b =>
+    b.addEventListener('click', () => {
+      G.rounds = +b.dataset.n;
+      $$('#roundSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      store('sd.rounds', G.rounds);
       sfx('ui');
     })
   );
@@ -22479,6 +22574,72 @@ function showMenu() {
       $('#ovMenu').hidden = true;
     });
 }
+/* Presence heartbeat: players online + public 1v1 rooms (netlify/functions/lobby.mjs). */
+const Lobby = {
+  id: (() => {
+    const mk = () => connectionToken().replace(/[^a-z0-9]/gi, '').slice(0, 24);
+    try { let x = sessionStorage.getItem('sd.pid'); if (!x) { x = mk(); sessionStorage.setItem('sd.pid', x); } return x; } catch (e) { return mk(); }
+  })(),
+  online: 0, rooms: [], ok: false, wantPublic: true, listed: false, timer: 0, busy: false, last: 0,
+  async ping(force) {
+    if (typeof fetch !== 'function' || this.busy || (!force && document.hidden)) return;
+    if (!force && Date.now() - this.last < 4000) return;
+    this.busy = true; this.last = Date.now();
+    const room = this.listed && Net.role === 'host' && Net.ready && !Net.connected && Net.code ? { code: Net.code, name: G.name, rounds: G.mpRounds || 10 } : null;
+    try {
+      const r = await fetch('/api/lobby', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: this.id, v: NET_PROTOCOL, room }) });
+      if (r.ok) { const d = await r.json(); this.online = Math.max(1, d.online | 0); this.rooms = (d.rooms || []).filter(x => x.v === NET_PROTOCOL && x.code !== Net.code); this.ok = true; }
+      else this.ok = false;
+    } catch (e) { this.ok = false; }
+    this.busy = false;
+    this.render();
+  },
+  list() { if (!this.wantPublic) return; this.listed = true; this.last = 0; this.ping(true); },
+  unlist() { if (!this.listed) return; this.listed = false; this.last = 0; this.ping(true); },
+  start() { clearInterval(this.timer); this.ping(true); this.timer = setInterval(() => this.ping(), 20000); },
+  render() {
+    const o = $('#onlineChip');
+    if (o) { o.hidden = !this.ok; const n = $('#onlineN'); if (n) n.textContent = this.online; }
+    const box = $('#roomList');
+    if (!box) return;
+    box.innerHTML = !this.ok
+      ? '<span class="small">Public rooms appear here when the server is reachable.</span>'
+      : this.rooms.length
+        ? this.rooms.map(r => `<div class="room"><b>${esc(r.name)}</b><span class="small">${r.rounds} rounds · ${esc(r.code)}</span><button class="btn" data-code="${esc(r.code)}">Join</button></div>`).join('')
+        : '<span class="small">No open rooms right now. Host one and it shows up here.</span>';
+    box.querySelectorAll && box.querySelectorAll('button[data-code]').forEach(b => (b.onclick = () => {
+      sfx('ui');
+      if (G.mode === 'mp') Net.close();
+      Net.join(b.dataset.code);
+    }));
+  }
+};
+addEventListener('pagehide', () => { try { navigator.sendBeacon && navigator.sendBeacon('/api/lobby', new Blob([JSON.stringify({ id: Lobby.id, bye: true })], { type: 'application/json' })); } catch (e) {} });
+
+/* Holo lightning: a brief electric crackle along a random edge of a panel. */
+function zap(el, opt = {}) {
+  if (!el || SETTINGS.motion === false || !el.getBoundingClientRect) return;
+  try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch (e) {}
+  const r = el.getBoundingClientRect();
+  if (r.width < 40 || r.height < 30) return;
+  let layer = $('#zapLayer');
+  if (!layer) { layer = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); layer.id = 'zapLayer'; layer.setAttribute('aria-hidden', 'true'); document.body.appendChild(layer); }
+  const side = opt.side ?? Math.floor(Math.random() * 4), horiz = side % 2 === 0;
+  const len = horiz ? r.width : r.height, segLen = Math.min(len * 0.95, len * (0.35 + Math.random() * 0.45));
+  const start = Math.random() * (len - segLen), steps = Math.max(6, Math.round(segLen / 14));
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = start + (segLen * i) / steps, j = i === 0 || i === steps ? 0 : (Math.random() - 0.5) * 9;
+    pts.push(horiz ? [r.left + t, (side === 0 ? r.top : r.bottom) + j] : [(side === 1 ? r.right : r.left) + j, r.top + t]);
+  }
+  const d = 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L');
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'zap');
+  g.innerHTML = `<path d="${d}" class="zg"/><path d="${d}" class="zc"/>`;
+  layer.appendChild(g);
+  setTimeout(() => g.remove(), 520);
+  if (opt.sound) sfx('zap');
+}
 function lobbyUI() {
   const n = Net,
     host = n.role === 'host',
@@ -22497,26 +22658,43 @@ function lobbyUI() {
   c.innerHTML = `<span class="label">${host ? 'Hosting' : 'Joining'} a room</span><h2>Multiplayer</h2>
     <div class="code">${esc(n.code || '····')}</div>${st}
     <div class="lstat"><span><span class="dot on"></span>${esc(G.name)}</span><span><span class="dot${n.connected ? ' on' : ''}"></span>${n.connected ? esc(G.oppName) : 'Friend'}</span></div>
+    ${host ? `<div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div>
+    <label class="tgl lpub"><input type="checkbox" id="lPublic" ${Lobby.wantPublic ? 'checked' : ''}><span>List as a public 1v1 room</span></label>` : ''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>Start match</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Cancel</button></div>`;
+  $$('#lRounds button').forEach(b =>
+    b.addEventListener('click', () => {
+      G.mpRounds = +b.dataset.n;
+      $$('#lRounds button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      sfx('ui');
+      Lobby.list();
+    })
+  );
+  const lp = $('#lPublic');
+  if (lp) lp.onchange = () => { Lobby.wantPublic = lp.checked; lp.checked ? Lobby.list() : Lobby.unlist(); };
+  if (host && n.ready && !n.connected) Lobby.list();
+  if (n.connected) Lobby.unlist();
   const s = $('#lStart');
   if (s)
     s.addEventListener('click', () => {
       if (!n.connected) return;
-      const sched = makeSchedule();
       const format='balanced'; // only the balanced format is offered
-      Net.send({ t: 'begin', sched,format });
-      beginMP(sched,format);
+      const rounds = setRounds(G.mpRounds || 10);
+      const sched = makeSchedule(rounds);
+      Net.send({ t: 'begin', sched,format,rounds });
+      Lobby.unlist();
+      beginMP(sched,format,rounds);
     });
   $('#lCancel').addEventListener('click', () => {
+    Lobby.unlist();
     Net.close();
     $('#ovLobby').hidden = true;
     showMenu();
   });
 }
-function beginMP(sched,format='balanced') {
+function beginMP(sched,format='balanced',rounds=10) {
   G.started = true;
   $('#ovLobby').hidden = true;
-  startMatch('mp', sched,format);
+  startMatch('mp', sched,format,rounds);
 }
 $('#btnStart').addEventListener('click', () => {
   sfx('ui');
@@ -22557,6 +22735,7 @@ function loop(t) {
         B.menuPaused = false;
         B.paused = false;
       }
+      if (!$('#ovPause').hidden) { G.pzapT = (G.pzapT ?? 2) - dt; if (G.pzapT <= 0) { G.pzapT = 2 + Math.random() * 3; zap($('#pauseCard')); } }
       if (!B.paused && !Net.reconnecting) stepArena(dt);
       if (B && B.cars.length) drawArena();
       if (B && B.rec && G.phase === 'battle' && !B.paused && !Net.reconnecting) recTick(dt);
@@ -22583,10 +22762,14 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   if (n) G.name = n;
   const d = load('sd.diff');
   if (d != null && DIFF[+d]) G.diff = +d;
+  const rn = +load('sd.rounds');
+  G.rounds = ROUND_CHOICES.includes(rn) ? rn : 10;
+  G.mpRounds = G.rounds;
   MUTE = load('sd.mute') == 1;
   loadStyle();
   try {G.favorites=new Set(JSON.parse(load('sd.favorites')||'[]').filter(id=>MOD[id]));} catch(e){}
   Account.init();
+  Lobby.start();
 }
 // last chance to save when the tab closes or the phone switches apps
 addEventListener('pagehide', () => {

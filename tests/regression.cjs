@@ -211,7 +211,7 @@ test('solo aim assist is optional and never affects multiplayer or night visibil
 test('garage tabs and arena presentation leave world coordinates and protocol intact',()=>{
   const {rr,aa}=mobileRuntime();aa.setMobileTab('parts');assert.equal(rr.elements.get('build').dataset.mobileTab,'parts');aa.setMobileTab('bay');assert.equal(rr.elements.get('build').dataset.mobileTab,'bay');
   const before=aa.getB().cars.map(v=>[v.x,v.y,v.a]);aa.syncPresentation();assert.deepEqual(aa.getB().cars.map(v=>[v.x,v.y,v.a]),before);
-  assert(html.includes('NET_PROTOCOL=8'));assert(html.includes('height:100dvh'));assert(html.includes('Subtle touch aim assist (solo only)'));
+  assert(html.includes('NET_PROTOCOL=9'));assert(html.includes('height:100dvh'));assert(html.includes('Subtle touch aim assist (solo only)'));
 });
 test('open overlays release held touch input and prevent background fire',()=>{
   const {rr,aa}=mobileRuntime();const b=aa.getB();b.aimJoy={x:1,y:0,m:1};aa.keys.add('Space');
@@ -371,6 +371,14 @@ test('auto-build in the sandbox makes an armed, sensibly sized car',()=>{
  assert(tops.some(e=>aa.MOD[e.id].wpn),'no weapons');assert(aa.G.base.size<120,'base of '+aa.G.base.size+' parts');assert.equal(aa.blockedList().length,0);assert(aa.designConnected(aa.G.base));
 });
 
+test('match length follows the chosen rounds and the countdown takes three seconds',()=>{
+ const r=runtime(),a=r.api;a.G.rounds=5;a.startMatch('solo');assert.equal(a.G.sched.length,5);assert(a.G.sched.filter(Boolean).length<=2);
+ a.G.rounds=25;a.startMatch('solo');assert.equal(a.G.sched.length,25);
+ a.openBuild();a.toBattle({...a.makeCfg(a.myCarCfg()),me:0,net:null});const b=a.getB();
+ const run=ms=>{for(let t=0;t<ms;t+=16){r.advance(16);for(const f of r.rafs.splice(0))f(r.context.performance.now());}};
+ run(3600);assert.equal(b.seq,'count','still counting after 3.6 s');
+ run(1200);assert.equal(b.seq,'play');
+});
 test('car codes round-trip and report missing parts and bay size',()=>{
  process.on('unhandledRejection',e=>{console.error('FAIL async: '+e.message);process.exit(1);});
  const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();
