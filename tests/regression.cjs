@@ -379,6 +379,20 @@ test('match length follows the chosen rounds and the countdown takes three secon
  run(3600);assert.equal(b.seq,'count','still counting after 3.6 s');
  run(1200);assert.equal(b.seq,'play');
 });
+test('badges sanitize, rivals give hints and the match ends with fun awards',()=>{
+ const r=runtime(),a=r.api;
+ assert.equal(a.validBadge('star.skull.2'),'star.skull.2');assert.equal(a.validBadge('<x>.evil.99'),'shield.bolt.0');
+ a.startMatch('solo');a.openBuild();
+ const d=a.defaultCar?a.defaultCar():null;
+ const des={base:new Map([['0,0',{id:'cockpit',x:0,y:0,rot:0}],...[-3,-2,-1,1,2,3].map(x=>[x+',0',{id:'girder',x,y:0,rot:0}])]),top:new Map([['1,0',{id:'flamer',x:1,y:0,rot:0}],['-1,0',{id:'tinder',x:-1,y:0,rot:0}]])};
+ const h=a.oppHints(des);assert(h.length>=1&&h.length<=2);assert(h.some(x=>/fire|wide/i.test(x)),h.join());
+ a.G.lastReplay={me:0,cfg:{cars:[{design:a.packDesign(des),name:'Me',paint:'#fff',look:{}},{design:a.packDesign({base:new Map([['0,0',{id:'cockpit',x:0,y:0,rot:0}]]),top:new Map()}),name:'Bot',paint:'#f00',look:{}}]},tape:[]};
+ a.G.fun={lost:[5,1],clutch:[0.03,1],wins:[1,0]};a.G.log=[{round:1,win:true,dealt:500,taken:200}];
+ const aw=a.funAwards();const titles=aw.map(x=>x.title);
+ assert(titles.includes('Widest Ride')&&titles.includes('Survived on 1 HP')&&titles.includes('Scrap Donor'),titles.join());
+ assert(aw.some(x=>x.who===1),'the loser gets something too');
+ for(const k of ['plain','frost','fire','magnet'])assert(a.CRATE_THEMES[k].name);
+});
 test('car codes round-trip and report missing parts and bay size',()=>{
  process.on('unhandledRejection',e=>{console.error('FAIL async: '+e.message);process.exit(1);});
  const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();

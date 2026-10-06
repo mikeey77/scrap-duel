@@ -4019,6 +4019,61 @@ select {
 .lpub{justify-content:center;margin:6px 0 10px;font-size:14px}
 #lRounds{justify-content:center;display:flex}
 @media (hover:hover) and (pointer:fine){.arena-tools #btnFullscreen{display:none}}
+
+.d-joke{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);z-index:3;color:#cfe9ff;font:600 15px var(--f-body,sans-serif);opacity:0;transition:opacity .25s;white-space:nowrap;text-shadow:0 2px 8px #000}
+.door-fx.closed .d-joke{opacity:.9}
+.door-fx.open .d-joke{opacity:0}
+.g-flavour{font-size:13px;color:#b6c8e0;margin-top:-6px;min-height:18px}
+.g-crate .g-skin{position:absolute;inset:10px;z-index:2;pointer-events:none;border-radius:10px}
+.crate-frost .g-crate img{filter:drop-shadow(0 10px 18px rgba(0,0,0,.6)) hue-rotate(160deg) saturate(.5) brightness(1.25)}
+.crate-frost .g-skin{background:radial-gradient(circle at 20% 15%,rgba(255,255,255,.75) 0 4px,transparent 5px),radial-gradient(circle at 80% 25%,rgba(220,250,255,.7) 0 3px,transparent 4px),radial-gradient(circle at 60% 85%,rgba(220,250,255,.6) 0 5px,transparent 6px),linear-gradient(160deg,rgba(200,245,255,.35),transparent 55%);box-shadow:inset 0 0 18px rgba(191,244,255,.7)}
+.crate-frost .g-glow{background:radial-gradient(circle,rgba(170,240,255,var(--glow)),transparent 65%)}
+.crate-fire .g-crate img{filter:drop-shadow(0 10px 18px rgba(0,0,0,.6)) sepia(.6) saturate(2.2) hue-rotate(-20deg) brightness(.85)}
+.crate-fire .g-skin{background:linear-gradient(0deg,rgba(255,110,30,.45),transparent 50%);mix-blend-mode:screen;animation:emberPulse .6s ease-in-out infinite alternate}
+.crate-fire .g-glow{background:radial-gradient(circle,rgba(255,140,40,var(--glow)),transparent 65%)}
+@keyframes emberPulse{from{opacity:.5}to{opacity:1}}
+.crate-magnet .g-crate img{filter:drop-shadow(0 10px 18px rgba(0,0,0,.6)) hue-rotate(220deg) saturate(1.4)}
+.crate-magnet .g-skin{border:2px dashed rgba(197,139,255,.6);border-radius:50%;inset:-14px;animation:magSpin 3s linear infinite}
+.crate-magnet .g-glow{background:radial-gradient(circle,rgba(197,139,255,var(--glow)),transparent 65%)}
+@keyframes magSpin{to{transform:rotate(360deg)}}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:18px;margin:6px 0 10px}
+.podium .pd{display:flex;flex-direction:column;align-items:center;gap:4px}
+.podium .pd img{width:110px;height:110px;object-fit:contain;filter:drop-shadow(0 8px 12px rgba(0,0,0,.5))}
+.podium .pd.first img{width:140px;height:140px;animation:podBounce 1.6s ease-in-out infinite}
+.podium .step{display:grid;place-items:center;width:130px;font:700 26px var(--f-display);color:#0a1020;background:linear-gradient(180deg,#c9d4e2,#7f8ea3);clip-path:var(--chamfer-s)}
+.podium .first .step{height:70px;background:linear-gradient(180deg,#ffe27a,#ffb423)}
+.podium .second .step{height:44px}
+.podium .pd b{font-size:14px}
+@keyframes podBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.funawards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:8px 0}
+.funawards .fa{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;padding:8px 10px;background:rgba(255,180,35,.06);border:1px solid rgba(255,180,35,.3);clip-path:var(--chamfer-s)}
+.funawards .fa i{grid-row:span 2;font-style:normal;font-size:24px}
+.funawards .fa b{font-size:14px}
+.funawards .fa span{font-size:12px;color:#b6c8e0}
+
+#bay{position:relative}
+#bayIntel{position:absolute;right:12px;top:52px;width:190px;display:flex;flex-direction:column;gap:8px;z-index:3}
+#bayIntel[hidden]{display:none}
+#bayIntel .intel{background:rgba(10,16,32,.82);border:1px solid rgba(91,231,255,.25);clip-path:var(--chamfer-s);padding:6px;font-size:12px}
+#bayIntel .win canvas{display:block;width:100%;height:auto}
+#bayIntel .win span{display:block;margin-top:4px;color:#b6c8e0}
+#bayIntel .rival{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center}
+#bayIntel .rival .ih{grid-column:1/-1;color:var(--danger);font-weight:600}
+#bayIntel .rival img.shadow{width:56px;height:56px;object-fit:contain;filter:brightness(0) drop-shadow(0 0 3px rgba(255,92,122,.9)) drop-shadow(0 0 1px #ff5c7a)}
+#bayIntel .rival ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px}
+@media (max-width:1100px){#bayIntel .win{display:none}}
+@media (max-width:760px){#bayIntel{top:84px;right:8px;width:128px}#bayIntel .intel{font-size:11px;padding:4px}#bayIntel .rival img.shadow{width:30px;height:30px}#bayIntel .rival .ih{font-size:11px}}
+#resFx{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:5}
+
+.badgeed{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.badgeed .bhead{display:flex;gap:12px;align-items:center}
+.badgeed .brow{display:flex;flex-wrap:wrap;gap:4px}
+.badgeed .bo{width:38px;height:38px;padding:3px;display:grid;place-items:center;background:rgba(91,231,255,.05);border:1px solid rgba(91,231,255,.2);cursor:pointer}
+.badgeed .bo.on{border-color:var(--hazard);box-shadow:0 0 0 1px var(--hazard) inset}
+.badgeed .bo.sw{background:var(--c);width:30px;height:30px}
+img.badge{vertical-align:middle;display:inline-block}
+#tScore img.badge{margin:0 4px}
+.podium .pd img.badge{width:26px;height:26px;animation:none;filter:none}
 </style>
   </head>
   <body>
@@ -4082,6 +4137,10 @@ select {
               ><button id="zFit" title="Fit" style="width: auto; padding: 0 8px; font-size: 11px">FIT</button>
             </div>
             <div id="bayHint"></div>
+            <div id="bayIntel" aria-live="polite">
+              <div class="intel win" title="The arena of the next round"><canvas id="winCv" width="190" height="84"></canvas><span id="winLbl">Next arena</span></div>
+              <div class="intel rival" id="rivalIntel"></div>
+            </div>
             <div class="layer-controls" aria-label="Builder view">
               <span class="seg" role="group" aria-label="Layers"
                 ><button data-layer="both" aria-pressed="true" title="Show chassis and equipment">All</button
@@ -4263,7 +4322,7 @@ select {
     <div class="overlay" id="ovSettings" hidden><div class="card" id="settingsCard"></div></div>
     <div class="overlay" id="ovReconnect" hidden><div class="card" id="reconnectCard"></div></div>
     <div class="overlay" id="ovPause" hidden><div class="card" id="pauseCard"></div></div>
-    <div class="door-fx" id="doorFx" hidden aria-hidden="true"><i class="d-dark"></i><i class="d-l"><b>SCRAP</b></i><i class="d-r"><b>DUEL</b></i></div>
+    <div class="door-fx" id="doorFx" hidden aria-hidden="true"><i class="d-dark"></i><i class="d-l"><b>SCRAP</b></i><i class="d-r"><b>DUEL</b></i><span class="d-joke" id="doorJoke"></span></div>
     <div class="overlay" id="ovBlueprint" hidden><div class="card bp-card" id="bpCard"></div></div>
     <div class="overlay" id="ovAccount" hidden><div class="card account-card" id="accountCard"></div></div>
     <div class="coach" id="coach" hidden></div>
@@ -7800,7 +7859,7 @@ const ACHIEVEMENTS = {
 };
 const XP = { round: 25, roundWin: 25, specialWin: 15, match: 50, matchWin: 100 };
 const xpForLevel = lvl => 100 + 50 * (lvl - 1); // XP needed to go from lvl to lvl + 1
-const DEFAULT_STYLE = { livery: 'factory', trail: 'none', wreck: 'classic', title: 'rookie' };
+const DEFAULT_STYLE = { livery: 'factory', trail: 'none', wreck: 'classic', title: 'rookie', badge: 'shield.bolt.0' };
 
 /* ===== js/render/module-art.js ===== */
 // Canvas artwork for every module, junk object and themed wall.
@@ -7899,6 +7958,13 @@ function topMount(c, h, s) {
   circ(c, 0, 0, h * 0.78, '#2b3036', '#15181b', s * 0.05);
   circ(c, 0, 0, h * 0.62, null, 'rgba(255,255,255,.08)', s * 0.03);
 }
+/** Mood + gaze for a car's cockpit eyes. */
+function cockpitFace(v) {
+  const won = B && B.seq === 'end' && B.win === v.idx, integ = v.dead ? 0 : v.total ? integrity(v) : 1;
+  const mood = v.dead ? 'dead' : won ? 'happy' : integ < 0.35 || (v.lastHurt && B.time - v.lastHurt < 0.4) ? 'hurt' : v.fire ? 'angry' : 'idle';
+  const la = Math.atan2((v.aimY ?? v.y - 1) - v.y, (v.aimX ?? v.x) - v.x) - v.a;
+  return { mood, lookA: la, seed: v.idx * 1.7, badge: (v.look && v.look.badge) || null };
+}
 function drawModule(c, id, s, ang, team, st) {
   const m = MOD[id],
     A = m.art,
@@ -7947,7 +8013,9 @@ function drawModule(c, id, s, ang, team, st) {
       c.lineTo(-h * 0.22, -h * 0.12);
       c.closePath();
       c.fill();
+      if (st.eyes !== false && s > 14) drawEyes(c, h, st);
       c.restore();
+      if (st.badge && s > 14) drawBadge(c, st.badge, s * 0.34, 0, h * 0.62);
       break;
     }
     case 'frame': {
@@ -10223,13 +10291,85 @@ function drawPiece(c, e, top, scale = 1) {
   drawModule(c, e.id, cell * (top ? 0.82 : 0.96), (e.rot * Math.PI) / 2, 'p', {
     builder: 1,
     turret: top && b && b.id === 'ring',
-    paint: G.paint
+    paint: G.paint,
+    ...(e.id === 'cockpit' ? { badge: G.style.badge, mood: G.scars ? 'hurt' : 'idle' } : null)
   });
   c.shadowBlur = 0;
   if (cold) drawFrost(c, cell * (top ? 0.82 : 0.96), ccx * 7 + ccy * 3);
   const scar = G.scars && building() && G.scars[(top ? 't|' : 'b|') + key(e.x, e.y)];
   if (scar) drawScar(c, cell * (top ? 0.82 : 0.96), scar, ccx * 13 + ccy * 7);
   c.restore();
+}
+/* ---------- cockpit character + badge ---------- */
+/** Two eyes on the windshield: they blink, look where you aim and pull faces. */
+function drawEyes(c, h, st) {
+  const mood = st.mood || 'idle', t = ANIM + (st.seed || 0);
+  const blink = mood !== 'dead' && (t % 4.3) < 0.12;
+  const la = st.lookA != null ? st.lookA : Math.sin(t * 0.7) * 0.6 - Math.PI / 2, lx = Math.cos(la) * h * 0.06, ly = Math.sin(la) * h * 0.05;
+  for (const sx of [-1, 1]) {
+    const x = sx * h * 0.27, y = -h * 0.36, r = h * (mood === 'hurt' ? 0.19 : 0.16);
+    c.save();
+    c.translate(x, y);
+    if (mood === 'dead') {
+      line(c, [-r * 0.7, -r * 0.7, r * 0.7, r * 0.7], '#1a1a1a', h * 0.07);
+      line(c, [r * 0.7, -r * 0.7, -r * 0.7, r * 0.7], '#1a1a1a', h * 0.07);
+    } else if (mood === 'happy') {
+      c.strokeStyle = '#1a1a1a'; c.lineWidth = h * 0.07; c.beginPath(); c.arc(0, r * 0.3, r * 0.75, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
+    } else {
+      c.fillStyle = '#f7fbff'; c.beginPath(); c.ellipse(0, 0, r, blink ? r * 0.12 : r * 1.05, 0, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(0,0,0,.55)'; c.lineWidth = h * 0.03; c.stroke();
+      if (!blink) { c.fillStyle = '#10141c'; c.beginPath(); c.arc(lx, ly, r * 0.5, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(lx - r * 0.18, ly - r * 0.2, r * 0.15, 0, 7); c.fill(); }
+      if (mood === 'angry') { c.fillStyle = st.paint || '#f2b705'; c.beginPath(); c.moveTo(-r * 1.3, -r * (sx > 0 ? 1.3 : 0.2)); c.lineTo(r * 1.3, -r * (sx > 0 ? 0.2 : 1.3)); c.lineTo(r * 1.3, -r * 1.6); c.lineTo(-r * 1.3, -r * 1.6); c.closePath(); c.fill(); }
+      if (mood === 'hurt' && sx > 0) { c.fillStyle = '#7fd1ff'; c.beginPath(); c.moveTo(r * 1.2, -r * 0.4); c.quadraticCurveTo(r * 1.65, r * 0.5, r * 1.2, r * 0.6); c.quadraticCurveTo(r * 0.8, r * 0.5, r * 1.2, -r * 0.4); c.fill(); }
+    }
+    c.restore();
+  }
+}
+const BADGE_SHAPES = {
+  shield: 'M20 2 L36 8 V20 C36 30 28 36 20 39 C12 36 4 30 4 20 V8 Z',
+  circle: 'M20 2 A18 18 0 1 1 19.99 2 Z',
+  hex: 'M20 2 L36 11 V29 L20 38 L4 29 V11 Z',
+  diamond: 'M20 1 L39 20 L20 39 L1 20 Z',
+  star: 'M20 1 L25 13 L38 13 L28 22 L32 36 L20 28 L8 36 L12 22 L2 13 L15 13 Z'
+};
+const BADGE_SYMBOLS = {
+  bolt: '<path d="M22 7 L12 22 H19 L16 33 L28 17 H21 L24 7 Z"/>',
+  skull: '<path d="M20 9 C13 9 10 14 10 19 C10 23 12 25 14 26 V30 H26 V26 C28 25 30 23 30 19 C30 14 27 9 20 9 Z M15.5 17 A2.5 2.5 0 1 0 15.5 22 A2.5 2.5 0 1 0 15.5 17 Z M24.5 17 A2.5 2.5 0 1 0 24.5 22 A2.5 2.5 0 1 0 24.5 17 Z" fill-rule="evenodd"/>',
+  gear: '<circle cx="20" cy="20" r="8" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="3.2 2.1"/><circle cx="20" cy="20" r="5.5"/><circle cx="20" cy="20" r="2.4" fill="#0a1020"/>',
+  crown: '<path d="M10 28 V15 L15 20 L20 11 L25 20 L30 15 V28 Z"/>',
+  flame: '<path d="M20 8 C24 14 29 17 27 25 C26 30 22 32 20 32 C16 32 12 29 13 23 C14 19 17 18 17 14 C19 16 20 18 20 20 C22 17 21 12 20 8 Z"/>',
+  cross: '<path d="M17 9 H23 V17 H31 V23 H23 V31 H17 V23 H9 V17 H17 Z"/>',
+  chevron: '<path d="M10 14 L20 22 L30 14 V19 L20 27 L10 19 Z M10 22 L20 30 L30 22 V26 L20 33 L10 26 Z"/>',
+  wrench: '<path d="M26 8 A6 6 0 0 0 20 15 L10 25 A2.8 2.8 0 0 0 14 29 L24 19 A6 6 0 0 0 31 13 L27.5 15 L25 12.5 Z"/>'
+};
+const BADGE_COLS = ['#ffb423', '#5be7ff', '#ff5c7a', '#3fe0a0', '#c58bff', '#f2f6fc', '#ff8a3a', '#4ea1ff'];
+const DEFAULT_BADGE = 'shield.bolt.0';
+function parseBadge(code) {
+  const [sh, sy, ci] = String(code || DEFAULT_BADGE).split('.');
+  return { sh: BADGE_SHAPES[sh] ? sh : 'shield', sy: BADGE_SYMBOLS[sy] ? sy : 'bolt', col: BADGE_COLS[+ci] || BADGE_COLS[0], ci: BADGE_COLS[+ci] ? +ci : 0 };
+}
+const validBadge = code => { const p = parseBadge(code); return `${p.sh}.${p.sy}.${p.ci}`; };
+function badgeSVG(code) {
+  const b = parseBadge(code);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><path d="${BADGE_SHAPES[b.sh]}" fill="#0a1020" stroke="${b.col}" stroke-width="2.6" stroke-linejoin="round"/><g fill="${b.col}" color="${b.col}">${BADGE_SYMBOLS[b.sy]}</g></svg>`;
+}
+const badgeURL = code => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(badgeSVG(code));
+const badgeHTML = (code, size = 24) => (code ? `<img class="badge" width="${size}" height="${size}" alt="" src="${badgeURL(code)}">` : '');
+const _badgeImgs = {};
+function drawBadge(c, code, size, x = 0, y = 0) {
+  if (typeof Image === 'undefined') return;
+  const k = validBadge(code);
+  let im = _badgeImgs[k];
+  if (!im) { im = _badgeImgs[k] = new Image(); im.src = badgeURL(k); }
+  if (im.complete && im.naturalWidth) c.drawImage(im, x - size / 2, y - size / 2, size, size);
+}
+function badgeEditorHTML() {
+  const p = parseBadge(G.style.badge);
+  const opt = (k, v, code, on) => `<button class="bo${on ? ' on' : ''}" data-bk="${k}" data-bv="${v}" aria-pressed="${on}" title="${esc(String(v))}">${badgeHTML(code, 30)}</button>`;
+  return `<div class="badgeed"><span class="label">Your badge</span><div class="bhead">${badgeHTML(G.style.badge, 72)}<span class="small">Shows on your cockpit, the scoreboard and the podium.</span></div>
+    <div class="brow">${Object.keys(BADGE_SHAPES).map(sh => opt('sh', sh, `${sh}.${p.sy}.${p.ci}`, sh === p.sh)).join('')}</div>
+    <div class="brow">${Object.keys(BADGE_SYMBOLS).map(sy => opt('sy', sy, `${p.sh}.${sy}.${p.ci}`, sy === p.sy)).join('')}</div>
+    <div class="brow">${BADGE_COLS.map((c, i) => `<button class="bo sw${i === p.ci ? ' on' : ''}" data-bk="ci" data-bv="${i}" aria-pressed="${i === p.ci}" style="--c:${c}" title="Colour ${i + 1}"></button>`).join('')}</div></div>`;
 }
 /* ---------- living garage helpers ---------- */
 /** A few frost crystals and a pale rim on ice modules. */
@@ -10705,6 +10845,7 @@ function setMobileTab(tab) {
 $$('.mobile-workshop-nav button').forEach(b=>b.onclick=()=>setMobileTab(b.dataset.mobileTab));
 function bfxTick(dt) {
   garageAmbient(dt);
+  if (building()) { drawWindow(SETTINGS.motion === false ? 0 : dt); intelUI(); }
   for (let i = bfx.length - 1; i >= 0; i--) {
     const p = bfx[i];
     p.life -= dt;
@@ -10956,8 +11097,17 @@ function act(x, y, mode) {
     if (G.hist.length > 80) G.hist.shift();
     G.redo = [];
     sfx(mode === 'remove' ? 'remove' : 'place');
+    if (mode !== 'remove') { const id = G.sel; placeSound(id); }
   }
   refreshUI();
+}
+/** Heavy parts land with a metal clank, electronics give a soft beep. */
+function placeSound(id) {
+  const m = id && MOD[id];
+  if (!m) return;
+  const elec = m.tags.includes('energy') || m.tags.includes('tech') || ['sensor', 'radar', 'shieldgen', 'emp', 'tesla', 'laser', 'pulse', 'plasma', 'ion', 'drone', 'jammer'].includes(m.id) || m.wpn?.cls === 'energy' || m.cat === 'utility' && m.layer === 't';
+  if (elec) sfx('beep');
+  else if (m.mass >= 3 || (m.size || 1) >= 3) sfx('clank');
 }
 function undo() {
   if (!G.hist.length) return;
@@ -11804,7 +11954,7 @@ function updateHUD() {
   const sb = G.mode === 'sandbox';
   $('#tScore').innerHTML = sb
     ? '<span class="small">Sandbox</span>'
-    : `<span class="sw" style="background:${G.paint}"></span><span class="me">${G.score[0]}</span>–<span class="op">${G.score[1]}</span><span class="sw" style="background:${G.oppPaint}"></span>`;
+    : `${badgeHTML(G.style.badge, 18)}<span class="sw" style="background:${G.paint}"></span><span class="me">${G.score[0]}</span>–<span class="op">${G.score[1]}</span><span class="sw" style="background:${G.oppPaint}"></span>${badgeHTML(G.oppBadge, 18)}`;
   $('#tScoreLbl').textContent = sb ? 'Mode' : `You vs ${G.oppName}`;
   $('#tStake').textContent = sb
     ? ''
@@ -12255,6 +12405,9 @@ const GFX = {
           c.beginPath();
           c.arc(0, 0, p.r + (1 - k) * p.grow, 0, 7);
           c.stroke();
+        } else if (p.k === 'smoke') {
+          c.globalAlpha = k * 0.8;
+          circ(c, 0, 0, p.r * (1.6 - k * 0.6), p.col);
         } else {
           c.globalCompositeOperation = 'lighter';
           circ(c, 0, 0, p.r * (0.5 + k * 0.5), p.col);
@@ -12345,8 +12498,11 @@ function openCrate() {
       ? `<div class="cell jack"><span>★</span></div>`
       : `<div class="cell" style="--rc:${RAR[m.rar].col}"><img alt="" decoding="async" src="${iconURL(m.id)}"></div>`;
   const ov = $('#ovCrate');
-  ov.innerHTML = `<div class="gamble"><canvas class="gfx" id="gFx"></canvas><div class="reelwrap"><span class="g-title">Scrap Crate</span>
-    <div class="g-crate" id="gCrate"><img alt="" src="${crateURL()}"><i class="g-glow"></i></div>
+  const theme = G.forceCrateTheme || pick(['plain', 'frost', 'fire', 'magnet']),
+    TH = CRATE_THEMES[theme];
+  G.forceCrateTheme = null;
+  ov.innerHTML = `<div class="gamble crate-${theme}"><canvas class="gfx" id="gFx"></canvas><div class="reelwrap"><span class="g-title">${TH.name}</span>
+    <div class="g-crate" id="gCrate"><img alt="" src="${crateURL()}"><i class="g-glow"></i><i class="g-skin"></i></div><span class="g-flavour">${TH.flavour}</span>
     <div class="reel" id="reel" hidden><div class="strip" id="strip">${cells.map(cellHTML).join('')}</div></div>
     <button class="btn ghost" id="cSkip">Skip</button><div class="reelres" id="reelres" aria-live="polite"></div></div></div>`;
   ov.hidden = false;
@@ -12402,15 +12558,17 @@ function openCrate() {
         a = 2 + k * k * 14;
       crate.style.transform = `translate(${(Math.random() - 0.5) * a}px,${(Math.random() - 0.5) * a * 0.6}px) rotate(${(Math.random() - 0.5) * a * 0.4}deg) scale(${1 + k * 0.08})`;
       crate.style.setProperty('--glow', (0.2 + k * 0.8).toFixed(2));
+      { const r = crate.getBoundingClientRect(); TH.tick && TH.tick(r, k); }
       if (Math.random() < k * 0.25) {
         const r = crate.getBoundingClientRect();
-        GFX.burst(r.left + r.width * Math.random(), r.top + r.height * 0.3, jackpot && k > 0.6 ? '#ffd257' : '#5be7ff', 3, 180);
+        GFX.burst(r.left + r.width * Math.random(), r.top + r.height * 0.3, jackpot && k > 0.6 ? '#ffd257' : TH.pop || '#5be7ff', 3, 180);
       }
     } else {
       if (!popped) {
         popped = true;
         const r = crate.getBoundingClientRect();
-        GFX.burst(r.left + r.width / 2, r.top + r.height / 2, '#ffffff', 50, 520);
+        GFX.burst(r.left + r.width / 2, r.top + r.height / 2, TH.pop || '#ffffff', 50, 520);
+        TH.open && TH.open(r);
         sfx('boom');
         crate.hidden = true;
         $('#reel').hidden = false;
@@ -12432,6 +12590,25 @@ function openCrate() {
   raf = requestAnimationFrame(frame);
 }
 
+/* Crates with character: same odds, different personality. */
+const CRATE_THEMES = {
+  plain: { name: 'Scrap Crate', flavour: 'Smells like old oil and opportunity.' },
+  frost: {
+    name: 'Frozen Crate', flavour: 'Something in here creaks…', pop: '#bff4ff',
+    tick(r, k) { if (Math.random() < 0.05 + k * 0.1) sfx('creak'); if (Math.random() < 0.3) GFX.parts.push({ k: 'conf', x: r.left + Math.random() * r.width, y: r.top + r.height * 0.9, vx: (Math.random() - 0.5) * 40, vy: 30, g: 200, a: Math.random() * 6, va: 3, life: 1, t: 0, r: 2 + Math.random() * 2, col: '#dff8ff' }); },
+    open(r) { sfx('shatter'); for (let i = 0; i < 40; i++) { const a = Math.random() * 6.28, sp = 200 + Math.random() * 400; GFX.parts.push({ k: 'conf', x: r.left + r.width / 2, y: r.top + r.height / 2, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 700, a, va: (Math.random() - 0.5) * 20, life: 1.4, t: 0, r: 3 + Math.random() * 5, col: pick(['#bff4ff', '#8bdeed', '#ffffff']) }); } }
+  },
+  fire: {
+    name: 'Smoking Crate', flavour: 'Warm to the touch. Very warm.', pop: '#ff9a3c',
+    tick(r, k) { if (Math.random() < 0.5) GFX.parts.push({ k: 'smoke', x: r.left + r.width * (0.3 + Math.random() * 0.4), y: r.top + r.height * 0.2, vx: (Math.random() - 0.5) * 30, vy: -60 - Math.random() * 60, life: 1.6, t: 0, r: 10 + Math.random() * 10, col: 'rgba(120,120,130,.5)' }); if (Math.random() < k * 0.4) GFX.parts.push({ k: 'spark', x: r.left + Math.random() * r.width, y: r.top + r.height * 0.4, vx: (Math.random() - 0.5) * 60, vy: -120, g: -40, life: 0.8, t: 0, r: 2, col: pick(['#ffb423', '#ff7a1a']) }); },
+    open(r) { sfx('flame'); for (let i = 0; i < 26; i++) GFX.parts.push({ k: 'smoke', x: r.left + r.width / 2 + (Math.random() - 0.5) * 60, y: r.top + r.height / 2, vx: (Math.random() - 0.5) * 220, vy: -80 - Math.random() * 200, life: 1.8, t: 0, r: 14 + Math.random() * 16, col: 'rgba(90,90,100,.55)' }); }
+  },
+  magnet: {
+    name: 'Magnetic Crate', flavour: 'Loose bolts are getting nervous.', pop: '#c58bff',
+    tick(r, k) { if (Math.random() < 0.25 + k * 0.5) { const cx = r.left + r.width / 2, cy = r.top + r.height / 2, a = Math.random() * 6.28, d = 320 + Math.random() * 200, t = 0.5 + Math.random() * 0.3; GFX.parts.push({ k: 'conf', x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, vx: -Math.cos(a) * d / t, vy: -Math.sin(a) * d / t, life: t, t: 0, a, va: 12, r: 3 + Math.random() * 2, col: pick(['#9aa6b4', '#c6ccd4', '#6f7a88']) }); if (Math.random() < 0.15) sfx('tick'); } },
+    open(r) { GFX.rays(r.left + r.width / 2, r.top + r.height / 2, 'rgba(197,139,255,.5)', 12, 1.4); }
+  }
+};
 /* ---------- Prize Wheel ---------- */
 let _wheelImg = null;
 function wheelURL(size = 520) {
@@ -13115,12 +13292,28 @@ $('#btnAuto').addEventListener('click', () => autoPlace());
 $('#btnAutoBuild').addEventListener('click', autoBuild);
 
 /** Before entering the waiting arena: remind the player about loose parts and unspent coins. */
+const SCRAP_JOKES = [
+  'Tip: wheels go on the bottom. Usually.',
+  'No ducks were harmed. Several were annoyed.',
+  'Fun fact: 9 out of 10 mechanics recommend more spikes.',
+  'Remember to stretch before ramming.',
+  'Your warranty expired when you said “hold my oil can”.',
+  'The arena is not responsible for lost hubcaps.',
+  'If it rattles, it’s working.',
+  'Pro tip: the pointy end goes towards the enemy.',
+  'Today’s forecast: 100% chance of scrap.',
+  'Please keep all limbs inside the vehicle. You don’t have limbs. Carry on.',
+  'Built with love, bolts and bad decisions.',
+  'Airbags sold separately.'
+];
 /* Garage → arena: the lights go out, engines start, the arena door slides open. */
 function enterWaitShow() {
   const fx = $('#doorFx');
   if (!fx || SETTINGS.motion === false || !window.matchMedia || matchMedia('(prefers-reduced-motion: reduce)').matches) return enterWait();
   fx.hidden = false;
   fx.className = 'door-fx lights-out';
+  const dj = $('#doorJoke');
+  if (dj) dj.textContent = pick(SCRAP_JOKES);
   sfx('engine');
   setTimeout(() => {
     fx.classList.add('closed');
@@ -13188,6 +13381,7 @@ function loadStyle() {
     const it = COSMETICS[slot].find(i => i.id === s[slot]);
     if (it && isUnlocked(it)) G.style[slot] = it.id;
   }
+  if (s.badge) G.style.badge = validBadge(s.badge);
 }
 const saveProg = () => store('sd.prog', PROG);
 const saveStyle = () => store('sd.style', G.style);
@@ -13309,6 +13503,7 @@ function renderStyle() {
       <div class="lvl"><span class="lv">${L.lvl}</span><div><b>Scrap Cred level ${L.lvl}</b><div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">${L.into} / ${L.need} XP · ${unlockedCount()} of ${totalCosmetics()} items</span></div></div>
       <button class="btn ghost" id="stBack">Done</button></header>
     <div class="stbody"><div class="stprev"><img src="${img}" alt="Your car with the ${esc(G.style.livery)} livery"><span class="small">Paint colour is set in the garage. Cosmetics never change stats.</span>
+      ${badgeEditorHTML()}
       <span class="label">Achievements · ${PROG.ach.length}/${Object.keys(ACHIEVEMENTS).length}</span><div class="achlist">${Object.entries(
         ACHIEVEMENTS
       )
@@ -13325,6 +13520,16 @@ function renderStyle() {
           return `<button class="stitem${on ? ' on' : ''}${un ? '' : ' locked'}" data-id="${it.id}" ${un ? '' : 'aria-disabled="true"'}>${stylePreview(styleTab, it.id)}<b>${esc(it.name)}</b><span>${esc(un ? it.desc : unlockText(it.unlock))}</span>${on ? '<i>Equipped</i>' : un ? '' : '<i>Locked</i>'}</button>`;
         })
         .join('')}</div></div></div></div>`;
+  $$('#ovStyle [data-bk]').forEach(b =>
+    b.addEventListener('click', () => {
+      const p = parseBadge(G.style.badge), k = b.dataset.bk, v = b.dataset.bv;
+      if (k === 'sh') p.sh = v; else if (k === 'sy') p.sy = v; else p.ci = +v;
+      G.style.badge = `${p.sh}.${p.sy}.${p.ci}`;
+      saveStyle();
+      sfx('place');
+      renderStyle();
+    })
+  );
   $$('#ovStyle [data-tab]').forEach(b =>
     b.addEventListener('click', () => {
       styleTab = b.dataset.tab;
@@ -14198,6 +14403,7 @@ function killText(v) {
 function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   if (!I.alive || v.dead || amt <= 0 || B.seq === 'in' || B.seq === 'count' || v.spawnT > 0) return;
   amt=planHurt(v,I,amt,type);if(amt<=0)return;
+  v.lastHurt = B.time;
   const m = I.m;
   let a = amt * (1 + v.fragile);
   const attacker = att != null && att >= 0 ? B.cars[att] : null;
@@ -17349,12 +17555,12 @@ function drawSpecialHUD(c, W, y) {
 /* ===== js/game/banter.js ===== */
 // Bot banter: speech bubbles over bot cars at key moments (start, taking hits, nearly wrecked, wrecking you).
 const BANTER = {
-  start: ['Let’s dance.', 'Nice paint. Shame about what happens next.', 'I’ve seen scarier toasters.'],
-  hurt: ['Hey! That was a new part!', 'Rude.', 'I needed that!', 'Ouch, my wheel!'],
-  low: ['Just a scratch!', 'I meant to do that.', 'Tis but a flesh wound.', 'Running on fumes here…'],
-  wreck: ['Scrap metal!', 'Another one for the pile.', 'Was that your best?'],
-  win: ['Too easy.', 'Better luck next round!'],
-  lose: ['I let you win that one.', 'My cat was driving.', 'Rematch. Now.']
+  start: ['Let’s dance.', 'Nice paint. Shame about what happens next.', 'I’ve seen scarier toasters.', 'Is that a car or a filing cabinet?', 'I built mine from a fridge. Fear me.', 'Seatbelts are for quitters.', 'My mechanic said this was a bad idea.', 'Warranty void in 3… 2… 1…', 'I’m 40% duct tape and 60% confidence.', 'Who welded that? A raccoon?'],
+  hurt: ['Hey! That was a new part!', 'Rude.', 'I needed that!', 'Ouch, my wheel!', 'That was a rental!', 'My insurance doesn’t cover this.', 'I can fix that. Probably.', 'Not the cup holder!', 'Okay, now it’s personal.'],
+  low: ['Just a scratch!', 'I meant to do that.', 'Tis but a flesh wound.', 'Running on fumes here…', 'The check-engine light is now a bonfire.', 'Everything’s fine. This is fine.', 'Is it supposed to smell like that?', 'I can see the road through the floor.'],
+  wreck: ['Scrap metal!', 'Another one for the pile.', 'Was that your best?', 'Sold for parts!', 'I’ll take the hubcaps, thanks.', 'Your car is now modern art.'],
+  win: ['Too easy.', 'Better luck next round!', 'Did you try turning it off and on again?', 'GG. Mostly G.', 'I’ll send you the repair bill.'],
+  lose: ['I let you win that one.', 'My cat was driving.', 'Rematch. Now.', 'The sun was in my eyes. Indoors.', 'Lag. Definitely lag.', 'I was testing your armour. For science.', 'I’m telling my mum.']
 };
 const BOT_NAMES = Object.fromEntries(BOTS.map(b => [b.name, b]));
 /** A bot (solo or menu demo) says something; at most one line every few seconds per car. */
@@ -17486,6 +17692,7 @@ function drawVehicle(c, v, alpha) {
         }
         drawModule(c, I.id, layer === 't' ? S * 0.84 : S, rotA, team, {
           paint: v.paint,
+          ...(I.id === 'cockpit' ? cockpitFace(v) : null),
           turret: I.turret,
           charge: I.charge / ((I.W && I.W.charge) || 1),heat:I.heat||0,cargo:v.cargo||0,
           fire: (I.m.booster && I.bon > 0) || (I.m.jump && v.z > 0 && v.vz > 0),
@@ -19921,6 +20128,10 @@ const SFX = {
     [523, 659, 784, 1047].forEach((f, i) => tone('square', f, f, i === 3 ? 0.5 : 0.14, 0.1 * v, i * 0.12));
   },
   tick: v => tone('square', 1800, 1500, 0.025, 0.035 * v),
+  creak: v => { noise(0.25, 0.08 * v, 300, 900, 6); tone('sawtooth', 140, 120, 0.22, 0.03 * v); },
+  shatter: v => { noise(0.4, 0.3 * v, 3000, 9000, 1.2); noise(0.2, 0.2 * v, 1200, 4000, 2, 0.05); [2400, 3100, 2700].forEach((f, i) => tone('triangle', f, f * 0.9, 0.12, 0.05 * v, 0.03 + i * 0.05)); },
+  clank: v => { noise(0.18, 0.22 * v, 500, 2500, 3); tone('triangle', 180, 90, 0.25, 0.14 * v); tone('square', 620, 600, 0.06, 0.04 * v, 0.01); },
+  beep: v => { tone('sine', 1320, 1320, 0.06, 0.06 * v); tone('sine', 1760, 1760, 0.06, 0.05 * v, 0.07); },
   drumroll: v => {
     for (let i = 0; i < 14; i++) noise(0.06, 0.05 * v * (0.5 + i / 14), 300 + i * 30, 150, 1, i * 0.11);
   },
@@ -21219,7 +21430,8 @@ function randomLook(diff = 1) {
     livery: pickFrom('livery', n),
     trail: pickFrom('trail', n - 1),
     wreck: pickFrom('wreck', n - 2),
-    title: pickFrom('title', n)
+    title: pickFrom('title', n),
+    badge: `${pick(Object.keys(BADGE_SHAPES))}.${pick(Object.keys(BADGE_SYMBOLS))}.${Math.floor(Math.random() * BADGE_COLS.length)}`
   };
 }
 /** Only accept cosmetic ids we know (data from the other player). */
@@ -21227,6 +21439,7 @@ function sanitizeLook(l) {
   const out = { ...DEFAULT_STYLE };
   if (l && typeof l === 'object')
     for (const [slot] of STYLE_SLOTS) if (COSMETICS[slot].some(i => i.id === l[slot])) out[slot] = l[slot];
+  if (l && l.badge) out.badge = validBadge(l.badge);
   return out;
 }
 
@@ -21247,8 +21460,7 @@ function recTick(dt) {
 
 let RP = null; // the replay being played
 /** mode 'kill': the seconds around the last wreck in slow motion. mode 'full': the whole round. */
-function startReplay(mode) {
-  const R = G.lastReplay;
+function startReplay(mode, R = G.lastReplay) {
   if (!R || !R.tape.length || !R.cfg) return;
   let from = 0,
     to = R.tape.length - 1,
@@ -21456,9 +21668,10 @@ function carsFromCfg(cfg) {
 }
 /** A full battle config: theme, special round, arena layout and both cars. Built by the solo player or the host. */
 function makeCfg(opp) {
-  const ti = pickTheme(),
+  const ti = G.nextTheme != null ? G.nextTheme : pickTheme(),
     special = specialOf(G.round),
     f = applySpecialField(genArena('battle', THEMES[ti]), special);
+  G.nextTheme = null;
   return { round: G.round,format:G.format,awards:formatAwards(), theme: ti, special, field: serializeField(f), cars: [myCarCfg(), opp] };
 }
 
@@ -21528,6 +21741,10 @@ function resetProfile() {
     sched: null,
     maxDeficit: 0,
     lastReplay: null,
+    bestReplay: null,
+    fun: null,
+    lastOppDesign: null,
+    nextTheme: null,
     srcTotals: {}
   });
   draftRerolls = 0;
@@ -21572,6 +21789,7 @@ function startMatch(mode, sched,format=chosenFormat,rounds) {
     G.oppName = G.bot.name;
     G.oppPaint = G.bot.paint === G.paint ? PAINTS.find(p => p !== G.paint) : G.bot.paint;
     G.oppLook = randomLook(G.diff);
+    G.oppBadge = G.oppLook.badge;
   }
   if (mode === 'solo' || mode === 'mp') G.sched = sched || makeSchedule();if(G.format==='finalehill')G.sched[ROUNDS-1]='hill';
   if (mode === 'sandbox') {
@@ -21609,6 +21827,80 @@ function openBuild() {
   refreshUI();
   updateHUD();
   showTip(specialOf(G.round) ? 'special' : 'build');
+  if (G.nextTheme == null && G.mode !== 'sandbox' && !(G.mode === 'mp' && Net.role === 'client')) G.nextTheme = pickTheme();
+  intelUI(true);
+}
+/* ---------- garage intel: the arena through the window, and the rival's shadow ---------- */
+function oppHints(d) {
+  const es = [...d.base.values(), ...d.top.values()], ms = es.map(e => MOD[e.id]).filter(Boolean);
+  const mass = ms.reduce((a, m) => a + (m.mass || 0), 0), n = t => ms.filter(m => m.tags.includes(t)).length;
+  const xs = [];for (const e of d.base.values()) for (const [x] of footprint(e.id, e.rot, e.x, e.y)) xs.push(x);
+  const width = xs.length ? Math.max(...xs) - Math.min(...xs) + 1 : 0;
+  const H = [
+    [mass > 45, 3, '🏋 Heavy vehicle'], [mass < 18, 2, '🪶 Lightweight'], [n('fire') >= 2, 3, '🔥 Lots of fire'],
+    [ms.filter(m => m.wpn).length >= 4, 3, '🔫 Bristling with guns'], [ms.filter(m => m.mel).length >= 2, 3, '🗡 Spiky nose'],
+    [n('expl') >= 1, 2, '💥 Explosives on board'], [width >= 7, 2, '↔ Very wide body'], [ms.filter(m => m.drive).length >= 6, 2, '💨 Built for speed'],
+    [n('cold') >= 2, 2, '❄ Cold hands'], [ms.some(m => m.odd), 2, '❓ Something weird…'], [ms.filter(m => m.tags.includes('def')).length >= 6, 2, '🛡 Armoured up']
+  ].filter(h => h[0]).sort((a, b) => b[1] - a[1]).map(h => h[2]);
+  return H.length ? H.slice(0, 2) : ['🤷 Hard to read'];
+}
+function intelUI(force) {
+  const box = $('#rivalIntel');
+  if (!box) return;
+  const solo = G.mode === 'solo', mp = G.mode === 'mp';
+  if (!solo && !mp) { $('#bayIntel').hidden = true; return; }
+  if (solo && G.bot && G.botRound !== G.round) try { prepareBot(); } catch (e) {}
+  $('#bayIntel').hidden = false;
+  const packed = solo ? (G.botDesign ? packDesign(G.botDesign) : null) : (Net.oppReady && Net.oppReady.design) || G.lastOppDesign || null;
+  const k = G.round + ':' + (packed ? JSON.stringify(packed).length : 0) + ':' + G.oppName;
+  if (!force && box.dataset.k === k) return;
+  box.dataset.k = k;
+  let img = '', hints = ['No intel yet'];
+  if (packed) try { const d = unpackDesign(packed); img = `<img class="shadow" alt="" src="${designURL(d, 90, '#000')}">`; hints = oppHints(d); } catch (e) {}
+  box.innerHTML = `<span class="ih">${badgeHTML(G.oppBadge, 16)} ${esc(G.oppName || 'Rival')}</span>${img}<ul>${hints.map(h => `<li>${esc(h)}</li>`).join('')}</ul>`;
+}
+const winFx = { parts: [], t: 0 };
+function drawWindow(dt) {
+  const cv = $('#winCv');
+  if (!cv || !cv.getContext || cv.offsetParent === null) return;
+  const c = cv.getContext('2d'), W = cv.width, H = cv.height;
+  const th = THEMES[G.nextTheme != null ? G.nextTheme : 0], sp = specialOf(G.round), S = sp && SPECIALS[sp];
+  const known = G.nextTheme != null;
+  const lbl = $('#winLbl'), txt = (known ? th.name : 'Arena unknown') + (S ? ' · ' + S.name : '');
+  if (lbl && lbl.textContent !== txt) lbl.textContent = txt;
+  winFx.t += dt;
+  const g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, known ? th.ground[0] : '#2a3344');
+  g.addColorStop(1, known ? `rgb(${th.ground[1]})` : '#141b28');
+  c.fillStyle = g;
+  c.fillRect(0, 0, W, H);
+  // moving obstacles: a couple of junk blocks sliding past
+  for (let i = 0; i < 3; i++) {
+    const x = ((winFx.t * (14 + i * 9) + i * 70) % (W + 40)) - 20, y = 50 + i * 9;
+    c.fillStyle = `rgba(${known ? th.ground[2] : '120,130,150'},.55)`;
+    c.fillRect(x, y, 16 + i * 4, 8);
+  }
+  const id = known ? th.id : 'fog', P = winFx.parts;
+  const spawn = { ice: 'snow', beach: 'sand', junkyard: 'dust', backyard: 'leaf', construction: 'spark', carpark: 'rain', market: 'dust', fog: 'dust' }[id];
+  const rate = spawn === 'rain' ? 60 : spawn === 'snow' ? 30 : 14;
+  if (SETTINGS.motion !== false) for (let i = 0; i < rate * dt; i++) P.push({ x: Math.random() * W * 1.2, y: -4, vx: spawn === 'sand' ? -60 : spawn === 'rain' ? -30 : rnd(-10, 10), vy: spawn === 'rain' ? 220 : spawn === 'snow' ? 26 : spawn === 'spark' ? rnd(-40, 40) : 30, life: 4, k: spawn });
+  if (spawn === 'spark' && Math.random() < dt * 2) for (let i = 0; i < 6; i++) P.push({ x: rnd(20, W - 20), y: rnd(20, H - 10), vx: rnd(-60, 60), vy: rnd(-60, 10), life: 0.5, k: 'spark' });
+  for (let i = P.length - 1; i >= 0; i--) {
+    const q = P[i];
+    q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; if (q.k === 'spark') q.vy += 120 * dt;
+    if (q.life <= 0 || q.y > H + 4) { P.splice(i, 1); continue; }
+    c.fillStyle = { snow: '#fff', sand: 'rgba(250,230,170,.8)', dust: 'rgba(200,190,170,.35)', leaf: '#8fbf4f', spark: '#ffd257', rain: 'rgba(170,200,255,.7)' }[q.k];
+    if (q.k === 'rain') c.fillRect(q.x, q.y, 1, 6); else c.fillRect(q.x, q.y, q.k === 'snow' ? 2 : 2, 2);
+  }
+  if (P.length > 300) P.splice(0, P.length - 300);
+  if (sp === 'night') { c.fillStyle = 'rgba(5,8,20,.72)'; c.fillRect(0, 0, W, H); const r = c.createRadialGradient(W * 0.6, H * 0.6, 4, W * 0.6, H * 0.6, 40); r.addColorStop(0, 'rgba(255,240,180,.35)'); r.addColorStop(1, 'transparent'); c.fillStyle = r; c.fillRect(0, 0, W, H); }
+  if (sp === 'lowgrav') { c.fillStyle = 'rgba(127,224,255,.12)'; c.fillRect(0, 0, W, H); }
+  if (S) { c.font = '700 22px "Chakra Petch", sans-serif'; c.textAlign = 'right'; c.textBaseline = 'top'; c.fillStyle = S.col; c.globalAlpha = 0.6 + Math.sin(winFx.t * 3) * 0.3; c.fillText(S.icon, W - 8, 6); c.globalAlpha = 1; }
+  // window frame + blinds
+  c.fillStyle = 'rgba(10,16,32,.28)';
+  for (let y = 6; y < H; y += 18) c.fillRect(0, y, W, 1.5);
+  c.strokeStyle = '#3a4a66'; c.lineWidth = 4; c.strokeRect(2, 2, W - 4, H - 4);
+  c.beginPath(); c.moveTo(W / 2, 0); c.lineTo(W / 2, H); c.lineWidth = 3; c.stroke();
 }
 
 /* ---------- bot rival ---------- */
@@ -21789,6 +22081,7 @@ function showVS(cfg, done) {
 }
 function toBattle(cfg) {
   G.scars = null; // a fresh round: the repair bay has done its job
+  try { G.lastOppDesign = cfg.cars[1 - cfg.me].design; G.oppBadge = validBadge(cfg.cars[1 - cfg.me].look && cfg.cars[1 - cfg.me].look.badge); } catch (e) {}
   if(cfg.format)G.format=cfg.format;
   G.phase = 'battle';
   G.meReady = false;
@@ -21932,6 +22225,12 @@ function finishBattle() {
     S = special && SPECIALS[special];
   G.lastReplay = { cfg: B.cfg, tape: B.tape, me };
   const hadWreck = B.tape.some(s => s.q === 'death');
+  G.fun = G.fun || { lost: [0, 0], clutch: [1, 1], wins: [0, 0] };
+  G.fun.lost[0] += (st[me].lost || []).length;
+  G.fun.lost[1] += (st[op].lost || []).length;
+  if (iWon) { G.fun.clutch[0] = Math.min(G.fun.clutch[0], st[me].integ); G.fun.wins[0]++; }
+  else if (!draw) { G.fun.clutch[1] = Math.min(G.fun.clutch[1], st[op].integ); G.fun.wins[1]++; }
+  if (iWon && hadWreck) G.bestReplay = G.lastReplay;
   if (!draw) {
     G.score[iWon?0:1]+=pts;
     if(G.format==='lives')G.lives[iWon?1:0]=Math.max(0,G.lives[iWon?1:0]-2-G.round);
@@ -22068,7 +22367,9 @@ function showFinal() {
       .join(' + ') || 'Scrap';
   $('#resultCard').innerHTML =
     `<span class="label">${esc(MATCH_FORMATS[G.format].name)} · Match over${tie ? ' · tie broken on damage dealt' : ''}</span><h2 style="color:${won ? '#5cc38f' : '#e2504a'}">${won ? 'Victory' : 'Defeat'}</h2>
+    ${podiumHTML(won)}
     <div class="score" style="justify-content:center;font-size:34px"><span class="me">${G.format==='lives'?'♥ '+G.lives[0]:s[0]}</span>–<span class="op">${G.format==='lives'?G.lives[1]+' ♥':s[1]}</span></div>
+    ${funAwardsHTML()}
     <p>${G.format==='lives'?`Lives remaining (♥): ${G.lives[0]}–${G.lives[1]}, rounds won ${s[0]}–${s[1]}. `:''}${esc(G.name)} vs ${esc(G.oppName)}. You won ${tot.w} of ${G.log.length} rounds with a ${esc(br)} build, dealt ${tot.d.toLocaleString()} damage and took ${tot.t.toLocaleString()}.</p>
     <div class="ledger">${G.log.map(r => `<div><span>Round ${r.round}${r.special ? ' · ' + esc(SPECIALS[r.special].name) : ''}</span><span>${G.format==='lives'?(r.win ? `won · rival −${2 + r.round} ♥` : r.draw ? 'draw' : `lost · −${2 + r.round} ♥`):(r.win ? 'won +' + r.pts : r.draw ? 'draw' : 'lost')} · ${r.dealt} dmg</span></div>`).join('')}</div>
     ${(() => {
@@ -22078,11 +22379,15 @@ function showFinal() {
         : '';
     })()}
     ${progressHtml(prog)}
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : ''}<button class="btn ghost" id="btnStyle2">Garage Style</button><button class="btn ghost" id="btnHome">Main menu</button></div>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : ''}<button class="btn ghost" id="btnStyle2">Garage Style</button><button class="btn ghost" id="btnHome">Main menu</button></div>`;
   $('#ovResult').hidden = false;
   sfx(won ? 'win' : 'lose');
   const a = $('#btnAgain');
   if (a) a.addEventListener('click', () => startMatch('solo',null,G.format));
+  const bm = $('#btnBest');
+  if (bm) bm.addEventListener('click', () => startReplay('kill', G.bestReplay));
+  if (won && SETTINGS.motion !== false) setTimeout(() => { const r = $('#resultCard').getBoundingClientRect && $('#resultCard').getBoundingClientRect(); if (r) { GFX.start($('#resFx')); GFX.confetti(r.left + r.width / 2, r.top + 80, 120); } }, 200);
+  Announcer.say(won ? 'Victory' : 'Defeat');
   $('#btnStyle2').addEventListener('click', () => openStyle(() => ($('#ovResult').hidden = false)));
   $('#btnHome').addEventListener('click', () => {
     if (G.mode === 'mp') Net.close();
@@ -22090,6 +22395,48 @@ function showFinal() {
   });
 }
 
+/** Both cars side by side on a podium, winner on the high step. */
+function finalCars() {
+  const R = G.lastReplay;
+  if (!R || !R.cfg || !R.cfg.cars) return null;
+  return R.cfg.cars.map((c, i) => ({ c, d: unpackDesign(c.design), mine: i === R.me }));
+}
+function podiumHTML(won) {
+  const cars = finalCars();
+  if (!cars) return '';
+  const me = cars.find(x => x.mine), op = cars.find(x => !x.mine);
+  const card = (x, first) => {
+    let src = '';
+    try { src = designURL(x.d, 160, x.c.paint, x.c.look && x.c.look.livery); } catch (e) {}
+    return `<div class="pd ${first ? 'first' : 'second'}">${badgeHTML(x.mine ? G.style.badge : x.c.look && x.c.look.badge, 26)}<img alt="" src="${src}"><b>${esc(x.c.name || (x.mine ? G.name : G.oppName))}</b><span class="step">${first ? 1 : 2}</span></div>`;
+  };
+  return `<canvas class="gfx" id="resFx"></canvas><div class="podium">${won ? card(op, false) + card(me, true) : card(me, false) + card(op, true)}</div>`;
+}
+/** Playful end-of-match titles; the loser can earn one too. */
+function funAwards() {
+  const cars = finalCars(), F = G.fun || { lost: [0, 0], clutch: [1, 1], wins: [0, 0] }, out = [];
+  const names = [G.name, G.oppName];
+  const stat = d => {
+    const xs = [], es = [...d.base.values(), ...d.top.values()];
+    for (const e of d.base.values()) for (const [x] of footprint(e.id, e.rot, e.x, e.y)) xs.push(x);
+    return { w: xs.length ? Math.max(...xs) - Math.min(...xs) + 1 : 0, mass: es.reduce((a, e) => a + (MOD[e.id] ? MOD[e.id].mass : 0), 0), parts: es.length };
+  };
+  const S = cars ? [stat(cars.find(x => x.mine).d), stat(cars.find(x => !x.mine).d)] : null;
+  const add = (who, icon, title, why) => out.push({ who, icon, title, why });
+  if (S && S[0].w !== S[1].w) { const w = S[0].w > S[1].w ? 0 : 1; add(w, '↔', 'Widest Ride', `${S[w].w} cells wide. Needs two parking spots.`); }
+  if (F.clutch[0] <= 0.05 || F.clutch[1] <= 0.05) { const w = F.clutch[0] <= F.clutch[1] ? 0 : 1; add(w, '🩹', 'Survived on 1 HP', 'Won a round held together by hope.'); }
+  if (F.lost[0] !== F.lost[1]) { const w = F.lost[0] > F.lost[1] ? 0 : 1; add(w, '🔩', 'Scrap Donor', `Lost ${F.lost[w]} parts. The arena thanks you.`); }
+  if (S && Math.abs(S[0].mass - S[1].mass) > 3) { const w = S[0].mass > S[1].mass ? 0 : 1; add(w, '🐘', 'Absolute Unit', `${Math.round(S[w].mass)} tonnes of pure stubbornness.`); }
+  const dealt = [G.log.reduce((a, r) => a + r.dealt, 0), G.log.reduce((a, r) => a + r.taken, 0)];
+  if (dealt[0] !== dealt[1]) { const w = dealt[0] > dealt[1] ? 0 : 1; add(w, '🔨', 'Demolition Crew', `${dealt[w].toLocaleString()} damage dealt.`); }
+  out.splice(4);
+  for (const w of [0, 1]) if (!out.some(a => a.who === w)) add(w, '🏅', 'Participation Trophy', 'Shiny, plastic and all yours.');
+  return out.map(a => ({ ...a, name: names[a.who] }));
+}
+function funAwardsHTML() {
+  const A = funAwards();
+  return A.length ? `<div class="funawards">${A.map(a => `<div class="fa"><i>${a.icon}</i><b>${esc(a.title)}</b><span>${esc(a.name)} · ${esc(a.why)}</span></div>`).join('')}</div>` : '';
+}
 /** Biggest damage source from a {source: damage} map, as [display name, damage]. */
 function topSource(src) {
   const best = Object.entries(src || {}).sort((a, b) => b[1] - a[1])[0];
@@ -22788,7 +23135,7 @@ requestAnimationFrame(loop);
 
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
-  window.__SD = { blueprintCode, parseBlueprintCode, blueprintNeeds, applyBlueprint, spinWheel, WHEEL_SEGS, GFX, Account, openAccount, showMenu, canPause, togglePause, CATS,blockedFor,reviewHTML,openGarageReport,closeGarageReport,footprint,occupancy,instCenter,cellCount,shapeBounds,shapeLabel,topAt,canPlaceTop,act,returnTopsOn,planCapacity,planTakeScrap,planSpill,planTick,planActivate,planWeapon,planHurt,simulate,weapons,hurtInst,stepCarHazards,mkObj,setupSpecial,stepSpecial,specialTimeout,finishBattle,formatAwards,MATCH_FORMATS,POWERUPS,SPECIALS,drawBP,drawArena, view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
+  window.__SD = { validBadge, parseBadge, funAwards, oppHints, CRATE_THEMES, Announcer, Lobby, intelUI, showFinal, unpackDesign, packDesign, blueprintCode, parseBlueprintCode, blueprintNeeds, applyBlueprint, spinWheel, WHEEL_SEGS, GFX, Account, openAccount, showMenu, canPause, togglePause, CATS,blockedFor,reviewHTML,openGarageReport,closeGarageReport,footprint,occupancy,instCenter,cellCount,shapeBounds,shapeLabel,topAt,canPlaceTop,act,returnTopsOn,planCapacity,planTakeScrap,planSpill,planTick,planActivate,planWeapon,planHurt,simulate,weapons,hurtInst,stepCarHazards,mkObj,setupSpecial,stepSpecial,specialTimeout,finishBattle,formatAwards,MATCH_FORMATS,POWERUPS,SPECIALS,drawBP,drawArena, view,cam,mouse,toWorld,worldToScreen,screenVectorToWorld,moveStick,sizeArena,updateCam,touchAimAssist,equippedTouchActions,touchActionCooldown,setMobileTab,enterWait,syncPresentation,clearArenaInput, unlock, makeCfg, myCarCfg, toBattle, G, MODS, MOD, getB: () => B, killInst, Net, endRound, startReplay, botSay, makeGround, THEMES, autoPlace, autoBuild, blockedList, defaultCar, starterKit, resetProfile, startMatch, openBuild, takeOption, draftSupportCount, openCrate, readLocal, keys, edges, applyInput, roundPoints, pointsRemaining, weakLinks, catalogMatches, catalogFilters, snapshot, applySnap, BattleMusic, SETTINGS, makeCar, designConnected, refreshUI, replayStep, setB: b=>B=b, getRP:()=>RP };
 
 })();
 </script>
