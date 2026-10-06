@@ -1,0 +1,113 @@
+/* ---------- v7: layout fixes ---------- */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+#hud {
+  flex-wrap: nowrap;
+  overflow: hidden;
+  min-width: 0;
+}
+#hud > * {
+  flex-shrink: 0;
+}
+#hud .hstat {
+  min-width: 0;
+}
+#tScoreLbl {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 1540px) {
+  .hide-md {
+    display: none !important;
+  }
+}
+@media (max-width: 1280px) {
+  .hide-sm {
+    display: none !important;
+  }
+}
+/* Top bar never pushes Codex/Menu off screen: the long labels shrink first. */
+#hud .stake,
+#hud .format-status {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#hud .hbtn {
+  flex-shrink: 0;
+}
+@media (max-width: 1180px) {
+  #hud .brand {
+    font-size: 0;
+    gap: 0;
+  }
+  #hud .format-status {
+    display: none;
+  }
+}
+@media (max-width: 920px) {
+  #app {
+    padding-inline: 8px;
+    padding-block: 6px;
+    gap: 6px;
+  }
+  #hud {
+    gap: 10px;
+    padding: 6px 8px;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  #hud .brand {
+    font-size: 0;
+    gap: 0;
+  }
+  #hud .label {
+    display: none;
+  }
+  #hud .segs i {
+    width: 8px;
+  }
+  #hud .pill {
+    display: none;
+  }
+  #btnCodex {
+    display: none;
+  }
+  #bay {
+    height: 62vh;
+    min-height: 360px;
+  }
+  .bin {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  #arena {
+    height: calc(100vh - 70px);
+    height: calc(100dvh - 70px);
+  }
+  .overlay {
+    padding: 8px;
+    align-items: flex-start;
+  }
+}
+@media (max-width: 520px) {
+  #hud .grow {
+    display: none;
+  }
+  .toolbar .kbd,
+  .tool .kbd {
+    display: none;
+  }
+}

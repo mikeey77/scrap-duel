@@ -1,6 +1,8 @@
-# The game is one static page in site/. The only server code is the account API
-# (netlify/functions/account.mjs), which keeps nickname + PIN profiles in Netlify Blobs.
+# The game source lives in src/ (css + js split by feature); `node build.mjs` bundles it
+# into the single static page site/index.html. Server code: the account API and the lobby
+# (players online + public rooms), both in netlify/functions and stored in Netlify Blobs.
 [build]
+  command = "node build.mjs"
   publish = "site"
   functions = "netlify/functions"
 

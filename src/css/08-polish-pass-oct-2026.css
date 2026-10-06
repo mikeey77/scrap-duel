@@ -1,0 +1,216 @@
+/* ---------- polish pass (Oct 2026) ---------- */
+/* The live menu sits over the demo battle: hide the match HUD and arena buttons behind it. */
+body:has(#ovMenu.live:not([hidden])) #hud,
+body:has(#ovMenu.live:not([hidden])) .arena-tools,
+body:has(#ovIntro:not([hidden])) .arena-tools {
+  visibility: hidden;
+}
+/* Bay: keep the grid clear of the layer buttons (top) and the toolbar + hint (bottom). */
+#bayScroll {
+  bottom: 0;
+  padding-top: 40px;
+  /* toolbar (12px from the bottom) + the hint line above it */
+  padding-bottom: calc(var(--tb-h, 54px) + 52px);
+}
+#bayHint {
+  bottom: calc(var(--tb-h, 54px) + 20px);
+}
+@container bay (max-width: 780px) {
+  .toolbar button {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  .toolbar .kbd {
+    display: none;
+  }
+}
+#bay {
+  container: bay / inline-size;
+}
+/* Pause button only matters in the arena. */
+#btnPause {
+  display: none;
+}
+body.in-arena #btnPause {
+  display: inline-flex;
+  letter-spacing: -2px;
+}
+/* Phones in battle: no Forfeit or view buttons under your thumbs; both live in the pause menu. */
+body.touch-enabled.arena-battle .arena-tools,
+body.touch-enabled.arena-battle #bEnd {
+  display: none !important;
+}
+/* Phones in the waiting arena: Start/Back sit under the ready card, clear of the thumb buttons. */
+@media (max-width: 920px) {
+  body.in-arena.touch-enabled:not(.arena-battle) .abtns {
+    top: 168px;
+    bottom: auto;
+    left: 10px;
+    right: 10px;
+  }
+}
+@media (max-width: 920px) and (orientation: landscape) {
+  body.in-arena.touch-enabled:not(.arena-battle) .abtns {
+    top: 58px;
+    left: 160px;
+    right: 160px;
+  }
+}
+/* Phones in the arena: one compact HUD row. */
+@media (max-width: 920px) {
+  body.in-arena #hud {
+    flex-wrap: nowrap;
+  }
+  body.in-arena #hud .hbtn {
+    padding: 6px 10px;
+    min-height: 34px;
+  }
+  body.in-arena #hud .format-status {
+    display: none;
+  }
+  body.in-arena #hud .pill {
+    max-width: 104px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+/* The menu's live ticker belongs to the menu: hide it under codex, settings and style screens. */
+body:has(#ovCodex:not([hidden])) #demoFeed,
+body:has(#ovSettings:not([hidden])) #demoFeed,
+body:has(#ovStyle:not([hidden])) #demoFeed,
+body:has(#ovLobby:not([hidden])) #demoFeed {
+  display: none;
+}
+/* Landscape phones: the build actions become one slim row so the bay stays visible. */
+@media (max-width: 920px) and (orientation: landscape) {
+  #build > .panel .pfoot {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    padding: 5px !important;
+    gap: 5px !important;
+  }
+  #build > .panel .pfoot .autorow {
+    display: contents;
+  }
+  #build > .panel .pfoot .btn {
+    padding: 6px 4px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+  #app {
+    padding-bottom: calc(52px + var(--host-safe) + env(safe-area-inset-bottom)) !important;
+  }
+  .mobile-workshop-nav {
+    padding: 4px;
+  }
+  .mobile-workshop-nav button {
+    min-height: 32px;
+  }
+  #bay {
+    height: calc(100dvh - 178px - var(--host-safe)) !important;
+    min-height: 180px !important;
+  }
+  #bayHint {
+    display: none;
+  }
+  #bay .layer-controls {
+    top: 6px;
+    left: 160px;
+    right: 190px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  #bayScroll {
+    top: 34px;
+    padding-top: 6px;
+    padding-bottom: calc(var(--tb-h, 44px) + 12px);
+  }
+  #bay .toolbar {
+    bottom: 6px;
+  }
+}
+/* =====================================================================
+   HOLO-WORKSHOP THEME (Oct 2026)
+   A scrapyard seen through a workshop HUD: blue-black glass panels with
+   chamfered corners and cyan corner brackets; amber is kept for the one
+   action that matters on each screen. Layout rules above stay untouched;
+   this layer only changes surfaces, type and colour.
+   ===================================================================== */
+:root {
+  --bg: #0a1020;
+  --bg-2: #070c18;
+  --panel: #111c33;
+  --panel-2: #172642;
+  --panel-3: #1e3052;
+  --line: #263b60;
+  --line-2: #34507e;
+  --fg: #e6f1ff;
+  --muted: #8da3c2;
+  --holo: #5be7ff;
+  --holo-dim: rgba(91, 231, 255, 0.28);
+  --hazard: #ffb423;
+  --hazard-ink: #1a1100;
+  --danger: #ff5c7a;
+  --ok: #3fe0a0;
+  --info: #5be7ff;
+  --coin: #ffd257;
+  --blueprint: #0b1a33;
+  --bp-line: rgba(91, 231, 255, 0.08);
+  --bp-ink: #a8e9ff;
+  --f-display: 'Chakra Petch', 'Barlow Semi Condensed', 'Arial Narrow', sans-serif;
+  --cut: 12px;
+  --cut-s: 7px;
+  --chamfer: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
+  --chamfer-s: polygon(
+    var(--cut-s) 0,
+    100% 0,
+    100% calc(100% - var(--cut-s)),
+    calc(100% - var(--cut-s)) 100%,
+    0 100%,
+    0 var(--cut-s)
+  );
+  /* two corner brackets (top right, bottom left), drawn as backgrounds so no pseudo-elements are needed */
+  --brackets:
+    linear-gradient(var(--holo), var(--holo)) top right / 16px 2px no-repeat,
+    linear-gradient(var(--holo), var(--holo)) top right / 2px 16px no-repeat,
+    linear-gradient(var(--holo), var(--holo)) bottom left / 16px 2px no-repeat,
+    linear-gradient(var(--holo), var(--holo)) bottom left / 2px 16px no-repeat;
+}
+body {
+  background:
+    radial-gradient(1200px 600px at 78% -10%, rgba(91, 231, 255, 0.09), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(255, 180, 35, 0.05), transparent 60%),
+    linear-gradient(rgba(91, 231, 255, 0.035) 1px, transparent 1px) 0 0 / 100% 32px,
+    var(--bg);
+  background-attachment: fixed;
+}
+::selection {
+  background: rgba(91, 231, 255, 0.35);
+}
+:focus-visible {
+  outline: 2px solid var(--holo);
+  outline-offset: 2px;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.label {
+  font-family: var(--f-display);
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7fb8d6;
+}

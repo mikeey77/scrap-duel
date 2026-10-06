@@ -54,9 +54,20 @@ In the garage: click/drag to place, right-click to remove, R changes the next pa
 
 Players can stay a guest or sign in with a nickname and a 4–6 digit PIN. Signed-in players keep their XP, Garage Style, blueprints, favorites and settings on the server and get them back on any device. The API is one Netlify Function (`netlify/functions/account.mjs`, logic in `netlify/lib/account-core.mjs`) storing profiles in Netlify Blobs. PINs are salted and hashed with PBKDF2; five wrong PINs lock sign-in for ten minutes.
 
+## Code layout
+
+The source is split by feature in `src/`:
+
+- `src/index.html` — page markup with `<!-- @styles -->` / `<!-- @scripts -->` slots
+- `src/css/` — stylesheets, in load order
+- `src/js/` — game code by area (`data/`, `garage/`, `game/`, `render/`, `audio/`, `net/`, `ui/`, `ai/`, `core/`)
+- `src/manifest.json` — the order the files are bundled in (all scripts share one scope)
+
+`npm run build` (or `node build.mjs`) bundles everything into the single page `site/index.html`, which is what Netlify serves and what the tests load. `npm run format` runs Prettier. Edit files in `src/`, never `site/index.html` directly.
+
 ## Run locally
 
-The game is one static page in `site/`. Serve that folder, for example:
+Build, then serve `site/`, for example:
 
 ```sh
 python -m http.server 8765 --directory site
@@ -76,4 +87,4 @@ The suite checks randomized starters, support grants, functional placement, undo
 
 ## Deployment
 
-Netlify publishes this folder directly using `netlify.toml`. The HTML entry point revalidates on each visit so multiplayer players receive the same protocol version after an update.
+Netlify runs `node build.mjs` and publishes `site/` using `netlify.toml`. The HTML entry point revalidates on each visit so multiplayer players receive the same protocol version after an update.

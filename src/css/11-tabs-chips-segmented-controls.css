@@ -1,0 +1,62 @@
+/* ---------- tabs, chips, segmented controls ---------- */
+.tabs,
+.seg {
+  background: rgba(5, 10, 20, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  padding: 3px;
+  display: inline-flex;
+  gap: 2px;
+}
+.tabs button,
+.seg button {
+  border-radius: 0;
+  font-family: var(--f-display);
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+}
+.tabs button[aria-pressed='true'],
+.seg button[aria-pressed='true'] {
+  background: linear-gradient(180deg, rgba(91, 231, 255, 0.25), rgba(91, 231, 255, 0.1));
+  color: #eafaff;
+  box-shadow: inset 0 -2px 0 var(--holo);
+}
+.chip {
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  border-color: var(--line);
+  font-family: var(--f-display);
+  font-weight: 600;
+}
+.chip[aria-pressed='true'] {
+  background: rgba(91, 231, 255, 0.16);
+  color: #eafaff;
+  border-color: var(--holo);
+}
+input,
+select {
+  font-family: var(--f-body);
+}
+.catalog-filters input[type='search'],
+.catalog-filters select,
+.mname,
+.codein,
+#shopCategory,
+.format-picker select,
+.ac-form input {
+  background: rgba(5, 10, 20, 0.7) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  color: var(--fg) !important;
+}
+.catalog-filters input[type='search']:focus,
+.mname:focus,
+.codein:focus,
+.ac-form input:focus {
+  border-color: var(--holo) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(91, 231, 255, 0.15);
+}

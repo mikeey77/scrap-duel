@@ -1,0 +1,70 @@
+/* ---------- account ---------- */
+.acct-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 10px;
+  margin-bottom: 4px;
+  font-family: var(--f-display);
+  font-size: 13px;
+  color: #cfeeff;
+  background: rgba(91, 231, 255, 0.07);
+  border: 1px solid var(--holo-dim);
+  clip-path: var(--chamfer-s);
+  cursor: pointer;
+}
+.acct-chip:hover {
+  border-color: var(--holo);
+}
+.acct-chip b {
+  color: var(--fg);
+}
+.acct-chip > b:last-child {
+  color: var(--hazard);
+  margin-left: 4px;
+}
+.ac-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 8px var(--ok);
+}
+.ac-dot.off {
+  background: var(--muted);
+  box-shadow: none;
+}
+.ac-dot.warn {
+  background: var(--hazard);
+  box-shadow: 0 0 8px var(--hazard);
+}
+.account-card {
+  max-width: 420px !important;
+}
+.ac-form {
+  display: grid;
+  gap: 12px;
+}
+.ac-form label {
+  display: grid;
+  gap: 5px;
+  font-family: var(--f-display);
+  font-size: 13px;
+  color: #9fd2ea;
+}
+.ac-form input {
+  padding: 11px 12px;
+  font-size: 17px;
+}
+.ac-form input[type='password'] {
+  letter-spacing: 0.4em;
+  font-family: var(--f-mono);
+}
+.ac-msg {
+  margin: 0;
+  color: var(--danger);
+  font-size: 14px;
+}
+.ac-tabs {
+  align-self: flex-start;
+}

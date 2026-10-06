@@ -211,7 +211,7 @@ test('solo aim assist is optional and never affects multiplayer or night visibil
 test('garage tabs and arena presentation leave world coordinates and protocol intact',()=>{
   const {rr,aa}=mobileRuntime();aa.setMobileTab('parts');assert.equal(rr.elements.get('build').dataset.mobileTab,'parts');aa.setMobileTab('bay');assert.equal(rr.elements.get('build').dataset.mobileTab,'bay');
   const before=aa.getB().cars.map(v=>[v.x,v.y,v.a]);aa.syncPresentation();assert.deepEqual(aa.getB().cars.map(v=>[v.x,v.y,v.a]),before);
-  assert(html.includes('NET_PROTOCOL=9'));assert(html.includes('height:100dvh'));assert(html.includes('Subtle touch aim assist (solo only)'));
+  assert(/NET_PROTOCOL\s*=\s*9\b/.test(html));assert(/height:\s*100dvh/.test(html));assert(html.includes('Subtle touch aim assist (solo only)'));
 });
 test('open overlays release held touch input and prevent background fire',()=>{
   const {rr,aa}=mobileRuntime();const b=aa.getB();b.aimJoy={x:1,y:0,m:1};aa.keys.add('Space');

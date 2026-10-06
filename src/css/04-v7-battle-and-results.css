@@ -1,0 +1,113 @@
+/* ---------- v7: battle and results ---------- */
+.vssp {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 10px auto 0;
+  padding: 10px 14px;
+  border: 2px solid var(--sc);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--sc) 14%, rgba(10, 12, 14, 0.8));
+  text-align: left;
+  max-width: 560px;
+  animation: pop 0.5s 0.6s both;
+}
+.vssp b {
+  display: block;
+  color: var(--sc);
+  letter-spacing: 0.06em;
+}
+.vssp span:not(.spi) {
+  font-size: 14px;
+}
+.vs .ttl,
+.style .ttl {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coin);
+}
+.rbtns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.rplabel {
+  font-family: var(--f-display);
+  color: var(--danger);
+  align-self: center;
+  margin-right: 6px;
+}
+#abtns .btn.on {
+  border-color: var(--hazard);
+  color: var(--hazard);
+}
+.pity {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-bottom: 3px solid var(--rc);
+  cursor: pointer;
+  min-width: 0;
+}
+.pick img {
+  width: 44px;
+  height: 44px;
+}
+.pick b {
+  font-size: 13px;
+  text-align: center;
+}
+.pick span {
+  font-size: 11px;
+  color: var(--rc);
+}
+.pick:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.pick.taken {
+  opacity: 1;
+  outline: 2px solid var(--ok);
+}
+.prog {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--bg-2);
+}
+.prow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+.prow b {
+  color: var(--coin);
+}
+.achv,
+.unl {
+  font-size: 13px;
+  animation: fadeup 0.4s both;
+}
+.achv b {
+  color: var(--hazard);
+}
+.achv span {
+  color: var(--muted);
+}
+.unl b {
+  color: var(--ok);
+}

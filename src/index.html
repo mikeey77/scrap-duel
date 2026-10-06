@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Scrap Duel: build a battle car from scrap, draft new parts every round and duel a bot or a friend."
+    />
+    <title>Scrap Duel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+<!-- @styles -->
+</style>
+  </head>
+  <body>
+    <div id="app">
+      <header id="hud">
+        <div class="brand">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 2l2.4 3.2 3.9-.9.5 4 3.6 1.9-1.9 3.5 1.2 3.8-3.9 1-1.4 3.8-3.7-1.6L9 21.6 7.6 17.8l-3.9-1 1.2-3.8L3 9.2l3.6-1.9.5-4 3.9.9z"
+              fill="#f2b705"
+            />
+            <circle cx="12" cy="12" r="3.6" fill="#1b1f23" /></svg
+          >SCRAP DUEL
+        </div>
+        <div class="track">
+          <span class="label" id="tRoundLbl">Round 1 of 10</span>
+          <div class="segs" id="segs"></div>
+        </div>
+        <span id="formatStatus" class="format-status" hidden></span><span class="pill" id="tPhase">Setup</span>
+        <div class="hstat"><span class="label">Coins</span><span class="coin" id="tCoins">0</span></div>
+        <div class="hstat">
+          <span class="label" id="tScoreLbl">Score</span><span class="score" id="tScore"></span>
+        </div>
+        <span class="stake hide-sm" id="tStake"></span>
+        <div class="grow"></div>
+        <div class="hstat hide-md icostat" title="Parts on your car">
+          <svg class="si" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z" opacity=".85"/></svg><span class="v" id="tParts">0</span>
+        </div>
+        <div class="hstat hide-md icostat" title="Modules discovered">
+          <svg class="si" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M3 2h8l2 2v10H3zM5 6h6v1.5H5zM5 9h6v1.5H5z"/></svg><span class="v" id="tFound">0 / 100</span>
+        </div>
+        <button class="hbtn" id="btnCodex">Codex <span class="kbd">K</span></button
+        ><button class="hbtn" id="btnFS" title="Fullscreen (F11)" aria-label="Fullscreen">⛶</button
+        ><button class="hbtn" id="btnPause" title="Pause (Esc)" aria-label="Pause">❚❚</button
+        ><button class="hbtn" id="btnMenu">Menu</button>
+      </header>
+      <main>
+        <button id="reviewBack" class="btn review-return" hidden>Back to round report</button>
+        <section id="build" data-mobile-tab="bay">
+          <nav class="mobile-workshop-nav" aria-label="Mobile workshop">
+            <button data-mobile-tab="parts" aria-pressed="false">Parts &amp; shop</button>
+            <button data-mobile-tab="bay" aria-pressed="true">Build bay</button>
+            <button data-mobile-tab="stats" aria-pressed="false">Car &amp; stats</button>
+          </nav>
+          <aside class="panel" aria-label="Parts bin and shop">
+            <div class="phead">
+              <div class="tabs" role="tablist">
+                <button id="tabBin" aria-pressed="true">Parts bin</button
+                ><button id="tabShop" aria-pressed="false">Shop</button>
+              </div>
+              <span class="label" id="binCount"></span>
+            </div>
+            <div class="pbody" id="leftBody"></div>
+          </aside>
+          <div id="bay">
+            <div id="bayScroll"><canvas id="bp"></canvas></div>
+            <div class="baytag" id="bayTag">BAY</div>
+            <div class="zoom">
+              <button id="zOut" title="Zoom out">−</button><span id="zLbl">100%</span
+              ><button id="zIn" title="Zoom in">+</button
+              ><button id="zFit" title="Fit" style="width: auto; padding: 0 8px; font-size: 11px">FIT</button>
+            </div>
+            <div id="bayHint"></div>
+            <div id="bayIntel" aria-live="polite">
+              <div class="intel win" title="The arena of the next round"><canvas id="winCv" width="190" height="84"></canvas><span id="winLbl">Next arena</span></div>
+              <div class="intel rival" id="rivalIntel"></div>
+            </div>
+            <div class="layer-controls" aria-label="Builder view">
+              <span class="seg" role="group" aria-label="Layers"
+                ><button data-layer="both" aria-pressed="true" title="Show chassis and equipment">All</button
+                ><button data-layer="base" aria-pressed="false" title="Show only the chassis blocks">▦ Chassis</button
+                ><button data-layer="top" aria-pressed="false" title="Show equipment and every free socket">⬢ Sockets</button></span
+              ><button id="btnArcs" aria-pressed="false" title="Show where each weapon can shoot">⌔ Arcs</button
+              ><button id="btnLinks" aria-pressed="false" title="Show blocks that would drop parts off if destroyed">⚠ Weak links</button>
+            </div>
+            <div class="toolbar" role="toolbar" aria-label="Builder tools">
+              <button data-tool="place" aria-pressed="true" title="Place (B)">
+                <svg viewBox="0 0 16 16">
+                  <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" fill="none" /></svg
+                >Place
+              </button>
+              <button data-tool="rotate" aria-pressed="false" title="Rotate a placed part (T)">
+                <svg viewBox="0 0 16 16">
+                  <path
+                    d="M13 8a5 5 0 1 1-1.5-3.5M13 2v3h-3"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                  /></svg
+                >Rotate
+              </button>
+              <button data-tool="remove" aria-pressed="false" title="Remove (X or right-click)">
+                <svg viewBox="0 0 16 16">
+                  <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" fill="none" /></svg
+                >Remove
+              </button>
+              <span class="sep"></span>
+              <button id="btnRot" title="Turn the next part (R)">
+                <svg viewBox="0 0 16 16" id="rotIcon">
+                  <path d="M8 2l4 5H9v7H7V7H4z" fill="currentColor" /></svg
+                >Facing
+              </button>
+              <span class="sep"></span>
+              <button id="btnMirror" class="icon-only" title="Mirror placements left/right (M)" aria-label="Mirror">
+                <svg viewBox="0 0 16 16"><path d="M8 1v14" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2" fill="none"/><path d="M6 4L1 8l5 4zM10 4l5 4-5 4z" fill="currentColor"/></svg>
+              </button>
+              <button id="btnUndo" class="icon-only" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 16 16"><path d="M5 3L1 7l4 4M1 7h9a4 4 0 0 1 0 8H7" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
+              <button id="btnRedo" class="icon-only" title="Redo (Ctrl+Y)" aria-label="Redo"><svg viewBox="0 0 16 16"><path d="M11 3l4 4-4 4M15 7H6a4 4 0 0 0 0 8h3" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
+            </div>
+            <div id="toast" role="status"></div>
+          </div>
+          <aside class="panel" aria-label="Inspector">
+            <div class="phead"><h3>Inspector</h3></div>
+            <div class="pbody">
+              <div class="inspect" id="inspect"></div>
+              <div>
+                <span class="label">Vehicle</span>
+                <div class="specs">
+                  <div class="spec">
+                    <span>Structure</span><span class="v" id="sHp"></span
+                    ><i class="meter"><b id="mHp"></b></i>
+                  </div>
+                  <div class="spec"><span>Mass</span><span class="v" id="sMass"></span></div>
+                  <div class="spec">
+                    <span>Top speed</span><span class="v" id="sSpeed"></span
+                    ><i class="meter"><b id="mSpeed"></b></i>
+                  </div>
+                  <div class="spec">
+                    <span>Turning</span><span class="v" id="sTurn"></span
+                    ><i class="meter"><b id="mTurn"></b></i>
+                  </div>
+                  <div class="spec">
+                    <span>Firepower</span><span class="v" id="sDps"></span
+                    ><i class="meter"><b id="mDps"></b></i>
+                  </div>
+                </div>
+              </div>
+              <div class="warns" id="warns"></div>
+              <div>
+                <span class="label">Your branches</span>
+                <div class="branches" id="branches"></div>
+              </div>
+              <div>
+                <span class="label">Synergies on this car</span>
+                <div class="synergy" id="synergy"></div>
+              </div>
+              <div>
+                <span class="label">Tuning</span>
+                <div class="perks" id="perks"></div>
+              </div>
+              <div>
+                <span class="label">Paint</span>
+                <div class="paints" id="paints"></div>
+              </div>
+              <div>
+                <span class="label">Blueprints</span>
+                <div class="slots" id="slots"></div>
+                <div class="bp-share"><button class="btn ghost" id="bpShare" title="Get a code for this car that a friend can paste">Share this car</button><button class="btn ghost" id="bpImport" title="Paste a car code from a friend">Paste a code</button></div>
+              </div>
+            </div>
+            <div class="pfoot">
+              <div class="autorow">
+                <button class="btn ghost" id="btnAuto" title="Bolt every loose part onto your car">
+                  Auto-place loose parts
+                </button>
+                <button
+                  class="btn ghost"
+                  id="btnAutoBuild"
+                  title="Rebuild the whole car from everything you own (undo with Ctrl+Z)"
+                >
+                  Auto-build
+                </button>
+              </div>
+              <button class="btn ghost" id="btnClear">Return all parts to the bin</button>
+              <button class="btn" id="btnReady">Ready · enter waiting arena</button>
+            </div>
+          </aside>
+        </section>
+        <section id="arena" hidden>
+          <canvas id="ac" aria-label="Arena: left stick drives; right stick aims, push farther to fire"></canvas>
+          <div class="arena-tools" aria-label="Arena view">
+            <button id="btnFullscreen">⛶ Fullscreen</button>
+            <button id="btnPortrait" aria-pressed="true">↻ Portrait view</button>
+          </div>
+          <div class="stick-guide left">DRIVE<br>left thumb</div>
+          <div class="stick-guide right">AIM<br>push to fire</div>
+          <div class="waitcard" id="waitcard" hidden>
+            <span><span class="dot"></span>You · ready</span
+            ><span id="oppStatus"><span class="dot off"></span>Opponent · building</span>
+          </div>
+          <div class="touchpad" id="touchpad">
+            <button data-k="Space">Fire</button><button data-k="ShiftLeft">Boost</button><button data-k="KeyJ">Jump</button
+            ><button data-k="RMB">Action</button><button data-k="KeyZ">Drop</button
+            ><button data-k="KeyV">Counter</button><button data-k="KeyF">Blink</button
+            ><button data-k="KeyH">Horn</button><button data-k="KeyC">Anchor</button><button data-k="KeyX">Release</button>
+          </div>
+          <div class="abtns" id="abtns"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="overlay" id="ovIntro" hidden>
+      <div class="card">
+        <span class="label">Vehicle combat · builder preview</span>
+        <h1>SCRAP DUEL</h1>
+        <p class="lede">
+          Weld a battle car together in your bay. Chassis parts go on the bottom layer; guns and gadgets bolt
+          on top of support blocks. Draft a branch every round, win coins, spend them on parts, crates and a
+          bigger bay.
+        </p>
+        <ol class="flow">
+          <li><b>Draft</b><span>Flip three cards, take one</span></li>
+          <li><b>Build</b><span>No clock. Shop with your coins</span></li>
+          <li><b>Ready</b><span>Test-drive in the waiting arena</span></li>
+          <li><b>Fight</b><span>Teleport into a random junkyard</span></li>
+        </ol>
+        <dl class="keys">
+          <dt>Garage</dt>
+          <dd>
+            Click to place, drag to paint, right-click removes. R turns the next part, T rotates placed ones.
+            Scroll to zoom.
+          </dd>
+          <dt>Drive</dt>
+          <dd>
+            WASD or arrows drive. Mouse aims; left-click or Space fires. Equipped gadgets and their cooldowns appear in battle. J jumps; right-click activates gadgets or reels a harpoon.
+          </dd>
+          <dt>Touch</dt>
+          <dd>Left stick drives. Right stick aims; push it farther to fire, or use Fire. Portrait automatically rotates the arena. Equipped gadgets appear as thumb buttons.</dd>
+        </dl>
+        <p class="small">
+          Ten rounds per match. Each round is worth one point; the final round is worth two. Play a bot rival, a
+          friend online, or mess around in the sandbox.
+        </p>
+        <button class="btn" id="btnStart">Back to the menu</button>
+      </div>
+    </div>
+    <div class="overlay" id="ovMenu" hidden></div>
+    <div class="overlay" id="ovLobby" hidden><div class="card" id="lobbyCard"></div></div>
+    <div class="overlay" id="ovVS" hidden></div>
+    <div class="overlay" id="ovDraft" hidden></div>
+    <div class="overlay" id="ovCrate" hidden></div>
+    <div class="overlay" id="ovCodex" hidden></div>
+    <div class="overlay" id="ovResult" hidden><div class="card" id="resultCard"></div></div>
+    <div class="overlay" id="ovReady" hidden><div class="card" id="readyCard"></div></div>
+    <div class="overlay" id="ovStyle" hidden></div>
+    <div class="overlay" id="ovSettings" hidden><div class="card" id="settingsCard"></div></div>
+    <div class="overlay" id="ovReconnect" hidden><div class="card" id="reconnectCard"></div></div>
+    <div class="overlay" id="ovPause" hidden><div class="card" id="pauseCard"></div></div>
+    <div class="door-fx" id="doorFx" hidden aria-hidden="true"><i class="d-dark"></i><i class="d-l"><b>SCRAP</b></i><i class="d-r"><b>DUEL</b></i><span class="d-joke" id="doorJoke"></span></div>
+    <div class="overlay" id="ovBlueprint" hidden><div class="card bp-card" id="bpCard"></div></div>
+    <div class="overlay" id="ovAccount" hidden><div class="card account-card" id="accountCard"></div></div>
+    <div class="coach" id="coach" hidden></div>
+    <div class="feed" id="demoFeed" hidden></div>
+    <script>
+<!-- @scripts -->
+</script>
+  </body>
+</html>

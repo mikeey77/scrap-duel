@@ -1,0 +1,139 @@
+/* ---------- v7: Garage Style ---------- */
+.style {
+  width: min(1000px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100% - 8px);
+  min-height: 0;
+}
+.style header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.style header h2 {
+  margin: 0;
+  font-family: var(--f-display);
+  font-weight: 400;
+}
+.style .lvl {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-left: auto;
+  min-width: 240px;
+}
+.style .lv {
+  font-family: var(--f-display);
+  font-size: 26px;
+  color: var(--hazard);
+  border: 2px solid var(--hazard);
+  border-radius: 10px;
+  min-width: 48px;
+  text-align: center;
+}
+.stbody {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px 18px;
+  overflow: auto;
+  min-height: 0;
+}
+.stprev {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.stprev img {
+  width: 100%;
+  background: var(--blueprint);
+  border-radius: 10px;
+}
+.achlist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.achlist span {
+  font-size: 12px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--muted);
+}
+.achlist span.on {
+  background: #3a3210;
+  color: var(--coin);
+}
+.stright .tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.stright .tabs button {
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+.stright .tabs button[aria-pressed='true'] {
+  border-color: var(--hazard);
+  color: var(--hazard);
+}
+.stgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.stitem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.stitem span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.stitem i {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ok);
+}
+.stitem.on {
+  border-color: var(--ok);
+}
+.stitem.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.stitem.locked i {
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  .stbody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pity {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

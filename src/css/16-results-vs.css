@@ -1,0 +1,21 @@
+/* ---------- results, VS ---------- */
+#resultCard h2 {
+  font-size: 40px;
+}
+.bigcoin {
+  font-family: var(--f-display);
+  font-weight: 700;
+}
+.ledger div {
+  border-color: rgba(91, 231, 255, 0.12) !important;
+}
+.vs .mid {
+  font-family: var(--f-display);
+  font-weight: 700;
+  color: var(--holo);
+  text-shadow: 0 0 30px rgba(91, 231, 255, 0.6);
+}
+.vs .nm {
+  font-family: var(--f-display);
+  font-weight: 700;
+}

@@ -1,0 +1,58 @@
+/* ---------- buttons ---------- */
+.btn {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.03em;
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  background: linear-gradient(180deg, #ffc44d, var(--hazard) 55%, #e89a0c);
+  color: var(--hazard-ink);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+  transition:
+    filter 0.12s,
+    transform 0.08s;
+}
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.btn:disabled {
+  filter: grayscale(0.7) brightness(0.6);
+}
+.btn.ghost {
+  font-family: var(--f-display);
+  font-weight: 600;
+  background: rgba(91, 231, 255, 0.06);
+  color: #cfeeff;
+  border: 1px solid var(--holo-dim);
+  box-shadow: none;
+}
+.btn.ghost:hover:not(:disabled) {
+  background: rgba(91, 231, 255, 0.14);
+  border-color: var(--holo);
+  filter: none;
+}
+.btn.ok {
+  background: linear-gradient(180deg, #6ff0bd, var(--ok));
+  color: #032417;
+}
+.hbtn {
+  background: rgba(91, 231, 255, 0.06);
+  border: 1px solid var(--holo-dim);
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  color: #d6f3ff;
+  font-family: var(--f-display);
+  font-weight: 600;
+}
+.hbtn:hover {
+  border-color: var(--holo);
+  background: rgba(91, 231, 255, 0.14);
+}
+.pill {
+  font-family: var(--f-display);
+  letter-spacing: 0.08em;
+  border-radius: 0;
+  clip-path: var(--chamfer-s);
+  background: var(--panel-3);
+}
