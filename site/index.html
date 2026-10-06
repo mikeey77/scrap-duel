@@ -4018,7 +4018,8 @@ select {
 .rseg{margin:6px 0}
 .lpub{justify-content:center;margin:6px 0 10px;font-size:14px}
 #lRounds{justify-content:center;display:flex}
-@media (hover:hover) and (pointer:fine){.arena-tools #btnFullscreen{display:none}}
+/* fullscreen lives in the top bar, rotation in Settings: no extra buttons over the battle */
+#arena .arena-tools{display:none!important}
 
 .d-joke{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);z-index:3;color:#cfe9ff;font:600 15px var(--f-body,sans-serif);opacity:0;transition:opacity .25s;white-space:nowrap;text-shadow:0 2px 8px #000}
 .door-fx.closed .d-joke{opacity:.9}
@@ -22547,7 +22548,7 @@ function openSettings(back) {
     ${toggle('setNums', 'Floating damage numbers', SETTINGS.nums)}
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
     <label class="vol"><span>Controls</span><select id="setTouch" aria-label="Control style"><option value="auto" ${SETTINGS.touchControls==='auto'?'selected':''}>Automatic</option><option value="on" ${SETTINGS.touchControls==='on'?'selected':''}>Touch sticks</option><option value="off" ${SETTINGS.touchControls==='off'?'selected':''}>Mouse &amp; keyboard</option></select></label>
-    ${toggle('setPortrait','Rotate arena in portrait',SETTINGS.rotatePortrait)}
+    ${toggle('setPortrait','Rotate the arena on phones held upright (portrait view)',SETTINGS.rotatePortrait)}
     ${toggle('setPerf','Performance mode (lower resolution, smoother on older phones)',SETTINGS.perf)}
     ${toggle('setTouchAssist','Subtle touch aim assist (solo only)',SETTINGS.touchAssist)}
     <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Garage Style progress</button></div>
