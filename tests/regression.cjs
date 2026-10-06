@@ -393,6 +393,20 @@ test('badges sanitize, rivals give hints and the match ends with fun awards',()=
  assert(aw.some(x=>x.who===1),'the loser gets something too');
  for(const k of ['plain','frost','fire','magnet'])assert(a.CRATE_THEMES[k].name);
 });
+test('all seventeen arenas generate, run their gimmicks and stay finite',()=>{
+ const r=runtime(),a=r.api;assert.equal(a.THEMES.length,17);
+ a.startMatch('solo');a.openBuild();
+ for(let ti=0;ti<a.THEMES.length;ti++){
+  const th=a.THEMES[ti];a.G.nextTheme=ti;
+  const cfg=a.makeCfg(a.myCarCfg());assert.equal(cfg.theme,ti);
+  for(const k of Object.keys(th.extra||{}))assert(cfg.field.zn.some(z=>z.kind===k),th.id+' has '+k);
+  a.toBattle({...cfg,me:0,net:null});const b=a.getB();b.seq='play';b.t=40;
+  for(let n=0;n<60;n++){b.cars[0].throttle=1;a.simulate(0.05);}
+  for(const v of b.cars)assert([v.x,v.y,v.vx,v.vy].every(Number.isFinite),th.id);
+  assert(b.objs.every(o=>Number.isFinite(o.x)&&Number.isFinite(o.y)),th.id+' objects');
+  a.drawArena();
+ }
+});
 test('car codes round-trip and report missing parts and bay size',()=>{
  process.on('unhandledRejection',e=>{console.error('FAIL async: '+e.message);process.exit(1);});
  const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();

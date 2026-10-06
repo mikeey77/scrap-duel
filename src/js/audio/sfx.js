@@ -345,6 +345,10 @@ const SFX = {
     [523, 659, 784, 1047].forEach((f, i) => tone('square', f, f, i === 3 ? 0.5 : 0.14, 0.1 * v, i * 0.12));
   },
   tick: v => tone('square', 1800, 1500, 0.025, 0.035 * v),
+  bumper: v => {
+    tone('square', 880, 1320, 0.08, 0.08 * v);
+    tone('triangle', 1760, 1760, 0.12, 0.05 * v, 0.05);
+  },
   creak: v => {
     noise(0.25, 0.08 * v, 300, 900, 6);
     tone('sawtooth', 140, 120, 0.22, 0.03 * v);

@@ -1833,6 +1833,7 @@ function crateURL() {
 function drawStaticThemed(c, s, theme) {
   c.fillStyle = 'rgba(20,12,4,.35)';
   c.fillRect(s.x + 5, s.y + 6, s.w, s.h);
+  if (drawWallExtra(c, s, theme)) return;
   const v = s.h > s.w;
   if (theme === 'fence') {
     c.fillStyle = '#8a5a32';

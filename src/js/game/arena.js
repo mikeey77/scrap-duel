@@ -147,6 +147,7 @@ function makeGround(th, kind) {
     g.fillStyle = `rgba(${Math.random() < 0.5 ? tint[1] : tint[2]},${rnd(0.08, 0.25)})`;
     g.fillRect(rnd(0, AW), rnd(0, AH), rnd(1, 3), rnd(1, 3));
   }
+  decorateGround(g, th, kind);
   if (th.id === 'carpark' && kind !== 'wait') {
     // painted parking bays along both long walls
     g.strokeStyle = 'rgba(240,240,230,.55)';
@@ -397,6 +398,7 @@ function genArena(kind, th) {
       : { kind: 'spikes', x: x - 75, y: y - 11, w: 150, h: 22 }
   );
   addZ(th.pads, (x, y) => ({ kind: 'pad', x: x - 45, y: y - 30, w: 90, h: 60, ang: 0 }));
+  for (const [k, n] of Object.entries(th.extra || {})) addZ(n, (x, y) => gimmickZone(k, x, y));
   const place = (k, n) => {
     const r = (JUNK[k] || PROPS[k]).r;
     for (let i = 0, t = 0; i < n && t < 300; t++) {

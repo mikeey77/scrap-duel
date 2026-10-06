@@ -348,6 +348,7 @@ function drawObj(c, o) {
   }
 }
 function drawZone(c, z) {
+  if (drawGimmickZone(c, z)) return;
   if (z.kind === 'goal' || z.kind === 'base' || z.kind === 'hill') return drawSpecialZone(c, z);
   if (['bead', 'soapbead'].includes(z.kind)) {
     circ(c, z.x + 2, z.y + 3, z.r, 'rgba(0,0,0,.3)');
@@ -960,6 +961,7 @@ function drawArena() {
   }
   if (v && !B.demo) drawHitArrows(c, v, s);
   if (B.special === 'night') drawNight(c, s);
+  drawGimmickOverlay(c, s);
   if (v && !B.demo && !B.replay) lowHealth(c, v);
   if (B.ring && v && !v.dead && Math.hypot(v.x - AW / 2, v.y - AH / 2) > B.ring.r) {
     c.strokeStyle = `rgba(255,80,40,${0.35 + Math.sin(ANIM * 10) * 0.2})`;
@@ -1418,7 +1420,7 @@ function lowHealth(c, v) {
 }
 let nightCv = null;
 /** Night Shift: darkness everywhere except headlights, fires, explosions and pickups. */
-function drawNight(c, s) {
+function drawNight(c, s, dark = 0.9, flash = 1) {
   const W = view.w,
     H = view.h,
     d = dprOf();
@@ -1431,7 +1433,7 @@ function drawNight(c, s) {
   n.setTransform(d, 0, 0, d, 0, 0);
   n.globalCompositeOperation = 'source-over';
   n.clearRect(0, 0, W, H);
-  n.fillStyle = 'rgba(4,6,18,.9)';
+  n.fillStyle = `rgba(4,6,18,${dark * flash})`;
   n.fillRect(0, 0, W, H);
   n.globalCompositeOperation = 'destination-out';
   const toS = (x, y) => worldToScreen(x, y, s);

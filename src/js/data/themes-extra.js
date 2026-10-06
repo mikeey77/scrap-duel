@@ -1,0 +1,155 @@
+// Ten more arenas. Each one has its own floor, walls, junk and a gimmick (see js/game/arena-gimmicks.js).
+// `extra` lists gimmick zones placed on the left half (the arena is mirrored), `wind` adds gusts,
+// `dark` dims the lights like a night round.
+Object.assign(JUNK, {
+  rock: { name: 'Boulder', r: 20, m: 30, h: 22, hp: 220 },
+  block: { name: 'Toy block', r: 14, m: 2, h: 20, hp: 45, bounce: 0.8 },
+  teddy: { name: 'Giant teddy', r: 18, m: 2, h: 24, hp: 60, bounce: 1.1, note: 'Squeaks. Judges you.' },
+  grave: { name: 'Gravestone', r: 12, m: 18, h: 26, hp: 120, note: 'Here lies your last car.' },
+  toaster: { name: 'Giant toaster', r: 16, m: 8, h: 18, hp: 90 },
+  satellite: { name: 'Satellite dish', r: 17, m: 6, h: 20, hp: 70 }
+});
+JUNKNAMES.push('rock', 'block', 'teddy', 'grave', 'toaster', 'satellite');
+
+THEMES.push(
+  {
+    id: 'volcano',
+    name: 'Volcano Forge',
+    ground: ['#2b2224', '12,8,8', '90,60,50'],
+    wall: 'basalt',
+    grip: 1,
+    junk: ['rock', 'rock', 'barrel', 'vending', 'tires', 'cactus', 'grave', 'washer'],
+    ramps: 2,
+    oil: 0,
+    spikes: 1,
+    tramp: 0,
+    pads: 1,
+    extra: { lava: 3 }
+  },
+  {
+    id: 'space',
+    name: 'Space Station',
+    ground: ['#2c3442', '14,18,26', '120,140,170'],
+    wall: 'metal',
+    grip: 0.75,
+    grav: 520,
+    junk: ['satellite', 'satellite', 'vending', 'arcade', 'tv', 'booth', 'washer', 'cone'],
+    ramps: 2,
+    oil: 0,
+    spikes: 0,
+    tramp: 1,
+    pads: 1,
+    extra: { vent: 2 }
+  },
+  {
+    id: 'carwash',
+    name: 'Car Wash',
+    ground: ['#6f8fa6', '40,60,80', '200,225,240'],
+    wall: 'tile',
+    grip: 0.85,
+    junk: ['duck', 'duck', 'cone', 'cart', 'hydrant', 'beachball', 'mailbox', 'flamingo'],
+    ramps: 1,
+    oil: 3,
+    spikes: 0,
+    tramp: 0,
+    pads: 1,
+    extra: { vent: 2 }
+  },
+  {
+    id: 'desert',
+    name: 'Desert Canyon',
+    ground: ['#c99a5b', '120,80,40', '240,210,160'],
+    wall: 'rocks',
+    grip: 0.9,
+    wind: 1,
+    junk: ['cactus', 'cactus', 'rock', 'rock', 'tires', 'barrel', 'booth', 'hay'],
+    ramps: 3,
+    oil: 0,
+    spikes: 1,
+    tramp: 0,
+    pads: 1
+  },
+  {
+    id: 'haunted',
+    name: 'Haunted Mansion',
+    ground: ['#3a2c3c', '20,12,24', '110,80,110'],
+    wall: 'fence',
+    grip: 1,
+    dark: 1,
+    junk: ['grave', 'grave', 'pumpkin', 'pumpkin', 'piano', 'couch', 'bathtub', 'chair', 'tv'],
+    ramps: 1,
+    oil: 1,
+    spikes: 1,
+    tramp: 0,
+    pads: 0
+  },
+  {
+    id: 'toyroom',
+    name: 'Toy Room',
+    ground: ['#3d6c8f', '20,40,60', '150,190,220'],
+    wall: 'toy',
+    grip: 1,
+    junk: ['block', 'block', 'block', 'teddy', 'teddy', 'duck', 'beachball', 'pin', 'pin', 'bumpercar'],
+    ramps: 2,
+    oil: 0,
+    spikes: 0,
+    tramp: 2,
+    pads: 1
+  },
+  {
+    id: 'factory',
+    name: 'Robot Factory',
+    ground: ['#55585c', '30,32,34', '150,154,158'],
+    wall: 'concrete',
+    grip: 1,
+    junk: ['crate', 'barrel', 'washer', 'vending', 'tv', 'tires', 'toaster', 'arcade'],
+    ramps: 1,
+    oil: 1,
+    spikes: 1,
+    tramp: 0,
+    pads: 0,
+    extra: { belt: 3 }
+  },
+  {
+    id: 'pinball',
+    name: 'Pinball Table',
+    ground: ['#1b2350', '6,10,30', '90,110,220'],
+    wall: 'neon',
+    grip: 1,
+    junk: ['pin', 'pin', 'beachball', 'trophy', 'arcade', 'duck', 'donut'],
+    ramps: 2,
+    oil: 0,
+    spikes: 0,
+    tramp: 1,
+    pads: 2,
+    extra: { bumper: 4 }
+  },
+  {
+    id: 'kitchen',
+    name: 'Giant Kitchen',
+    ground: ['#e9e2d4', '150,140,120', '255,255,250'],
+    wall: 'tile',
+    grip: 0.95,
+    junk: ['toaster', 'toaster', 'melon', 'melon', 'donut', 'donut', 'chicken', 'fridge', 'washer'],
+    ramps: 1,
+    oil: 2,
+    spikes: 0,
+    tramp: 0,
+    pads: 0,
+    extra: { stove: 2 }
+  },
+  {
+    id: 'swamp',
+    name: 'Soggy Swamp',
+    ground: ['#45563a', '20,30,14', '120,140,90'],
+    wall: 'rocks',
+    grip: 0.9,
+    junk: ['duck', 'duck', 'rock', 'flamingo', 'grave', 'hay', 'mailbox', 'bathtub'],
+    ramps: 2,
+    oil: 0,
+    spikes: 0,
+    tramp: 1,
+    pads: 0,
+    extra: { mud: 3 }
+  }
+);

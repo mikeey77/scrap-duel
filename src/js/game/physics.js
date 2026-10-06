@@ -65,6 +65,7 @@ function drive(v, dt) {
     v.w += (tw - v.w) * Math.min(1, 6 * dt * Math.max(0.3, trac));
   } else if (!air) v.w *= Math.exp(-4 * dt);
   if (!air) {
+    gimmickCar(v, dt);
     const pad = zoneAt(v.x, v.y, 'pad');
     if (pad) {
       v.vx += Math.cos(pad.ang) * 1100 * dt;
@@ -440,6 +441,7 @@ function stepObjs(dt) {
       o.vx *= f;
       o.vy *= f;
       o.w *= Math.exp(-(o.d.spinny ? 0.6 : 3) * dt);
+      gimmickObj(o, dt);
       const rp = zoneAt(o.x, o.y, 'ramp');
       if (rp) {
         const along = o.vx * Math.cos(rp.ang) + o.vy * Math.sin(rp.ang);

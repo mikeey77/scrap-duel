@@ -6,7 +6,17 @@ const THEME_BLURB = {
   backyard: 'Trampolines and garden chaos. Expect air time.',
   market: 'Speed pads between the aisles, spills on the floor.',
   construction: 'Ramps and spike strips. Mind your tyres.',
-  ice: 'Half the grip. Momentum is everything.'
+  ice: 'Half the grip. Momentum is everything.',
+  volcano: 'Lava pools burn your chassis. Do not park there.',
+  space: 'Low gravity and air vents that blast you across the deck.',
+  carwash: 'Soap everywhere and blowers that push. Free rinse included.',
+  desert: 'Sandstorm gusts shove light cars around. Hold on to your hubcaps.',
+  haunted: 'Lights out. Something keeps flickering. Probably fine.',
+  toyroom: 'Giant toys and trampolines. Mind the Lego. Ouch.',
+  factory: 'Conveyor belts move everything. Including you.',
+  pinball: 'Bumpers launch you back. TILT does not exist here.',
+  kitchen: 'Stove plates heat up in turns. Spills on the floor.',
+  swamp: 'Mud slows you to a crawl. The ducks think it is hilarious.'
 };
 
 /* ---------- arena state ---------- */
@@ -426,16 +436,39 @@ function drawWindow(dt) {
     construction: 'spark',
     carpark: 'rain',
     market: 'dust',
-    fog: 'dust'
+    fog: 'dust',
+    volcano: 'ember',
+    space: 'star',
+    carwash: 'bubble',
+    desert: 'sand',
+    haunted: 'ghost',
+    toyroom: 'confetti',
+    factory: 'spark',
+    pinball: 'star',
+    kitchen: 'steam',
+    swamp: 'fly'
   }[id];
   const rate = spawn === 'rain' ? 60 : spawn === 'snow' ? 30 : 14;
   if (SETTINGS.motion !== false)
     for (let i = 0; i < rate * dt; i++)
       P.push({
         x: Math.random() * W * 1.2,
-        y: -4,
-        vx: spawn === 'sand' ? -60 : spawn === 'rain' ? -30 : rnd(-10, 10),
-        vy: spawn === 'rain' ? 220 : spawn === 'snow' ? 26 : spawn === 'spark' ? rnd(-40, 40) : 30,
+        y: ['ember', 'steam', 'bubble'].includes(spawn) ? H + 4 : -4,
+        vx: spawn === 'sand' ? -90 : spawn === 'rain' ? -30 : spawn === 'fly' ? rnd(-40, 40) : rnd(-10, 10),
+        vy:
+          spawn === 'rain'
+            ? 220
+            : spawn === 'snow'
+              ? 26
+              : spawn === 'spark'
+                ? rnd(-40, 40)
+                : ['ember', 'steam', 'bubble'].includes(spawn)
+                  ? -rnd(20, 50)
+                  : spawn === 'star'
+                    ? 6
+                    : spawn === 'fly'
+                      ? rnd(-20, 20)
+                      : 30,
         life: 4,
         k: spawn
       });
@@ -448,7 +481,7 @@ function drawWindow(dt) {
     q.x += q.vx * dt;
     q.y += q.vy * dt;
     if (q.k === 'spark') q.vy += 120 * dt;
-    if (q.life <= 0 || q.y > H + 4) {
+    if (q.life <= 0 || q.y > H + 6 || q.y < -8) {
       P.splice(i, 1);
       continue;
     }
@@ -458,7 +491,14 @@ function drawWindow(dt) {
       dust: 'rgba(200,190,170,.35)',
       leaf: '#8fbf4f',
       spark: '#ffd257',
-      rain: 'rgba(170,200,255,.7)'
+      rain: 'rgba(170,200,255,.7)',
+      ember: '#ff9a3c',
+      star: 'rgba(255,255,255,.8)',
+      bubble: 'rgba(220,245,255,.8)',
+      ghost: 'rgba(220,200,255,.35)',
+      confetti: pick(['#ff5c7a', '#ffd257', '#5be7ff', '#3fe0a0']),
+      steam: 'rgba(255,255,255,.35)',
+      fly: '#1a1a1a'
     }[q.k];
     if (q.k === 'rain') c.fillRect(q.x, q.y, 1, 6);
     else c.fillRect(q.x, q.y, q.k === 'snow' ? 2 : 2, 2);
@@ -701,6 +741,7 @@ function toBattle(cfg) {
   });
   setupField('battle', deserializeField(cfg.field));
   setupSpecial(cfg.special);
+  if (B.theme.grav && !B.grav) B.grav = B.theme.grav;
   B.cars = carsFromCfg(cfg);
   const v = myCar();
   B.flash = 1;
