@@ -1,7 +1,7 @@
 // Arena state (B), arena generation, cars, damage and death.
 /* =================== ARENA CORE (two cars) =================== */
 const ac = $('#ac'),
-  ax = ac.getContext('2d');
+  ax = ac.getContext('2d', { alpha: false });
 const AW = 2000,
   AH = 1250,
   WM = 22,

@@ -801,10 +801,7 @@ function drawArena() {
   c.setTransform(d, 0, 0, d, 0, 0);
   c.fillStyle = '#1b1712';
   c.fillRect(0, 0, view.w, view.h);
-  const shk =
-      SETTINGS.shake && SETTINGS.motion !== false && !matchMedia('(prefers-reduced-motion:reduce)').matches
-        ? Math.min(5, B.shake)
-        : 0,
+  const shk = SETTINGS.shake && SETTINGS.motion !== false && !REDUCED.on ? Math.min(5, B.shake) : 0,
     sh = shk ? rnd(-shk, shk) : 0,
     sh2 = shk ? rnd(-shk, shk) : 0,
     s = view.sc * cam.z;

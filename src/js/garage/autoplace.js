@@ -182,8 +182,7 @@ const SCRAP_JOKES = [
 /* Garage → arena: the lights go out, engines start, the arena door slides open. */
 function enterWaitShow() {
   const fx = $('#doorFx');
-  if (!fx || SETTINGS.motion === false || !window.matchMedia || matchMedia('(prefers-reduced-motion: reduce)').matches)
-    return enterWait();
+  if (!fx || SETTINGS.motion === false || REDUCED.on) return enterWait();
   fx.hidden = false;
   fx.className = 'door-fx lights-out';
   const dj = $('#doorJoke');

@@ -1848,7 +1848,6 @@ textarea {
   background: rgba(35, 40, 45, 0.82);
   border: 1px solid var(--line);
   border-top: 3px solid var(--rc);
-  backdrop-filter: blur(6px);
   transition:
     transform 0.15s,
     box-shadow 0.15s;
@@ -2543,9 +2542,7 @@ textarea {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(120deg, transparent 35%, #7fe0ff0a 50%, transparent 65%);
-  background-size: 250% 100%;
-  animation: workshop-light 14s linear infinite;
+  background: linear-gradient(120deg, transparent 35%, #7fe0ff08 50%, transparent 65%);
 }
 @keyframes workshop-light {
   from {
@@ -2764,7 +2761,6 @@ body {
     radial-gradient(900px 500px at -10% 110%, rgba(255, 180, 35, 0.05), transparent 60%),
     linear-gradient(rgba(91, 231, 255, 0.035) 1px, transparent 1px) 0 0 / 100% 32px,
     var(--bg);
-  background-attachment: fixed;
 }
 ::selection {
   background: rgba(91, 231, 255, 0.35);
@@ -2802,8 +2798,6 @@ h4 {
   border-radius: 0;
   clip-path: var(--chamfer);
   box-shadow: inset 0 1px 0 rgba(91, 231, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 #hud {
   background: var(--brackets), linear-gradient(180deg, rgba(20, 34, 60, 0.95), rgba(12, 20, 38, 0.95));
@@ -4422,6 +4416,18 @@ img.badge {
     font-size: 12px;
   }
 }
+
+#fpsMeter {
+  position: fixed;
+  left: 8px;
+  bottom: 6px;
+  z-index: 50;
+  font: 600 12px var(--f-mono, monospace);
+  color: var(--ok);
+  background: rgba(6, 10, 20, 0.7);
+  padding: 2px 6px;
+  pointer-events: none;
+}
 </style>
   </head>
   <body>
@@ -4659,6 +4665,16 @@ img.badge {
 (() => {
 /* ===== js/core/utils.js ===== */
 'use strict';
+/** The OS "reduce motion" preference, read once and kept up to date (matchMedia per frame is slow). */
+const REDUCED = (() => {
+  const st = { on: false };
+  try {
+    const mq = matchMedia('(prefers-reduced-motion: reduce)');
+    st.on = mq.matches;
+    mq.addEventListener && mq.addEventListener('change', e => (st.on = e.matches));
+  } catch (e) {}
+  return st;
+})();
 // Shared helpers: DOM shortcuts, math, grid keys, weighted random.
 const $ = s => document.querySelector(s),
   $$ = s => [...document.querySelectorAll(s)];
@@ -13431,7 +13447,7 @@ function closeGarageReport() {
   $('#ovResult').hidden = false;
 }
 function planAmbient(c) {
-  if (SETTINGS.motion === false || matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  if (SETTINGS.motion === false || REDUCED.on) return;
   c.save();
   c.strokeStyle = '#7fe0ff';
   c.lineWidth = 2;
@@ -15059,8 +15075,7 @@ const SCRAP_JOKES = [
 /* Garage → arena: the lights go out, engines start, the arena door slides open. */
 function enterWaitShow() {
   const fx = $('#doorFx');
-  if (!fx || SETTINGS.motion === false || !window.matchMedia || matchMedia('(prefers-reduced-motion: reduce)').matches)
-    return enterWait();
+  if (!fx || SETTINGS.motion === false || REDUCED.on) return enterWait();
   fx.hidden = false;
   fx.className = 'door-fx lights-out';
   const dj = $('#doorJoke');
@@ -15326,7 +15341,7 @@ function renderStyle() {
 // Arena state (B), arena generation, cars, damage and death.
 /* =================== ARENA CORE (two cars) =================== */
 const ac = $('#ac'),
-  ax = ac.getContext('2d');
+  ax = ac.getContext('2d', { alpha: false });
 const AW = 2000,
   AH = 1250,
   WM = 22,
@@ -18468,7 +18483,7 @@ function planDrawLinks(c, v) {
 function planDrawModule(c, m, s, ang, st) {
   const b = shapeBounds(m),
     col = m.art.c,
-    t = SETTINGS?.motion === false || matchMedia('(prefers-reduced-motion:reduce)').matches ? 0 : ANIM;
+    t = SETTINGS?.motion === false || REDUCED.on ? 0 : ANIM;
   c.save();
   c.rotate(ang);
   for (const [x, y] of moduleCells(m)) {
@@ -21361,10 +21376,7 @@ function drawArena() {
   c.setTransform(d, 0, 0, d, 0, 0);
   c.fillStyle = '#1b1712';
   c.fillRect(0, 0, view.w, view.h);
-  const shk =
-      SETTINGS.shake && SETTINGS.motion !== false && !matchMedia('(prefers-reduced-motion:reduce)').matches
-        ? Math.min(5, B.shake)
-        : 0,
+  const shk = SETTINGS.shake && SETTINGS.motion !== false && !REDUCED.on ? Math.min(5, B.shake) : 0,
     sh = shk ? rnd(-shk, shk) : 0,
     sh2 = shk ? rnd(-shk, shk) : 0,
     s = view.sc * cam.z;
@@ -26329,7 +26341,7 @@ function showRunOver() {
 function zap(el, opt = {}) {
   if (!el || SETTINGS.motion === false || !el.getBoundingClientRect) return;
   try {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (REDUCED.on) return;
   } catch (e) {}
   const r = el.getBoundingClientRect();
   if (r.width < 40 || r.height < 30) return;
@@ -26423,7 +26435,8 @@ const SETTINGS = {
   voice: true,
   motion: true,
   crateSpin: true,
-  perf: false
+  perf: false,
+  fps: false
 };
 try {
   Object.assign(SETTINGS, JSON.parse(load('sd.settings') || '{}'));
@@ -26470,6 +26483,7 @@ function openSettings(back) {
     ${toggle('setNums', 'Floating damage numbers', SETTINGS.nums)}
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
     ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
+    ${toggle('setFps', 'Show frame rate (FPS)', SETTINGS.fps)}
     <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Garage Style progress</button></div>
     <button class="btn" id="setDone">Done</button>`;
   $('#ovSettings').hidden = false;
@@ -26493,6 +26507,7 @@ function openSettings(back) {
   for (const [id, k] of [
     ['setVoice', 'voice'],
     ['setMotion', 'motion'],
+    ['setFps', 'fps'],
     ['setCrateSpin', 'crateSpin'],
     ['setShake', 'shake'],
     ['setNums', 'nums'],
@@ -26937,9 +26952,51 @@ $('#btnPause').addEventListener('click', () => {
 /* ---------- main loop ---------- */
 $('#reviewBack').onclick = closeGarageReport;
 let lastT = performance.now();
+/** Optional FPS readout (Settings → Show frame rate), updated twice a second. */
+const FPS = { n: 0, t: 0, el: null };
+/** If battles run below ~40 FPS for a while on a high-DPI screen, switch to performance mode once. */
+const AUTO_PERF = { slow: 0, done: false };
+function autoPerf(dt) {
+  if (
+    AUTO_PERF.done ||
+    SETTINGS.perf ||
+    SETTINGS.autoPerfOff ||
+    G.phase !== 'battle' ||
+    (window.devicePixelRatio || 1) <= 1
+  )
+    return;
+  AUTO_PERF.slow = dt > 0.025 ? AUTO_PERF.slow + dt : Math.max(0, AUTO_PERF.slow - dt * 0.5);
+  if (AUTO_PERF.slow > 5) {
+    AUTO_PERF.done = true;
+    SETTINGS.perf = true;
+    saveSettings();
+    sizeArena();
+    toast('Switched to performance mode for smoother play. You can change this in Settings.', true);
+  }
+}
+function fpsTick(t) {
+  if (!SETTINGS.fps) {
+    if (FPS.el) FPS.el.hidden = true;
+    return;
+  }
+  if (!FPS.el) {
+    FPS.el = document.createElement('div');
+    FPS.el.id = 'fpsMeter';
+    document.body.appendChild(FPS.el);
+  }
+  FPS.el.hidden = false;
+  FPS.n++;
+  if (t - FPS.t >= 500) {
+    FPS.el.textContent = Math.round((FPS.n * 1000) / (t - FPS.t)) + ' FPS';
+    FPS.n = 0;
+    FPS.t = t;
+  }
+}
 function loop(t) {
   const dt = Math.min(0.05, Math.max(0, (t - lastT) / 1000));
   lastT = t;
+  fpsTick(t);
+  autoPerf(dt);
   try {
     syncPresentation();
     BattleMusic.update();

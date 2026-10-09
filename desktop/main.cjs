@@ -8,6 +8,12 @@ const { pathToFileURL } = require('node:url');
 const SITE = path.join(__dirname, '..', 'site');
 const STATE = () => path.join(app.getPath('userData'), 'window.json');
 
+// Use the graphics card for canvas drawing wherever possible, also on GPUs Chromium is cautious about.
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'app',

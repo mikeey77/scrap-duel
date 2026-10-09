@@ -2388,7 +2388,7 @@ function closeGarageReport() {
   $('#ovResult').hidden = false;
 }
 function planAmbient(c) {
-  if (SETTINGS.motion === false || matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  if (SETTINGS.motion === false || REDUCED.on) return;
   c.save();
   c.strokeStyle = '#7fe0ff';
   c.lineWidth = 2;

@@ -228,9 +228,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(120deg, transparent 35%, #7fe0ff0a 50%, transparent 65%);
-  background-size: 250% 100%;
-  animation: workshop-light 14s linear infinite;
+  background: linear-gradient(120deg, transparent 35%, #7fe0ff08 50%, transparent 65%);
 }
 @keyframes workshop-light {
   from {

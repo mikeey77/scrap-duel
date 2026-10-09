@@ -215,9 +215,51 @@ $('#btnPause').addEventListener('click', () => {
 /* ---------- main loop ---------- */
 $('#reviewBack').onclick = closeGarageReport;
 let lastT = performance.now();
+/** Optional FPS readout (Settings → Show frame rate), updated twice a second. */
+const FPS = { n: 0, t: 0, el: null };
+/** If battles run below ~40 FPS for a while on a high-DPI screen, switch to performance mode once. */
+const AUTO_PERF = { slow: 0, done: false };
+function autoPerf(dt) {
+  if (
+    AUTO_PERF.done ||
+    SETTINGS.perf ||
+    SETTINGS.autoPerfOff ||
+    G.phase !== 'battle' ||
+    (window.devicePixelRatio || 1) <= 1
+  )
+    return;
+  AUTO_PERF.slow = dt > 0.025 ? AUTO_PERF.slow + dt : Math.max(0, AUTO_PERF.slow - dt * 0.5);
+  if (AUTO_PERF.slow > 5) {
+    AUTO_PERF.done = true;
+    SETTINGS.perf = true;
+    saveSettings();
+    sizeArena();
+    toast('Switched to performance mode for smoother play. You can change this in Settings.', true);
+  }
+}
+function fpsTick(t) {
+  if (!SETTINGS.fps) {
+    if (FPS.el) FPS.el.hidden = true;
+    return;
+  }
+  if (!FPS.el) {
+    FPS.el = document.createElement('div');
+    FPS.el.id = 'fpsMeter';
+    document.body.appendChild(FPS.el);
+  }
+  FPS.el.hidden = false;
+  FPS.n++;
+  if (t - FPS.t >= 500) {
+    FPS.el.textContent = Math.round((FPS.n * 1000) / (t - FPS.t)) + ' FPS';
+    FPS.n = 0;
+    FPS.t = t;
+  }
+}
 function loop(t) {
   const dt = Math.min(0.05, Math.max(0, (t - lastT) / 1000));
   lastT = t;
+  fpsTick(t);
+  autoPerf(dt);
   try {
     syncPresentation();
     BattleMusic.update();

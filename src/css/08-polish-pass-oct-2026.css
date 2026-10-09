@@ -101,7 +101,6 @@ body {
     radial-gradient(900px 500px at -10% 110%, rgba(255, 180, 35, 0.05), transparent 60%),
     linear-gradient(rgba(91, 231, 255, 0.035) 1px, transparent 1px) 0 0 / 100% 32px,
     var(--bg);
-  background-attachment: fixed;
 }
 ::selection {
   background: rgba(91, 231, 255, 0.35);

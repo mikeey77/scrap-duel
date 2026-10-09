@@ -699,7 +699,7 @@ function planDrawLinks(c, v) {
 function planDrawModule(c, m, s, ang, st) {
   const b = shapeBounds(m),
     col = m.art.c,
-    t = SETTINGS?.motion === false || matchMedia('(prefers-reduced-motion:reduce)').matches ? 0 : ANIM;
+    t = SETTINGS?.motion === false || REDUCED.on ? 0 : ANIM;
   c.save();
   c.rotate(ang);
   for (const [x, y] of moduleCells(m)) {

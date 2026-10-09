@@ -8,7 +8,8 @@ const SETTINGS = {
   voice: true,
   motion: true,
   crateSpin: true,
-  perf: false
+  perf: false,
+  fps: false
 };
 try {
   Object.assign(SETTINGS, JSON.parse(load('sd.settings') || '{}'));
@@ -55,6 +56,7 @@ function openSettings(back) {
     ${toggle('setNums', 'Floating damage numbers', SETTINGS.nums)}
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
     ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
+    ${toggle('setFps', 'Show frame rate (FPS)', SETTINGS.fps)}
     <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Garage Style progress</button></div>
     <button class="btn" id="setDone">Done</button>`;
   $('#ovSettings').hidden = false;
@@ -78,6 +80,7 @@ function openSettings(back) {
   for (const [id, k] of [
     ['setVoice', 'voice'],
     ['setMotion', 'motion'],
+    ['setFps', 'fps'],
     ['setCrateSpin', 'crateSpin'],
     ['setShake', 'shake'],
     ['setNums', 'nums'],

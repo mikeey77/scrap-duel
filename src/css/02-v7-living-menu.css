@@ -52,7 +52,6 @@
   background: rgba(35, 40, 45, 0.82);
   border: 1px solid var(--line);
   border-top: 3px solid var(--rc);
-  backdrop-filter: blur(6px);
   transition:
     transform 0.15s,
     box-shadow 0.15s;

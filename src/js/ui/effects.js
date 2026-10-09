@@ -2,7 +2,7 @@
 function zap(el, opt = {}) {
   if (!el || SETTINGS.motion === false || !el.getBoundingClientRect) return;
   try {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (REDUCED.on) return;
   } catch (e) {}
   const r = el.getBoundingClientRect();
   if (r.width < 40 || r.height < 30) return;

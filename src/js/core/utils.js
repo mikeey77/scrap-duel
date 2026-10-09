@@ -1,4 +1,14 @@
 'use strict';
+/** The OS "reduce motion" preference, read once and kept up to date (matchMedia per frame is slow). */
+const REDUCED = (() => {
+  const st = { on: false };
+  try {
+    const mq = matchMedia('(prefers-reduced-motion: reduce)');
+    st.on = mq.matches;
+    mq.addEventListener && mq.addEventListener('change', e => (st.on = e.matches));
+  } catch (e) {}
+  return st;
+})();
 // Shared helpers: DOM shortcuts, math, grid keys, weighted random.
 const $ = s => document.querySelector(s),
   $$ = s => [...document.querySelectorAll(s)];

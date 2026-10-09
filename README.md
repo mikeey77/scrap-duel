@@ -1,14 +1,27 @@
 # Scrap Duel
 
-A browser vehicle builder and combat game: draft parts, bolt together a car, and duel a bot or a friend across ten rounds.
+A desktop vehicle builder and combat game: draft parts, bolt together a car, and duel a bot or a friend.
 
-Play: https://scrap-duel.netlify.app/ — installable as an app (Add to Home Screen / Install app in the menu).
+## Desktop app
+
+The game ships as a Windows app (Electron). Everything runs on the player's PC: solo, Scrap Gauntlet and the sandbox work offline, saves stay in the user profile, and multiplayer is peer-to-peer (one player hosts, the other joins with a 4-character code; only the code exchange uses the free PeerJS service).
+
+```sh
+npm install
+npm start            # build and open the game window
+npm run dist:win     # installer + portable exe (run on Windows, or use the "Desktop build" GitHub Action)
+npm run dist:win-zip # unsigned zip of the app, buildable from Linux/macOS
+```
+
+- `desktop/main.cjs` – window, `app://` protocol, saved window size, F11 fullscreen, GPU flags
+- `desktop/preload.cjs` – the small bridge the page uses (`window.desktop`: fullscreen, quit, version)
+- Fonts and PeerJS are bundled by `build.mjs` (no CDN needed)
+- Settings → *Show frame rate* shows FPS; slow high-DPI screens switch to performance mode automatically
 
 ## Gauntlet & arenas release
 
-- **Scrap Gauntlet** (roguelike): survive endless waves with three hearts. Rivals grow stronger every wave; every fifth wave is a boss (extra HP and damage) that drops a heart and a relic (Duct Tape, Nitro Coffee, Hair Trigger, Thick Skin, Repair Drone, …). Your best wave is saved to your account.
+- **Scrap Gauntlet** (roguelike): survive endless waves with three hearts. Rivals grow stronger every wave; every fifth wave is a boss (extra HP and damage) that drops a heart and a relic (Duct Tape, Nitro Coffee, Hair Trigger, Thick Skin, Repair Drone, …). Your best wave is saved.
 - **17 arenas**: ten new ones with gimmicks — Volcano Forge (lava), Space Station (low gravity, air vents), Car Wash (soap, blowers), Desert Canyon (sandstorm gusts), Haunted Mansion (lights out), Toy Room, Robot Factory (conveyor belts), Pinball Table (bumpers), Giant Kitchen (stove plates) and Soggy Swamp (mud).
-- **Installable app**: web manifest, icons and a service worker (`site/sw.js`); solo and sandbox work offline.
 - Richer sound: room reverb, stereo position, pitch variation and reworked hits, explosions and UI clicks.
 - More jokes: bot banter, hit quips, talking test dummies, kill messages, menu taglines, a cockpit that dozes off when you leave the garage.
 
@@ -27,15 +40,6 @@ Play: https://scrap-duel.netlify.app/ — installable as an app (Add to Home Scr
 - Shop search, category, rarity, favorites and mount filters narrow the discovered parts. Shop rows and crate rewards show occupied footprints, weight and mount requirements.
 
 Weather rules, 2v2 and spectating during building remain future work.
-
-## Mobile and UI update
-
-- Portrait arena rotates 90 degrees; aiming, steering, camera fitting and offscreen arrows use the same inverse projection. World coordinates and multiplayer protocol stay unchanged.
-- Independent drive and aim sticks. Aim gently without firing; push the right stick past its firing ring to shoot. Pointer capture, cancellation and focus loss release inputs safely.
-- Fixed mobile battle viewport, fullscreen button and a portrait-rotation toggle.
-- Equipped touch actions show actual cooldowns; control style can be automatic, touch or mouse/keyboard. Optional subtle aim assist is solo-only and ignores smoke, night and blocked targets.
-- Three mobile garage tabs keep the parts catalog, build bay and car stats accessible, with persistent build actions.
-- Workshop lighting, responsive card feedback, footprint labels and synergy progress bars. Reduced-motion preferences are respected.
 
 ## Previous release
 
@@ -58,10 +62,6 @@ New gadgets: right-click activates/reels cables; Z drops beads or foam, V releas
 
 In the garage: click/drag to place, right-click to remove, R changes the next part's facing, T rotates placed parts, X removes, M mirrors. Ctrl+Z undoes and Ctrl+Y redoes.
 
-## Accounts
-
-Players can stay a guest or sign in with a nickname and a 4–6 digit PIN. Signed-in players keep their XP, Garage Style, blueprints, favorites and settings on the server and get them back on any device. The API is one Netlify Function (`netlify/functions/account.mjs`, logic in `netlify/lib/account-core.mjs`) storing profiles in Netlify Blobs. PINs are salted and hashed with PBKDF2; five wrong PINs lock sign-in for ten minutes.
-
 ## Code layout
 
 The source is split by feature in `src/`:
@@ -71,19 +71,20 @@ The source is split by feature in `src/`:
 - `src/js/` — game code by area (`data/`, `garage/`, `game/`, `render/`, `audio/`, `net/`, `ui/`, `ai/`, `core/`)
 - `src/manifest.json` — the order the files are bundled in (all scripts share one scope)
 
-Static files that are not built (icons, `manifest.webmanifest`, `sw.js`) live directly in `site/`.
+Static files that are not built (icons) live directly in `site/`; `site/fonts` and `site/vendor` are generated.
 
-`npm run build` (or `node build.mjs`) bundles everything into the single page `site/index.html`, which is what Netlify serves and what the tests load. `npm run format` runs Prettier. Edit files in `src/`, never `site/index.html` directly.
+`npm run build` (or `node build.mjs`) bundles everything into the single page `site/index.html`, which the desktop app loads and the tests check. `npm run format` runs Prettier. Edit files in `src/`, never `site/index.html` directly.
 
-## Run locally
+## Run in a browser (development)
 
-Build, then serve `site/`, for example:
+Build, then serve `site/` and open http://localhost:8765/:
 
 ```sh
+npm run build
 python -m http.server 8765 --directory site
 ```
 
-Open http://localhost:8765/ in a browser. Accounts need the Netlify Function (`netlify dev`); everything else works without it. Internet access is required for multiplayer matchmaking.
+Multiplayer needs an internet connection for the code exchange.
 
 ## Regression checks
 
@@ -93,8 +94,5 @@ With Node.js installed:
 npm test
 ```
 
-The suite checks randomized starters, support grants, functional placement, undo, scoring, controls, filters, crate accounting, replay events, music lifecycle, and two-peer battle recovery including score and cooldown synchronization. Mobile checks cover rotated camera/input round trips, independently cancelled twin sticks, equipment cooldowns, and solo-only aim assistance. Shape/content checks cover all 50 modules, four-way footprints, full support requirements, non-anchor removal/replacement, connected Auto-place, combat/render execution, cargo rewards and spills, real tow forces, rescue/press timing, serialized new states, Scrap Run deposits, selectable scoring and layer-specific damage reports. Browser playtesting covers layout and actual PeerJS connections.
+The suite checks randomized starters, support grants, functional placement, undo, scoring, controls, filters, crate accounting, replay events, music lifecycle, and two-peer battle recovery including score and cooldown synchronization. Shape/content checks cover all 50 modules, four-way footprints, full support requirements, non-anchor removal/replacement, connected Auto-place, combat/render execution, cargo rewards and spills, real tow forces, rescue/press timing, serialized new states, Scrap Run deposits, selectable scoring and layer-specific damage reports. Browser playtesting covers layout and actual PeerJS connections.
 
-## Deployment
-
-Netlify runs `node build.mjs` and publishes `site/` using `netlify.toml`. The HTML entry point revalidates on each visit so multiplayer players receive the same protocol version after an update.
