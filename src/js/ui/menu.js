@@ -442,6 +442,7 @@ requestAnimationFrame(loop);
 if (window.__SD_TEST__)
   window.__SD = {
     STORY,
+    dpsOf,
     OW_SITES,
     OW_CACHES,
     OW_W,

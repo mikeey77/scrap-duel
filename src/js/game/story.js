@@ -359,11 +359,11 @@ const STORY_BOSSES = {
     name: 'Mother Crusher',
     style: 'rammer',
     paint: '#5cc38f',
-    hp: 1,
-    dmg: 0.8,
+    hp: 1.35,
+    dmg: 0.9,
     taunt: 'Bin day!',
-    base: ['..SSS..', 'RGFFFGR', 'WFFCFFW', 'WGFFFGW', 'kFFFFFk', 'WAAAAAW'],
-    top: ['.......', '.m...m.', '.......', '.o...o.', '.......', '.......']
+    base: ['..SSS..', 'RGFCFGR', 'WFFFFFW', 'WGAAAGW'],
+    top: ['.......', '.m...m.', '.......', '.......']
   },
   drill: {
     name: 'Twin Drill',
@@ -390,10 +390,10 @@ const STORY_BOSSES = {
     style: 'brawler',
     paint: '#f2b705',
     hp: 1.2,
-    dmg: 0.9,
+    dmg: 0.85,
     taunt: 'Kneel before the scrap.',
-    base: ['...XXX...', 'S.RGGGR.S', 'GrHFFFHrG', '..WFCFW..', '..WGFGW..', '..AHHHA..', '..WMMMW..'],
-    top: ['.........', '.........', '..c...c..', '...z.x...', '..o.s.o..', '...w.p...', '.........']
+    base: ['...RXR...', 'S.RGGGR.S', 'GrAFFFArG', '..WFCFW..', '..WGFGW..', '..AFFFA..', '..WMMMW..'],
+    top: ['.........', '.........', '..c...c..', '...z.x...', '..m.s.m..', '...w.p...', '.........']
   }
 };
 /** Turns a boss sketch into a design. Melee and joints face away from the cockpit. */

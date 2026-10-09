@@ -20,10 +20,11 @@ npm run dist:win-zip # unsigned zip of the app, buildable from Linux/macOS
 
 ## Scrap Road update
 
-- **Scrap Road** (story mode): 4 regions and 19 missions on a road map. Missions have hand-made arena layouts, special rounds, salvage crates to grab before the rival steals them, and three stars each. Every region ends with a boss: Mother Crusher, the Twin Drill, the Magnet Baron and the Junk King, hand-built giant cars that get angrier at ⅔ and ⅓ health.
-- **Workbench and gear**: parts you find (after Duel matches, Gauntlet runs, missions and bosses) are yours to keep. Upgrade them with bolts up to a level 5 Masterwork, pick a quirk at level 3 (every quirk is a trade-off), fuse duplicates or scrap them. In Duel, Story and Gauntlet your gear turns up as a draft card.
+- **Scrap Road** (story mode): a top-down world you drive around in your own car (WASD, Shift to boost). 4 regions with their own terrain, roads, gates that open after each boss, 12 hidden caches with bolts and gear, fog of war, a minimap with fast travel. 19 missions on the way. Missions have hand-made arena layouts, special rounds, salvage crates to grab before the rival steals them, and three stars each. Every region ends with a boss (best of 3): Mother Crusher, the Twin Drill, the Magnet Baron and the Junk King, hand-built cars that get angrier at ⅔ and ⅓ health. Boss and mission difficulty were tuned with simulated playthroughs.
+- **Workbench and gear** (a technical spec sheet: schematic, base/now/next readout, level curve, work order): parts you find (after Duel matches, Gauntlet runs, missions and bosses) are yours to keep. Upgrade them with bolts up to a level 5 Masterwork, pick a quirk at level 3 (every quirk is a trade-off), fuse duplicates or scrap them. In Duel, Story and Gauntlet your gear turns up as a draft card.
 - **Locker** (replaces Garage Style): skins, stickers, trails, wreck effects, titles and your badge. Stickers show on your car and give small perks; two stickers from your skin's set unlock a set bonus. Perks only work offline; online only the picture travels.
 - **The show**: commentators Dash Danvers and Doc Gasket call the fight with captions and voices, the crowd in the stands cheers and boos, and a full hype meter makes the crowd throw you a gift (repair, coins or a power-up; offline only).
+- Battle telemetry (speed, DPS out and in, parts left, a 10-second trace) and a broadcast-style vignette.
 - Match formats (Classic, Lives, Bounty, Hill) are selectable again for Duel vs bot. Your paint colour is remembered.
 - Removed: the "Sandbox online" placeholder, unused CSS from older menus, Netlify leftovers and dead code.
 
