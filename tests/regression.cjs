@@ -1754,4 +1754,88 @@ test('crowd: damage builds hype, full hype throws a gift offline, never online',
   assert.equal(b.pk.length, n, 'no gifts online');
 });
 
+test('scrap road world: every mission has a site in its region, all reachable once gates open', () => {
+  const r = runtime(),
+    a = r.api;
+  const W = a.owWorld();
+  for (const m of a.STORY) {
+    const p = a.OW_SITES[m.id];
+    assert(p, 'site for ' + m.id);
+    assert.equal(a.owRegionAt(p[0], p[1]), m.region, m.id + ' sits in its region');
+  }
+  // flood fill on a 20 px grid: what can the car reach?
+  const reach = gatesOpen => {
+    for (const m of a.STORY) a.STORYP().stars[m.id] = gatesOpen ? 1 : 0;
+    const blk = a.owBlockers(),
+      S = 20,
+      cols = Math.ceil(a.OW_W / S),
+      rows = Math.ceil(a.OW_H / S),
+      seen = new Uint8Array(cols * rows),
+      ok = (x, y) =>
+        x > 22 &&
+        y > 22 &&
+        x < a.OW_W - 22 &&
+        y < a.OW_H - 22 &&
+        W.solids.every(o => Math.hypot(x - o.x, y - o.y) > o.r * (o.kind === 'container' ? 0.95 : 0.8) + 20) &&
+        blk.every(w => !(x > w.x - 20 && x < w.x + w.w + 20 && y > w.y - 20 && y < w.y + w.h + 20));
+    const q = [[11, 112]];
+    seen[112 * cols + 11] = 1;
+    while (q.length) {
+      const [cx, cy] = q.pop();
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1]
+      ]) {
+        const nx = cx + dx,
+          ny = cy + dy;
+        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows || seen[ny * cols + nx]) continue;
+        if (!ok(nx * S + 10, ny * S + 10)) continue;
+        seen[ny * cols + nx] = 1;
+        q.push([nx, ny]);
+      }
+    }
+    return (x, y) => {
+      for (let dy = -2; dy <= 2; dy++)
+        for (let dx = -2; dx <= 2; dx++)
+          if (seen[(Math.floor(y / S) + dy) * cols + Math.floor(x / S) + dx]) return true;
+      return false;
+    };
+  };
+  const all = reach(true);
+  for (const m of a.STORY) assert(all(...a.OW_SITES[m.id]), m.id + ' reachable');
+  for (const c of a.OW_CACHES) assert(all(c.x, c.y), c.id + ' reachable');
+  const start = reach(false);
+  assert(start(...a.OW_SITES.r1x), 'region 1 open from the start');
+  assert(!start(...a.OW_SITES.r2a), 'region 2 is behind a closed gate');
+  assert(!start(...a.OW_SITES.r4x), 'the Keep is behind three gates');
+});
+test('scrap road world: the car drives, a closed gate stops it, fog and caches are saved', () => {
+  const r = runtime(),
+    a = r.api;
+  a.setGear({ bolts: 0, items: [], next: 1 });
+  for (const m of a.STORY) a.STORYP().stars[m.id] = 0;
+  a.STORYP().pos = [1400, 1820, 0];
+  a.owStart();
+  const S = a.OWS();
+  S.keys.add('KeyW');
+  for (let i = 0; i < 120; i++) a.owStep(1 / 60);
+  assert(S.x < 1480, 'stopped at the gate, x=' + S.x);
+  a.STORYP().stars.r1x = 1;
+  for (let i = 0; i < 120; i++) a.owStep(1 / 60);
+  assert(S.x > 1520, 'drives through once the boss is beaten');
+  a.owFogSave(S.fog);
+  const f = a.owFogLoad();
+  assert.equal(
+    f.reduce((x, y) => x + y, 0),
+    S.fog.reduce((x, y) => x + y, 0)
+  );
+  const b0 = a.GEAR().bolts,
+    n0 = a.GEAR().items.length;
+  a.owOpenCache(a.OW_CACHES[0]);
+  assert(a.GEAR().bolts > b0 || a.GEAR().items.length > n0, 'cache pays out');
+  assert(a.STORYP().caches.includes('c1'));
+});
+
 console.log(`\n${passed} regression tests passed.`);

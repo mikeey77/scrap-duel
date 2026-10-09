@@ -105,7 +105,13 @@ const COSMETICS = {
     { id: 'yardboss', name: 'Yard Boss', desc: 'Took out the garbage. Literally.', unlock: { ach: 'road1' } },
     { id: 'canyon', name: 'Canyon Runner', desc: 'Outlasted the Twin Drill.', unlock: { ach: 'road2' } },
     { id: 'baron', name: 'Unstuck', desc: 'Escaped the Magnet Baron.', unlock: { ach: 'road3' } },
-    { id: 'junkking', name: 'The New Junk King', desc: 'Sits on a throne of scrap.', unlock: { ach: 'kingslayer' } }
+    { id: 'junkking', name: 'The New Junk King', desc: 'Sits on a throne of scrap.', unlock: { ach: 'kingslayer' } },
+    {
+      id: 'roadtripper',
+      name: 'Road Tripper',
+      desc: 'Has seen every corner of the Scrap Road.',
+      unlock: { ach: 'explorer' }
+    }
   ]
 };
 const ACHIEVEMENTS = {
@@ -131,7 +137,8 @@ const ACHIEVEMENTS = {
   road1: { name: 'Bin Day', desc: 'Beat Mother Crusher on the Scrap Road.' },
   road2: { name: 'Drill Sergeant', desc: 'Beat the Twin Drill on the Scrap Road.' },
   road3: { name: 'Demagnetised', desc: 'Beat the Magnet Baron on the Scrap Road.' },
-  kingslayer: { name: 'Kingslayer', desc: 'Beat the Junk King at the end of the Scrap Road.' }
+  kingslayer: { name: 'Kingslayer', desc: 'Beat the Junk King at the end of the Scrap Road.' },
+  explorer: { name: 'Road Tripper', desc: 'Find every hidden cache on the Scrap Road.' }
 };
 const XP = { round: 25, roundWin: 25, specialWin: 15, match: 50, matchWin: 100 };
 const xpForLevel = lvl => 100 + 50 * (lvl - 1); // XP needed to go from lvl to lvl + 1

@@ -360,7 +360,9 @@ function loop(t) {
     syncPresentation();
     BattleMusic.update();
     Net.updateStatus();
-    if (G.phase === 'replay' && B) {
+    if (owFrame(dt)) {
+      // the Scrap Road map draws itself
+    } else if (G.phase === 'replay' && B) {
       replayStep(dt);
       if (B) drawArena();
     } else if (B && B.demo) {
@@ -440,6 +442,23 @@ requestAnimationFrame(loop);
 if (window.__SD_TEST__)
   window.__SD = {
     STORY,
+    OW_SITES,
+    OW_CACHES,
+    OW_W,
+    OW_H,
+    owWorld,
+    owRegionAt,
+    owBlockers,
+    owStart,
+    owStep,
+    OWS: () => OWS,
+    owFogSave,
+    owFogLoad,
+    owOpenCache,
+    makeBot,
+    botDraft,
+    botShop,
+    botBuildFor,
     openDraft,
     openSettings,
     sanitizeLook,

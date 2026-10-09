@@ -27,39 +27,111 @@ function openWorkbench(back) {
 }
 const lvPips = g =>
   `<span class="lvpips" aria-label="Level ${g.lvl} of ${GEAR_MAX}">${Array.from({ length: GEAR_MAX }, (_, i) => `<i class="${i < g.lvl ? 'on' : ''}${i === GEAR_MAX - 1 ? ' mw' : ''}"></i>`).join('')}</span>`;
+/** Multipliers a gear piece gives at a level, mirroring applyGear (for the spec sheet). */
+function gearEffects(g) {
+  const k = gearKind(g.id),
+    b = gearBonus(g);
+  const e = { hp: k === 'hp' ? 1 + b : 1, rate: k === 'rate' ? 1 + b : 1, speed: k === 'speed' ? b : 0 };
+  const q = g.q;
+  if (q === 'overclock') e.rate *= 1.2;
+  if (q === 'bulky') ((e.hp *= 1.35), (e.speed -= 0.03));
+  if (q === 'feather') ((e.hp *= 0.8), (e.speed += 0.03));
+  if (q === 'spiky' || q === 'tantrum') e.hp *= 0.9;
+  if (q === 'showoff') e.hp *= 0.85;
+  if (q === 'selfheal' || q === 'magnetic') e.speed -= 0.02;
+  return e;
+}
+const pct = v => `${v >= 0 ? '+' : '−'}${Math.abs(Math.round(v * 100))}%`;
+/** Blueprint schematic: the part on a grid with dimension lines and callouts. */
+function wbSchematic(g) {
+  const m = MOD[g.id],
+    b = shapeBounds(m),
+    cells = `${b.w}×${b.h}`,
+    code = `SD-${g.id.toUpperCase().slice(0, 6)}-${String(g.u).padStart(4, '0')}`;
+  return `<svg class="wb-schem" viewBox="0 0 520 250" role="img" aria-label="Schematic of ${esc(m.name)}">
+    <defs><pattern id="wbgrid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="rgba(91,231,255,.09)"/></pattern></defs>
+    <rect width="520" height="250" fill="url(#wbgrid)"/>
+    <g stroke="#5be7ff" stroke-width="1" fill="none" opacity=".55">
+      <path d="M150 40h220M150 34v12M370 34v12"/><path d="M400 70v130M394 70h12M394 200h12"/>
+      <circle cx="260" cy="135" r="86" stroke-dasharray="3 6"/><path d="M260 35v20M260 215v20M160 135h20M340 135h20"/>
+    </g>
+    <image href="${iconURL(g.id, 184)}" x="195" y="70" width="130" height="130"/>
+    <g font-family="Chakra Petch" font-size="12" fill="#7fb8d6">
+      <text x="260" y="30" text-anchor="middle">${cells} CELL${b.w * b.h > 1 ? 'S' : ''}</text>
+      <text x="410" y="139" transform="rotate(90 410 139)" text-anchor="middle">${esc((m.layer === 't' ? 'NEEDS ' + MOUNTNAME[m.mnt] : m.mnt ? 'GIVES ' + MOUNTNAME[m.mnt] : 'NO SOCKET').toUpperCase())}</text>
+      <text x="16" y="24">${code}</text>
+      <text x="16" y="42" fill="#8da3c2">REV ${g.lvl}.${g.q ? 'Q' : '0'} · ${esc(RAR[m.rar].name.toUpperCase())}</text>
+      <text x="16" y="232" fill="#8da3c2">MASS ${m.mass} t</text>
+      <text x="504" y="232" text-anchor="end" fill="#8da3c2">${esc(CATNAME[m.cat].toUpperCase())}</text>
+    </g>
+    ${g.lvl >= GEAR_MAX ? '<rect x="1" y="1" width="518" height="248" fill="none" stroke="#ffd257" stroke-width="2"/>' : ''}
+  </svg>`;
+}
+/** Readout: base part, now, and after the next upgrade. */
+function wbReadout(g) {
+  const m = MOD[g.id],
+    now = gearEffects(g),
+    nxt = g.lvl < GEAR_MAX ? gearEffects({ ...g, lvl: g.lvl + 1 }) : null,
+    dps = dpsOf(m.id, {}),
+    row = (label, base, a, b, fmt) =>
+      `<tr><th scope="row">${label}</th><td>${fmt(base)}</td><td class="now">${fmt(a)}</td><td class="nx">${b == null ? '—' : fmt(b)}</td></tr>`;
+  const rows = [row('Hit points', m.hp, m.hp * now.hp, nxt && m.hp * nxt.hp, v => Math.round(v))];
+  if (dps) rows.push(row('DPS', dps, dps * now.rate, nxt && dps * nxt.rate, v => Math.round(v)));
+  else if (now.rate !== 1 || (nxt && nxt.rate !== 1))
+    rows.push(row('Use rate', 1, now.rate, nxt && nxt.rate, v => `×${v.toFixed(2)}`));
+  if (now.speed || (nxt && nxt.speed)) rows.push(row('Car top speed', 0, now.speed, nxt && nxt.speed, v => pct(v)));
+  return `<table class="wb-read"><thead><tr><th></th><th scope="col">Base</th><th scope="col">Lv ${g.lvl}</th><th scope="col">${nxt ? 'Lv ' + (g.lvl + 1) : 'Max'}</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+/** Level curve: the bonus at each level, current filled, next outlined. */
+function wbCurve(g) {
+  const vals = Array.from({ length: GEAR_MAX }, (_, i) => gearBonus({ ...g, lvl: i + 1 })),
+    max = vals[GEAR_MAX - 1];
+  return `<div class="wb-curve" aria-label="Bonus per level">${vals
+    .map(
+      (v, i) =>
+        `<div class="lv${i + 1 <= g.lvl ? ' on' : ''}${i + 1 === g.lvl + 1 ? ' nx' : ''}${i === GEAR_MAX - 1 ? ' mw' : ''}"><i style="height:${Math.round((v / max) * 100)}%"></i><b>${pct(v)}</b><span>Lv ${i + 1}</span></div>`
+    )
+    .join(
+      ''
+    )}<p class="small">${esc(GEAR_KIND_TEXT[gearKind(g.id)])} per level${g.lvl < GEAR_MAX ? '' : ' · Masterwork'}</p></div>`;
+}
 function wbDetail(g) {
   if (!g)
     return `<div class="wb-empty"><h3>No gear yet</h3><p>Win matches, clear Gauntlet waves and finish Scrap Road missions to find gear.</p></div>`;
   const m = MOD[g.id],
-    k = gearKind(g.id),
-    now = Math.round(gearBonus(g) * 100),
-    next = g.lvl < GEAR_MAX ? Math.round(gearBonus({ ...g, lvl: g.lvl + 1 }) * 100) : null,
-    cost = g.lvl < GEAR_MAX ? gearCost(g) : 0,
-    dup = GEAR.items.find(x => x !== g && x.id === g.id),
     q = g.q && QUIRKS[g.q];
   let quirk;
   if (q)
     quirk = `<div class="wb-q on"><span class="qtag">Quirk</span><b>${esc(q.name)}</b><p class="pro">+ ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p><button class="btn ghost sm" id="wbReroll" ${GEAR.bolts < QUIRK_REROLL ? 'disabled' : ''}>Reroll quirk · ${QUIRK_REROLL} bolts</button></div>`;
   else if (g.qo && g.qo.length)
-    quirk = `<div class="wb-q pick"><span class="qtag">Pick a quirk</span><p class="small">Every quirk is a trade-off. You can reroll later.</p><div class="qopts">${g.qo
+    quirk = `<div class="wb-q pick"><span class="qtag">Pick a quirk</span><span class="small">Every quirk is a trade-off. You can reroll later.</span><div class="qopts">${g.qo
       .map(
         id =>
           `<button class="qopt" data-q="${id}"><b>${esc(QUIRKS[id].name)}</b><span class="pro">+ ${esc(QUIRKS[id].pro)}</span><span class="con">− ${esc(QUIRKS[id].con)}</span></button>`
       )
       .join('')}</div></div>`;
-  else quirk = `<div class="wb-q locked"><span class="qtag">Quirk</span><p>Unlocks at level 3.</p></div>`;
-  return `<div class="wb-hero ${g.lvl >= GEAR_MAX ? 'mw' : ''}"><img alt="" src="${iconURL(g.id, 184)}"></div>
-    <div class="wb-meta"><span class="label" style="color:${RAR[m.rar].col}">${RAR[m.rar].name} · ${esc(CATNAME[m.cat])}${g.from ? ' · ' + esc(g.from) : ''}</span>
-      <h3>${esc(gearName(g))}${g.lvl >= GEAR_MAX ? ' <em class="mwtag">Masterwork</em>' : ''}</h3>${lvPips(g)}
-      <div class="wb-stat"><span>${esc(GEAR_KIND_TEXT[k])}</span><b>+${now}%</b>${next != null ? `<i aria-hidden="true">→</i><b class="nx">+${next}%</b>` : ''}</div>
-      ${g.lvl === GEAR_MAX - 1 ? '<p class="small">Level 5 makes it a Masterwork: an extra bonus, a golden glow and a hype boost with the crowd.</p>' : ''}
-    </div>
-    ${quirk}
-    <div class="wb-acts">
-      ${g.lvl < GEAR_MAX ? `<button class="btn" id="wbUp" ${GEAR.bolts < cost ? 'disabled' : ''}>Upgrade to level ${g.lvl + 1} · ${cost} bolts</button>` : '<span class="small">Max level reached.</span>'}
-      ${dup ? `<button class="btn ghost" id="wbFuse">Fuse with your other ${esc(m.name)} (Lv ${dup.lvl})</button>` : ''}
-      <button class="btn ghost warn" id="wbScrap">${wbArmed === g.u ? 'Click again to scrap' : `Scrap for ${gearScrapValue(g)} bolts`}</button>
-    </div>`;
+  else quirk = `<div class="wb-q locked"><span class="qtag">Quirk</span><span>Slot unlocks at level 3.</span></div>`;
+  return `<div class="wb-title"><span class="label" style="color:${RAR[m.rar].col}">${RAR[m.rar].name} · ${esc(CATNAME[m.cat])}${g.from ? ' · found in ' + esc(g.from) : ''}</span>
+      <h3>${esc(gearName(g))}${g.lvl >= GEAR_MAX ? ' <em class="mwtag">Masterwork</em>' : ''}</h3></div>
+    ${wbSchematic(g)}
+    <div class="wb-grid2">${wbReadout(g)}${wbCurve(g)}</div>
+    ${quirk}`;
+}
+/** Right column: the work order for the selected piece. */
+function wbOrder(g) {
+  if (!g) return '';
+  const m = MOD[g.id],
+    cost = g.lvl < GEAR_MAX ? gearCost(g) : 0,
+    dup = GEAR.items.find(x => x !== g && x.id === g.id),
+    after = GEAR.bolts - cost;
+  return `<h3>Work order</h3>
+    <dl class="wb-bill"><dt>Bolts in stock</dt><dd>${GEAR.bolts}</dd>
+      ${g.lvl < GEAR_MAX ? `<dt>Upgrade to Lv ${g.lvl + 1}</dt><dd class="neg">−${cost}</dd><dt>Left after</dt><dd class="${after < 0 ? 'bad' : ''}">${after}</dd>` : '<dt>Status</dt><dd>Max level</dd>'}</dl>
+    ${g.lvl < GEAR_MAX ? `<button class="btn" id="wbUp" ${after < 0 ? 'disabled' : ''}>${after < 0 ? `Need ${-after} more bolts` : `Upgrade to level ${g.lvl + 1}`}</button>` : ''}
+    ${dup ? `<button class="btn ghost" id="wbFuse">Fuse with your other ${esc(m.name)} (Lv ${dup.lvl})</button>` : ''}
+    <button class="btn ghost warn" id="wbScrap">${wbArmed === g.u ? 'Click again to scrap' : `Scrap for ${gearScrapValue(g)} bolts`}</button>
+    <div class="wb-help"><b>How gear works</b>
+      <p>Gear drops after Duel matches, Gauntlet runs, missions, bosses and road caches. Level 3 opens the quirk slot, level 5 makes a Masterwork. In Duel, Story and Gauntlet your gear shows up as a draft card. Online 1v1 never uses gear.</p></div>`;
 }
 function renderWorkbench() {
   const list = GEAR.items.filter(wbMatch).sort((a, b) => b.lvl - a.lvl || MOD[b.id].rar - MOD[a.id].rar);
@@ -90,15 +162,7 @@ function renderWorkbench() {
         }</div>
       </section>
       <section class="wb-detail" aria-label="Selected gear">${wbDetail(g)}</section>
-      <aside class="wb-help">
-        <h3>How gear works</h3>
-        <ol>
-          <li><b>Find it.</b> Gear drops after Duel matches, Gauntlet runs and Scrap Road missions. Bosses drop their signature parts.</li>
-          <li><b>Upgrade it.</b> Spend bolts here. Level 3 unlocks a quirk, level 5 makes it a Masterwork.</li>
-          <li><b>Draft it.</b> In Duel, Story and Gauntlet your gear shows up as a draft card. Take it and the first copy you mount is your tuned part.</li>
-        </ol>
-        <p class="small">Online 1v1 never uses gear, so matches against friends stay fair.</p>
-      </aside>
+      <aside class="wb-order" aria-label="Work order">${wbOrder(g)}</aside>
     </div></div>`;
   $$('#ovWork [data-f]').forEach(b =>
     b.addEventListener('click', () => {

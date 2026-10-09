@@ -997,6 +997,7 @@ function drawArena() {
   if (v && !B.demo) drawHitArrows(c, v, s);
   if (B.special === 'night') drawNight(c, s);
   drawGimmickOverlay(c, s);
+  drawVignette(c);
   if (v && !B.demo && !B.replay) lowHealth(c, v);
   if (B.ring && v && !v.dead && Math.hypot(v.x - AW / 2, v.y - AH / 2) > B.ring.r) {
     c.strokeStyle = `rgba(255,80,40,${0.35 + Math.sin(ANIM * 10) * 0.2})`;
@@ -1096,7 +1097,7 @@ function drawDemoHUD(c) {
 }
 /** Stacked labelled bars. `inset` leaves room on the first row for the cockpit portrait. */
 function bars(c, x, y, w, rows, right, inset = 0) {
-  c.fillStyle = 'rgba(20,16,12,.72)';
+  c.fillStyle = 'rgba(14,18,28,.88)';
   c.fillRect(x, y, w, 8 + rows.length * 26);
   rows.forEach(([l, val, col], i) => {
     const yy = y + 6 + i * 26,
@@ -1166,6 +1167,7 @@ function drawHUD(c) {
   }
   drawBossBar(c);
   drawCommentary(c);
+  drawTelemetry(c, v, W, H);
   c.textAlign = 'center';
   c.textBaseline = 'top';
   if (G.phase === 'battle' || B.replay) {
@@ -1208,7 +1210,7 @@ function drawHUD(c) {
     c.textBaseline = 'top';
     c.font = '700 10px "Barlow Semi Condensed", sans-serif';
     let sx = 12;
-    const sy = 12 + 8 + rows.length * 26 + 4 + (B.crowd && G.mode !== 'sandbox' ? 20 : 0); // under the hype meter
+    const sy = 12 + 8 + rows.length * 26 + 4 + (B.crowd && G.mode !== 'sandbox' && G.phase === 'battle' ? 20 : 0); // under the hype meter
     for (const [t, lvl] of syn) {
       const label = `${TAGS[t].toUpperCase()} ${'★'.repeat(lvl)}`,
         w = c.measureText(label).width + 12;
@@ -1429,4 +1431,119 @@ function drawNight(c, s, dark = 0.9, flash = 1) {
   for (const p of B.pk) if (p.cd <= 0) light(p.x, p.y, 70, 0.8);
   for (const sh of B.shots) if (sh.kind !== 'bullet') light(sh.x, sh.y, 60, 0.5);
   c.drawImage(nightCv, 0, 0, W, H);
+}
+
+/** Telemetry plate (bottom right): speed, damage per second out and in, parts left, and a DPS trace. */
+function drawTelemetry(c, v, W, H) {
+  if (G.phase !== 'battle' || B.replay || W < 760) return;
+  const T = (B.tele = B.tele || { t: 0, hist: [], dealt: v.dealt || 0, hp: 0, inHist: [] });
+  const hpNow = v.insts.reduce((a, I) => a + (I.alive ? Math.max(0, I.hp) : 0), 0);
+  if (!T.hp) T.hp = hpNow;
+  T.t += 1 / 60;
+  if (T.t >= 0.25) {
+    T.t = 0;
+    T.hist.push(Math.max(0, (v.dealt || 0) - T.dealt) * 4);
+    T.inHist.push(Math.max(0, T.hp - hpNow) * 4);
+    T.dealt = v.dealt || 0;
+    T.hp = hpNow;
+    if (T.hist.length > 40) (T.hist.shift(), T.inHist.shift());
+  }
+  const avg = a => (a.length ? a.slice(-12).reduce((x, y) => x + y, 0) / Math.min(12, a.length) : 0),
+    dps = Math.round(avg(T.hist)),
+    din = Math.round(avg(T.inHist)),
+    kmh = Math.round(Math.hypot(v.vx || 0, v.vy || 0) * 0.4),
+    alive = v.insts.filter(I => I.alive).length,
+    w = 230,
+    h = 92,
+    x = W - w - 14,
+    y = H - h - 64;
+  c.save();
+  c.fillStyle = 'rgba(10,16,32,.82)';
+  c.beginPath();
+  c.moveTo(x + 8, y);
+  c.lineTo(x + w, y);
+  c.lineTo(x + w, y + h - 8);
+  c.lineTo(x + w - 8, y + h);
+  c.lineTo(x, y + h);
+  c.lineTo(x, y + 8);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = 'rgba(91,231,255,.35)';
+  c.stroke();
+  c.font = '700 10px "Chakra Petch", sans-serif';
+  c.textBaseline = 'top';
+  c.textAlign = 'left';
+  const cell = (lx, label, val, col) => {
+    c.fillStyle = '#7fb8d6';
+    c.font = '700 10px "Chakra Petch", sans-serif';
+    c.fillText(label, x + lx, y + 8);
+    c.fillStyle = col;
+    c.font = '700 18px "Chakra Petch", sans-serif';
+    c.fillText(String(val), x + lx, y + 20);
+  };
+  cell(10, 'KM/H', kmh, '#e6f1ff');
+  cell(66, 'DPS OUT', dps, '#3fe0a0');
+  cell(130, 'DPS IN', din, din > dps ? '#ff8a9c' : '#e6f1ff');
+  cell(190, 'PARTS', alive, '#ffd257');
+  // trace of the last 10 s: out (green) over in (red)
+  const gx = x + 10,
+    gy = y + 48,
+    gw = w - 20,
+    gh = 34,
+    mx = Math.max(40, ...T.hist, ...T.inHist);
+  c.strokeStyle = 'rgba(91,231,255,.12)';
+  for (let i = 0; i <= 2; i++) {
+    c.beginPath();
+    c.moveTo(gx, gy + (gh * i) / 2);
+    c.lineTo(gx + gw, gy + (gh * i) / 2);
+    c.stroke();
+  }
+  const trace = (a, col) => {
+    if (a.length < 2) return;
+    c.strokeStyle = col;
+    c.lineWidth = 1.6;
+    c.beginPath();
+    a.forEach((val, i) => {
+      const px = gx + (i / 39) * gw,
+        py = gy + gh - (val / mx) * gh;
+      i ? c.lineTo(px, py) : c.moveTo(px, py);
+    });
+    c.stroke();
+  };
+  trace(T.inHist, 'rgba(255,92,122,.8)');
+  trace(T.hist, '#3fe0a0');
+  c.restore();
+}
+
+/** Soft vignette and a cool top light: frames the arena like a broadcast camera. Cached per screen size. */
+let _vig = null;
+function drawVignette(c) {
+  if (SETTINGS.perf) return;
+  const W = view.w,
+    H = view.h;
+  if (!_vig || _vig.w !== W || _vig.h !== H) {
+    const cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.round(W / 2));
+    cv.height = Math.max(1, Math.round(H / 2));
+    const x = cv.getContext('2d'),
+      g = x.createRadialGradient(
+        cv.width / 2,
+        cv.height * 0.45,
+        Math.min(cv.width, cv.height) * 0.35,
+        cv.width / 2,
+        cv.height / 2,
+        Math.hypot(cv.width, cv.height) * 0.62
+      );
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(4,8,18,.42)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, cv.width, cv.height);
+    const t = x.createLinearGradient(0, 0, 0, cv.height * 0.35);
+    t.addColorStop(0, 'rgba(91,231,255,.06)');
+    t.addColorStop(1, 'rgba(91,231,255,0)');
+    x.fillStyle = t;
+    x.fillRect(0, 0, cv.width, cv.height * 0.35);
+    _vig = { w: W, h: H, cv };
+  }
+  c.drawImage(_vig.cv, 0, 0, W, H);
 }

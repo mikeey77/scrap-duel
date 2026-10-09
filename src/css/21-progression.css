@@ -66,7 +66,7 @@
 /* ---------- Workbench ---------- */
 .wb-body {
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr) 260px;
+  grid-template-columns: 320px minmax(0, 1fr) 270px;
   gap: 18px;
   padding: 18px 20px;
   overflow: auto;
@@ -180,53 +180,6 @@
   gap: 14px;
   min-width: 0;
 }
-.wb-hero {
-  align-self: center;
-  width: 200px;
-  height: 200px;
-  display: grid;
-  place-items: center;
-  background:
-    linear-gradient(var(--bp-line) 1px, transparent 1px) 0 0 / 20px 20px,
-    linear-gradient(90deg, var(--bp-line) 1px, transparent 1px) 0 0 / 20px 20px,
-    var(--blueprint);
-  border: 1px solid var(--line-2);
-  clip-path: var(--chamfer);
-}
-.wb-hero img {
-  width: 150px;
-  height: 150px;
-}
-.wb-hero.mw {
-  border-color: var(--coin);
-  box-shadow: inset 0 0 40px rgba(255, 210, 87, 0.25);
-}
-.wb-meta h3 {
-  margin: 4px 0 6px;
-  font-size: 26px;
-}
-.wb-stat {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-top: 10px;
-  font-family: var(--f-display);
-}
-.wb-stat span {
-  color: var(--muted);
-  font-size: 14px;
-}
-.wb-stat b {
-  font-size: 24px;
-  color: var(--ok);
-}
-.wb-stat i {
-  font-style: normal;
-  color: var(--muted);
-}
-.wb-stat b.nx {
-  color: var(--hazard);
-}
 .wb-q {
   padding: 12px 14px;
   background: var(--bg-2);
@@ -280,31 +233,6 @@
 .qopt:hover {
   border-color: var(--hazard);
 }
-.wb-acts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: auto;
-}
-.wb-help {
-  padding: 14px;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  clip-path: var(--chamfer-s);
-  font-size: 14px;
-  line-height: 1.4;
-}
-.wb-help h3 {
-  margin: 0 0 8px;
-  font-size: 17px;
-}
-.wb-help ol {
-  margin: 0 0 10px;
-  padding-left: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 .wb-empty {
   margin: auto;
   text-align: center;
@@ -313,6 +241,149 @@
 .gearlv {
   background: var(--hazard) !important;
   color: var(--hazard-ink) !important;
+}
+
+/* spec sheet */
+.wb-title h3 {
+  margin: 2px 0 0;
+  font-size: 28px;
+}
+.wb-schem {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--blueprint);
+  border: 1px solid var(--line-2);
+  clip-path: var(--chamfer);
+}
+.wb-grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 12px;
+}
+.wb-read {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--f-display);
+  font-size: 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+.wb-read th,
+.wb-read td {
+  padding: 7px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.wb-read thead th {
+  font-size: 11px;
+  font-weight: 600;
+  color: #7fb8d6;
+}
+.wb-read tbody th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted);
+}
+.wb-read td.now {
+  color: var(--ok);
+  font-weight: 700;
+}
+.wb-read td.nx {
+  color: var(--hazard);
+}
+.wb-curve {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  align-items: end;
+  padding: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+.wb-curve > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  height: 120px;
+  justify-content: flex-end;
+}
+.wb-curve i {
+  width: 100%;
+  min-height: 4px;
+  background: var(--line-2);
+}
+.wb-curve .on i {
+  background: var(--hazard);
+}
+.wb-curve .mw.on i {
+  background: var(--coin);
+  box-shadow: 0 0 10px var(--coin);
+}
+.wb-curve .nx i {
+  background: transparent;
+  outline: 2px dashed var(--hazard);
+  outline-offset: -2px;
+}
+.wb-curve b {
+  font-family: var(--f-display);
+  font-size: 12px;
+}
+.wb-curve span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.wb-curve p {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+}
+.wb-order {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+}
+.wb-order h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.wb-bill {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 10px;
+  margin: 0 0 4px;
+  padding: 10px 0;
+  border-top: 1px dashed var(--line-2);
+  border-bottom: 1px dashed var(--line-2);
+  font-family: var(--f-display);
+}
+.wb-bill dt {
+  color: var(--muted);
+}
+.wb-bill dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.wb-bill dd.neg {
+  color: var(--hazard);
+}
+.wb-bill dd.bad {
+  color: var(--danger);
+}
+.wb-help {
+  margin-top: auto;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.wb-help p {
+  margin: 4px 0 0;
 }
 
 /* ---------- Scrap Road ---------- */
@@ -578,4 +649,68 @@ button.stslot:hover {
   .sr-body {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ---------- Scrap Road world map ---------- */
+#ovStory:has(.ow) {
+  padding: 8px;
+}
+.story.ow {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+}
+.ow-head {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+}
+.ow-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+#owc {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#owmini {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: 240px;
+  height: 160px;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+#owCard {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 340px;
+  max-height: calc(100% - 32px);
+  overflow: auto;
+  background: rgba(17, 28, 51, 0.94);
+  backdrop-filter: blur(4px);
+}
+#owCard.idle {
+  border-color: var(--line-2);
+}
+.ow-name {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ow-name input {
+  height: 44px;
+  padding: 0 12px;
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  color: var(--fg);
+  font-family: var(--f-display);
+  font-size: 16px;
 }

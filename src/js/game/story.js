@@ -94,7 +94,7 @@ const STORY = [
     boss: 'crusher',
     theme: 'junkyard',
     layout: 'pit',
-    rounds: 1,
+    rounds: 3,
     diff: 1,
     coins: 220,
     salvage: 2,
@@ -171,7 +171,7 @@ const STORY = [
     boss: 'drill',
     theme: 'desert',
     layout: 'pit',
-    rounds: 1,
+    rounds: 3,
     diff: 2,
     coins: 300,
     salvage: 2,
@@ -246,7 +246,7 @@ const STORY = [
     boss: 'baron',
     theme: 'factory',
     layout: 'ring',
-    rounds: 1,
+    rounds: 3,
     diff: 2,
     coins: 380,
     salvage: 2,
@@ -307,7 +307,7 @@ const STORY = [
     boss: 'king',
     theme: 'volcano',
     layout: 'castle',
-    rounds: 1,
+    rounds: 3,
     diff: 2,
     coins: 480,
     salvage: 3,
@@ -359,18 +359,18 @@ const STORY_BOSSES = {
     name: 'Mother Crusher',
     style: 'rammer',
     paint: '#5cc38f',
-    hp: 2.2,
-    dmg: 1.1,
+    hp: 1,
+    dmg: 0.8,
     taunt: 'Bin day!',
-    base: ['.SSSSS.', 'RGFFFGR', 'WFFCFFW', 'WGFFFGW', 'kFFFFFk', 'WAAAAAW'],
-    top: ['.......', '.c...c.', '...m...', '.o...o.', '.......', '.......']
+    base: ['..SSS..', 'RGFFFGR', 'WFFCFFW', 'WGFFFGW', 'kFFFFFk', 'WAAAAAW'],
+    top: ['.......', '.m...m.', '.......', '.o...o.', '.......', '.......']
   },
   drill: {
     name: 'Twin Drill',
     style: 'rammer',
     paint: '#ff8a3a',
-    hp: 2.5,
-    dmg: 1.15,
+    hp: 1.15,
+    dmg: 0.85,
     taunt: 'Brrrrrrrrr.',
     base: ['.D.D.', 'DGFGD', 'WFCFW', 'WGFGW', 'AFFFA', 'WBBBW'],
     top: ['.....', '.f.f.', '.....', '.x.x.', '.....', '.....']
@@ -379,8 +379,8 @@ const STORY_BOSSES = {
     name: 'The Magnet Baron',
     style: 'gunner',
     paint: '#4ea1ff',
-    hp: 2.8,
-    dmg: 1.15,
+    hp: 1.25,
+    dmg: 0.9,
     taunt: 'Come closer. I insist.',
     base: ['.RRRRR.', 'WGFGFGW', 'AFFCFFA', 'WGFFFGW', 'AHFFFHA', 'W.WWW.W'],
     top: ['.......', '.t.g.t.', '..p.p..', '.l...l.', '.s...e.', '.......']
@@ -389,8 +389,8 @@ const STORY_BOSSES = {
     name: 'The Junk King',
     style: 'brawler',
     paint: '#f2b705',
-    hp: 3.2,
-    dmg: 1.25,
+    hp: 1.2,
+    dmg: 0.9,
     taunt: 'Kneel before the scrap.',
     base: ['...XXX...', 'S.RGGGR.S', 'GrHFFFHrG', '..WFCFW..', '..WGFGW..', '..AHHHA..', '..WMMMW..'],
     top: ['.........', '.........', '..c...c..', '...z.x...', '..o.s.o..', '...w.p...', '.........']
@@ -613,11 +613,18 @@ function storyFree(f, x, y, r) {
 }
 
 /* ---------- progress ---------- */
-let STORYP = { stars: {}, seen: {} };
+let STORYP = { stars: {}, seen: {}, pos: null, fog: null, caches: [] };
 function loadStory() {
   try {
     const s = JSON.parse(load('sd.story') || 'null');
-    if (s && s.stars) STORYP = { stars: s.stars, seen: s.seen || {} };
+    if (s && s.stars)
+      STORYP = {
+        stars: s.stars,
+        seen: s.seen || {},
+        pos: Array.isArray(s.pos) ? s.pos : null,
+        fog: typeof s.fog === 'string' ? s.fog : null,
+        caches: Array.isArray(s.caches) ? s.caches.filter(id => OW_CACHES.some(c => c.id === id)) : []
+      };
   } catch (e) {}
 }
 const saveStory = () => store('sd.story', STORYP);
@@ -674,7 +681,7 @@ function storySetup() {
   const r = M.rival || STORY_BOSSES[M.boss];
   Object.assign(bot, { name: r.name, style: r.style, likes: r.likes || ['melee'], paint: r.paint });
   if (r.taunt) bot.say = [r.taunt];
-  bot.coins += M.coins || 0;
+  // the mission's starting coins are the player's head start; the rival only gets its own bot budget
   G.bot = bot;
   G.oppName = bot.name;
   G.oppPaint = bot.paint === G.paint ? PAINTS.find(p => p !== G.paint) : bot.paint;
@@ -810,51 +817,18 @@ function openStory() {
   if (G.phase !== 'menu') {
     G.phase = 'menu';
     updateHUD();
-    demoStart();
   }
+  demoStop(); // the map has its own world; no battle behind it
   if (!storySel || !STORY_BY[storySel]) storySel = (nextMission() || STORY[STORY.length - 1]).id;
-  renderStory();
   $('#ovStory').hidden = false;
+  owOpen();
 }
-/** Node positions along a winding road (0..1000 × 0..560). */
-function roadPoints() {
-  const pts = [];
-  STORY.forEach((m, i) => {
-    const t = i / (STORY.length - 1),
-      x = 70 + t * 860,
-      y = 280 + Math.sin(t * Math.PI * 3.2) * 170 + (m.kind === 'boss' ? 0 : 0);
-    pts.push([x, y]);
-  });
-  return pts;
-}
-function renderStory() {
-  const pts = roadPoints(),
-    M = STORY_BY[storySel],
-    R = STORY_REGIONS.find(r => r.id === M.region),
+/** The mission card shown when you park at a mission site. */
+function storyCardHtml(M) {
+  const R = STORY_REGIONS.find(r => r.id === M.region),
     open = storyOpen(M.id),
-    st = storyStars(M.id);
-  const path = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(0) + ' ' + p[1].toFixed(0)).join(' ');
-  const regionBands = STORY_REGIONS.map((r, i) => {
-    const ms = STORY.map((m, j) => [m, j]).filter(([m]) => m.region === r.id),
-      x0 = pts[ms[0][1]][0] - 40,
-      x1 = pts[ms[ms.length - 1][1]][0] + 40;
-    return `<g><rect x="${x0}" y="20" width="${x1 - x0}" height="520" fill="${r.col}" opacity=".05"/><text x="${x0 + 10}" y="46" fill="${r.col}" font-family="Chakra Petch" font-size="16" font-weight="700">${esc(r.name)}</text></g>`;
-  }).join('');
-  const nodes = STORY.map((m, i) => {
-    const [x, y] = pts[i],
-      o = storyOpen(m.id),
-      s = storyStars(m.id),
-      boss = m.kind === 'boss',
-      col = STORY_REGIONS.find(r => r.id === m.region).col,
-      r = boss ? 26 : 17;
-    return `<g class="rnode${m.id === storySel ? ' sel' : ''}${o ? '' : ' locked'}" data-m="${m.id}" tabindex="0" role="button" aria-label="${esc(m.name)}${o ? '' : ' (locked)'}">
-      ${m.id === storySel ? `<circle cx="${x}" cy="${y}" r="${r + 9}" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="4 4"/>` : ''}
-      ${boss ? `<polygon points="${x},${y - r} ${x + r},${y} ${x},${y + r} ${x - r},${y}" fill="${o ? '#172642' : '#0d1628'}" stroke="${o ? col : '#34507e'}" stroke-width="3"/>` : `<circle cx="${x}" cy="${y}" r="${r}" fill="${o ? '#172642' : '#0d1628'}" stroke="${o ? col : '#34507e'}" stroke-width="3"/>`}
-      ${o ? `<text x="${x}" y="${y + 5}" text-anchor="middle" fill="#e6f1ff" font-family="Chakra Petch" font-size="${boss ? 16 : 13}" font-weight="700">${boss ? '☠' : i + 1}</text>` : `<g fill="none" stroke="#4d6283" stroke-width="2"><rect x="${x - 5}" y="${y - 1}" width="10" height="8" fill="#4d6283"/><path d="M${x - 3} ${y - 1}v-3a3 3 0 0 1 6 0v3"/></g>`}
-      ${s ? `<text x="${x}" y="${y + r + 18}" text-anchor="middle" fill="#ffd257" font-size="12">${'★'.repeat(s)}${'☆'.repeat(3 - s)}</text>` : ''}
-    </g>`;
-  }).join('');
-  const rw = M.reward || {};
+    st = storyStars(M.id),
+    rw = M.reward || {};
   const rewards = [
     rw.bolts ? `${rw.bolts} bolts` : '',
     rw.gear ? `Gear: ${MOD[rw.gear].name}${rw.gearLvl > 1 ? ' +' + (rw.gearLvl - 1) : ''}` : '',
@@ -864,59 +838,22 @@ function renderStory() {
   const kindText = {
     duel: 'Duel',
     salvage: 'Salvage hunt',
-    special: M.sched ? [...new Set(M.sched.filter(Boolean))].map(s => SPECIALS[s].name).join(' + ') : 'Special',
+    special: M.sched ? [...new Set(M.sched.filter(Boolean))].map(x => SPECIALS[x].name).join(' + ') : 'Special',
     boss: 'Boss fight'
   }[M.kind];
   const goal3 = M.kind === 'salvage' ? `Find all ${M.salvage} salvage crates` : 'Deal twice the damage you take';
   const boss = M.boss ? STORY_BOSSES[M.boss] : null;
-  $('#ovStory').innerHTML = `<div class="story">
-    <header><div><span class="label">Story mode</span><h2>Scrap Road</h2></div>
-      <div class="sr-sum"><b>${totalStars()}</b><span>/ ${STORY.length * 3} stars</span></div>
-      <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b><span>bolts</span></div>
-      <button class="btn ghost" id="srWork">Workbench</button><button class="btn ghost" id="srBack">Main menu</button></header>
-    <div class="sr-body">
-      <div class="sr-map"><svg viewBox="0 0 1000 560" role="group" aria-label="Mission map">${regionBands}
-        <path d="${path}" fill="none" stroke="#263b60" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="${path}" fill="none" stroke="#ffb423" stroke-width="2" stroke-dasharray="10 12" opacity=".6"/>
-        ${nodes}</svg></div>
-      <aside class="sr-card" style="--rc:${R.col}">
-        <span class="label" style="color:${R.col}">${esc(R.name)} · ${esc(kindText)}</span>
-        <h3>${esc(M.name)}</h3>
-        ${boss ? `<p class="bossline">Boss: <b>${esc(boss.name)}</b> · ${Math.round(boss.hp * 100)}% health, phases at ⅔ and ⅓</p>` : M.rival ? `<p class="small">Rival: <b>${esc(M.rival.name)}</b> · ${esc(DIFF[M.diff].name)}</p>` : ''}
-        <p>${esc(M.intro)}</p>
-        <div class="sr-facts"><span>${M.rounds} round${M.rounds > 1 ? 's' : ''}</span><span>${esc(THEMES[THEMES.findIndex(t => t.id === M.theme)].name)}</span>${M.salvage ? `<span>${M.salvage} salvage crates</span>` : ''}${M.coins ? `<span>+${M.coins} starting coins</span>` : ''}</div>
-        <div class="sr-goals"><span class="label">Stars</span>
-          <div class="${st >= 1 ? 'on' : ''}">★ Win the mission</div>
-          <div class="${st >= 2 ? 'on' : ''}">★ Do not lose a round</div>
-          <div class="${st >= 3 ? 'on' : ''}">★ ${esc(goal3)}</div></div>
-        <div class="sr-rew"><span class="label">${st ? 'First-clear rewards (claimed)' : 'Rewards'}</span>${rewards.map(r => `<span>${esc(r)}</span>`).join('')}</div>
-        <button class="btn mgo" id="srGo" ${open ? '' : 'disabled'}>${open ? (st ? 'Replay mission' : 'Start mission') : 'Beat the previous mission first'}</button>
-      </aside>
-    </div></div>`;
-  $$('#ovStory .rnode').forEach(n => {
-    const sel = () => {
-      storySel = n.dataset.m;
-      sfx('ui');
-      renderStory();
-    };
-    n.addEventListener('click', sel);
-    n.addEventListener('keydown', e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), sel()));
-  });
-  $('#srGo').addEventListener('click', () => {
-    if (!storyOpen(M.id)) return;
-    sfx('go');
-    $('#ovStory').hidden = true;
-    startStory(M.id);
-  });
-  $('#srWork').addEventListener('click', () => {
-    $('#ovStory').hidden = true;
-    openWorkbench(() => openStory());
-  });
-  $('#srBack').addEventListener('click', () => {
-    $('#ovStory').hidden = true;
-    sfx('ui');
-    showMenu();
-  });
+  return `<span class="label" style="color:${R.col}">${esc(R.name)} · ${esc(kindText)}</span>
+    <h3>${esc(M.name)}</h3>
+    ${boss ? `<p class="bossline">Boss: <b>${esc(boss.name)}</b> · best of ${M.rounds}, angrier at ⅔ and ⅓ health</p>` : M.rival ? `<p class="small">Rival: <b>${esc(M.rival.name)}</b> · ${esc(DIFF[M.diff].name)}</p>` : ''}
+    <p>${esc(M.intro)}</p>
+    <div class="sr-facts"><span>${M.rounds} round${M.rounds > 1 ? 's' : ''}</span><span>${esc(THEMES[THEMES.findIndex(t => t.id === M.theme)].name)}</span>${M.salvage ? `<span>${M.salvage} salvage crates</span>` : ''}${M.coins ? `<span>+${M.coins} starting coins</span>` : ''}</div>
+    <div class="sr-goals"><span class="label">Stars</span>
+      <div class="${st >= 1 ? 'on' : ''}">★ Win the mission</div>
+      <div class="${st >= 2 ? 'on' : ''}">★ Do not lose a round</div>
+      <div class="${st >= 3 ? 'on' : ''}">★ ${esc(goal3)}</div></div>
+    <div class="sr-rew"><span class="label">${st ? 'First-clear rewards (claimed)' : 'Rewards'}</span>${rewards.map(r => `<span>${esc(r)}</span>`).join('')}</div>
+    <button class="btn mgo" id="srGo" ${open ? '' : 'disabled'}>${open ? (st ? 'Replay mission' : 'Start mission') : 'Beat the previous mission first'}</button>`;
 }
 /** Boss health bar across the top of the arena. */
 function drawBossBar(c) {

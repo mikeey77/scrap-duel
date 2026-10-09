@@ -61,6 +61,7 @@
     "js/game/gauntlet.js",
     "js/game/gear.js",
     "js/game/story.js",
+    "js/game/overworld.js",
     "js/ui/effects.js",
     "js/ui/tutorial.js",
     "js/ui/settings.js",
