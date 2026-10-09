@@ -2,13 +2,76 @@
   "name": "scrap-duel",
   "private": true,
   "type": "module",
-  "description": "Static game plus one Netlify Function for nickname + PIN accounts.",
+  "description": "Scrap Duel: build a battle car from scrap and duel a bot or a friend.",
   "scripts": {
     "build": "node build.mjs",
     "test": "node build.mjs && node tests/regression.cjs",
-    "format": "prettier --write \"src/js/**/*.js\" \"src/css/*.css\" tests desktop"
+    "format": "prettier --write \"src/js/**/*.js\" \"src/css/*.css\" tests desktop",
+    "start": "node build.mjs && electron .",
+    "dist:win": "node build.mjs && electron-builder --win",
+    "dist:linux": "node build.mjs && electron-builder --linux",
+    "dist:win-zip": "node build.mjs && electron-builder --win zip --x64 -c.win.signAndEditExecutable=false"
   },
   "devDependencies": {
+    "@fontsource/barlow-semi-condensed": "^5.3.0",
+    "@fontsource/chakra-petch": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
+    "peerjs": "^1.5.5",
     "prettier": "^3.9.9"
+  },
+  "version": "1.0.0",
+  "main": "desktop/main.cjs",
+  "build": {
+    "appId": "nl.scrapduel.game",
+    "productName": "Scrap Duel",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/**",
+      "site/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "site/icons/icon-512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Scrap Duel"
+    },
+    "portable": {
+      "artifactName": "ScrapDuel--portable.exe"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "site/icons/icon-512.png",
+      "category": "Game"
+    },
+    "electronLanguages": [
+      "en-US",
+      "nl"
+    ],
+    "compression": "maximum",
+    "asar": true
   }
 }

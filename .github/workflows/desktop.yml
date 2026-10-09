@@ -1,0 +1,23 @@
+# Builds the Windows installer + portable exe on a real Windows machine (icons and metadata
+# are applied there). Run it from the Actions tab ("Run workflow") or by pushing a tag like v1.0.0.
+name: Desktop build
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm test
+      - run: npx electron-builder --win --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scrap-duel-windows
+          path: |
+            dist/*.exe

@@ -47,9 +47,11 @@ function showMenu() {
         <div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">Scrap Cred level ${L.lvl} · ${L.into}/${L.need} XP</span>
         <button class="btn" id="mStyle">Customize</button></div>
     </div>
-    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button></div>
+    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button>${window.desktop ? '<button class="btn ghost quit-app" id="mQuit">Quit game</button>' : ''}</div>
   </div>`;
   $('#ovMenu').hidden = false;
+  const q = $('#mQuit');
+  if (q) q.onclick = () => window.desktop.quit();
   clearInterval(showMenu.tag);
   showMenu.tag = setInterval(() => {
     const t = $('#tagline');

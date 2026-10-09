@@ -26,7 +26,7 @@
   }
 }
 /* Wide screens: the four modes sit in one row under the title, no scrolling. */
-@media (min-width: 1180px) {
+@media (min-width: 1080px) {
   #ovMenu .menu2 {
     width: min(1280px, 100%);
     margin: auto auto 0 0;

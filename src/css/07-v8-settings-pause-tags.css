@@ -54,7 +54,7 @@
 
 /* Playtest update: accessible workshop, safe-area controls and lightweight reels. */
 :root {
-  --host-safe: 56px;
+  --host-safe: 0px;
 } /* room for the 'Powered by Netlify' badge (iframe #nl-badge-frame, bottom right) */
 #app {
   padding-bottom: calc(var(--host-safe) + env(safe-area-inset-bottom));

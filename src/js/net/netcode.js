@@ -1,6 +1,7 @@
 // PeerJS multiplayer: lobby, host-authoritative sync, snapshots.
 /* =================== NETWORK (PeerJS, host-authoritative) =================== */
 const PEER_SRC = [
+  'vendor/peerjs.min.js', // bundled with the game; the CDNs are only a fallback
   'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js',
   'https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js',
   'https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js'
