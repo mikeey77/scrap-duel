@@ -117,6 +117,22 @@ function draftOptions(P = G) {
       slot: 'Wildcard',
       why: 'Spend it in the shop'
     });
+  // your own gear can turn up instead of the wildcard (single player only)
+  if (P === G && gearActive()) {
+    const miss = gearMissing(),
+      none = !Object.keys(G.gearFound || {}).length;
+    if (miss.length && (Math.random() < 0.4 || (none && G.round >= 3))) {
+      const g = wpick(miss, g => g.lvl * g.lvl + (g.q ? 2 : 0));
+      opts[2] = {
+        type: 'gear',
+        u: g.u,
+        id: g.id,
+        rar: Math.max(MOD[g.id].rar, Math.min(4, g.lvl - 1)),
+        slot: 'Your gear',
+        why: 'Found in the scrap: your own tuned part'
+      };
+    }
+  }
   return opts;
 }
 function optView(o) {
@@ -138,6 +154,17 @@ function optView(o) {
       img: `<img alt="" src="${iconURL(t.mod, 184)}"><span class="x">▲</span>`,
       title: t.name,
       body: `<p class="pro">+ ${esc(t.pro)}</p><p class="con">− ${esc(t.con)}</p><p class="small">Applies to every ${esc(MOD[t.mod].name)}</p>`
+    };
+  }
+  if (o.type === 'gear') {
+    const g = gearById(o.u),
+      m = MOD[o.id],
+      q = g && g.q ? QUIRKS[g.q] : null;
+    return {
+      kind: g && g.lvl >= GEAR_MAX ? 'Masterwork gear' : 'Personal gear',
+      img: `<img alt="" src="${iconURL(m.id, 184)}"><span class="x gearlv">+${g ? g.lvl - 1 : 0}</span>`,
+      title: g ? gearName(g) : m.name,
+      body: `<p class="pro">+ ${Math.round(gearBonus(g || { id: o.id, lvl: 1 }) * 100)}% ${GEAR_KIND_TEXT[gearKind(o.id)]}</p>${q ? `<p class="pro">+ ${esc(q.name)}: ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p>` : ''}<p class="small">One copy. Upgrade it further at the Workbench.</p>`
     };
   }
   if (o.type === 'ws') {
@@ -221,6 +248,10 @@ function takeOption(o) {
   } else if (o.type === 'tune') {
     G.tune.add(o.id);
     addAff(TUNEMAP[o.id].mod, 0.5);
+  } else if (o.type === 'gear') {
+    const g = gearById(o.u);
+    if (g) findGear(g);
+    G.sel = o.id;
   } else if (o.type === 'ws') {
     for (const k of o.cells) G.ws.add(k);
   } else if (o.type === 'salvage') {

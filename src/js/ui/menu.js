@@ -1,12 +1,13 @@
 // Main menu (over a live bot battle), multiplayer lobby, the main loop and start-up.
 const inMatch = () => !['intro', 'menu', 'final'].includes(G.phase) && G.mode !== undefined && G.started;
 const MENU_TABS = [
+  { id: 'story', name: 'Scrap Road', ico: 'SR', col: '#ffb423', badge: () => storyBadge() },
   { id: 'solo', name: 'Duel vs bot', ico: '1P', col: '#3fe0a0' },
-  { id: 'online', name: 'Online 1v1', ico: '2P', col: '#5be7ff' },
   { id: 'run', name: 'Scrap Gauntlet', ico: '☠', col: '#ff5c7a' },
+  { id: 'online', name: 'Online 1v1', ico: '2P', col: '#5be7ff' },
   { id: 'sand', name: 'Sandbox', ico: 'LAB', col: '#c58bff' },
-  { id: 'sandmp', name: 'Sandbox online', ico: 'MP', col: '#c58bff', badge: () => 'soon' },
-  { id: 'style', name: 'Garage style', ico: '★', col: '#ffd257', badge: () => 'Lv ' + levelInfo().lvl },
+  { id: 'work', name: 'Workbench', ico: 'WB', col: '#ffb423', badge: () => GEAR.bolts + ' bolts' },
+  { id: 'style', name: 'Locker', ico: '★', col: '#ffd257', badge: () => 'Lv ' + levelInfo().lvl },
   { id: 'codex', name: 'Module codex', ico: 'K', col: '#8da3c2' }
 ];
 const TAGLINES = [
@@ -36,7 +37,7 @@ function showMenu() {
   }
   const L = levelInfo();
   $('#ovMenu').classList.toggle('live', !resume);
-  const tab = MENU_TABS.some(t => t.id === load('sd.menuTab')) ? load('sd.menuTab') : 'solo';
+  const tab = MENU_TABS.some(t => t.id === load('sd.menuTab')) ? load('sd.menuTab') : 'story';
   const item = t =>
     `<button class="mrail-i" data-tab="${t.id}" style="--rc:${t.col}" aria-pressed="${t.id === tab}"><span class="mi-ico">${t.ico}</span><span class="mi-t">${t.name}</span>${t.badge ? `<span class="mi-b">${t.badge()}</span>` : ''}</button>`;
   const group = (label, ids) =>
@@ -50,11 +51,12 @@ function showMenu() {
     ${resume ? '<button class="btn ok mresume" id="mResume">▶ Resume match</button>' : ''}
     <div class="mbody">
       <nav class="mrail" aria-label="Game modes">
-        ${group('Play', ['solo', 'online', 'run'])}
-        ${group('Build', ['sand', 'sandmp'])}
-        ${group('Garage', ['style', 'codex'])}
+        ${group('Play', ['story', 'solo', 'run', 'online'])}
+        ${group('Build', ['sand'])}
+        ${group('Garage', ['work', 'style', 'codex'])}
       </nav>
       <div class="mpanels">
+        ${panel('story', '#ffb423', 'Scrap Road', storyPanelHtml())}
         ${panel(
           'solo',
           '#3fe0a0',
@@ -62,6 +64,14 @@ function showMenu() {
           `<p>A bot rival who drafts, shops and builds with the same rules as you.</p>
           <span class="mlab">Difficulty</span><div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
           <span class="mlab">Rounds</span><div class="seg" id="roundSeg" aria-label="Match length">${ROUND_CHOICES.map(n => `<button data-n="${n}" aria-pressed="${n === (G.rounds || 10)}">${n}</button>`).join('')}</div>
+          <span class="mlab">Format</span><div class="seg" id="fmtSeg" aria-label="Match format">${Object.entries(
+            MATCH_FORMATS
+          )
+            .map(
+              ([k, f]) =>
+                `<button data-f="${k}" title="${esc(f.desc)}" aria-pressed="${k === chosenFormat}">${esc(f.short)}</button>`
+            )
+            .join('')}</div><p class="small" id="fmtDesc">${esc(MATCH_FORMATS[chosenFormat].desc)}</p>
           <button class="btn mgo" id="mSolo">Play vs bot</button>`
         )}
         ${panel(
@@ -88,19 +98,21 @@ function showMenu() {
           <button class="btn mgo" id="mSand">Open sandbox</button>`
         )}
         ${panel(
-          'sandmp',
-          '#c58bff',
-          'Sandbox online <em class="msoon">soon</em>',
-          `<p>Build freely with friends in one shared arena: no rounds, no drafting, instant respawns, and mini games like sumo, races and scrap soccer.</p>
-          <button class="btn mgo" disabled>Coming soon</button>`
+          'work',
+          '#ffb423',
+          'Workbench',
+          `<p>Your own parts. Upgrade them with bolts, weld on quirks and find them again as draft cards in Duel, Story and Gauntlet.</p>
+          <div class="mstat"><b>${GEAR.bolts}</b><span>bolts</span></div><div class="mstat"><b>${GEAR.items.length}</b><span>gear pieces</span></div>
+          <button class="btn mgo" id="mWork">Open the Workbench</button>`
         )}
         ${panel(
           'style',
           '#ffd257',
-          'Garage style',
+          'Locker',
           `<p>${esc(titleName(G.style.title))} · ${unlockedCount()} of ${totalCosmetics()} unlocked</p>
           <div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">Scrap Cred level ${L.lvl} · ${L.into}/${L.need} XP</span>
-          <button class="btn mgo" id="mStyle">Customize</button>`
+          <p class="small">Skins, stickers, trails and titles. Stickers give small perks, and two stickers that match your skin unlock a set bonus.</p>
+          <button class="btn mgo" id="mStyle">Open the Locker</button>`
         )}
       </div>
     </div>
@@ -127,6 +139,25 @@ function showMenu() {
       sfx('ui');
     })
   );
+  $$('#fmtSeg button').forEach(b =>
+    b.addEventListener('click', () => {
+      chosenFormat = b.dataset.f;
+      $$('#fmtSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      $('#fmtDesc').textContent = MATCH_FORMATS[chosenFormat].desc;
+      store('sd.format', chosenFormat);
+      sfx('ui');
+    })
+  );
+  $('#mWork').addEventListener('click', () => {
+    $('#ovMenu').hidden = true;
+    sfx('ui');
+    openWorkbench(showMenu);
+  });
+  $('#mStory').addEventListener('click', () => {
+    sfx('ui');
+    leave();
+    openStory();
+  });
   $$('#roundSeg button').forEach(b =>
     b.addEventListener('click', () => {
       G.rounds = +b.dataset.n;
@@ -383,7 +414,13 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   G.rounds = ROUND_CHOICES.includes(rn) ? rn : 10;
   G.mpRounds = G.rounds;
   MUTE = load('sd.mute') == 1;
+  const pt = load('sd.paint');
+  if (pt && /^#[0-9a-f]{6}$/i.test(pt)) G.paint = pt;
+  const fm = load('sd.format');
+  if (fm && MATCH_FORMATS[fm]) chosenFormat = fm;
+  loadStory();
   loadStyle();
+  loadGear();
   try {
     G.favorites = new Set(JSON.parse(load('sd.favorites') || '[]').filter(id => MOD[id]));
   } catch (e) {}
@@ -402,6 +439,51 @@ requestAnimationFrame(loop);
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
   window.__SD = {
+    STORY,
+    sanitizeLook,
+    ACHIEVEMENTS,
+    STORY_BY,
+    STORY_BOSSES,
+    STORY_LAYOUTS,
+    STICKERS,
+    STICKER,
+    STICKER_SETS,
+    QUIRKS,
+    bossDesign,
+    startStory,
+    storyField,
+    storyFinish,
+    storyGrab,
+    storyTick,
+    openStory,
+    STORYP: () => STORYP,
+    GEAR: () => GEAR,
+    setGear: g => (GEAR = g),
+    addGear,
+    addBolts,
+    gearUpgrade,
+    gearPickQuirk,
+    gearFuse,
+    gearScrap,
+    gearBonus,
+    gearCfg,
+    flairCfg,
+    activeSet,
+    applyGear,
+    findGear,
+    matchSpoils,
+    openWorkbench,
+    commentate,
+    crowdStep,
+    stepCommentary,
+    throwGift,
+    crowdGiftTaken,
+    stepGifts,
+    COMM: () => COMM,
+    carHealth,
+    stickerUnlocked,
+    openStyle,
+    draftOptions,
     prepareBot,
     stepLogic,
     groupOn,

@@ -620,25 +620,32 @@ function stepCarHazards(v, dt) {
       explode(z.x, z.y, 75, 70, 'expl', z.own);
     }
   }
-  const reach = v.has.coinmag ? 3 : 1;
+  const reach = (v.has.coinmag ? 3 : 1) * (1 + (v.reach || 0)),
+    fl = v.flair || {};
   for (const p of B.pk || []) {
     if (p.cd > 0) continue;
     if (Math.hypot(p.x - v.x, p.y - v.y) < (v.rad * 0.6 + 22) * reach) {
+      if (p.kind === 'salvage' || p.kind === 'gift') {
+        p.cd = 1e9;
+        if (p.kind === 'salvage') storyGrab(v, p);
+        else crowdGiftTaken(v, p);
+        continue;
+      }
       p.cd = p.kind === 'power' ? POWER_RESPAWN : 25;
       if (p.kind === 'power') {
         const P = POWERUPS[p.p];
         if (p.p === 'repair') {
           for (const I of v.insts) if (I.alive && I.id !== 'cockpit') I.hp = Math.min(I.max, I.hp + I.max * 0.2);
-        } else v.buff = { p: p.p, t: P.time };
+        } else v.buff = { p: p.p, t: P.time * (1 + (fl.powerK || 0)) };
         v.powers = (v.powers || 0) + 1;
         txt(p.x, p.y - 22, P.name.toUpperCase(), P.col, 1.2);
         fx({ k: 'ring', x: v.x, y: v.y, life: 0.5, max: 0.5, r: 70, col: '255,255,255' });
         sfx('power', p.x, p.y);
         p.p = pick(POWER_IDS);
       } else if (p.kind === 'coins') {
-        coinPop(p.x, p.y, p.val, v);
+        coinPop(p.x, p.y, Math.round(p.val * (1 + (fl.coinK || 0))), v);
       } else {
-        for (const I of v.insts) if (I.alive) I.hp = Math.min(I.max, I.hp + I.max * p.val);
+        for (const I of v.insts) if (I.alive) I.hp = Math.min(I.max, I.hp + I.max * p.val * (1 + (fl.repairK || 0)));
         txt(p.x, p.y - 20, 'REPAIRED', '#5cc38f', 1);
         sfx('repair', p.x, p.y);
       }

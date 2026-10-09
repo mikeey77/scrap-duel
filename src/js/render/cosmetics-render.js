@@ -504,6 +504,9 @@ function randomLook(diff = 1) {
     trail: pickFrom('trail', n - 1),
     wreck: pickFrom('wreck', n - 2),
     title: pickFrom('title', n),
+    stickers: STICKERS.filter(() => Math.random() < 0.12 + diff * 0.06)
+      .slice(0, 3)
+      .map(s => s.id),
     badge: `${pick(Object.keys(BADGE_SHAPES))}.${pick(Object.keys(BADGE_SYMBOLS))}.${Math.floor(Math.random() * BADGE_COLS.length)}`
   };
 }
@@ -513,5 +516,229 @@ function sanitizeLook(l) {
   if (l && typeof l === 'object')
     for (const [slot] of STYLE_SLOTS) if (COSMETICS[slot].some(i => i.id === l[slot])) out[slot] = l[slot];
   if (l && l.badge) out.badge = validBadge(l.badge);
+  // stickers are only a picture online: perks never travel in the look
+  out.stickers = Array.isArray(l && l.stickers)
+    ? [...new Set(l.stickers.filter(id => STICKER[id]))].slice(0, STICKER_SLOTS)
+    : [];
   return out;
+}
+
+/* ---------- stickers ---------- */
+/** A die-cut sticker: white rim, set colour, a simple glyph. Centred on 0,0 with radius r. */
+function drawSticker(c, id, r) {
+  const st = STICKER[id];
+  if (!st) return;
+  const col = STICKER_SETS[st.set].col,
+    k = r * 0.84,
+    ink = '#0a1020';
+  c.save();
+  c.fillStyle = '#f4f7fb';
+  c.beginPath();
+  c.arc(0, 0, r, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = col;
+  c.beginPath();
+  c.arc(0, 0, k, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = ink;
+  c.strokeStyle = ink;
+  c.lineWidth = k * 0.14;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  const P = pts => {
+    c.beginPath();
+    pts.forEach(([x, y], i) => (i ? c.lineTo(x * k, y * k) : c.moveTo(x * k, y * k)));
+    c.closePath();
+    c.fill();
+  };
+  const circle = (x, y, rr, fill = true) => {
+    c.beginPath();
+    c.arc(x * k, y * k, rr * k, 0, Math.PI * 2);
+    fill ? c.fill() : c.stroke();
+  };
+  switch (id) {
+    case 'flag':
+      for (let i = 0; i < 3; i++)
+        for (let j = 0; j < 3; j++)
+          if ((i + j) % 2 === 0) c.fillRect((-0.5 + i / 3) * k, (-0.5 + j / 3) * k, k / 3, k / 3);
+      c.strokeRect(-0.5 * k, -0.5 * k, k, k);
+      break;
+    case 'flame':
+      P([
+        [0, -0.62],
+        [0.38, -0.05],
+        [0.3, 0.42],
+        [0, 0.6],
+        [-0.3, 0.42],
+        [-0.38, 0.02],
+        [-0.12, -0.18]
+      ]);
+      break;
+    case 'lightning':
+      P([
+        [0.12, -0.66],
+        [-0.36, 0.08],
+        [-0.02, 0.08],
+        [-0.14, 0.66],
+        [0.36, -0.12],
+        [0.02, -0.12]
+      ]);
+      break;
+    case 'wrench':
+      c.beginPath();
+      c.moveTo(-0.42 * k, 0.42 * k);
+      c.lineTo(0.18 * k, -0.18 * k);
+      c.lineWidth = k * 0.2;
+      c.stroke();
+      circle(0.3, -0.3, 0.24, false);
+      break;
+    case 'skull':
+      circle(0, -0.08, 0.46);
+      c.fillRect(-0.24 * k, 0.24 * k, 0.48 * k, 0.28 * k);
+      c.fillStyle = col;
+      circle(-0.18, -0.08, 0.13);
+      circle(0.18, -0.08, 0.13);
+      break;
+    case 'rat':
+      c.beginPath();
+      c.ellipse(0.02 * k, 0.1 * k, 0.42 * k, 0.28 * k, 0, 0, Math.PI * 2);
+      c.fill();
+      circle(-0.3, -0.18, 0.14);
+      c.beginPath();
+      c.moveTo(0.42 * k, 0.12 * k);
+      c.quadraticCurveTo(0.7 * k, -0.2 * k, 0.5 * k, -0.5 * k);
+      c.stroke();
+      break;
+    case 'star': {
+      const s = [];
+      for (let i = 0; i < 10; i++) {
+        const a = -Math.PI / 2 + (i * Math.PI) / 5,
+          rr = i % 2 ? 0.26 : 0.62;
+        s.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+      }
+      P(s);
+      break;
+    }
+    case 'crown':
+      P([
+        [-0.5, 0.36],
+        [-0.5, -0.3],
+        [-0.25, 0.02],
+        [0, -0.42],
+        [0.25, 0.02],
+        [0.5, -0.3],
+        [0.5, 0.36]
+      ]);
+      break;
+    case 'heart':
+      c.beginPath();
+      c.moveTo(0, 0.5 * k);
+      c.bezierCurveTo(-0.7 * k, 0, -0.4 * k, -0.6 * k, 0, -0.22 * k);
+      c.bezierCurveTo(0.4 * k, -0.6 * k, 0.7 * k, 0, 0, 0.5 * k);
+      c.fill();
+      break;
+    case 'paw':
+      circle(0, 0.2, 0.26);
+      for (const [x, y] of [
+        [-0.36, -0.12],
+        [-0.13, -0.36],
+        [0.13, -0.36],
+        [0.36, -0.12]
+      ])
+        circle(x, y, 0.12);
+      break;
+    case 'cat':
+      P([
+        [-0.45, -0.5],
+        [-0.15, -0.25],
+        [0.15, -0.25],
+        [0.45, -0.5],
+        [0.45, 0.2],
+        [0, 0.5],
+        [-0.45, 0.2]
+      ]);
+      c.fillStyle = col;
+      circle(-0.18, 0, 0.08);
+      circle(0.18, 0, 0.08);
+      break;
+    case 'duck':
+      c.beginPath();
+      c.ellipse(0.05 * k, 0.2 * k, 0.45 * k, 0.26 * k, 0, 0, Math.PI * 2);
+      c.fill();
+      circle(-0.2, -0.22, 0.2);
+      c.fillStyle = '#f4f7fb';
+      P([
+        [-0.38, -0.22],
+        [-0.62, -0.14],
+        [-0.38, -0.1]
+      ]);
+      break;
+    case 'atom':
+      c.lineWidth = k * 0.08;
+      for (let i = 0; i < 3; i++) {
+        c.beginPath();
+        c.ellipse(0, 0, 0.6 * k, 0.22 * k, (i * Math.PI) / 3, 0, Math.PI * 2);
+        c.stroke();
+      }
+      circle(0, 0, 0.12);
+      break;
+    case 'chip':
+      c.fillRect(-0.32 * k, -0.32 * k, 0.64 * k, 0.64 * k);
+      c.lineWidth = k * 0.08;
+      for (const t of [-0.18, 0, 0.18]) {
+        c.beginPath();
+        c.moveTo(t * k, -0.55 * k);
+        c.lineTo(t * k, 0.55 * k);
+        c.moveTo(-0.55 * k, t * k);
+        c.lineTo(0.55 * k, t * k);
+        c.stroke();
+      }
+      c.fillRect(-0.32 * k, -0.32 * k, 0.64 * k, 0.64 * k);
+      break;
+    case 'eye':
+      c.beginPath();
+      c.moveTo(-0.6 * k, 0);
+      c.quadraticCurveTo(0, -0.55 * k, 0.6 * k, 0);
+      c.quadraticCurveTo(0, 0.55 * k, -0.6 * k, 0);
+      c.fill();
+      c.fillStyle = col;
+      circle(0, 0, 0.2);
+      c.fillStyle = ink;
+      circle(0, 0, 0.09);
+      break;
+  }
+  c.restore();
+}
+const _stickerURL = {};
+function stickerURL(id, size = 64) {
+  const k = id + size;
+  if (_stickerURL[k]) return _stickerURL[k];
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  const c = cv.getContext('2d');
+  c.translate(size / 2, size / 2);
+  c.rotate(-0.12);
+  drawSticker(c, id, size * 0.46);
+  return (_stickerURL[k] = cv.toDataURL());
+}
+/** Up to three body cells get a sticker each: the cells next to the cockpit, left, right and back. */
+function stickerCells(v) {
+  if (v._stCells) return v._stCells;
+  const want = [
+    [-1, 0],
+    [1, 0],
+    [0, 1],
+    [0, -1],
+    [-1, 1],
+    [1, 1]
+  ];
+  const c0 = v.insts.find(I => I.id === 'cockpit');
+  const out = [];
+  if (c0)
+    for (const [dx, dy] of want) {
+      const b = v.grid.get(key(c0.gcx + dx, c0.gcy + dy));
+      if (b && b.inst.layer === 'b' && liveryPart(b.inst.id) && !out.includes(b.inst)) out.push(b.inst);
+      if (out.length >= 3) break;
+    }
+  return (v._stCells = out);
 }

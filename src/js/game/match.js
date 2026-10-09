@@ -103,19 +103,20 @@ const packDesign = d => ({
 });
 const unpackDesign = p => ({ base: new Map(p.base), top: new Map(p.top) });
 const MATCH_FORMATS = {
-  balanced: { name: 'Balanced rounds', desc: 'One point per round; double-point finale.' },
-  lives: { name: 'Scrap Lives', desc: '20 lives each. A loss costs 2 + round number. Zero lives ends the match.' },
+  balanced: { name: 'Balanced rounds', short: 'Classic', desc: 'One point per round; double-point finale.' },
+  lives: {
+    name: 'Scrap Lives',
+    short: 'Lives',
+    desc: '20 lives each. A loss costs 2 + round number. Zero lives ends the match.'
+  },
   bounty: {
     name: 'Bounty',
+    short: 'Bounty',
     desc: 'Beating the leader pays up to 2 bonus points (never more than the gap) and 45 bonus coins.'
   },
-  finalehill: { name: 'Hill finale', desc: 'Balanced scoring with a King of the Hill final round.' }
+  finalehill: { name: 'Hill finale', short: 'Hill', desc: 'Balanced scoring with a King of the Hill final round.' }
 };
 let chosenFormat = 'balanced';
-const formatSelect = (id, value = chosenFormat) =>
-  `<label class="format-picker">Match format<select id="${id}" aria-label="Match format">${Object.entries(MATCH_FORMATS)
-    .map(([k, f]) => `<option value="${k}" ${k === value ? 'selected' : ''}>${f.name}</option>`)
-    .join('')}</select><small>${esc(MATCH_FORMATS[value].desc)}</small></label>`;
 const roundPoints = r => (G.format === 'lives' || G.format === 'bounty' ? 1 : r === ROUNDS ? 2 : 1);
 /** Bounty: beating the leader pays 1 point plus up to 2 more for a long leader streak,
     but never more than the gap, so one upset can catch you up without erasing a string of losses. */
@@ -145,7 +146,8 @@ const myCarCfg = () => ({
   name: G.name,
   paint: G.paint,
   ctrl: 'local',
-  look: { ...G.style }
+  look: { ...G.style },
+  ...(gearActive() ? { gear: gearCfg(), flair: flairCfg() } : {})
 });
 /** Builds one car from a config entry at its spawn point. */
 function carFromCfg(c, i) {
@@ -172,7 +174,7 @@ function carsFromCfg(cfg) {
 function makeCfg(opp) {
   const ti = G.nextTheme != null ? G.nextTheme : pickTheme(),
     special = specialOf(G.round),
-    f = applySpecialField(genArena('battle', THEMES[ti]), special);
+    f = applySpecialField(G.story ? storyField(THEMES[ti]) : genArena('battle', THEMES[ti]), special);
   G.nextTheme = null;
   return {
     round: G.round,
@@ -255,7 +257,8 @@ function resetProfile() {
     fun: null,
     lastOppDesign: null,
     nextTheme: null,
-    srcTotals: {}
+    srcTotals: {},
+    gearFound: {}
   });
   draftRerolls = 0;
   resetWs();
@@ -281,7 +284,9 @@ function hideOverlays() {
     '#ovResult',
     '#ovReady',
     '#ovStyle',
-    '#ovBlueprint'
+    '#ovBlueprint',
+    '#ovWork',
+    '#ovStory'
   ])
     $(id).hidden = true;
 }
@@ -290,7 +295,10 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
     G.diff = G.run.prevDiff;
     G.run = null;
   }
+  G.story = (mode === 'solo' && G.storyNext) || null;
+  G.storyNext = null;
   setRounds(mode === 'mp' ? rounds || 10 : mode === 'solo' ? G.rounds || 10 : 10);
+  if (G.story) ROUNDS = G.story.rounds; // missions are short and not limited to the menu choices
   G.format = MATCH_FORMATS[format] ? format : 'balanced';
   G.lives = [20, 20];
   G.bountyStreak = 0;
@@ -301,7 +309,8 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
   B = null;
   G.mode = mode;
   resetProfile();
-  if (mode === 'solo') {
+  if (G.story) storySetup();
+  else if (mode === 'solo') {
     G.bot = makeBot(G.diff);
     G.bot.coins += DIFF[G.diff].bonus;
     G.oppName = G.bot.name;
@@ -576,7 +585,8 @@ const botCarCfg = () => ({
   style: G.bot.style,
   diff: G.diff,
   look: G.oppLook,
-  ...runBotExtras()
+  ...runBotExtras(),
+  ...storyBotExtras()
 });
 
 /* ---------- waiting arena ---------- */
@@ -665,6 +675,7 @@ function setButtons() {
     });
 }
 function pickTheme() {
+  if (G.story) return storyThemeIndex();
   let ti;
   do ti = Math.floor(Math.random() * THEMES.length);
   while (ti === G.lastTheme && THEMES.length > 1);
@@ -1046,6 +1057,7 @@ function showFinal() {
         : s[0] > s[1] || (s[0] === s[1] && tot.d > tot.t),
     tie = G.format === 'lives' ? G.lives[0] === G.lives[1] : s[0] === s[1];
   const prog = progressMatch({ won });
+  const spoils = G.story ? storyFinish(won, tot) : matchSpoils(won, tot.w);
   const br =
     Object.entries(G.aff)
       .sort((a, b) => b[1] - a[1])
@@ -1065,12 +1077,16 @@ function showFinal() {
         ? `<p class="small">MVP part of the match: <b>${esc(mvp[0])}</b> with ${mvp[1].toLocaleString()} damage.</p>`
         : '';
     })()}
-    ${progressHtml(prog)}
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : ''}<button class="btn ghost" id="btnStyle2">Garage Style</button><button class="btn ghost" id="btnHome">Main menu</button></div>`;
+    ${progressHtml(prog)}${G.story ? storyResultHtml(spoils) : spoilsHtml(spoils)}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.story ? '<button class="btn" id="btnRoad">Back to the Scrap Road</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : ''}${gearActive() ? '<button class="btn ghost" id="btnWork2">Workbench</button>' : ''}<button class="btn ghost" id="btnStyle2">Locker</button><button class="btn ghost" id="btnHome">Main menu</button></div>`;
   $('#ovResult').hidden = false;
   sfx(won ? 'win' : 'lose');
   const a = $('#btnAgain');
   if (a) a.addEventListener('click', () => startMatch('solo', null, G.format));
+  const rd = $('#btnRoad');
+  if (rd) rd.addEventListener('click', () => openStory());
+  const wk = $('#btnWork2');
+  if (wk) wk.addEventListener('click', () => openWorkbench(() => ($('#ovResult').hidden = false)));
   const bm = $('#btnBest');
   if (bm) bm.addEventListener('click', () => startReplay('kill', G.bestReplay));
   if (won && SETTINGS.motion !== false)

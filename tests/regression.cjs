@@ -1586,4 +1586,172 @@ test('car codes round-trip and report missing parts and bay size', () => {
   });
 });
 
+function playRT(r) {
+  return ms => {
+    for (let t = 0; t < ms; t += 16) {
+      r.advance(16);
+      for (const f of r.rafs.splice(0)) f(r.context.performance.now());
+    }
+  };
+}
+test('gear: upgrades cost bolts, quirks at level 3, fuse, scrap, and only solo cars carry it', () => {
+  const r = runtime(),
+    a = r.api;
+  a.setGear({ bolts: 0, items: [], next: 1 });
+  const g = a.addGear('saw', 1, true);
+  assert.equal(g.lvl, 1);
+  assert.equal(a.gearUpgrade(g), false, 'no bolts, no upgrade');
+  a.addBolts(1000);
+  assert(a.gearUpgrade(g) && a.gearUpgrade(g));
+  assert.equal(g.lvl, 3);
+  assert.equal(g.qo.length, 3, 'three quirk offers at level 3');
+  assert(a.gearPickQuirk(g, g.qo[0]));
+  assert(a.QUIRKS[g.q]);
+  const g2 = a.addGear('saw', 3, true);
+  const keep = a.gearFuse(g, g2);
+  assert.equal(keep.lvl, 4);
+  assert.equal(a.GEAR().items.filter(x => x.id === 'saw').length, 1);
+  const b0 = a.GEAR().bolts;
+  const mg = a.addGear('mg', 2, true);
+  a.gearScrap(mg);
+  assert(a.GEAR().bolts > b0);
+  // found in a solo match: the car config carries it and the part gets the bonus
+  a.startMatch('solo');
+  a.openBuild();
+  a.findGear(keep);
+  const cfg = a.myCarCfg();
+  assert.equal(JSON.stringify(cfg.gear.map(x => x.id)), '["saw"]');
+  a.G.mode = 'mp';
+  assert(!('gear' in a.myCarCfg()), 'online never carries gear');
+  a.G.mode = 'solo';
+  const des = { base: new Map(), top: new Map() };
+  des.base.set('0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 });
+  des.base.set('0,-1', { id: 'saw', x: 0, y: -1, rot: 0 });
+  const plain = a.makeCar(des, 0, 500, 500, 0, { tune: [] });
+  const tuned = a.makeCar(des, 0, 500, 500, 0, { tune: [] });
+  a.applyGear(tuned, [{ id: 'saw', lvl: 4, q: null }]);
+  const s0 = plain.insts.find(I => I.id === 'saw'),
+    s1 = tuned.insts.find(I => I.id === 'saw');
+  assert(s1.max > s0.max * 1.2, 'level 4 saw has more HP');
+  assert(s1.gear && !s0.gear);
+});
+test('gear turns up as a draft card in solo and never online', () => {
+  const r = runtime(),
+    a = r.api;
+  a.setGear({ bolts: 0, items: [], next: 1 });
+  a.addGear('laser', 2, true);
+  a.startMatch('solo');
+  a.G.round = 4;
+  let seen = 0;
+  for (let i = 0; i < 40; i++) if (a.draftOptions().some(o => o.type === 'gear')) seen++;
+  assert(seen > 0, 'gear card shows up');
+  a.G.mode = 'mp';
+  for (let i = 0; i < 40; i++) assert(!a.draftOptions().some(o => o.type === 'gear'));
+});
+test('stickers: perks, set bonus with a matching skin, and online looks keep only the picture', () => {
+  const r = runtime(),
+    a = r.api;
+  a.startMatch('solo');
+  a.G.style.livery = 'flames';
+  a.G.style.stickers = ['flag', 'flame'];
+  assert.equal(a.activeSet(), 'speed');
+  const fx = a.flairCfg();
+  assert.equal(fx.set, 'speed');
+  assert(Math.abs(fx.speedK - 0.08) < 1e-9, 'sticker 3% + set 5%');
+  assert.equal(fx.res.fire, 0.15);
+  a.G.style.livery = 'rust';
+  assert.equal(a.activeSet(), null, 'wrong skin, no set');
+  const look = a.sanitizeLook({ livery: 'flames', stickers: ['flag', 'nope', 'flame', 'star', 'crown'] });
+  assert.equal(JSON.stringify(look.stickers), '["flag","flame","star"]');
+  a.G.mode = 'mp';
+  assert(!('flair' in a.myCarCfg()));
+});
+test('story: missions use their own round count, layout, salvage and rewards', () => {
+  const r = runtime(),
+    a = r.api;
+  a.setGear({ bolts: 0, items: [], next: 1 });
+  a.startStory('r1a');
+  assert(a.G.story && a.G.story.mid === 'r1a');
+  assert.equal(a.G.sched.length, 2);
+  const f = a.storyField(a.THEMES.find(t => t.id === 'junkyard'));
+  assert.equal(f.pk.filter(p => p.kind === 'salvage').length, 3);
+  a.openBuild();
+  a.prepareBot();
+  a.toBattle({ ...a.makeCfg(a.botCarCfg()), me: 0, net: null });
+  const b = a.getB();
+  const salv = b.pk.filter(p => p.kind === 'salvage');
+  assert.equal(salv.length, 3);
+  a.storyGrab(b.cars[1], salv[0]);
+  assert.equal(a.G.story.stolen, 1);
+  a.storyGrab(b.cars[0], salv.find(p => p.gear) || salv[1]);
+  assert(a.G.story.got + a.G.story.gearGot.length === 1);
+  a.G.log = [
+    { win: true, dealt: 100, taken: 10 },
+    { win: true, dealt: 100, taken: 10 }
+  ];
+  const res = a.storyFinish(true, { d: 200, t: 20, w: 2 });
+  assert.equal(res.stars, 2, 'win + no round lost, salvage incomplete');
+  assert(res.first && res.bolts >= 40);
+  assert.equal(a.STORYP().stars.r1a, 2);
+  assert(a.stickerUnlocked(a.STICKER.rat), 'mission sticker unlocked');
+  // the next mission is open, the boss of region 1 is still locked
+  a.startStory('r1x');
+  assert(!a.G.storyNext || a.G.storyNext.mid !== 'r1x');
+});
+test('story bosses are valid hand-built cars that change phase', () => {
+  const r = runtime(),
+    a = r.api;
+  for (const id of Object.keys(a.STORY_BOSSES)) {
+    const d = a.bossDesign(id);
+    assert(a.designConnected(d.base), id + ' is connected');
+    assert([...d.base.values()].some(e => e.id === 'cockpit'));
+  }
+  for (const m of a.STORY) if (m.id !== 'r1x') a.STORYP().stars[m.id] = 1;
+  a.startStory('r1x');
+  a.openBuild();
+  a.prepareBot();
+  a.toBattle({ ...a.makeCfg(a.botCarCfg()), me: 0, net: null });
+  const b = a.getB(),
+    boss = b.cars.find(c => c.boss);
+  assert(boss, 'boss car');
+  assert.equal(boss.name, 'Mother Crusher');
+  b.seq = 'play';
+  for (const I of boss.insts) if (I.id !== 'cockpit') I.hp = I.max * 0.3;
+  a.storyTick();
+  assert(boss.phase >= 2, 'phase changes when health drops');
+});
+test('crowd: damage builds hype, full hype throws a gift offline, never online', () => {
+  const r = runtime(),
+    a = r.api,
+    run = playRT(r);
+  a.startMatch('solo');
+  a.openBuild();
+  a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
+  run(5000);
+  const b = a.getB();
+  assert.equal(b.seq, 'play');
+  a.crowdStep(0.016);
+  const foe = b.cars[1];
+  for (const I of foe.insts) if (I.id !== 'cockpit') I.hp = I.max * 0.5;
+  a.crowdStep(0.016);
+  assert(b.crowd.hype[0] > 20, 'hitting the rival builds your hype');
+  b.crowd.hype[0] = 100;
+  a.crowdStep(0.016);
+  const gift = b.pk.find(p => p.kind === 'gift');
+  assert(gift, 'gift thrown');
+  a.stepGifts(2);
+  assert.equal(gift.fly, 1);
+  const hp0 = b.cars[0].insts.reduce((s, I) => s + I.hp, 0);
+  for (const I of b.cars[0].insts) I.hp = I.max * 0.5;
+  gift.g = 'repair';
+  a.crowdGiftTaken(b.cars[0], gift);
+  assert(b.cars[0].insts.reduce((s, I) => s + I.hp, 0) > hp0 * 0.5);
+  assert(a.COMM().q.length || a.COMM().cur, 'the commentators had something to say');
+  a.G.mode = 'mp';
+  b.crowd.hype[1] = 100;
+  const n = b.pk.length;
+  a.crowdStep(0.016);
+  assert.equal(b.pk.length, n, 'no gifts online');
+});
+
 console.log(`\n${passed} regression tests passed.`);

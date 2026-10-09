@@ -2698,6 +2698,8 @@ body.in-arena #btnPause {
 body:has(#ovCodex:not([hidden])) #demoFeed,
 body:has(#ovSettings:not([hidden])) #demoFeed,
 body:has(#ovStyle:not([hidden])) #demoFeed,
+body:has(#ovWork:not([hidden])) #demoFeed,
+body:has(#ovStory:not([hidden])) #demoFeed,
 body:has(#ovLobby:not([hidden])) #demoFeed {
   display: none;
 }
@@ -4686,6 +4688,587 @@ img.badge {
 .mlink[hidden] {
   display: none;
 }
+/* =====================================================================
+   PROGRESSION (Oct 2026): Workbench, Scrap Road, Locker stickers, spoils.
+   Same holo-workshop surfaces as the other overlays.
+   ===================================================================== */
+.wb,
+.story {
+  width: min(1180px, 100%);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100% - 8px);
+  min-height: 0;
+  background: var(--brackets), linear-gradient(180deg, rgba(23, 38, 66, 0.94), rgba(14, 24, 44, 0.96));
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer);
+}
+.wb header,
+.story header {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.wb header h2,
+.story header h2 {
+  margin: 0;
+  font-size: 28px;
+}
+.wb header > div:first-child,
+.story header > div:first-child {
+  margin-right: auto;
+}
+/* bolts: the Workbench currency, a little hex nut */
+.boltico {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: var(--hazard);
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  position: relative;
+  vertical-align: -2px;
+}
+.boltico::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+.wb-bolts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--f-display);
+}
+.wb-bolts b {
+  font-size: 24px;
+  color: var(--hazard);
+}
+.wb-bolts span {
+  color: var(--muted);
+}
+
+/* ---------- Workbench ---------- */
+.wb-body {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr) 260px;
+  gap: 18px;
+  padding: 18px 20px;
+  overflow: auto;
+  min-height: 0;
+}
+.wb-list .tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.wb-list .tabs button {
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  padding: 6px 10px;
+  font-family: var(--f-display);
+  font-size: 13px;
+  clip-path: var(--chamfer-s);
+}
+.wb-list .tabs button[aria-pressed='true'] {
+  border-color: var(--holo);
+  color: var(--holo);
+}
+.wb-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 560px;
+  overflow: auto;
+  padding-right: 4px;
+}
+.wb-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  text-align: left;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+  cursor: pointer;
+  position: relative;
+}
+.wb-row img {
+  width: 40px;
+  height: 40px;
+  background: var(--blueprint);
+}
+.wb-row .nm {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.wb-row .nm b {
+  font-family: var(--f-display);
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wb-row .nm span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.wb-row.on {
+  border-color: var(--holo);
+  background: var(--panel-3);
+}
+.newtag,
+.fusetag,
+.mwtag {
+  font-style: normal;
+  font-family: var(--f-display);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: var(--ok);
+  color: #04140c;
+}
+.fusetag {
+  background: var(--holo);
+  color: var(--bg);
+}
+.mwtag {
+  background: var(--coin);
+  color: var(--hazard-ink);
+  font-size: 12px;
+  vertical-align: middle;
+}
+.lvpips {
+  display: inline-flex;
+  gap: 3px;
+}
+.lvpips i {
+  width: 8px;
+  height: 12px;
+  background: var(--line-2);
+  transform: skewX(-14deg);
+}
+.lvpips i.on {
+  background: var(--hazard);
+}
+.lvpips i.mw.on {
+  background: var(--coin);
+  box-shadow: 0 0 8px var(--coin);
+}
+.wb-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.wb-hero {
+  align-self: center;
+  width: 200px;
+  height: 200px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(var(--bp-line) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(90deg, var(--bp-line) 1px, transparent 1px) 0 0 / 20px 20px,
+    var(--blueprint);
+  border: 1px solid var(--line-2);
+  clip-path: var(--chamfer);
+}
+.wb-hero img {
+  width: 150px;
+  height: 150px;
+}
+.wb-hero.mw {
+  border-color: var(--coin);
+  box-shadow: inset 0 0 40px rgba(255, 210, 87, 0.25);
+}
+.wb-meta h3 {
+  margin: 4px 0 6px;
+  font-size: 26px;
+}
+.wb-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 10px;
+  font-family: var(--f-display);
+}
+.wb-stat span {
+  color: var(--muted);
+  font-size: 14px;
+}
+.wb-stat b {
+  font-size: 24px;
+  color: var(--ok);
+}
+.wb-stat i {
+  font-style: normal;
+  color: var(--muted);
+}
+.wb-stat b.nx {
+  color: var(--hazard);
+}
+.wb-q {
+  padding: 12px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+}
+.wb-q.on {
+  border-color: var(--danger);
+}
+.wb-q p {
+  margin: 4px 0;
+}
+.qtag {
+  display: inline-block;
+  font-family: var(--f-display);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  margin-right: 8px;
+  background: var(--danger);
+  color: #1a0008;
+}
+.pro {
+  color: var(--ok);
+}
+.con {
+  color: #ff8a9c;
+}
+.qopts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.qopt {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-2);
+  clip-path: var(--chamfer-s);
+  font-size: 13px;
+  cursor: pointer;
+}
+.qopt b {
+  font-family: var(--f-display);
+  font-size: 15px;
+}
+.qopt:hover {
+  border-color: var(--hazard);
+}
+.wb-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+}
+.wb-help {
+  padding: 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.wb-help h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+.wb-help ol {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wb-empty {
+  margin: auto;
+  text-align: center;
+  color: var(--muted);
+}
+.gearlv {
+  background: var(--hazard) !important;
+  color: var(--hazard-ink) !important;
+}
+
+/* ---------- Scrap Road ---------- */
+.sr-sum {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--f-display);
+}
+.sr-sum b {
+  font-size: 26px;
+  color: var(--coin);
+}
+.sr-sum span {
+  color: var(--muted);
+}
+.sr-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  padding: 18px 20px;
+  overflow: auto;
+  min-height: 0;
+}
+.sr-map {
+  background:
+    linear-gradient(var(--bp-line) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, var(--bp-line) 1px, transparent 1px) 0 0 / 40px 40px,
+    var(--blueprint);
+  border: 1px solid var(--line-2);
+  clip-path: var(--chamfer);
+  padding: 6px;
+}
+.sr-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.rnode {
+  cursor: pointer;
+  outline: none;
+}
+.rnode:hover circle,
+.rnode:hover polygon,
+.rnode:focus-visible circle,
+.rnode:focus-visible polygon {
+  filter: drop-shadow(0 0 6px var(--holo));
+}
+.rnode.locked {
+  cursor: default;
+}
+.sr-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: var(--panel-2);
+  border: 1px solid var(--rc, var(--line));
+  clip-path: var(--chamfer);
+}
+.sr-card h3 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.05;
+}
+.sr-card p {
+  margin: 0;
+  line-height: 1.4;
+}
+.bossline {
+  color: #ff8a9c;
+}
+.sr-facts,
+.sr-rew {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.sr-facts span,
+.sr-rew span:not(.label) {
+  font-size: 13px;
+  padding: 3px 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+.sr-rew span:not(.label) {
+  color: var(--coin);
+}
+.sr-rew .label,
+.sr-goals .label {
+  width: 100%;
+}
+.sr-goals {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.sr-goals div.on {
+  color: var(--coin);
+}
+.sr-card .mgo {
+  margin-top: auto;
+}
+
+/* stars on the result card */
+.stars {
+  display: flex;
+  gap: 6px;
+}
+.stars i {
+  width: 30px;
+  height: 30px;
+  background: var(--line-2);
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+.stars i.on {
+  background: var(--coin);
+}
+.storyres {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 6px 0 10px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stars.big i.on {
+    animation: starpop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
+  }
+  .stars.big i.on:nth-child(2) {
+    animation-delay: 0.25s;
+  }
+  .stars.big i.on:nth-child(3) {
+    animation-delay: 0.5s;
+  }
+}
+@keyframes starpop {
+  from {
+    transform: scale(0);
+  }
+}
+
+/* spoils on result cards */
+.spoils {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.sp-b,
+.sp-g {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+}
+.sp-b b {
+  color: var(--hazard);
+  font-family: var(--f-display);
+}
+.sp-b span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.sp-g {
+  border-color: var(--coin);
+}
+.sp-g img {
+  width: 36px;
+  height: 36px;
+  background: var(--blueprint);
+}
+
+/* ---------- Locker: stickers and sets ---------- */
+.stslots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.stslot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 86px;
+  padding: 6px;
+  background: var(--bg-2);
+  border: 1px dashed var(--line-2);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+button.stslot {
+  cursor: pointer;
+  border-style: solid;
+  color: var(--fg);
+}
+button.stslot:hover {
+  border-color: var(--danger);
+}
+.stslot img {
+  width: 52px;
+  height: 52px;
+}
+.setp {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--sc, var(--line-2));
+  background: var(--bg-2);
+  font-size: 13px;
+  color: var(--muted);
+}
+.setp b {
+  font-family: var(--f-display);
+  font-size: 15px;
+  color: var(--sc, var(--fg));
+}
+.setp.on {
+  background: color-mix(in srgb, var(--sc) 14%, var(--bg-2));
+  color: var(--fg);
+}
+.settag {
+  align-self: flex-start;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--f-display);
+  padding: 1px 6px;
+  color: var(--sc);
+  border: 1px solid var(--sc);
+}
+.stitem.sticker {
+  align-items: flex-start;
+}
+.st-stk {
+  width: 56px;
+  height: 56px;
+}
+.stitem.sticker.match:not(.locked) {
+  box-shadow: inset 0 0 0 1px var(--hazard);
+}
+.stitem.locked .st-stk {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+.sthint {
+  margin: 0 0 8px;
+}
+@media (max-width: 1000px) {
+  .wb-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sr-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
     </style>
   </head>
   <body>
@@ -4953,6 +5536,8 @@ img.badge {
     <div class="overlay" id="ovResult" hidden><div class="card" id="resultCard"></div></div>
     <div class="overlay" id="ovReady" hidden><div class="card" id="readyCard"></div></div>
     <div class="overlay" id="ovStyle" hidden></div>
+    <div class="overlay" id="ovWork" hidden></div>
+    <div class="overlay" id="ovStory" hidden></div>
     <div class="overlay" id="ovSettings" hidden><div class="card" id="settingsCard"></div></div>
     <div class="overlay" id="ovReconnect" hidden><div class="card" id="reconnectCard"></div></div>
     <div class="overlay" id="ovPause" hidden><div class="card" id="pauseCard"></div></div>
@@ -9534,7 +10119,7 @@ function mergeAura(a, b) {
 /* ===== js/data/cosmetics.js ===== */
 // Garage Style: cosmetics are earned by playing (Scrap Cred levels) and by achievements. Nothing is bought.
 const STYLE_SLOTS = [
-  ['livery', 'Livery'],
+  ['livery', 'Skin'],
   ['trail', 'Trail'],
   ['wreck', 'Wreck effect'],
   ['title', 'Title']
@@ -9635,7 +10220,11 @@ const COSMETICS = {
       desc: 'Grabbed three power-ups in one round.',
       unlock: { ach: 'powered' }
     },
-    { id: 'legend', name: 'Scrap Legend', desc: 'Reached Scrap Cred level 20.', unlock: { lvl: 20 } }
+    { id: 'legend', name: 'Scrap Legend', desc: 'Reached Scrap Cred level 20.', unlock: { lvl: 20 } },
+    { id: 'yardboss', name: 'Yard Boss', desc: 'Took out the garbage. Literally.', unlock: { ach: 'road1' } },
+    { id: 'canyon', name: 'Canyon Runner', desc: 'Outlasted the Twin Drill.', unlock: { ach: 'road2' } },
+    { id: 'baron', name: 'Unstuck', desc: 'Escaped the Magnet Baron.', unlock: { ach: 'road3' } },
+    { id: 'junkking', name: 'The New Junk King', desc: 'Sits on a throne of scrap.', unlock: { ach: 'kingslayer' } }
   ]
 };
 const ACHIEVEMENTS = {
@@ -9657,11 +10246,238 @@ const ACHIEVEMENTS = {
   night: { name: 'Night Owl', desc: 'Win a Night Shift round.' },
   sumo: { name: 'Sumo Champ', desc: 'Win a Sumo Ring round.' },
   powered: { name: 'Juiced', desc: 'Grab three power-ups in one round.' },
-  jackpot: { name: 'Jackpot', desc: 'Hit the 1 in 100 jackpot in a Scrap Crate.' }
+  jackpot: { name: 'Jackpot', desc: 'Hit the 1 in 100 jackpot in a Scrap Crate.' },
+  road1: { name: 'Bin Day', desc: 'Beat Mother Crusher on the Scrap Road.' },
+  road2: { name: 'Drill Sergeant', desc: 'Beat the Twin Drill on the Scrap Road.' },
+  road3: { name: 'Demagnetised', desc: 'Beat the Magnet Baron on the Scrap Road.' },
+  kingslayer: { name: 'Kingslayer', desc: 'Beat the Junk King at the end of the Scrap Road.' }
 };
 const XP = { round: 25, roundWin: 25, specialWin: 15, match: 50, matchWin: 100 };
 const xpForLevel = lvl => 100 + 50 * (lvl - 1); // XP needed to go from lvl to lvl + 1
-const DEFAULT_STYLE = { livery: 'factory', trail: 'none', wreck: 'classic', title: 'rookie', badge: 'shield.bolt.0' };
+const DEFAULT_STYLE = {
+  livery: 'factory',
+  trail: 'none',
+  wreck: 'classic',
+  title: 'rookie',
+  badge: 'shield.bolt.0',
+  stickers: []
+};
+/* ===== js/data/progression.js ===== */
+// Personal progression data: gear (your own upgraded parts), quirks, stickers and sticker sets.
+// Gear and stickers only work in single-player modes (Duel vs bot, Story, Gauntlet); online stays fair.
+
+/* ---------- Gear ---------- */
+const GEAR_MAX = 5; // levels 1..5, quirk at 3, masterwork at 5
+const GEAR_CAP = 40; // items in the locker
+// Bolts needed to reach the next level, scaled by rarity.
+const GEAR_COST = [0, 40, 90, 160, 260];
+const GEAR_RARK = [1, 1.2, 1.5, 1.9, 2.4];
+const gearCost = (g, lvl = g.lvl) => Math.round(GEAR_COST[lvl] * GEAR_RARK[MOD[g.id] ? MOD[g.id].rar : 0]);
+const gearScrapValue = g =>
+  Math.round(10 + 6 * (MOD[g.id] ? MOD[g.id].rar : 0) + 0.3 * GEAR_COST.slice(1, g.lvl).reduce((a, b) => a + b, 0));
+
+/** What kind of bonus a part's levels give. */
+function gearKind(id) {
+  const m = MOD[id];
+  if (!m) return 'hp';
+  if (m.cat === 'move') return 'speed';
+  if (m.cat === 'weapon') return 'rate';
+  return 'hp';
+}
+/** Total bonus (fraction) at a level; masterwork adds a final kick. */
+function gearBonus(g) {
+  const k = gearKind(g.id),
+    L = g.lvl,
+    mw = L >= GEAR_MAX ? 1 : 0;
+  if (k === 'speed') return 0.015 + 0.015 * (L - 1) + 0.02 * mw;
+  if (k === 'rate') return 0.04 + 0.06 * (L - 1) + 0.06 * mw;
+  return 0.05 + 0.08 * (L - 1) + 0.08 * mw;
+}
+const GEAR_KIND_TEXT = { hp: 'part HP', rate: 'fire / use rate', speed: 'car top speed' };
+
+/** Quirks: every one is a trade-off, picked at level 3. `fits` limits which parts can roll it. */
+const QUIRKS = {
+  overclock: {
+    name: 'Overclocked',
+    pro: '+20% fire rate',
+    con: 'This part takes 25% more damage',
+    fits: k => k === 'rate'
+  },
+  bulky: { name: 'Bulky', pro: '+35% part HP', con: 'Car top speed −3%', fits: () => true },
+  feather: { name: 'Featherweight', pro: 'Car top speed +3%', con: 'Part HP −20%', fits: () => true },
+  spiky: {
+    name: 'Spiky',
+    pro: 'Rams and melee on this part bounce 25% of the damage back',
+    con: 'Part HP −10%',
+    fits: k => k === 'hp'
+  },
+  selfheal: {
+    name: 'Self-Healing',
+    pro: 'Repairs 2% of its HP every second',
+    con: 'Car top speed −2%',
+    fits: () => true
+  },
+  showoff: {
+    name: 'Show-off',
+    pro: 'The crowd goes wild: +50% hype for your car',
+    con: 'Part HP −15%',
+    fits: () => true
+  },
+  magnetic: {
+    name: 'Magnetic',
+    pro: 'Pickup reach +50%',
+    con: 'Car top speed −2%',
+    fits: () => true
+  },
+  tantrum: {
+    name: 'Tantrum',
+    pro: 'When this part breaks it explodes in a scrap burst',
+    con: 'Part HP −10%',
+    fits: () => true
+  }
+};
+const QUIRK_IDS = Object.keys(QUIRKS);
+
+/* ---------- Stickers and sets ---------- */
+// Each livery belongs to a set. Wear two stickers from the same set as your livery for its set bonus.
+const STICKER_SETS = {
+  speed: {
+    name: 'Speed Demon',
+    col: '#ff7a3a',
+    bonus: 'Top speed +5%',
+    liveries: ['flames', 'stripes', 'racing', 'checker']
+  },
+  junk: {
+    name: 'Junkyard',
+    col: '#c9a227',
+    bonus: 'Repairs heal 30% more and parts slowly mend',
+    liveries: ['rust', 'camo', 'hazard', 'graffiti', 'factory']
+  },
+  show: {
+    name: 'Showtime',
+    col: '#ffd257',
+    bonus: 'Hype +40%: the crowd throws you more gifts',
+    liveries: ['gold', 'chrome', 'holo', 'neon']
+  },
+  wild: {
+    name: 'Wild',
+    col: '#3fe0a0',
+    bonus: 'All damage dealt +5%',
+    liveries: ['tiger', 'dazzle', 'arctic']
+  },
+  tech: {
+    name: 'Tech',
+    col: '#5be7ff',
+    bonus: 'Power-ups last 30% longer',
+    liveries: ['circuit', 'carbon', 'galaxy', 'lava']
+  }
+};
+const liverySet = id => Object.keys(STICKER_SETS).find(s => STICKER_SETS[s].liveries.includes(id)) || null;
+
+// unlock: {lvl} | {ach} | {story: missionId} — story stickers are earned on the Scrap Road.
+const STICKERS = [
+  { id: 'flag', set: 'speed', name: 'Checker Flag', perk: 'Top speed +3%', fx: { speedK: 0.03 }, unlock: null },
+  {
+    id: 'flame',
+    set: 'speed',
+    name: 'Flame Decal',
+    perk: 'Fire damage taken −15%',
+    fx: { res: { fire: 0.15 } },
+    unlock: { lvl: 4 }
+  },
+  {
+    id: 'lightning',
+    set: 'speed',
+    name: 'Lightning',
+    perk: 'Start every round with a 4 s speed boost',
+    fx: { quick: 1 },
+    unlock: { story: 'r1b' }
+  },
+  {
+    id: 'wrench',
+    set: 'junk',
+    name: 'Grease Monkey',
+    perk: 'Repair pickups heal 30% more',
+    fx: { repairK: 0.3 },
+    unlock: null
+  },
+  {
+    id: 'skull',
+    set: 'junk',
+    name: 'Skull & Bolts',
+    perk: 'Ram damage taken −10%',
+    fx: { res: { ram: 0.1 } },
+    unlock: { lvl: 6 }
+  },
+  { id: 'rat', set: 'junk', name: 'Junk Rat', perk: 'Coin pickups +30%', fx: { coinK: 0.3 }, unlock: { story: 'r1a' } },
+  { id: 'star', set: 'show', name: 'Gold Star', perk: 'Hype +20%', fx: { hypeK: 0.2 }, unlock: { lvl: 2 } },
+  { id: 'crown', set: 'show', name: 'Tiny Crown', perk: 'Max HP +4%', fx: { hpK: 0.04 }, unlock: { ach: 'match_win' } },
+  {
+    id: 'heart',
+    set: 'show',
+    name: 'Fan Mail',
+    perk: 'Crowd gifts you grab also repair 6%',
+    fx: { giftHeal: 0.06 },
+    unlock: { story: 'r2c' }
+  },
+  {
+    id: 'paw',
+    set: 'wild',
+    name: 'Tiger Paw',
+    perk: 'Ram damage dealt +8%',
+    fx: { ramOut: 0.08 },
+    unlock: { story: 'r2a' }
+  },
+  {
+    id: 'cat',
+    set: 'wild',
+    name: 'Lucky Cat',
+    perk: 'Pickup reach +40%',
+    fx: { reach: 0.4 },
+    unlock: { lvl: 8 }
+  },
+  {
+    id: 'duck',
+    set: 'wild',
+    name: 'Rubber Duck',
+    perk: 'Explosive damage taken −10%',
+    fx: { res: { expl: 0.1 } },
+    unlock: { ach: 'duck' }
+  },
+  {
+    id: 'atom',
+    set: 'tech',
+    name: 'Atom',
+    perk: 'Power-ups last 20% longer',
+    fx: { powerK: 0.2 },
+    unlock: { lvl: 10 }
+  },
+  {
+    id: 'chip',
+    set: 'tech',
+    name: 'Overclock Chip',
+    perk: 'Fire rate +4%',
+    fx: { rateK: 0.04 },
+    unlock: { story: 'r3b' }
+  },
+  {
+    id: 'eye',
+    set: 'tech',
+    name: 'Watchful Eye',
+    perk: 'Bullet damage taken −8%',
+    fx: { res: { light: 0.08 } },
+    unlock: { story: 'r3d' }
+  }
+];
+const STICKER = Object.fromEntries(STICKERS.map(s => [s.id, s]));
+const STICKER_SLOTS = 3;
+const SET_FX = {
+  speed: { speedK: 0.05 },
+  junk: { repairK: 0.3, mend: 0.004 },
+  show: { hypeK: 0.4 },
+  wild: { dmgK: 0.05 },
+  tech: { powerK: 0.3 }
+};
 /* ===== js/render/module-art.js ===== */
 // Canvas artwork for every module, junk object and themed wall.
 /* =================== ART =================== */
@@ -14354,6 +15170,22 @@ function draftOptions(P = G) {
       slot: 'Wildcard',
       why: 'Spend it in the shop'
     });
+  // your own gear can turn up instead of the wildcard (single player only)
+  if (P === G && gearActive()) {
+    const miss = gearMissing(),
+      none = !Object.keys(G.gearFound || {}).length;
+    if (miss.length && (Math.random() < 0.4 || (none && G.round >= 3))) {
+      const g = wpick(miss, g => g.lvl * g.lvl + (g.q ? 2 : 0));
+      opts[2] = {
+        type: 'gear',
+        u: g.u,
+        id: g.id,
+        rar: Math.max(MOD[g.id].rar, Math.min(4, g.lvl - 1)),
+        slot: 'Your gear',
+        why: 'Found in the scrap: your own tuned part'
+      };
+    }
+  }
   return opts;
 }
 function optView(o) {
@@ -14375,6 +15207,17 @@ function optView(o) {
       img: `<img alt="" src="${iconURL(t.mod, 184)}"><span class="x">▲</span>`,
       title: t.name,
       body: `<p class="pro">+ ${esc(t.pro)}</p><p class="con">− ${esc(t.con)}</p><p class="small">Applies to every ${esc(MOD[t.mod].name)}</p>`
+    };
+  }
+  if (o.type === 'gear') {
+    const g = gearById(o.u),
+      m = MOD[o.id],
+      q = g && g.q ? QUIRKS[g.q] : null;
+    return {
+      kind: g && g.lvl >= GEAR_MAX ? 'Masterwork gear' : 'Personal gear',
+      img: `<img alt="" src="${iconURL(m.id, 184)}"><span class="x gearlv">+${g ? g.lvl - 1 : 0}</span>`,
+      title: g ? gearName(g) : m.name,
+      body: `<p class="pro">+ ${Math.round(gearBonus(g || { id: o.id, lvl: 1 }) * 100)}% ${GEAR_KIND_TEXT[gearKind(o.id)]}</p>${q ? `<p class="pro">+ ${esc(q.name)}: ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p>` : ''}<p class="small">One copy. Upgrade it further at the Workbench.</p>`
     };
   }
   if (o.type === 'ws') {
@@ -14458,6 +15301,10 @@ function takeOption(o) {
   } else if (o.type === 'tune') {
     G.tune.add(o.id);
     addAff(TUNEMAP[o.id].mod, 0.5);
+  } else if (o.type === 'gear') {
+    const g = gearById(o.u);
+    if (g) findGear(g);
+    G.sel = o.id;
   } else if (o.type === 'ws') {
     for (const k of o.cells) G.ws.add(k);
   } else if (o.type === 'salvage') {
@@ -15845,7 +16692,7 @@ function readyCheck() {
   });
 }
 /* ===== js/garage/style.js ===== */
-// Garage Style: Scrap Cred progression, achievements, unlocks and the customization screen.
+// The Locker: Scrap Cred progression, achievements, unlocks, and the screen for skins, stickers, trails and titles.
 let PROG = { xp: 0, ach: [] };
 function loadStyle() {
   try {
@@ -15862,6 +16709,9 @@ function loadStyle() {
     if (it && isUnlocked(it)) G.style[slot] = it.id;
   }
   if (s.badge) G.style.badge = validBadge(s.badge);
+  G.style.stickers = Array.isArray(s.stickers)
+    ? [...new Set(s.stickers.filter(id => STICKER[id] && stickerUnlocked(STICKER[id])))].slice(0, STICKER_SLOTS)
+    : [];
 }
 const saveProg = () => store('sd.prog', PROG);
 const saveStyle = () => store('sd.style', G.style);
@@ -15885,7 +16735,9 @@ const unlockText = u =>
     ? 'Starter item'
     : u.lvl
       ? `Reach Scrap Cred level ${u.lvl}`
-      : `Achievement: ${ACHIEVEMENTS[u.ach].name} (${ACHIEVEMENTS[u.ach].desc})`;
+      : u.story
+        ? `Scrap Road: beat ${STORY_BY[u.story].name}`
+        : `Achievement: ${ACHIEVEMENTS[u.ach].name} (${ACHIEVEMENTS[u.ach].desc})`;
 
 /** Applies XP and achievements, returning what changed so the result screen can celebrate it. */
 function grant(xp, achIds) {
@@ -15933,9 +16785,16 @@ function progressHtml(p) {
     ${p.unlocked.map(i => `<div class="unl">Unlocked ${esc(STYLE_SLOTS.find(s => s[0] === i.slot)[1].toLowerCase())}: <b>${esc(i.name)}</b></div>`).join('')}</div>`;
 }
 
-/* ---------- the Garage Style screen ---------- */
+/* ---------- the Locker screen ---------- */
 let styleTab = 'livery',
   styleBack = null;
+const LOCKER_TABS = [
+  ['livery', 'Skins'],
+  ['stickers', 'Stickers'],
+  ['trail', 'Trails'],
+  ['wreck', 'Wreck effects'],
+  ['title', 'Titles']
+];
 function openStyle(back) {
   styleBack = back || null;
   renderStyle();
@@ -15950,7 +16809,7 @@ function stylePreviewDesign() {
   G.top = save.top;
   return d;
 }
-/* Small previews in the Garage Style grid: liveries on your own car, a glyph for the rest. */
+/* Small previews in the Locker grid: skins on your own car, a glyph for the rest. */
 const _stylePrev = {};
 const STYLE_GLYPH = {
   trail: {
@@ -15967,7 +16826,7 @@ const STYLE_GLYPH = {
     comet: '☄',
     coins: '●'
   },
-  wreck: { classic: '🔥', confetti: '🎉', glitter: '✨', pixels: '▦', ducks: '🦆', notes: '♫' }
+  wreck: { classic: '✹', confetti: '❋', glitter: '✧', pixels: '▦', ducks: '◒', notes: '♫' }
 };
 function stylePreview(slot, id) {
   if (slot === 'livery') {
@@ -15984,18 +16843,54 @@ function stylePreview(slot, id) {
   const g = (STYLE_GLYPH[slot] || {})[id];
   return g ? `<span class="st-glyph" aria-hidden="true">${g}</span>` : '';
 }
+const setTag = set =>
+  set ? `<em class="settag" style="--sc:${STICKER_SETS[set].col}">${esc(STICKER_SETS[set].name)}</em>` : '';
+/** The set panel: which set your skin belongs to and how close you are to its bonus. */
+function setPanelHtml() {
+  const set = liverySet(G.style.livery),
+    have = (G.style.stickers || []).filter(id => STICKER[id].set === set).length;
+  if (!set)
+    return `<div class="setp off"><b>No set</b><span>The ${esc(COSMETICS.livery.find(i => i.id === G.style.livery).name)} skin has no sticker set. Pick a skin with a set tag to unlock a set bonus.</span></div>`;
+  const S = STICKER_SETS[set],
+    on = have >= 2;
+  return `<div class="setp${on ? ' on' : ''}" style="--sc:${S.col}"><b>${esc(S.name)} set · ${Math.min(have, 2)}/2</b><span>${on ? 'Active: ' : 'Wear two ' + esc(S.name) + ' stickers with this skin: '}${esc(S.bonus)}</span></div>`;
+}
+function stickerSlotsHtml() {
+  const st = G.style.stickers || [];
+  return `<div class="stslots">${Array.from({ length: STICKER_SLOTS }, (_, i) =>
+    st[i]
+      ? `<button class="stslot on" data-rm="${st[i]}" title="Remove ${esc(STICKER[st[i]].name)}"><img alt="" src="${stickerURL(st[i], 72)}"><span>${esc(STICKER[st[i]].name)}</span></button>`
+      : `<div class="stslot"><span>Empty slot</span></div>`
+  ).join('')}</div>`;
+}
 function renderStyle() {
   const L = levelInfo(),
-    items = COSMETICS[styleTab];
+    isSt = styleTab === 'stickers',
+    items = isSt ? STICKERS : COSMETICS[styleTab];
   let img = '';
   try {
     img = designURL(stylePreviewDesign(), 260, G.paint, G.style.livery);
   } catch (e) {}
+  const grid = items
+    .map(it => {
+      if (isSt) {
+        const un = stickerUnlocked(it),
+          on = (G.style.stickers || []).includes(it.id),
+          match = it.set === liverySet(G.style.livery);
+        return `<button class="stitem sticker${on ? ' on' : ''}${un ? '' : ' locked'}${match ? ' match' : ''}" data-id="${it.id}" ${un ? '' : 'aria-disabled="true"'}><img class="st-stk" alt="" src="${stickerURL(it.id, 64)}"><b>${esc(it.name)}</b>${setTag(it.set)}<span>${esc(un ? it.perk : unlockText(it.unlock))}</span>${on ? '<i>On your car</i>' : un ? '' : '<i>Locked</i>'}</button>`;
+      }
+      const un = isUnlocked(it),
+        on = G.style[styleTab] === it.id;
+      return `<button class="stitem${on ? ' on' : ''}${un ? '' : ' locked'}" data-id="${it.id}" ${un ? '' : 'aria-disabled="true"'}>${stylePreview(styleTab, it.id)}<b>${esc(it.name)}</b>${styleTab === 'livery' ? setTag(liverySet(it.id)) : ''}<span>${esc(un ? it.desc : unlockText(it.unlock))}</span>${on ? '<i>Equipped</i>' : un ? '' : '<i>Locked</i>'}</button>`;
+    })
+    .join('');
   $('#ovStyle').innerHTML = `<div class="style">
-    <header><div><span class="label">Garage Style</span><h2>${esc(G.name)} <span class="ttl">${esc(titleName(G.style.title))}</span></h2></div>
+    <header><div><span class="label">Locker</span><h2>${esc(G.name)} <span class="ttl">${esc(titleName(G.style.title))}</span></h2></div>
       <div class="lvl"><span class="lv">${L.lvl}</span><div><b>Scrap Cred level ${L.lvl}</b><div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">${L.into} / ${L.need} XP · ${unlockedCount()} of ${totalCosmetics()} items</span></div></div>
       <button class="btn ghost" id="stBack">Done</button></header>
-    <div class="stbody"><div class="stprev"><img src="${img}" alt="Your car with the ${esc(G.style.livery)} livery"><span class="small">Paint colour is set in the garage. Cosmetics never change stats.</span>
+    <div class="stbody"><div class="stprev"><img src="${img}" alt="Your car with the ${esc(G.style.livery)} skin">
+      ${stickerSlotsHtml()}${setPanelHtml()}
+      <span class="small">Skins, trails and titles are looks only. Sticker perks and set bonuses work in Duel, Scrap Road and Gauntlet; online only the picture travels.</span>
       ${badgeEditorHTML()}
       <span class="label">Achievements · ${PROG.ach.length}/${Object.keys(ACHIEVEMENTS).length}</span><div class="achlist">${Object.entries(
         ACHIEVEMENTS
@@ -16004,14 +16899,9 @@ function renderStyle() {
           ([id, a]) => `<span class="${PROG.ach.includes(id) ? 'on' : ''}" title="${esc(a.desc)}">${esc(a.name)}</span>`
         )
         .join('')}</div></div>
-      <div class="stright"><div class="tabs">${STYLE_SLOTS.map(([s, n]) => `<button data-tab="${s}" aria-pressed="${s === styleTab}">${n}</button>`).join('')}</div>
-      <div class="stgrid">${items
-        .map(it => {
-          const un = isUnlocked(it),
-            on = G.style[styleTab] === it.id;
-          return `<button class="stitem${on ? ' on' : ''}${un ? '' : ' locked'}" data-id="${it.id}" ${un ? '' : 'aria-disabled="true"'}>${stylePreview(styleTab, it.id)}<b>${esc(it.name)}</b><span>${esc(un ? it.desc : unlockText(it.unlock))}</span>${on ? '<i>Equipped</i>' : un ? '' : '<i>Locked</i>'}</button>`;
-        })
-        .join('')}</div></div></div></div>`;
+      <div class="stright"><div class="tabs">${LOCKER_TABS.map(([s, n]) => `<button data-tab="${s}" aria-pressed="${s === styleTab}">${n}</button>`).join('')}</div>
+      ${isSt ? `<p class="small sthint">Three slots. Click a sticker to put it on or take it off. Stickers glowing with your skin's colour count towards its set.</p>` : ''}
+      <div class="stgrid">${grid}</div></div></div></div>`;
   $$('#ovStyle [data-bk]').forEach(b =>
     b.addEventListener('click', () => {
       const p = parseBadge(G.style.badge),
@@ -16033,8 +16923,32 @@ function renderStyle() {
       renderStyle();
     })
   );
+  $$('#ovStyle [data-rm]').forEach(b =>
+    b.addEventListener('click', () => {
+      G.style.stickers = G.style.stickers.filter(x => x !== b.dataset.rm);
+      saveStyle();
+      sfx('remove');
+      renderStyle();
+    })
+  );
   $$('#ovStyle .stitem').forEach(b =>
     b.addEventListener('click', () => {
+      if (isSt) {
+        const st = STICKER[b.dataset.id];
+        if (!stickerUnlocked(st)) return sfx('remove');
+        const cur = G.style.stickers || [];
+        if (cur.includes(st.id)) G.style.stickers = cur.filter(x => x !== st.id);
+        else if (cur.length >= STICKER_SLOTS) {
+          toast('All three slots are full. Click a sticker on your car to peel it off first.');
+          return sfx('remove');
+        } else G.style.stickers = [...cur, st.id];
+        saveStyle();
+        sfx('place');
+        if (activeSet() && cur.length < G.style.stickers.length)
+          toast(`Set bonus on: ${STICKER_SETS[activeSet()].bonus}`, true);
+        renderStyle();
+        return;
+      }
       const it = items.find(i => i.id === b.dataset.id);
       if (!isUnlocked(it)) {
         sfx('remove');
@@ -16050,6 +16964,178 @@ function renderStyle() {
     $('#ovStyle').hidden = true;
     sfx('ui');
     if (styleBack) styleBack();
+  });
+}
+/* ===== js/garage/workbench.js ===== */
+// Workbench: upgrade your personal gear with bolts, pick quirks, fuse duplicates, scrap what you do not need.
+let wbSel = null,
+  wbFilter = 'all',
+  wbBack = null,
+  wbArmed = null;
+const WB_FILTERS = [
+  ['all', 'All'],
+  ['weapon', 'Weapons'],
+  ['melee', 'Melee'],
+  ['armour', 'Armour'],
+  ['move', 'Movement'],
+  ['other', 'Other']
+];
+function wbMatch(g) {
+  const c = MOD[g.id].cat;
+  if (wbFilter === 'all') return true;
+  if (wbFilter === 'armour') return c === 'struct' || c === 'defense';
+  if (wbFilter === 'other') return c === 'utility' || c === 'chaos';
+  return c === wbFilter;
+}
+function openWorkbench(back) {
+  wbBack = back || null;
+  wbArmed = null;
+  if (!wbSel || !gearById(wbSel)) wbSel = GEAR.items[0] ? GEAR.items[0].u : null;
+  renderWorkbench();
+  $('#ovWork').hidden = false;
+}
+const lvPips = g =>
+  `<span class="lvpips" aria-label="Level ${g.lvl} of ${GEAR_MAX}">${Array.from({ length: GEAR_MAX }, (_, i) => `<i class="${i < g.lvl ? 'on' : ''}${i === GEAR_MAX - 1 ? ' mw' : ''}"></i>`).join('')}</span>`;
+function wbDetail(g) {
+  if (!g)
+    return `<div class="wb-empty"><h3>No gear yet</h3><p>Win matches, clear Gauntlet waves and finish Scrap Road missions to find gear.</p></div>`;
+  const m = MOD[g.id],
+    k = gearKind(g.id),
+    now = Math.round(gearBonus(g) * 100),
+    next = g.lvl < GEAR_MAX ? Math.round(gearBonus({ ...g, lvl: g.lvl + 1 }) * 100) : null,
+    cost = g.lvl < GEAR_MAX ? gearCost(g) : 0,
+    dup = GEAR.items.find(x => x !== g && x.id === g.id),
+    q = g.q && QUIRKS[g.q];
+  let quirk;
+  if (q)
+    quirk = `<div class="wb-q on"><span class="qtag">Quirk</span><b>${esc(q.name)}</b><p class="pro">+ ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p><button class="btn ghost sm" id="wbReroll" ${GEAR.bolts < QUIRK_REROLL ? 'disabled' : ''}>Reroll quirk · ${QUIRK_REROLL} bolts</button></div>`;
+  else if (g.qo && g.qo.length)
+    quirk = `<div class="wb-q pick"><span class="qtag">Pick a quirk</span><p class="small">Every quirk is a trade-off. You can reroll later.</p><div class="qopts">${g.qo
+      .map(
+        id =>
+          `<button class="qopt" data-q="${id}"><b>${esc(QUIRKS[id].name)}</b><span class="pro">+ ${esc(QUIRKS[id].pro)}</span><span class="con">− ${esc(QUIRKS[id].con)}</span></button>`
+      )
+      .join('')}</div></div>`;
+  else quirk = `<div class="wb-q locked"><span class="qtag">Quirk</span><p>Unlocks at level 3.</p></div>`;
+  return `<div class="wb-hero ${g.lvl >= GEAR_MAX ? 'mw' : ''}"><img alt="" src="${iconURL(g.id, 184)}"></div>
+    <div class="wb-meta"><span class="label" style="color:${RAR[m.rar].col}">${RAR[m.rar].name} · ${esc(CATNAME[m.cat])}${g.from ? ' · ' + esc(g.from) : ''}</span>
+      <h3>${esc(gearName(g))}${g.lvl >= GEAR_MAX ? ' <em class="mwtag">Masterwork</em>' : ''}</h3>${lvPips(g)}
+      <div class="wb-stat"><span>${esc(GEAR_KIND_TEXT[k])}</span><b>+${now}%</b>${next != null ? `<i aria-hidden="true">→</i><b class="nx">+${next}%</b>` : ''}</div>
+      ${g.lvl === GEAR_MAX - 1 ? '<p class="small">Level 5 makes it a Masterwork: an extra bonus, a golden glow and a hype boost with the crowd.</p>' : ''}
+    </div>
+    ${quirk}
+    <div class="wb-acts">
+      ${g.lvl < GEAR_MAX ? `<button class="btn" id="wbUp" ${GEAR.bolts < cost ? 'disabled' : ''}>Upgrade to level ${g.lvl + 1} · ${cost} bolts</button>` : '<span class="small">Max level reached.</span>'}
+      ${dup ? `<button class="btn ghost" id="wbFuse">Fuse with your other ${esc(m.name)} (Lv ${dup.lvl})</button>` : ''}
+      <button class="btn ghost warn" id="wbScrap">${wbArmed === g.u ? 'Click again to scrap' : `Scrap for ${gearScrapValue(g)} bolts`}</button>
+    </div>`;
+}
+function renderWorkbench() {
+  const list = GEAR.items.filter(wbMatch).sort((a, b) => b.lvl - a.lvl || MOD[b.id].rar - MOD[a.id].rar);
+  const g = gearById(wbSel);
+  if (g && g.isNew) {
+    delete g.isNew;
+    saveGear();
+  }
+  const counts = {};
+  for (const x of GEAR.items) counts[x.id] = (counts[x.id] || 0) + 1;
+  $('#ovWork').innerHTML = `<div class="wb">
+    <header><div><span class="label">Workbench</span><h2>Your gear</h2></div>
+      <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b><span>bolts</span></div>
+      <span class="small">${GEAR.items.length} / ${GEAR_CAP} in the locker</span>
+      <button class="btn ghost" id="wbDone">Done</button></header>
+    <div class="wb-body">
+      <section class="wb-list" aria-label="Gear list">
+        <div class="tabs">${WB_FILTERS.map(([id, n]) => `<button data-f="${id}" aria-pressed="${id === wbFilter}">${n}</button>`).join('')}</div>
+        <div class="wb-rows">${
+          list.length
+            ? list
+                .map(
+                  x =>
+                    `<button class="wb-row${x.u === wbSel ? ' on' : ''}" data-u="${x.u}"><img alt="" src="${iconURL(x.id, 48)}"><span class="nm"><b>${esc(gearName(x))}</b><span>${x.q ? esc(QUIRKS[x.q].name) : x.qo ? 'Quirk ready' : esc(RAR[MOD[x.id].rar].name)}</span></span>${lvPips(x)}${x.isNew ? '<em class="newtag">New</em>' : counts[x.id] > 1 ? '<em class="fusetag">Fuse</em>' : ''}</button>`
+                )
+                .join('')
+            : '<p class="small" style="padding:12px">Nothing in this category.</p>'
+        }</div>
+      </section>
+      <section class="wb-detail" aria-label="Selected gear">${wbDetail(g)}</section>
+      <aside class="wb-help">
+        <h3>How gear works</h3>
+        <ol>
+          <li><b>Find it.</b> Gear drops after Duel matches, Gauntlet runs and Scrap Road missions. Bosses drop their signature parts.</li>
+          <li><b>Upgrade it.</b> Spend bolts here. Level 3 unlocks a quirk, level 5 makes it a Masterwork.</li>
+          <li><b>Draft it.</b> In Duel, Story and Gauntlet your gear shows up as a draft card. Take it and the first copy you mount is your tuned part.</li>
+        </ol>
+        <p class="small">Online 1v1 never uses gear, so matches against friends stay fair.</p>
+      </aside>
+    </div></div>`;
+  $$('#ovWork [data-f]').forEach(b =>
+    b.addEventListener('click', () => {
+      wbFilter = b.dataset.f;
+      sfx('ui');
+      renderWorkbench();
+    })
+  );
+  $$('#ovWork .wb-row').forEach(b =>
+    b.addEventListener('click', () => {
+      wbSel = +b.dataset.u;
+      wbArmed = null;
+      sfx('ui');
+      renderWorkbench();
+    })
+  );
+  $$('#ovWork .qopt').forEach(b =>
+    b.addEventListener('click', () => {
+      if (gearPickQuirk(g, b.dataset.q)) {
+        sfx('legend');
+        toast(`${QUIRKS[g.q].name} welded onto ${MOD[g.id].name}`, true);
+      }
+      renderWorkbench();
+    })
+  );
+  const on = (id, f) => {
+    const el = $('#' + id);
+    if (el) el.addEventListener('click', f);
+  };
+  on('wbUp', () => {
+    if (gearUpgrade(g)) {
+      sfx(g.lvl >= GEAR_MAX ? 'jackpot' : 'repair');
+      toast(`${gearName(g)}${g.lvl >= GEAR_MAX ? ' is now a Masterwork!' : ' upgraded'}`, true);
+    }
+    renderWorkbench();
+  });
+  on('wbReroll', () => {
+    if (gearRerollQuirk(g)) sfx('reveal');
+    renderWorkbench();
+  });
+  on('wbFuse', () => {
+    const other = GEAR.items.filter(x => x !== g && x.id === g.id).sort((a, b) => b.lvl - a.lvl)[0];
+    const keep = gearFuse(g, other);
+    if (keep) {
+      wbSel = keep.u;
+      sfx('clank');
+      toast(`Fused into ${gearName(keep)}`, true);
+    }
+    renderWorkbench();
+  });
+  on('wbScrap', () => {
+    if (wbArmed !== g.u) {
+      wbArmed = g.u;
+      renderWorkbench();
+      return;
+    }
+    const v = gearScrapValue(g);
+    gearScrap(g);
+    wbArmed = null;
+    wbSel = GEAR.items[0] ? GEAR.items[0].u : null;
+    sfx('remove');
+    toast(`Scrapped for ${v} bolts`);
+    renderWorkbench();
+  });
+  on('wbDone', () => {
+    $('#ovWork').hidden = true;
+    sfx('ui');
+    if (wbBack) wbBack();
   });
 }
 /* ===== js/game/arena.js ===== */
@@ -16984,6 +18070,7 @@ function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
     a *= 1 - m.res[type];
   if (v.has.gnome && v.insts.some(g => g.id === 'gnome' && g.alive)) a *= 0.92;
   if (I.sprung && type === 'ram') a *= 0.75;
+  if (I.gFrag || I.gSpiky || v.flair || (attacker && attacker.flair)) a = flairHurt(v, I, a, type, attacker);
   if (a >= 70 && Math.random() < 0.3 && SETTINGS.nums !== false)
     txt(v.x + rnd(-30, 30), v.y - v.rad - 20, pick(HIT_QUIPS), '#ffd257', 1.1);
   if (type === 'fire') {
@@ -17070,6 +18157,7 @@ function killInst(v, I, quiet) {
   if (I.id === 'cockpit' && (v.cargo || 0) > 0) planSpill(v, ...ipos(v, I));
   I.alive = false;
   v.lost.push(I.id);
+  if (I.gBurst && !quiet) gearBreak(v, I);
   const [x, y] = ipos(v, I);
   if (B.rec && !quiet) B.ev.push(['lesson', v.idx, x, y, `${MOD[I.id].name} destroyed`]);
   if (!quiet) boom(x, y, I.id === 'cockpit' ? 2 : 0.8);
@@ -18889,25 +19977,32 @@ function stepCarHazards(v, dt) {
       explode(z.x, z.y, 75, 70, 'expl', z.own);
     }
   }
-  const reach = v.has.coinmag ? 3 : 1;
+  const reach = (v.has.coinmag ? 3 : 1) * (1 + (v.reach || 0)),
+    fl = v.flair || {};
   for (const p of B.pk || []) {
     if (p.cd > 0) continue;
     if (Math.hypot(p.x - v.x, p.y - v.y) < (v.rad * 0.6 + 22) * reach) {
+      if (p.kind === 'salvage' || p.kind === 'gift') {
+        p.cd = 1e9;
+        if (p.kind === 'salvage') storyGrab(v, p);
+        else crowdGiftTaken(v, p);
+        continue;
+      }
       p.cd = p.kind === 'power' ? POWER_RESPAWN : 25;
       if (p.kind === 'power') {
         const P = POWERUPS[p.p];
         if (p.p === 'repair') {
           for (const I of v.insts) if (I.alive && I.id !== 'cockpit') I.hp = Math.min(I.max, I.hp + I.max * 0.2);
-        } else v.buff = { p: p.p, t: P.time };
+        } else v.buff = { p: p.p, t: P.time * (1 + (fl.powerK || 0)) };
         v.powers = (v.powers || 0) + 1;
         txt(p.x, p.y - 22, P.name.toUpperCase(), P.col, 1.2);
         fx({ k: 'ring', x: v.x, y: v.y, life: 0.5, max: 0.5, r: 70, col: '255,255,255' });
         sfx('power', p.x, p.y);
         p.p = pick(POWER_IDS);
       } else if (p.kind === 'coins') {
-        coinPop(p.x, p.y, p.val, v);
+        coinPop(p.x, p.y, Math.round(p.val * (1 + (fl.coinK || 0))), v);
       } else {
-        for (const I of v.insts) if (I.alive) I.hp = Math.min(I.max, I.hp + I.max * p.val);
+        for (const I of v.insts) if (I.alive) I.hp = Math.min(I.max, I.hp + I.max * p.val * (1 + (fl.repairK || 0)));
         txt(p.x, p.y - 20, 'REPAIRED', '#5cc38f', 1);
         sfx('repair', p.x, p.y);
       }
@@ -19793,6 +20888,7 @@ function weapons(v, dt) {
   const fireK = (buffOf(v, 'overdrive') ? 1.6 : 1) * (v.rateMul || 1);
   if (v.regen && !v.dead && B.seq === 'play')
     for (const I of v.insts) if (I.alive && I.hp < I.max) I.hp = Math.min(I.max, I.hp + I.max * v.regen * dt);
+  if ((v.gearHeal || (v.flair && v.flair.mend)) && !v.dead && B.seq === 'play') gearRegen(v, dt);
   const jam = v.jam > 0,
     sensor = !!v.has.sensor && !jam,
     cone = sensor ? 0.44 : 0.14,
@@ -19850,7 +20946,7 @@ function weapons(v, dt) {
           });
       }
       if (m.bombbay) {
-        I.cd -= dt * fireK;
+        I.cd -= dt * fireK * (I.gRate || 1);
         if (v.z > 25 && I.cd <= 0) {
           I.cd = 0.35;
           B.lobs.push({
@@ -19898,7 +20994,7 @@ function weapons(v, dt) {
         }
       }
       if (m.pd && !jam) {
-        I.cd -= dt * fireK;
+        I.cd -= dt * fireK * (I.gRate || 1);
         I.pa = (I.pa || 0) + dt * 2;
         if (I.cd <= 0) {
           let tgt = null,
@@ -20018,7 +21114,7 @@ function weapons(v, dt) {
           reach = m.mel.reach || 1,
           cx = px + Math.cos(fa) * S * 0.6 * reach,
           cy = py + Math.sin(fa) * S * 0.6 * reach;
-        I.cd -= dt * fireK;
+        I.cd -= dt * fireK * (I.gRate || 1);
         let target = null;
         for (const e of foes) {
           const b = carBlockAt(e, cx, cy, S * 0.45 * reach);
@@ -20055,7 +21151,7 @@ function weapons(v, dt) {
         }
       }
       if (m.flipper && !I.blocked) {
-        I.cd -= dt * fireK;
+        I.cd -= dt * fireK * (I.gRate || 1);
         if (I.cd <= 0) {
           const fa = faceAng(v, I),
             cx = px + Math.cos(fa) * S * 0.9,
@@ -20099,7 +21195,7 @@ function weapons(v, dt) {
       let aimA = fa;
       const want = Math.atan2(v.aimY - py, v.aimX - px);
       if (W.kind === 'tesla') {
-        I.cd -= dt * fireK;
+        I.cd -= dt * fireK * (I.gRate || 1);
         if (I.cd <= 0 && v.fire && !jam) {
           const first = autoTarget(v, px, py, W.rng);
           if (first) {
@@ -20127,7 +21223,7 @@ function weapons(v, dt) {
         aimA = fa + clamp(wrap(want - fa), -cone, cone);
         I.ta = aimA;
       }
-      I.cd -= dt * fireK;
+      I.cd -= dt * fireK * (I.gRate || 1);
       if (W.spin) I.spin = clamp(I.spin + (v.fire ? dt : -dt * 1.5), CT(v, 'minispool') ? 1 : 0, 1);
       const spr = (W.spr || 0) * (v.anchored ? 0.5 : 1),
         mx = px + Math.cos(aimA) * S * 0.85,
@@ -21873,6 +22969,12 @@ function drawVehicle(c, v, alpha) {
           I.W && I.W.kind !== 'lob' && I.W.kind !== 'tesla'
             ? I.ta - v.a - (I.la || 0) + Math.PI / 2
             : (I.rot * Math.PI) / 2;
+        if (I.mw) {
+          c.save();
+          c.globalCompositeOperation = 'lighter';
+          glowDisc(c, S * (0.95 + Math.sin(ANIM * 5) * 0.12), '#ffd257');
+          c.restore();
+        }
         if (I.m.glow || I.m.rar >= 3) {
           c.save();
           c.globalCompositeOperation = 'lighter';
@@ -21898,6 +23000,16 @@ function drawVehicle(c, v, alpha) {
         });
         if (layer === 'b' && look.livery !== 'factory' && liveryPart(I.id))
           drawLivery(c, look.livery, v.paint, I.gcx, I.gcy, S, liveryCtx(v.grid, I.gcx, I.gcy, v.minGy));
+        if (layer === 'b' && look.stickers && look.stickers.length) {
+          const si = stickerCells(v).indexOf(I);
+          if (si >= 0 && look.stickers[si]) {
+            c.save();
+            c.rotate(-0.3 + si * 0.35);
+            drawSticker(c, look.stickers[si], S * 0.28);
+            c.restore();
+          }
+        }
+        if (I.gear) drawGearPip(c, I);
         const r = I.hp / I.max;
         if (r < 0.5) {
           c.fillStyle = `rgba(25,12,4,${(0.5 - r) * 1.1})`;
@@ -22288,6 +23400,7 @@ function drawZone(c, z) {
   }
 }
 function drawPickup(c, p) {
+  if (p.kind === 'salvage' || p.kind === 'gift') return p.cd > 0 ? undefined : drawSalvage(c, p);
   const ready = p.cd <= 0,
     bob = Math.sin(ANIM * 3 + p.x) * 3;
   c.save();
@@ -22595,6 +23708,23 @@ function drawRing(c) {
   c.stroke();
   c.restore();
 }
+/** Small level chevrons on a gear part (gold on masterwork). */
+function drawGearPip(c, I) {
+  const n = Math.min(4, I.gear.lvl - 1),
+    col = I.mw ? '#ffd257' : '#ffb423';
+  c.save();
+  c.translate(-S * 0.32, S * 0.3);
+  c.strokeStyle = col;
+  c.lineWidth = 1.6;
+  for (let i = 0; i <= n; i++) {
+    c.beginPath();
+    c.moveTo(-3, -i * 3.2 + 1.5);
+    c.lineTo(0, -i * 3.2 - 1.5);
+    c.lineTo(3, -i * 3.2 + 1.5);
+    c.stroke();
+  }
+  c.restore();
+}
 function drawArena() {
   const c = ax,
     d = dprOf();
@@ -22609,6 +23739,7 @@ function drawArena() {
   c.translate(view.w / 2 + sh, view.h / 2 + sh2);
   c.scale(s, s);
   c.translate(-cam.x, -cam.y);
+  drawStands(c);
   c.drawImage(ground, 0, 0);
   planAmbient(c);
   for (const z of B.zones) if (z.kind !== 'ramp' && z.kind !== 'tramp') drawZone(c, z);
@@ -22917,12 +24048,16 @@ function drawHUD(c) {
   if (fragile) rows.push(['CONNECTION NEAR BREAKING', fragile.hp / fragile.max, '#ff8268']);
   bars(c, 12, 12, pw, rows, false, 26);
   planPortrait(c, v, 32, 28);
+  drawHypeBar(c, 12, 12 + 8 + rows.length * 26 + 3, pw, v, false);
   const e = B.cars.find(x => x !== v);
   if (e) {
     const r2 = [[e.name.toUpperCase(), e.dead ? 0 : integrity(e), e.paint]];
     bars(c, W - 12 - pw, 12, pw, r2, true, 26);
     planPortrait(c, e, W - 32, 28);
+    drawHypeBar(c, W - 12 - pw, 12 + 8 + 26 + 3, pw, e, true);
   }
+  drawBossBar(c);
+  drawCommentary(c);
   c.textAlign = 'center';
   c.textBaseline = 'top';
   if (G.phase === 'battle' || B.replay) {
@@ -22965,7 +24100,7 @@ function drawHUD(c) {
     c.textBaseline = 'top';
     c.font = '700 10px "Barlow Semi Condensed", sans-serif';
     let sx = 12;
-    const sy = 12 + 8 + rows.length * 26 + 4;
+    const sy = 12 + 8 + rows.length * 26 + 4 + (B.crowd && G.mode !== 'sandbox' ? 20 : 0); // under the hype meter
     for (const [t, lvl] of syn) {
       const label = `${TAGS[t].toUpperCase()} ${'★'.repeat(lvl)}`,
         w = c.measureText(label).width + 12;
@@ -23657,6 +24792,12 @@ function stepArena(rdt) {
   updateCam(rdt);
   if (sim) simulate(dt);
   else clientStep(dt);
+  if (sim && !B.demo && !B.replay) {
+    storyTick();
+    crowdStep(dt);
+    stepGifts(dt);
+  }
+  stepCommentary(rdt);
   stepFx(dt);
   B.shake *= Math.exp(-8 * rdt);
 }
@@ -23800,8 +24941,10 @@ function updateCam(rdt) {
   const s = view.sc * cam.z,
     hw = view.worldW / (2 * s),
     hh = view.worldH / (2 * s);
-  const cx = hw * 2 >= AW ? AW / 2 : clamp(cam.tx, hw, AW - hw),
-    cy = hh * 2 >= AH ? AH / 2 : clamp(cam.ty, hh, AH - hh);
+  // the camera may peek a little past the walls so the crowd in the stands is visible near the edges
+  const pk = B.demo ? 0 : STAND * 0.75,
+    cx = hw * 2 >= AW + pk * 2 ? AW / 2 : clamp(cam.tx, hw - pk, AW - hw + pk),
+    cy = hh * 2 >= AH + pk * 2 ? AH / 2 : clamp(cam.ty, hh - pk, AH - hh + pk);
   cam.x += (cx - cam.x) * k;
   cam.y += (cy - cam.y) * k;
 }
@@ -24573,6 +25716,616 @@ const Announcer = {
 try {
   if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => Announcer.pick();
 } catch (e) {}
+/* ===== js/game/crowd.js ===== */
+// The show around the fight: a commentator duo, a crowd in the stands and its hype meter.
+// Everything here watches the battle state (health, parts, airtime, pickups) instead of hooking the damage code,
+// so it works the same offline, online (both peers comment on their own screen) and costs almost nothing.
+// Crowd gifts change the match, so they only fall in offline matches.
+
+/* ---------- the duo ---------- */
+const CASTERS = {
+  dash: { name: 'Dash Danvers', col: '#ffb423', pitch: 1.15, rate: 1.1 },
+  doc: { name: 'Doc Gasket', col: '#5be7ff', pitch: 0.75, rate: 0.95 }
+};
+// {a} = the car that did it, {b} = the other car, {p} = a part name. A line is [caster, text] or a short exchange.
+const CALLS = {
+  start: [
+    [['dash', 'Engines hot, tyres bald, and the crowd is already loud!']],
+    [
+      ['dash', "{a} against {b}. Doc, who's your money on?"],
+      ['doc', "Whoever doesn't fall apart first. That's science."]
+    ],
+    [['doc', 'Remember folks: every bolt you see out there was once a perfectly good toaster.']],
+    [
+      ['dash', 'Welcome back to the junkyard!'],
+      ['doc', 'Mind the oil. And the saws. And everything.']
+    ],
+    [['dash', 'Lights, rust, action!']]
+  ],
+  firstblood: [
+    [['dash', 'First blood goes to {a}!']],
+    [['doc', '{a} draws first. The paint job on {b} will never be the same.']],
+    [['dash', 'And {a} opens the scoring with a dent!']]
+  ],
+  bighit: [
+    [['dash', 'OH! What a hit from {a}!']],
+    [['doc', 'I felt that one in my fillings. Big hit, {a}.']],
+    [['dash', '{b} is going to need a bigger toolbox!']],
+    [['dash', 'KA-CHUNK! {a} means business!']]
+  ],
+  partoff: [
+    [['dash', "{b}'s {p} is gone!"]],
+    [['doc', 'That {p} belonged to {b}. Past tense.']],
+    [['dash', 'There goes the {p}! Somebody catch it!']]
+  ],
+  weaponoff: [
+    [['doc', "{b} just lost the {p}. That's their teeth, Dash."]],
+    [['dash', '{a} rips the {p} right off {b}!']]
+  ],
+  wreck: [
+    [['dash', '{b} IS WRECKED! {a} takes it!']],
+    [
+      ['dash', "That's the end of {b}!"],
+      ['doc', 'Scrap value: about four coins and a sad hubcap.']
+    ],
+    [['doc', 'And {b} has been returned to its natural state: junk.']],
+    [['dash', 'Down goes {b}! Down goes {b}!']]
+  ],
+  lowhp: [
+    [['doc', '{b} is held together by hope and one bolt.']],
+    [['dash', "{b} is smoking! One more hit and that's it!"]]
+  ],
+  comeback: [
+    [['dash', 'Look at {a} fight back! This is a COMEBACK!']],
+    [['doc', 'Never count out a car with nothing left to lose.']]
+  ],
+  air: [
+    [['dash', '{a} is FLYING!']],
+    [['doc', 'Airtime! Nobody told {a} that cars stay on the ground.']],
+    [['dash', 'Big air from {a}! Ten out of ten, no notes!']]
+  ],
+  power: [
+    [['doc', '{a} grabs a power-up. That changes the maths.']],
+    [['dash', 'Power-up for {a}! Here comes trouble!']]
+  ],
+  boring: [
+    [
+      ['dash', 'Doc, are they... parking?'],
+      ['doc', 'The crowd paid good scrap for this. Get in there!']
+    ],
+    [['doc', 'I can hear the crowd booing from up here. Somebody hit something!']],
+    [['dash', "Come on, this isn't a car show!"]]
+  ],
+  gift: [
+    [['dash', 'The crowd loves {a}! Here comes a gift from the stands!']],
+    [['doc', 'Fan mail for {a}! Hopefully not a brick this time.']],
+    [['dash', 'They are THROWING THINGS for {a}! Nice things, I think!']]
+  ],
+  giftgot: [[['dash', '{a} grabs the gift!']], [['doc', 'Never refuse a present from the stands.']]],
+  salvage: [
+    [['doc', '{a} picks up some salvage. Waste not, want not.']],
+    [['dash', '{a} finds a goodie in the scrap!']]
+  ],
+  stolen: [
+    [['dash', 'Cheeky! {a} steals the salvage!']],
+    [['doc', 'That crate is gone for good. {a} is a professional thief.']]
+  ],
+  phase: [
+    [['dash', '{a} is getting ANGRY!']],
+    [['doc', "Uh oh. When a boss changes phase, it's time to change plans."]]
+  ],
+  masterwork: [[['doc', 'Look at that golden glow: {a} brought masterwork gear.']]],
+  setbonus: [[['dash', '{a} rolls out with a full sticker set! Style AND substance!']]],
+  close: [
+    [['dash', 'Both cars are hanging by a thread!']],
+    [['doc', 'Whoever lands the next hit wins this. Hold your breath.']]
+  ]
+};
+const COMM_PRI = { wreck: 5, phase: 4, start: 3, gift: 3, firstblood: 3, comeback: 3, close: 3, bighit: 2 };
+
+let COMM = null; // caption queue + state for the current battle
+const commReset = () =>
+  (COMM = { q: [], cur: null, t: 0, gap: 1.5, last: {}, used: {}, B: B, firstDone: false, sayAt: 0 });
+/** Queues a line for an event. ctx.car is the car that did it; its rival becomes {b}. */
+function commentate(kind, ctx = {}) {
+  if (!B || B.demo || B.replay || SETTINGS.comm === false || !CALLS[kind]) return;
+  if (!COMM || COMM.B !== B) commReset();
+  const now = B.time || 0,
+    pri = COMM_PRI[kind] || 1;
+  // each kind has its own cooldown so big moments do not get drowned by small ones
+  if (COMM.last[kind] && now - COMM.last[kind] < (pri >= 3 ? 4 : 9)) return;
+  if (pri < 3 && (COMM.q.length || (COMM.cur && COMM.cur.pri >= pri))) return;
+  COMM.last[kind] = now;
+  const a = ctx.car || null,
+    b = ctx.other || (a && B.cars.find(c => c !== a)) || null,
+    names = { a: a ? a.name : 'someone', b: b ? b.name : 'the other car', p: ctx.part || 'part' };
+  const opts = CALLS[kind],
+    used = COMM.used[kind] || [];
+  let i = Math.floor(Math.random() * opts.length);
+  if (opts.length > 1 && used.includes(i)) i = (i + 1 + Math.floor(Math.random() * (opts.length - 1))) % opts.length;
+  COMM.used[kind] = [...used.slice(-1), i];
+  const lines = opts[i].map(([who, t]) => ({ who, text: t.replace(/\{(\w)\}/g, (_, k) => names[k] || ''), pri }));
+  if (pri >= 4) {
+    COMM.q = lines; // big moments cut in
+    COMM.cur = null;
+    COMM.t = 0;
+  } else COMM.q.push(...lines);
+}
+/** Advances the captions and speaks new lines. */
+function stepCommentary(rdt) {
+  if (!B || B.demo || B.replay) return;
+  if (!COMM || COMM.B !== B) commReset();
+  COMM.t += rdt;
+  if (COMM.cur && COMM.t > COMM.cur.dur) {
+    COMM.cur = null;
+    COMM.t = 0;
+  }
+  if (!COMM.cur && COMM.q.length && COMM.t > (COMM.gap || 0)) {
+    const l = COMM.q.shift();
+    l.dur = clamp(1.6 + l.text.length * 0.055, 2.2, 5.5);
+    COMM.cur = l;
+    COMM.t = 0;
+    COMM.gap = COMM.q.length ? 0.25 : 1.2;
+    speakLine(l);
+  }
+}
+function speakLine(l) {
+  if (MUTE || SETTINGS.voice === false || SETTINGS.commVoice === false || !('speechSynthesis' in window)) return;
+  try {
+    const s = speechSynthesis;
+    if (s.speaking && COMM.cur && COMM.cur.pri < 4) return; // never talk over the announcer
+    if (l.pri >= 4) s.cancel();
+    const c = CASTERS[l.who],
+      u = new SpeechSynthesisUtterance(l.text);
+    u.pitch = c.pitch;
+    u.rate = c.rate;
+    u.volume = clamp(0.85 * SETTINGS.vol, 0, 1);
+    const vs = s.getVoices().filter(v => /^en/i.test(v.lang));
+    if (vs.length) u.voice = l.who === 'doc' ? vs[Math.min(1, vs.length - 1)] : vs[0];
+    s.speak(u);
+  } catch (e) {}
+}
+/** Caption box at the bottom centre of the arena. */
+function drawCommentary(c) {
+  if (!COMM || COMM.B !== B || !COMM.cur || SETTINGS.comm === false) return;
+  const l = COMM.cur,
+    who = CASTERS[l.who],
+    a = Math.min(1, COMM.t * 6, (l.dur - COMM.t) * 3);
+  if (a <= 0) return;
+  c.save();
+  c.globalAlpha = a;
+  c.font = '600 15px "Barlow Semi Condensed", sans-serif';
+  const maxW = Math.min(620, view.w - 80),
+    words = l.text.split(' '),
+    rows = [];
+  let row = '';
+  for (const w of words) {
+    const t = row ? row + ' ' + w : w;
+    if (c.measureText(t).width > maxW - 28 && row) {
+      rows.push(row);
+      row = w;
+    } else row = t;
+  }
+  rows.push(row);
+  const w = Math.min(maxW, Math.max(...rows.map(r => c.measureText(r).width)) + 28),
+    h = 30 + rows.length * 19,
+    x = view.w / 2 - w / 2,
+    y = view.h - h - 54;
+  // chamfered glass panel with the caster's colour on the edge
+  c.beginPath();
+  c.moveTo(x + 8, y);
+  c.lineTo(x + w, y);
+  c.lineTo(x + w, y + h - 8);
+  c.lineTo(x + w - 8, y + h);
+  c.lineTo(x, y + h);
+  c.lineTo(x, y + 8);
+  c.closePath();
+  c.fillStyle = 'rgba(10,16,32,.88)';
+  c.fill();
+  c.strokeStyle = who.col;
+  c.globalAlpha = a * 0.7;
+  c.lineWidth = 1;
+  c.stroke();
+  c.globalAlpha = a;
+  c.fillStyle = who.col;
+  c.fillRect(x, y + 8, 3, h - 16);
+  c.font = '700 12px "Chakra Petch", sans-serif';
+  c.textBaseline = 'top';
+  c.fillText(who.name.toUpperCase(), x + 14, y + 8);
+  c.fillStyle = '#e6f1ff';
+  c.font = '600 15px "Barlow Semi Condensed", sans-serif';
+  rows.forEach((r, i) => c.fillText(r, x + 14, y + 25 + i * 19));
+  c.restore();
+}
+
+/* ---------- crowd and hype ---------- */
+const HYPE_GIFT = 100;
+const GIFT_KINDS = ['repair', 'coins', 'power'];
+const crowdOn = () => B && !B.demo && !B.replay;
+/** Per-battle crowd state; created lazily. */
+function crowdState() {
+  if (B.crowd) return B.crowd;
+  B.crowd = {
+    hype: B.cars.map(() => 0),
+    seen: B.cars.map(v => ({ hp: carHealth(v), lost: v.lost.length, air: false, powers: v.powers || 0, dead: v.dead })),
+    quiet: 0,
+    mood: 0, // 0 calm .. 1 roaring, drives the stands animation
+    boo: 0,
+    started: false,
+    lowSaid: B.cars.map(() => false),
+    worst: B.cars.map(() => 1),
+    flare: 0
+  };
+  return B.crowd;
+}
+/** Watches the fight and turns what happens into hype, lines and gifts. Runs on the simulating peer. */
+function crowdStep(dt) {
+  if (!crowdOn()) return;
+  const C = crowdState();
+  if (B.seq !== 'play') {
+    C.mood = Math.max(0, C.mood - dt * 0.4);
+    return;
+  }
+  if (!C.started) {
+    C.started = true;
+    commentate('start', { car: B.cars[0], other: B.cars[1] });
+    for (const v of B.cars) {
+      if (v.insts.some(I => I.mw)) commentate('masterwork', { car: v });
+      else if (v.flair && v.flair.set) commentate('setbonus', { car: v });
+    }
+  }
+  let action = false;
+  B.cars.forEach((v, i) => {
+    const s = C.seen[i],
+      hp = carHealth(v),
+      other = B.cars.find(c => c !== v),
+      oi = B.cars.indexOf(other),
+      k = 1 + (other && other.hypeK ? other.hypeK : 0);
+    // damage taken by v is hype for the other car
+    const lost = s.hp - hp;
+    if (lost > 0.003 && other) {
+      gainHype(C, oi, lost * 120 * k);
+      action = true;
+      if (!C.firstDone) {
+        C.firstDone = true;
+        commentate('firstblood', { car: other, other: v });
+      } else if (lost > 0.09) {
+        commentate('bighit', { car: other, other: v });
+        sfx('ooh');
+      }
+    }
+    if (v.lost.length > s.lost && other) {
+      const id = v.lost[v.lost.length - 1],
+        m = MOD[id];
+      gainHype(C, oi, 4 * k);
+      if (m && id !== 'cockpit')
+        commentate(m.cat === 'weapon' ? 'weaponoff' : 'partoff', { car: other, other: v, part: m.name });
+    }
+    if (v.dead && !s.dead && other) {
+      gainHype(C, oi, 30 * k);
+      C.flare = 1;
+      commentate('wreck', { car: other, other: v });
+      sfx('cheer');
+    }
+    const air = (v.z || 0) > 34;
+    if (air && !s.air) {
+      gainHype(C, i, 6 * (1 + (v.hypeK || 0)));
+      commentate('air', { car: v });
+    }
+    if ((v.powers || 0) > s.powers) {
+      gainHype(C, i, 3 * (1 + (v.hypeK || 0)));
+      commentate('power', { car: v });
+    }
+    if (hp < 0.22 && !C.lowSaid[i] && !v.dead) {
+      C.lowSaid[i] = true;
+      commentate('lowhp', { car: other, other: v });
+    }
+    // comeback: was nearly dead, now the other car is lower
+    C.worst[i] = Math.min(C.worst[i], hp);
+    if (C.worst[i] < 0.25 && other && carHealth(other) < hp - 0.05 && !C.cb) {
+      C.cb = true;
+      commentate('comeback', { car: v });
+    }
+    Object.assign(s, { hp, lost: v.lost.length, air, powers: v.powers || 0, dead: v.dead });
+  });
+  if (!C.closeSaid && B.cars.length === 2 && B.cars.every(v => !v.dead && carHealth(v) < 0.3)) {
+    C.closeSaid = true;
+    commentate('close', {});
+  }
+  // a quiet arena bores the crowd
+  C.quiet = action ? 0 : C.quiet + dt;
+  if (C.quiet > 9) {
+    C.quiet = 0;
+    commentate('boring', {});
+    sfx('boo');
+    C.boo = 1;
+  }
+  C.boo = Math.max(0, C.boo - dt * 0.5);
+  C.flare = Math.max(0, C.flare - dt * 0.6);
+  // gifts land in offline matches only: online both peers must see the same pickups
+  if (G.mode !== 'mp')
+    C.hype.forEach((h, i) => {
+      if (h >= HYPE_GIFT && !B.cars[i].dead) {
+        C.hype[i] = 30;
+        throwGift(B.cars[i]);
+      }
+    });
+  for (let i = 0; i < C.hype.length; i++) C.hype[i] = Math.max(0, C.hype[i] - dt * (C.quiet > 4 ? 2.5 : 0.6));
+  C.mood += (clamp(Math.max(...C.hype) / HYPE_GIFT + C.flare, 0, 1) - C.mood) * Math.min(1, dt * 2);
+}
+function gainHype(C, i, n) {
+  if (i < 0) return;
+  C.hype[i] = Math.min(HYPE_GIFT, C.hype[i] + n);
+}
+/** A present flies out of the nearest stand and lands near the car. */
+function throwGift(v) {
+  let x = v.x + rnd(-140, 140),
+    y = v.y + rnd(-140, 140);
+  x = clamp(x, WM + 60, AW - WM - 60);
+  y = clamp(y, WM + 60, AH - WM - 60);
+  for (let t = 0; t < 30 && (B.st.some(s => circRectDist(x, y, s) < 40) || Math.hypot(x - v.x, y - v.y) < 70); t++) {
+    x = clamp(v.x + rnd(-220, 220), WM + 60, AW - WM - 60);
+    y = clamp(v.y + rnd(-220, 220), WM + 60, AH - WM - 60);
+  }
+  const fromTop = y < AH / 2,
+    sx = x + rnd(-200, 200),
+    sy = fromTop ? -60 : AH + 60;
+  B.pk.push({ kind: 'gift', g: pick(GIFT_KINDS), x, y, sx, sy, fly: 0, cd: 0, fan: v.idx, col: v.paint || '#ffb423' });
+  commentate('gift', { car: v });
+  sfx('cheer');
+}
+/** Called from the pickup code when a car grabs a gift. */
+function crowdGiftTaken(v, p) {
+  if (p.fly < 1) {
+    p.cd = 0; // still in the air
+    return;
+  }
+  const fl = v.flair || {};
+  if (p.g === 'repair') {
+    for (const I of v.insts) if (I.alive) I.hp = Math.min(I.max, I.hp + I.max * 0.14 * (1 + (fl.repairK || 0)));
+    txt(p.x, p.y - 22, 'FAN REPAIR', '#3fe0a0', 1.2);
+    sfx('repair', p.x, p.y);
+  } else if (p.g === 'coins') {
+    coinPop(p.x, p.y, Math.round(25 * (1 + (fl.coinK || 0))), v);
+  } else {
+    const id = pick(POWER_IDS.filter(x => x !== 'repair')),
+      P = POWERUPS[id];
+    v.buff = { p: id, t: P.time * (1 + (fl.powerK || 0)) };
+    v.powers = (v.powers || 0) + 1;
+    txt(p.x, p.y - 22, P.name.toUpperCase(), P.col, 1.2);
+    sfx('power', p.x, p.y);
+  }
+  if (fl.giftHeal) for (const I of v.insts) if (I.alive) I.hp = Math.min(I.max, I.hp + I.max * fl.giftHeal);
+  commentate('giftgot', { car: v });
+}
+/** Gifts fly in on an arc; called every frame from the arena step. */
+function stepGifts(dt) {
+  for (const p of B.pk || []) if (p.kind === 'gift' && p.fly < 1) p.fly = Math.min(1, p.fly + dt * 1.1);
+  // collected gifts are removed so the list does not grow
+  if (B.pk && B.pk.some(p => p.kind === 'gift' && p.cd > 1e8))
+    B.pk = B.pk.filter(p => !(p.kind === 'gift' && p.cd > 1e8));
+}
+
+/* ---------- drawing: stands, salvage, gifts, hype ---------- */
+const STAND = 90; // world px of stands behind every wall
+/** Pre-renders the four stands once per battle; heads are drawn per section with a bounce. */
+function standsCanvas() {
+  if (B.standsImg) return B.standsImg;
+  const cv = document.createElement('canvas'),
+    W = AW + STAND * 2,
+    H = AH + STAND * 2,
+    sc = 0.5; // half resolution is plenty for a blurry crowd
+  cv.width = W * sc;
+  cv.height = H * sc;
+  const c = cv.getContext('2d');
+  c.scale(sc, sc);
+  c.fillStyle = '#121a2c';
+  c.fillRect(0, 0, W, H);
+  // bleacher steps
+  for (let r = 0; r < 4; r++) {
+    c.fillStyle = r % 2 ? '#18233a' : '#1c2943';
+    const d = 8 + r * 20;
+    c.fillRect(d, d, W - d * 2, 12);
+    c.fillRect(d, H - d - 12, W - d * 2, 12);
+    c.fillRect(d, d, 12, H - d * 2);
+    c.fillRect(W - d - 12, d, 12, H - d * 2);
+  }
+  B.standsImg = cv;
+  return cv;
+}
+const SKIN_COLS = ['#c99a74', '#a8764f', '#e0b896', '#7a5236', '#d6a77f'];
+const FAN_COLS = ['#7a3d3a', '#36557a', '#7a6a2e', '#3d6a52', '#5e4a7a', '#7a4a62', '#6b6e74', '#7a5434'];
+function drawStands(c) {
+  if (!crowdOn() && !(B && B.demo)) return;
+  const img = standsCanvas(),
+    C = B.crowd,
+    mood = C ? C.mood : 0.15,
+    boo = C ? C.boo : 0,
+    t = ANIM;
+  c.drawImage(img, -STAND, -STAND, AW + STAND * 2, AH + STAND * 2);
+  // heads: rows along each side, bouncing with the mood. Sections near a car cheer for that car's colour.
+  const rowsAt = [-STAND + 22, -STAND + 46, -STAND + 70];
+  // only the heads on screen are drawn (the stands are mostly hidden behind the camera clamp)
+  const s = view.sc * cam.z,
+    vx0 = cam.x - view.w / (2 * s) - 20,
+    vx1 = cam.x + view.w / (2 * s) + 20,
+    vy0 = cam.y - view.h / (2 * s) - 20,
+    vy1 = cam.y + view.h / (2 * s) + 20;
+  c.save();
+  const cars = B.cars || [];
+  const fanCol = (x, y) => {
+    let best = null,
+      bd = 1e9;
+    for (const v of cars) {
+      const d = Math.hypot(v.x - x, v.y - y);
+      if (d < bd) ((bd = d), (best = v));
+    }
+    return best ? best.paint : '#ffb423';
+  };
+  const head = (x, y, seed) => {
+    const amp = (1.5 + mood * 7) * (0.6 + 0.4 * Math.sin(seed * 7.1)),
+      j = Math.max(0, Math.sin(t * (5 + mood * 6) + seed * 3.3)) * amp * (1 - boo * 0.7);
+    c.fillStyle = FAN_COLS[Math.abs(Math.floor(seed * 13)) % FAN_COLS.length];
+    c.beginPath();
+    c.arc(x, y - j + 7, 6, Math.PI, 0);
+    c.fill();
+    c.fillStyle = SKIN_COLS[Math.abs(Math.floor(seed * 7)) % SKIN_COLS.length];
+    c.beginPath();
+    c.arc(x, y - j - 2, 3.6, 0, Math.PI * 2);
+    c.fill();
+    if (mood > 0.5 && Math.abs(Math.floor(seed)) % 4 === 0) {
+      // arms up
+      c.fillRect(x - 6, y - j - 7, 1.8, 8);
+      c.fillRect(x + 4.2, y - j - 7, 1.8, 8);
+    }
+  };
+  // first seat at or after the visible edge, on the row's own 22 px grid so seats never shift
+  const snap = (base, from) => base + Math.max(0, Math.ceil((from - base) / 22)) * 22;
+  const top = vy0 < 0,
+    bot = vy1 > AH,
+    left = vx0 < 0,
+    right = vx1 > AW;
+  for (let r = 0; r < 3; r++) {
+    const d = rowsAt[r];
+    if (top || bot)
+      for (let x = snap(-STAND + 30 + r * 7, vx0); x < Math.min(AW + STAND - 30, vx1); x += 22) {
+        if (top) head(x, d, x * 0.37 + r);
+        if (bot) head(x, AH - d + 8, x * 0.53 + r + 9);
+      }
+    if (left || right)
+      for (let y = snap(-STAND + 60 + r * 7, vy0); y < Math.min(AH + STAND - 60, vy1); y += 22) {
+        if (left) head(d, y, y * 0.41 + r + 3);
+        if (right) head(AW - d, y, y * 0.29 + r + 5);
+      }
+  }
+  // flags in the colour of the nearest car, waving harder with hype
+  for (let k = 0; k < 14; k++) {
+    if (!(k % 2 ? bot : top)) continue;
+    const side = k % 2,
+      x = 100 + (k * (AW - 200)) / 13,
+      y = side ? AH + STAND - 12 : -STAND + 12,
+      col = fanCol(x, side ? AH : 0),
+      w = Math.sin(t * (3 + mood * 5) + k) * (4 + mood * 10);
+    c.strokeStyle = '#8b939c';
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(x, y);
+    c.lineTo(x, y + (side ? -28 : 28));
+    c.stroke();
+    c.fillStyle = col;
+    c.beginPath();
+    const fy = y + (side ? -28 : 28);
+    c.moveTo(x, fy);
+    c.lineTo(x + 18 + w * 0.3, fy + (side ? 6 : -6) + w * 0.4);
+    c.lineTo(x, fy + (side ? 12 : -12));
+    c.fill();
+  }
+  c.restore();
+}
+/** Salvage crate (story) and crowd gift drawing. */
+function drawSalvage(c, p) {
+  const bob = Math.sin(ANIM * 3 + p.x) * 3;
+  c.save();
+  if (p.kind === 'gift') {
+    let x = p.x,
+      y = p.y,
+      sc = 1;
+    if (p.fly < 1) {
+      const t = p.fly;
+      x = p.sx + (p.x - p.sx) * t;
+      y = p.sy + (p.y - p.sy) * t - Math.sin(t * Math.PI) * 220;
+      sc = 0.8 + Math.sin(t * Math.PI) * 0.5;
+      c.fillStyle = 'rgba(0,0,0,.25)';
+      c.beginPath();
+      c.ellipse(p.x, p.y + 10, 14 * t, 6 * t, 0, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.translate(x, y + (p.fly >= 1 ? bob : 0));
+    c.scale(sc, sc);
+    c.rotate(p.fly < 1 ? p.fly * 8 : 0);
+    c.fillStyle = p.col;
+    c.fillRect(-13, -13, 26, 26);
+    c.fillStyle = '#fff';
+    c.fillRect(-3, -13, 6, 26);
+    c.fillRect(-13, -3, 26, 6);
+    c.strokeStyle = '#fff';
+    c.lineWidth = 2.5;
+    c.beginPath();
+    c.ellipse(-6, -16, 6, 4, -0.5, 0, Math.PI * 2);
+    c.ellipse(6, -16, 6, 4, 0.5, 0, Math.PI * 2);
+    c.stroke();
+    if (p.fly >= 1) {
+      c.globalAlpha = 0.5 + Math.sin(ANIM * 6) * 0.3;
+      c.strokeStyle = '#ffd257';
+      c.lineWidth = 2;
+      c.strokeRect(-19, -19, 38, 38);
+    }
+  } else {
+    // salvage crate: a wooden box with a cyan beacon, gold for gear
+    const col = p.gear ? '#ffd257' : '#5be7ff';
+    c.translate(p.x, p.y + bob);
+    c.globalAlpha = 0.25 + Math.sin(ANIM * 4 + p.x) * 0.15;
+    c.fillStyle = col;
+    c.beginPath();
+    c.arc(0, 0, 30, 0, Math.PI * 2);
+    c.fill();
+    c.globalAlpha = 1;
+    c.fillStyle = '#8a5a2b';
+    c.fillRect(-15, -15, 30, 30);
+    c.strokeStyle = '#5b3a1a';
+    c.lineWidth = 3;
+    c.strokeRect(-15, -15, 30, 30);
+    c.beginPath();
+    c.moveTo(-15, -15);
+    c.lineTo(15, 15);
+    c.stroke();
+    c.fillStyle = col;
+    c.font = '700 11px "Chakra Petch", sans-serif';
+    c.textAlign = 'center';
+    c.fillText(p.gear ? 'GEAR' : 'SALVAGE', 0, -22);
+  }
+  c.restore();
+}
+/** One hype meter, drawn right under a health bar (screen space). */
+function drawHypeBar(c, x, y, w, car, right) {
+  if (!crowdOn() || !B.crowd || G.phase !== 'battle' || G.mode === 'sandbox') return;
+  const i = B.cars.indexOf(car);
+  if (i < 0) return;
+  const f = B.crowd.hype[i] / HYPE_GIFT,
+    full = f > 0.85;
+  c.save();
+  c.fillStyle = 'rgba(20,16,12,.72)';
+  c.fillRect(x, y, w, 16);
+  c.fillStyle = 'rgba(255,180,35,.18)';
+  const bx = right ? x + 8 : x + 44;
+  c.fillRect(bx, y + 5, w - 52, 6);
+  c.fillStyle = full ? '#ffd257' : '#ffb423';
+  const bw = (w - 52) * f;
+  c.fillRect(right ? bx + (w - 52) - bw : bx, y + 5, bw, 6);
+  c.font = '700 10px "Chakra Petch", sans-serif';
+  c.fillStyle = full ? '#ffd257' : '#c9ced3';
+  c.textAlign = right ? 'right' : 'left';
+  c.textBaseline = 'middle';
+  c.fillText(full ? 'GIFT!' : 'HYPE', right ? x + w - 8 : x + 8, y + 8.5);
+  c.restore();
+}
+
+/* ---------- crowd sounds ---------- */
+Object.assign(SFX, {
+  cheer: v => {
+    noise(1.4, 0.07 * v, 900, 1500, 0.6);
+    noise(1.1, 0.05 * v, 2200, 1800, 0.8, 0.05);
+    [0, 0.12, 0.26].forEach(d => tone('triangle', 900 + Math.random() * 300, 1200, 0.25, 0.012 * v, d));
+  },
+  boo: v => {
+    noise(1.3, 0.06 * v, 260, 180, 1.2);
+    tone('sawtooth', 140, 110, 1.1, 0.02 * v);
+  },
+  ooh: v => {
+    noise(0.7, 0.05 * v, 500, 900, 1.5);
+  }
+});
+Object.assign(THROT, { cheer: 1.2, boo: 2, ooh: 0.8 });
 /* ===== js/net/netcode.js ===== */
 // PeerJS multiplayer: lobby, host-authoritative sync, snapshots.
 /* =================== NETWORK (PeerJS, host-authoritative) =================== */
@@ -26059,6 +27812,9 @@ function randomLook(diff = 1) {
     trail: pickFrom('trail', n - 1),
     wreck: pickFrom('wreck', n - 2),
     title: pickFrom('title', n),
+    stickers: STICKERS.filter(() => Math.random() < 0.12 + diff * 0.06)
+      .slice(0, 3)
+      .map(s => s.id),
     badge: `${pick(Object.keys(BADGE_SHAPES))}.${pick(Object.keys(BADGE_SYMBOLS))}.${Math.floor(Math.random() * BADGE_COLS.length)}`
   };
 }
@@ -26068,7 +27824,231 @@ function sanitizeLook(l) {
   if (l && typeof l === 'object')
     for (const [slot] of STYLE_SLOTS) if (COSMETICS[slot].some(i => i.id === l[slot])) out[slot] = l[slot];
   if (l && l.badge) out.badge = validBadge(l.badge);
+  // stickers are only a picture online: perks never travel in the look
+  out.stickers = Array.isArray(l && l.stickers)
+    ? [...new Set(l.stickers.filter(id => STICKER[id]))].slice(0, STICKER_SLOTS)
+    : [];
   return out;
+}
+
+/* ---------- stickers ---------- */
+/** A die-cut sticker: white rim, set colour, a simple glyph. Centred on 0,0 with radius r. */
+function drawSticker(c, id, r) {
+  const st = STICKER[id];
+  if (!st) return;
+  const col = STICKER_SETS[st.set].col,
+    k = r * 0.84,
+    ink = '#0a1020';
+  c.save();
+  c.fillStyle = '#f4f7fb';
+  c.beginPath();
+  c.arc(0, 0, r, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = col;
+  c.beginPath();
+  c.arc(0, 0, k, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = ink;
+  c.strokeStyle = ink;
+  c.lineWidth = k * 0.14;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  const P = pts => {
+    c.beginPath();
+    pts.forEach(([x, y], i) => (i ? c.lineTo(x * k, y * k) : c.moveTo(x * k, y * k)));
+    c.closePath();
+    c.fill();
+  };
+  const circle = (x, y, rr, fill = true) => {
+    c.beginPath();
+    c.arc(x * k, y * k, rr * k, 0, Math.PI * 2);
+    fill ? c.fill() : c.stroke();
+  };
+  switch (id) {
+    case 'flag':
+      for (let i = 0; i < 3; i++)
+        for (let j = 0; j < 3; j++)
+          if ((i + j) % 2 === 0) c.fillRect((-0.5 + i / 3) * k, (-0.5 + j / 3) * k, k / 3, k / 3);
+      c.strokeRect(-0.5 * k, -0.5 * k, k, k);
+      break;
+    case 'flame':
+      P([
+        [0, -0.62],
+        [0.38, -0.05],
+        [0.3, 0.42],
+        [0, 0.6],
+        [-0.3, 0.42],
+        [-0.38, 0.02],
+        [-0.12, -0.18]
+      ]);
+      break;
+    case 'lightning':
+      P([
+        [0.12, -0.66],
+        [-0.36, 0.08],
+        [-0.02, 0.08],
+        [-0.14, 0.66],
+        [0.36, -0.12],
+        [0.02, -0.12]
+      ]);
+      break;
+    case 'wrench':
+      c.beginPath();
+      c.moveTo(-0.42 * k, 0.42 * k);
+      c.lineTo(0.18 * k, -0.18 * k);
+      c.lineWidth = k * 0.2;
+      c.stroke();
+      circle(0.3, -0.3, 0.24, false);
+      break;
+    case 'skull':
+      circle(0, -0.08, 0.46);
+      c.fillRect(-0.24 * k, 0.24 * k, 0.48 * k, 0.28 * k);
+      c.fillStyle = col;
+      circle(-0.18, -0.08, 0.13);
+      circle(0.18, -0.08, 0.13);
+      break;
+    case 'rat':
+      c.beginPath();
+      c.ellipse(0.02 * k, 0.1 * k, 0.42 * k, 0.28 * k, 0, 0, Math.PI * 2);
+      c.fill();
+      circle(-0.3, -0.18, 0.14);
+      c.beginPath();
+      c.moveTo(0.42 * k, 0.12 * k);
+      c.quadraticCurveTo(0.7 * k, -0.2 * k, 0.5 * k, -0.5 * k);
+      c.stroke();
+      break;
+    case 'star': {
+      const s = [];
+      for (let i = 0; i < 10; i++) {
+        const a = -Math.PI / 2 + (i * Math.PI) / 5,
+          rr = i % 2 ? 0.26 : 0.62;
+        s.push([Math.cos(a) * rr, Math.sin(a) * rr]);
+      }
+      P(s);
+      break;
+    }
+    case 'crown':
+      P([
+        [-0.5, 0.36],
+        [-0.5, -0.3],
+        [-0.25, 0.02],
+        [0, -0.42],
+        [0.25, 0.02],
+        [0.5, -0.3],
+        [0.5, 0.36]
+      ]);
+      break;
+    case 'heart':
+      c.beginPath();
+      c.moveTo(0, 0.5 * k);
+      c.bezierCurveTo(-0.7 * k, 0, -0.4 * k, -0.6 * k, 0, -0.22 * k);
+      c.bezierCurveTo(0.4 * k, -0.6 * k, 0.7 * k, 0, 0, 0.5 * k);
+      c.fill();
+      break;
+    case 'paw':
+      circle(0, 0.2, 0.26);
+      for (const [x, y] of [
+        [-0.36, -0.12],
+        [-0.13, -0.36],
+        [0.13, -0.36],
+        [0.36, -0.12]
+      ])
+        circle(x, y, 0.12);
+      break;
+    case 'cat':
+      P([
+        [-0.45, -0.5],
+        [-0.15, -0.25],
+        [0.15, -0.25],
+        [0.45, -0.5],
+        [0.45, 0.2],
+        [0, 0.5],
+        [-0.45, 0.2]
+      ]);
+      c.fillStyle = col;
+      circle(-0.18, 0, 0.08);
+      circle(0.18, 0, 0.08);
+      break;
+    case 'duck':
+      c.beginPath();
+      c.ellipse(0.05 * k, 0.2 * k, 0.45 * k, 0.26 * k, 0, 0, Math.PI * 2);
+      c.fill();
+      circle(-0.2, -0.22, 0.2);
+      c.fillStyle = '#f4f7fb';
+      P([
+        [-0.38, -0.22],
+        [-0.62, -0.14],
+        [-0.38, -0.1]
+      ]);
+      break;
+    case 'atom':
+      c.lineWidth = k * 0.08;
+      for (let i = 0; i < 3; i++) {
+        c.beginPath();
+        c.ellipse(0, 0, 0.6 * k, 0.22 * k, (i * Math.PI) / 3, 0, Math.PI * 2);
+        c.stroke();
+      }
+      circle(0, 0, 0.12);
+      break;
+    case 'chip':
+      c.fillRect(-0.32 * k, -0.32 * k, 0.64 * k, 0.64 * k);
+      c.lineWidth = k * 0.08;
+      for (const t of [-0.18, 0, 0.18]) {
+        c.beginPath();
+        c.moveTo(t * k, -0.55 * k);
+        c.lineTo(t * k, 0.55 * k);
+        c.moveTo(-0.55 * k, t * k);
+        c.lineTo(0.55 * k, t * k);
+        c.stroke();
+      }
+      c.fillRect(-0.32 * k, -0.32 * k, 0.64 * k, 0.64 * k);
+      break;
+    case 'eye':
+      c.beginPath();
+      c.moveTo(-0.6 * k, 0);
+      c.quadraticCurveTo(0, -0.55 * k, 0.6 * k, 0);
+      c.quadraticCurveTo(0, 0.55 * k, -0.6 * k, 0);
+      c.fill();
+      c.fillStyle = col;
+      circle(0, 0, 0.2);
+      c.fillStyle = ink;
+      circle(0, 0, 0.09);
+      break;
+  }
+  c.restore();
+}
+const _stickerURL = {};
+function stickerURL(id, size = 64) {
+  const k = id + size;
+  if (_stickerURL[k]) return _stickerURL[k];
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  const c = cv.getContext('2d');
+  c.translate(size / 2, size / 2);
+  c.rotate(-0.12);
+  drawSticker(c, id, size * 0.46);
+  return (_stickerURL[k] = cv.toDataURL());
+}
+/** Up to three body cells get a sticker each: the cells next to the cockpit, left, right and back. */
+function stickerCells(v) {
+  if (v._stCells) return v._stCells;
+  const want = [
+    [-1, 0],
+    [1, 0],
+    [0, 1],
+    [0, -1],
+    [-1, 1],
+    [1, 1]
+  ];
+  const c0 = v.insts.find(I => I.id === 'cockpit');
+  const out = [];
+  if (c0)
+    for (const [dx, dy] of want) {
+      const b = v.grid.get(key(c0.gcx + dx, c0.gcy + dy));
+      if (b && b.inst.layer === 'b' && liveryPart(b.inst.id) && !out.includes(b.inst)) out.push(b.inst);
+      if (out.length >= 3) break;
+    }
+  return (v._stCells = out);
 }
 /* ===== js/game/replay.js ===== */
 // Round recording, kill-cam and full replays. Recording reuses the multiplayer snapshot format.
@@ -26267,19 +28247,20 @@ const packDesign = d => ({
 });
 const unpackDesign = p => ({ base: new Map(p.base), top: new Map(p.top) });
 const MATCH_FORMATS = {
-  balanced: { name: 'Balanced rounds', desc: 'One point per round; double-point finale.' },
-  lives: { name: 'Scrap Lives', desc: '20 lives each. A loss costs 2 + round number. Zero lives ends the match.' },
+  balanced: { name: 'Balanced rounds', short: 'Classic', desc: 'One point per round; double-point finale.' },
+  lives: {
+    name: 'Scrap Lives',
+    short: 'Lives',
+    desc: '20 lives each. A loss costs 2 + round number. Zero lives ends the match.'
+  },
   bounty: {
     name: 'Bounty',
+    short: 'Bounty',
     desc: 'Beating the leader pays up to 2 bonus points (never more than the gap) and 45 bonus coins.'
   },
-  finalehill: { name: 'Hill finale', desc: 'Balanced scoring with a King of the Hill final round.' }
+  finalehill: { name: 'Hill finale', short: 'Hill', desc: 'Balanced scoring with a King of the Hill final round.' }
 };
 let chosenFormat = 'balanced';
-const formatSelect = (id, value = chosenFormat) =>
-  `<label class="format-picker">Match format<select id="${id}" aria-label="Match format">${Object.entries(MATCH_FORMATS)
-    .map(([k, f]) => `<option value="${k}" ${k === value ? 'selected' : ''}>${f.name}</option>`)
-    .join('')}</select><small>${esc(MATCH_FORMATS[value].desc)}</small></label>`;
 const roundPoints = r => (G.format === 'lives' || G.format === 'bounty' ? 1 : r === ROUNDS ? 2 : 1);
 /** Bounty: beating the leader pays 1 point plus up to 2 more for a long leader streak,
     but never more than the gap, so one upset can catch you up without erasing a string of losses. */
@@ -26309,7 +28290,8 @@ const myCarCfg = () => ({
   name: G.name,
   paint: G.paint,
   ctrl: 'local',
-  look: { ...G.style }
+  look: { ...G.style },
+  ...(gearActive() ? { gear: gearCfg(), flair: flairCfg() } : {})
 });
 /** Builds one car from a config entry at its spawn point. */
 function carFromCfg(c, i) {
@@ -26336,7 +28318,7 @@ function carsFromCfg(cfg) {
 function makeCfg(opp) {
   const ti = G.nextTheme != null ? G.nextTheme : pickTheme(),
     special = specialOf(G.round),
-    f = applySpecialField(genArena('battle', THEMES[ti]), special);
+    f = applySpecialField(G.story ? storyField(THEMES[ti]) : genArena('battle', THEMES[ti]), special);
   G.nextTheme = null;
   return {
     round: G.round,
@@ -26419,7 +28401,8 @@ function resetProfile() {
     fun: null,
     lastOppDesign: null,
     nextTheme: null,
-    srcTotals: {}
+    srcTotals: {},
+    gearFound: {}
   });
   draftRerolls = 0;
   resetWs();
@@ -26445,7 +28428,9 @@ function hideOverlays() {
     '#ovResult',
     '#ovReady',
     '#ovStyle',
-    '#ovBlueprint'
+    '#ovBlueprint',
+    '#ovWork',
+    '#ovStory'
   ])
     $(id).hidden = true;
 }
@@ -26454,7 +28439,10 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
     G.diff = G.run.prevDiff;
     G.run = null;
   }
+  G.story = (mode === 'solo' && G.storyNext) || null;
+  G.storyNext = null;
   setRounds(mode === 'mp' ? rounds || 10 : mode === 'solo' ? G.rounds || 10 : 10);
+  if (G.story) ROUNDS = G.story.rounds; // missions are short and not limited to the menu choices
   G.format = MATCH_FORMATS[format] ? format : 'balanced';
   G.lives = [20, 20];
   G.bountyStreak = 0;
@@ -26465,7 +28453,8 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
   B = null;
   G.mode = mode;
   resetProfile();
-  if (mode === 'solo') {
+  if (G.story) storySetup();
+  else if (mode === 'solo') {
     G.bot = makeBot(G.diff);
     G.bot.coins += DIFF[G.diff].bonus;
     G.oppName = G.bot.name;
@@ -26740,7 +28729,8 @@ const botCarCfg = () => ({
   style: G.bot.style,
   diff: G.diff,
   look: G.oppLook,
-  ...runBotExtras()
+  ...runBotExtras(),
+  ...storyBotExtras()
 });
 
 /* ---------- waiting arena ---------- */
@@ -26829,6 +28819,7 @@ function setButtons() {
     });
 }
 function pickTheme() {
+  if (G.story) return storyThemeIndex();
   let ti;
   do ti = Math.floor(Math.random() * THEMES.length);
   while (ti === G.lastTheme && THEMES.length > 1);
@@ -27210,6 +29201,7 @@ function showFinal() {
         : s[0] > s[1] || (s[0] === s[1] && tot.d > tot.t),
     tie = G.format === 'lives' ? G.lives[0] === G.lives[1] : s[0] === s[1];
   const prog = progressMatch({ won });
+  const spoils = G.story ? storyFinish(won, tot) : matchSpoils(won, tot.w);
   const br =
     Object.entries(G.aff)
       .sort((a, b) => b[1] - a[1])
@@ -27229,12 +29221,16 @@ function showFinal() {
         ? `<p class="small">MVP part of the match: <b>${esc(mvp[0])}</b> with ${mvp[1].toLocaleString()} damage.</p>`
         : '';
     })()}
-    ${progressHtml(prog)}
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : ''}<button class="btn ghost" id="btnStyle2">Garage Style</button><button class="btn ghost" id="btnHome">Main menu</button></div>`;
+    ${progressHtml(prog)}${G.story ? storyResultHtml(spoils) : spoilsHtml(spoils)}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.story ? '<button class="btn" id="btnRoad">Back to the Scrap Road</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : ''}${gearActive() ? '<button class="btn ghost" id="btnWork2">Workbench</button>' : ''}<button class="btn ghost" id="btnStyle2">Locker</button><button class="btn ghost" id="btnHome">Main menu</button></div>`;
   $('#ovResult').hidden = false;
   sfx(won ? 'win' : 'lose');
   const a = $('#btnAgain');
   if (a) a.addEventListener('click', () => startMatch('solo', null, G.format));
+  const rd = $('#btnRoad');
+  if (rd) rd.addEventListener('click', () => openStory());
+  const wk = $('#btnWork2');
+  if (wk) wk.addEventListener('click', () => openWorkbench(() => ($('#ovResult').hidden = false)));
   const bm = $('#btnBest');
   if (bm) bm.addEventListener('click', () => startReplay('kill', G.bestReplay));
   if (won && SETTINGS.motion !== false)
@@ -27456,8 +29452,11 @@ function applyCarMods(v, c) {
     v.boss = true;
     v.dmgOut = c.boss.dmg;
   }
+  if (c.gear) applyGear(v, c.gear);
+  if (c.flair) applyFlair(v, c.flair);
+  v.gearHeal = v.insts.some(I => I.gRegen);
   if (c.run) {
-    v.dmgOut = 1 + c.run.dmgOut;
+    v.dmgOut = (v.dmgOut || 1) * (1 + c.run.dmgOut);
     v.dmgIn = 1 - c.run.dmgIn;
     v.rateMul = 1 + c.run.rate;
     v.regen = c.run.regen;
@@ -27582,13 +29581,17 @@ function showRunOver() {
     record = reached > best;
   if (record) store('sd.runBest', reached);
   const prog = grant(20 + R.cleared * 12 + R.bosses * 40, []);
+  const spoils = matchSpoils(R.cleared >= 5, 0, {
+    bolts: R.cleared * 8 + R.bosses * 30 - 20,
+    from: 'Gauntlet wave ' + R.wave
+  });
   G.phase = 'final';
   $('#resultCard').innerHTML =
     `<span class="label">Scrap Gauntlet · run over</span><h2 style="color:${record ? '#3fe0a0' : '#ff5c7a'}">${record ? 'New record!' : 'Run over'}</h2>
     <div class="runstats"><div><b>${reached}</b><span>wave reached</span></div><div><b>${R.bosses}</b><span>bosses beaten</span></div><div><b>${Math.max(best, reached)}</b><span>best ever</span></div></div>
     ${R.relics.length ? `<div class="relicrow">${R.relics.map(id => `<span title="${esc(RUN_RELICS[id].desc)}">${RUN_RELICS[id].icon} ${esc(RUN_RELICS[id].name)}</span>`).join('')}</div>` : ''}
     <p class="small">${esc(pick(['Your car has been donated to science.', 'The scrapyard thanks you for your contribution.', 'Somewhere, a mechanic is crying.', 'Not bad for a pile of bolts.']))}</p>
-    ${progressHtml(prog)}
+    ${progressHtml(prog)}${spoilsHtml(spoils)}
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="runAgain">Run it back</button><button class="btn ghost" id="runHome">Main menu</button></div>`;
   $('#ovResult').hidden = false;
   Announcer.say(record ? 'New record' : 'Game over');
@@ -27597,6 +29600,1240 @@ function showRunOver() {
   G.run = null;
   $('#runAgain').onclick = () => startRun();
   $('#runHome').onclick = () => showMenu();
+}
+/* ===== js/game/gear.js ===== */
+// Personal gear and sticker flair: your own upgraded parts (found again in matches) and sticker perks.
+// Only single-player cars carry gear or flair; online configs never include them.
+
+let GEAR = { bolts: 0, items: [], next: 1 };
+function loadGear() {
+  try {
+    const g = JSON.parse(load('sd.gear') || 'null');
+    if (g && Array.isArray(g.items)) {
+      GEAR = {
+        bolts: Math.max(0, g.bolts | 0),
+        items: g.items.filter(x => x && MOD[x.id] && x.lvl >= 1).map(sanitizeGear),
+        next: Math.max(1, g.next | 0)
+      };
+      for (const x of GEAR.items) GEAR.next = Math.max(GEAR.next, x.u + 1);
+      return;
+    }
+  } catch (e) {}
+  // first time: three starter pieces so the Workbench is never empty
+  GEAR = { bolts: 60, items: [], next: 1 };
+  for (const id of ['wheel', 'frame', 'mg']) if (MOD[id]) addGear(id, 1, true);
+  saveGear();
+}
+const saveGear = () => store('sd.gear', GEAR);
+function sanitizeGear(x) {
+  const g = { u: x.u | 0, id: x.id, lvl: clamp(x.lvl | 0, 1, GEAR_MAX) };
+  if (x.q && QUIRKS[x.q]) g.q = x.q;
+  if (Array.isArray(x.qo)) g.qo = x.qo.filter(q => QUIRKS[q]).slice(0, 3);
+  if (x.from) g.from = String(x.from).slice(0, 40);
+  if (x.isNew) g.isNew = 1;
+  return g;
+}
+const gearName = g => `${MOD[g.id].name}${g.lvl > 1 ? ' +' + (g.lvl - 1) : ''}`;
+const gearById = u => GEAR.items.find(g => g.u === u);
+
+/** Adds a gear item. A full locker turns the drop into bolts instead. */
+function addGear(id, lvl = 1, quiet, from) {
+  if (!MOD[id] || id === 'cockpit') return null;
+  if (GEAR.items.length >= GEAR_CAP) {
+    const b = gearScrapValue({ id, lvl });
+    GEAR.bolts += b;
+    saveGear();
+    if (!quiet) toast(`Locker full: ${MOD[id].name} scrapped for ${b} bolts`);
+    return null;
+  }
+  const g = { u: GEAR.next++, id, lvl: clamp(lvl, 1, GEAR_MAX), isNew: 1 };
+  if (from) g.from = from;
+  if (g.lvl >= 3) g.qo = quirkOffers(g);
+  GEAR.items.push(g);
+  saveGear();
+  return g;
+}
+function addBolts(n) {
+  GEAR.bolts = Math.max(0, GEAR.bolts + Math.round(n));
+  saveGear();
+}
+/** Three random quirks that fit this part. */
+function quirkOffers(g) {
+  const k = gearKind(g.id),
+    pool = QUIRK_IDS.filter(q => QUIRKS[q].fits(k));
+  const out = [];
+  while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  return out;
+}
+function gearUpgrade(g) {
+  if (g.lvl >= GEAR_MAX) return false;
+  const c = gearCost(g);
+  if (GEAR.bolts < c) return false;
+  GEAR.bolts -= c;
+  g.lvl++;
+  if (g.lvl === 3 && !g.q) g.qo = quirkOffers(g);
+  saveGear();
+  return true;
+}
+function gearPickQuirk(g, q) {
+  if (!g.qo || !g.qo.includes(q)) return false;
+  g.q = q;
+  delete g.qo;
+  saveGear();
+  return true;
+}
+/** Reroll costs bolts; keeps the level. */
+const QUIRK_REROLL = 25;
+function gearRerollQuirk(g) {
+  if (g.lvl < 3 || GEAR.bolts < QUIRK_REROLL) return false;
+  GEAR.bolts -= QUIRK_REROLL;
+  g.qo = quirkOffers(g);
+  delete g.q;
+  saveGear();
+  return true;
+}
+/** Two copies of the same part fuse into one, one level above the better copy. */
+function gearFuse(a, b) {
+  if (!a || !b || a === b || a.id !== b.id) return false;
+  const keep = a.lvl >= b.lvl ? a : b,
+    lose = keep === a ? b : a;
+  GEAR.items = GEAR.items.filter(x => x !== lose);
+  if (keep.lvl < GEAR_MAX) {
+    keep.lvl++;
+    if (keep.lvl === 3 && !keep.q) keep.qo = quirkOffers(keep);
+  } else GEAR.bolts += gearScrapValue(lose);
+  if (!keep.q && lose.q) keep.q = lose.q;
+  saveGear();
+  return keep;
+}
+function gearScrap(g) {
+  GEAR.items = GEAR.items.filter(x => x !== g);
+  GEAR.bolts += gearScrapValue(g);
+  for (const k in G.gearFound || {}) if (G.gearFound[k] === g.u) delete G.gearFound[k];
+  saveGear();
+}
+
+/* ---------- gear in a match ---------- */
+const gearActive = () => G.mode === 'solo';
+/** Gear you have that is not yet found in this match. */
+const gearMissing = () =>
+  GEAR.items.filter(g => !Object.values(G.gearFound || {}).includes(g.u) && !(G.gearFound || {})[g.id]);
+/** Taking a gear card: one copy of the part, upgraded while it is on your car. */
+function findGear(g) {
+  G.gearFound = G.gearFound || {};
+  G.gearFound[g.id] = g.u;
+  gainWithSupport(g.id, 1);
+}
+/** Config payload: the found gear (single player only). */
+function gearCfg() {
+  if (!gearActive() || !G.gearFound) return null;
+  const list = Object.values(G.gearFound)
+    .map(gearById)
+    .filter(Boolean)
+    .map(g => ({ id: g.id, lvl: g.lvl, q: g.q || null }));
+  return list.length ? list : null;
+}
+/** Sticker and set perks for your car config. */
+function flairCfg() {
+  if (!gearActive()) return null;
+  const st = (G.style.stickers || []).filter(id => STICKER[id]);
+  if (!st.length) return null;
+  const fx = { res: {} };
+  const add = f => {
+    for (const k in f)
+      if (k === 'res') for (const t in f.res) fx.res[t] = (fx.res[t] || 0) + f.res[t];
+      else fx[k] = (fx[k] || 0) + f[k];
+  };
+  for (const id of st) add(STICKER[id].fx);
+  const set = activeSet();
+  if (set) {
+    add(SET_FX[set]);
+    fx.set = set;
+  }
+  return fx;
+}
+/** The set bonus is on when the livery's set has at least two matching stickers. */
+function activeSet(style = G.style) {
+  const s = liverySet(style.livery);
+  if (!s) return null;
+  const n = (style.stickers || []).filter(id => STICKER[id] && STICKER[id].set === s).length;
+  return n >= 2 ? s : null;
+}
+
+const speedMul = (v, k) => {
+  v.c.topCap *= 1 + k;
+  v.c.accel *= 1 + k * 0.6;
+};
+/** Applies gear to a freshly built car: the first matching part of each gear entry is upgraded. */
+function applyGear(v, list) {
+  if (!list) return;
+  for (const g of list) {
+    const I = v.insts.find(x => x.id === g.id && !x.gear);
+    if (!I) continue;
+    I.gear = g;
+    const b = gearBonus(g),
+      k = gearKind(g.id);
+    let hpK = k === 'hp' ? 1 + b : 1;
+    if (k === 'rate') I.gRate = 1 + b;
+    if (k === 'speed') speedMul(v, b);
+    const q = g.q;
+    if (q === 'overclock') {
+      I.gRate = (I.gRate || 1) * 1.2;
+      I.gFrag = 0.25;
+    } else if (q === 'bulky') {
+      hpK *= 1.35;
+      speedMul(v, -0.03);
+    } else if (q === 'feather') {
+      hpK *= 0.8;
+      speedMul(v, 0.03);
+    } else if (q === 'spiky') {
+      hpK *= 0.9;
+      I.gSpiky = 0.25;
+    } else if (q === 'selfheal') {
+      I.gRegen = 0.02;
+      speedMul(v, -0.02);
+    } else if (q === 'showoff') {
+      hpK *= 0.85;
+      v.hypeK = (v.hypeK || 0) + 0.5;
+    } else if (q === 'magnetic') {
+      v.reach = (v.reach || 0) + 0.5;
+      speedMul(v, -0.02);
+    } else if (q === 'tantrum') {
+      hpK *= 0.9;
+      I.gBurst = 1;
+    }
+    if (g.lvl >= GEAR_MAX) {
+      I.mw = true;
+      v.hypeK = (v.hypeK || 0) + 0.25;
+    }
+    if (hpK !== 1) {
+      v.total += I.max * (hpK - 1);
+      I.max *= hpK;
+      I.hp *= hpK;
+    }
+  }
+}
+function applyFlair(v, fx) {
+  if (!fx) return;
+  v.flair = fx;
+  if (fx.speedK) speedMul(v, fx.speedK);
+  if (fx.hpK)
+    for (const I of v.insts) {
+      I.max *= 1 + fx.hpK;
+      I.hp *= 1 + fx.hpK;
+    }
+  if (fx.hpK) v.total *= 1 + fx.hpK;
+  if (fx.rateK) v.rateMul = (v.rateMul || 1) * (1 + fx.rateK);
+  if (fx.dmgK) v.dmgOut = (v.dmgOut || 1) * (1 + fx.dmgK);
+  if (fx.hypeK) v.hypeK = (v.hypeK || 0) + fx.hypeK;
+  if (fx.reach) v.reach = (v.reach || 0) + fx.reach;
+  if (fx.quick) v.buff = { p: 'speed', t: 7 };
+}
+/** Extra damage rules from gear and stickers, called from hurtInst. */
+function flairHurt(v, I, a, type, attacker) {
+  if (I.gFrag) a *= 1 + I.gFrag;
+  if (v.flair && v.flair.res[type]) a *= 1 - Math.min(0.5, v.flair.res[type]);
+  if (type === 'ram' && attacker && attacker.flair && attacker.flair.ramOut) a *= 1 + attacker.flair.ramOut;
+  if (I.gSpiky && attacker && attacker !== v && (type === 'ram' || type === 'melee' || type === 'kin')) {
+    const t = attacker.insts.filter(x => x.alive && x.layer === 'b' && x.id !== 'cockpit');
+    if (t.length) hurtInst(attacker, pick(t), a * I.gSpiky, 'light', undefined, undefined, undefined, undefined, v.idx);
+  }
+  return a;
+}
+/** Per-tick healing from gear and the Junkyard set. */
+function gearRegen(v, dt) {
+  const mend = v.flair && v.flair.mend;
+  for (const I of v.insts)
+    if (I.alive && I.hp < I.max) {
+      const r = (I.gRegen || 0) + (mend || 0);
+      if (r) I.hp = Math.min(I.max, I.hp + I.max * r * dt);
+    }
+}
+/** Tantrum quirk: a broken gear part goes out with a scrap burst. */
+function gearBreak(v, I) {
+  if (!I.gBurst) return;
+  const [x, y] = ipos(v, I);
+  setTimeout(() => {
+    if (B) explode(x, y, 70, 45, 'expl', v.idx);
+  }, 80);
+}
+
+/* ---------- rewards ---------- */
+/** Bolts and a possible gear drop at the end of a single-player match. Returns what was earned. */
+function matchSpoils(won, roundsWon, extra = {}) {
+  if (!gearActive()) return null;
+  let bolts = (won ? 50 : 20) + roundsWon * 6 + (extra.bolts || 0);
+  bolts = Math.round(bolts * [0.8, 1, 1.3][G.diff ?? 1]);
+  addBolts(bolts);
+  const drops = [];
+  if (Math.random() < (won ? 0.55 : 0.25) || extra.drop) {
+    const used = [...new Set([...G.base.values(), ...G.top.values()].map(e => e.id))].filter(
+      id => id !== 'cockpit' && MOD[id]
+    );
+    const id = extra.drop || (used.length ? pick(used) : pick(MODS.filter(m => m.rar <= 1)).id);
+    const g = addGear(id, extra.dropLvl || 1, true, extra.from || 'Match salvage');
+    if (g) drops.push(g);
+  }
+  return { bolts, drops };
+}
+function spoilsHtml(s) {
+  if (!s) return '';
+  return `<div class="spoils"><div class="sp-b"><i class="boltico" aria-hidden="true"></i><b>+${s.bolts} bolts</b><span>${GEAR.bolts} in the Workbench</span></div>${s.drops
+    .map(
+      g =>
+        `<div class="sp-g"><img alt="" src="${iconURL(g.id, 64)}"><span>New gear · <b>${esc(gearName(g))}</b></span></div>`
+    )
+    .join('')}</div>`;
+}
+/* ===== js/game/story.js ===== */
+// Scrap Road: the story mode. Four regions of hand-made missions on a road map, each ending in a boss.
+// A mission is a short single-player match with its own rival, arena layout, special rounds and salvage
+// crates to find on the way. Bosses are hand-built giant cars with phases. Rewards: bolts, gear, stickers.
+
+/* ---------- regions and missions ---------- */
+const STORY_REGIONS = [
+  {
+    id: 'r1',
+    name: 'The Scrapyard',
+    col: '#ffb423',
+    blurb: 'Where every car begins: a mountain of junk and a truck that eats cars.'
+  },
+  { id: 'r2', name: 'Rust Canyon', col: '#ff7a3a', blurb: 'Sand, lava and a drill that never stops spinning.' },
+  {
+    id: 'r3',
+    name: 'Neon Docks',
+    col: '#5be7ff',
+    blurb: 'Container stacks, conveyor belts and a baron who collects cars with a magnet.'
+  },
+  {
+    id: 'r4',
+    name: "Junk King's Keep",
+    col: '#c58bff',
+    blurb: 'The castle at the end of the road. The Junk King does not do rematches.'
+  }
+];
+// rival: a BOTS-like entry. kind: duel | salvage | special | boss. stars: 1 win, 2 no round lost, 3 the bonus goal.
+const STORY = [
+  {
+    id: 'r1a',
+    region: 'r1',
+    name: 'Welcome to the Yard',
+    kind: 'salvage',
+    theme: 'junkyard',
+    layout: 'lanes',
+    rounds: 2,
+    diff: 0,
+    coins: 0,
+    salvage: 3,
+    rival: { name: 'Rusty Ramirez', style: 'rammer', likes: ['melee', 'flip'], paint: '#e2504a' },
+    intro: 'Rusty runs the gate. Beat him, grab the loose parts, and the yard is yours to explore.',
+    reward: { bolts: 40, sticker: 'rat' }
+  },
+  {
+    id: 'r1b',
+    region: 'r1',
+    name: 'Salvage Rights',
+    kind: 'salvage',
+    theme: 'carpark',
+    layout: 'maze',
+    rounds: 2,
+    diff: 0,
+    coins: 40,
+    salvage: 6,
+    rival: { name: 'Magpie', style: 'gunner', likes: ['gun', 'econ'], paint: '#c58bff' },
+    intro: 'Magpie wants every crate in this car park. Get there first: whatever she grabs is gone.',
+    reward: { bolts: 50, sticker: 'lightning' }
+  },
+  {
+    id: 'r1c',
+    region: 'r1',
+    name: 'Scrap Run Rumble',
+    kind: 'special',
+    theme: 'construction',
+    sched: ['scrap', 'scrap'],
+    rounds: 2,
+    diff: 1,
+    coins: 60,
+    salvage: 2,
+    rival: { name: 'Gunny McBolt', style: 'gunner', likes: ['gun', 'expl'], paint: '#4ea1ff' },
+    intro: 'Deliver scrap to your depot faster than Gunny. Cargo slows you down, so deliver often.',
+    reward: { bolts: 60, gear: 'saw' }
+  },
+  {
+    id: 'r1d',
+    region: 'r1',
+    name: 'Ramp Rats',
+    kind: 'duel',
+    theme: 'backyard',
+    layout: 'ramps',
+    rounds: 3,
+    diff: 1,
+    coins: 80,
+    salvage: 2,
+    rival: { name: 'Granny Gearbox', style: 'rammer', likes: ['melee', 'def'], paint: '#ff8fc7' },
+    intro: 'Granny Gearbox has been ramming cars since before wheels were round. Mind the ramps.',
+    reward: { bolts: 60 }
+  },
+  {
+    id: 'r1x',
+    region: 'r1',
+    name: 'Mother Crusher',
+    kind: 'boss',
+    boss: 'crusher',
+    theme: 'junkyard',
+    layout: 'pit',
+    rounds: 1,
+    diff: 1,
+    coins: 220,
+    salvage: 2,
+    intro: 'A garbage truck with a grudge. Break the saws off the front and she is just a big box.',
+    reward: { bolts: 120, gear: 'saw', gearLvl: 2, ach: 'road1' }
+  },
+  {
+    id: 'r2a',
+    region: 'r2',
+    name: 'Sand Trap',
+    kind: 'duel',
+    theme: 'desert',
+    layout: 'canyon',
+    rounds: 3,
+    diff: 1,
+    coins: 120,
+    salvage: 3,
+    rival: { name: 'Scorch', style: 'brawler', likes: ['fire', 'melee'], paint: '#ff8a3a' },
+    intro: 'The canyon road is narrow. Scorch likes it that way.',
+    reward: { bolts: 70, sticker: 'paw' }
+  },
+  {
+    id: 'r2b',
+    region: 'r2',
+    name: 'Hot Wheels',
+    kind: 'special',
+    theme: 'volcano',
+    layout: 'bridge',
+    sched: ['sumo', null, 'sumo'],
+    rounds: 3,
+    diff: 1,
+    coins: 140,
+    salvage: 2,
+    rival: { name: 'Big Boom Betty', style: 'artillery', likes: ['expl', 'gun'], paint: '#f2b705' },
+    intro: 'A bridge over lava and a sumo ring. Push, do not get pushed.',
+    reward: { bolts: 80, gear: 'flamer' }
+  },
+  {
+    id: 'r2c',
+    region: 'r2',
+    name: 'Beach Party',
+    kind: 'salvage',
+    theme: 'beach',
+    sched: [null, 'duck'],
+    rounds: 2,
+    diff: 1,
+    coins: 160,
+    salvage: 5,
+    rival: { name: 'DJ Dynamo', style: 'artillery', likes: ['energy', 'expl'], paint: '#5cc38f' },
+    intro: 'Crates washed up on the beach, and a golden duck to steal. DJ Dynamo brought speakers.',
+    reward: { bolts: 80, sticker: 'heart' }
+  },
+  {
+    id: 'r2d',
+    region: 'r2',
+    name: 'Night Drive',
+    kind: 'special',
+    theme: 'desert',
+    layout: 'canyon',
+    sched: ['night', 'night', 'night'],
+    rounds: 3,
+    diff: 2,
+    coins: 180,
+    salvage: 2,
+    rival: { name: 'Professor Volt', style: 'gunner', likes: ['energy', 'gun'], paint: '#5be7ff' },
+    intro: 'Headlights on. The Professor hunts in the dark.',
+    reward: { bolts: 90 }
+  },
+  {
+    id: 'r2x',
+    region: 'r2',
+    name: 'Twin Drill',
+    kind: 'boss',
+    boss: 'drill',
+    theme: 'desert',
+    layout: 'pit',
+    rounds: 1,
+    diff: 2,
+    coins: 300,
+    salvage: 2,
+    intro: 'Two drills, two boosters and no brakes. Dodge the charge, hit it from the side.',
+    reward: { bolts: 160, gear: 'drill', gearLvl: 2, ach: 'road2' }
+  },
+  {
+    id: 'r3a',
+    region: 'r3',
+    name: 'Conveyor Chaos',
+    kind: 'duel',
+    theme: 'factory',
+    layout: 'docks',
+    rounds: 3,
+    diff: 2,
+    coins: 200,
+    salvage: 3,
+    rival: { name: 'Magpie', style: 'gunner', likes: ['gun', 'econ'], paint: '#c58bff' },
+    intro: 'Magpie is back, and she brought friends: about forty shipping containers.',
+    reward: { bolts: 90 }
+  },
+  {
+    id: 'r3b',
+    region: 'r3',
+    name: 'Zero G',
+    kind: 'special',
+    theme: 'space',
+    sched: ['lowgrav', 'lowgrav', 'lowgrav'],
+    rounds: 3,
+    diff: 2,
+    coins: 220,
+    salvage: 3,
+    rival: { name: 'Professor Volt', style: 'gunner', likes: ['energy', 'air'], paint: '#5be7ff' },
+    intro: 'Low gravity, big jumps. Everything floats, including your dignity.',
+    reward: { bolts: 100, sticker: 'chip' }
+  },
+  {
+    id: 'r3c',
+    region: 'r3',
+    name: 'Wash & Wax',
+    kind: 'salvage',
+    theme: 'carwash',
+    layout: 'maze',
+    rounds: 2,
+    diff: 2,
+    coins: 240,
+    salvage: 6,
+    rival: { name: 'Gunny McBolt', style: 'gunner', likes: ['gun', 'slip'], paint: '#4ea1ff' },
+    intro: 'Soap floors and hidden crates. Slide in, grab, slide out.',
+    reward: { bolts: 100, gear: 'laser' }
+  },
+  {
+    id: 'r3d',
+    region: 'r3',
+    name: 'Lights Out',
+    kind: 'special',
+    theme: 'haunted',
+    sched: ['night', 'mayhem', 'night'],
+    rounds: 3,
+    diff: 2,
+    coins: 260,
+    salvage: 2,
+    rival: { name: 'Scorch', style: 'brawler', likes: ['fire', 'melee'], paint: '#ff8a3a' },
+    intro: 'The docks lose power at midnight. Scorch does not need light, he brings his own.',
+    reward: { bolts: 110, sticker: 'eye' }
+  },
+  {
+    id: 'r3x',
+    region: 'r3',
+    name: 'The Magnet Baron',
+    kind: 'boss',
+    boss: 'baron',
+    theme: 'factory',
+    layout: 'ring',
+    rounds: 1,
+    diff: 2,
+    coins: 380,
+    salvage: 2,
+    intro: 'He pulls cars in and zaps them. Kill the tesla coils first or keep your distance.',
+    reward: { bolts: 200, gear: 'tesla', gearLvl: 2, ach: 'road3' }
+  },
+  {
+    id: 'r4a',
+    region: 'r4',
+    name: 'The Gate',
+    kind: 'duel',
+    theme: 'haunted',
+    layout: 'castle',
+    rounds: 3,
+    diff: 2,
+    coins: 320,
+    salvage: 3,
+    rival: { name: 'Mega Mauler', style: 'rammer', likes: ['melee', 'pinball', 'flip'], paint: '#e2504a' },
+    intro: 'The Junk King keeps a Mauler at his gate. It has never let anyone through.',
+    reward: { bolts: 120 }
+  },
+  {
+    id: 'r4b',
+    region: 'r4',
+    name: 'Piano Heist',
+    kind: 'special',
+    theme: 'kitchen',
+    sched: ['piano', 'piano', 'piano'],
+    rounds: 3,
+    diff: 2,
+    coins: 340,
+    salvage: 3,
+    rival: { name: 'Grandma Tank', style: 'gunner', likes: ['gun', 'def'], paint: '#c58bff' },
+    intro: "The King's grand piano is going to your depot. Grandma Tank disagrees.",
+    reward: { bolts: 130 }
+  },
+  {
+    id: 'r4c',
+    region: 'r4',
+    name: 'King of the Hill',
+    kind: 'special',
+    theme: 'volcano',
+    layout: 'castle',
+    sched: ['hill', 'hill', 'hill'],
+    rounds: 3,
+    diff: 2,
+    coins: 360,
+    salvage: 2,
+    rival: { name: 'Big Boom Betty', style: 'artillery', likes: ['expl', 'gun'], paint: '#f2b705' },
+    intro: 'Hold the courtyard. Betty will shell it from the walls.',
+    reward: { bolts: 140 }
+  },
+  {
+    id: 'r4x',
+    region: 'r4',
+    name: 'The Junk King',
+    kind: 'boss',
+    boss: 'king',
+    theme: 'volcano',
+    layout: 'castle',
+    rounds: 1,
+    diff: 2,
+    coins: 480,
+    salvage: 3,
+    intro: 'Spinning arms, a throne full of guns and three phases of bad temper. This is the end of the road.',
+    reward: { bolts: 400, gear: 'grinder', gearLvl: 3, ach: 'kingslayer' }
+  }
+];
+const STORY_BY = Object.fromEntries(STORY.map(m => [m.id, m]));
+
+/* ---------- bosses: hand-built cars ---------- */
+// Base legend: C cockpit, F frame, G girder, A armour, H heavy plate, W wheel, M monster wheel, S saw, D drill,
+// J jaws, P spike, R bumper, B booster, k tyre wall, r rotator, X grinder. Top legend: m mg, c cannon,
+// x minigun, o mortar, t tesla, g magnet, s shield, p point defence, f flamer, l laser, z railgun, w swarm, e emp.
+const BOSS_LEGEND_B = {
+  C: 'cockpit',
+  F: 'frame',
+  G: 'girder',
+  A: 'armor',
+  H: 'heavyplate',
+  W: 'wheel',
+  M: 'monster',
+  S: 'saw',
+  D: 'drill',
+  J: 'jaws',
+  P: 'spike',
+  R: 'bumper',
+  B: 'booster',
+  k: 'tirewall',
+  r: 'rotator',
+  X: 'grinder'
+};
+const BOSS_LEGEND_T = {
+  m: 'mg',
+  c: 'cannon',
+  x: 'minigun',
+  o: 'mortar',
+  t: 'tesla',
+  g: 'magnet',
+  s: 'shield',
+  p: 'pd',
+  f: 'flamer',
+  l: 'laser',
+  z: 'railgun',
+  w: 'swarm',
+  e: 'emp'
+};
+const STORY_BOSSES = {
+  crusher: {
+    name: 'Mother Crusher',
+    style: 'rammer',
+    paint: '#5cc38f',
+    hp: 2.2,
+    dmg: 1.1,
+    taunt: 'Bin day!',
+    base: ['.SSSSS.', 'RGFFFGR', 'WFFCFFW', 'WGFFFGW', 'kFFFFFk', 'WAAAAAW'],
+    top: ['.......', '.c...c.', '...m...', '.o...o.', '.......', '.......']
+  },
+  drill: {
+    name: 'Twin Drill',
+    style: 'rammer',
+    paint: '#ff8a3a',
+    hp: 2.5,
+    dmg: 1.15,
+    taunt: 'Brrrrrrrrr.',
+    base: ['.D.D.', 'DGFGD', 'WFCFW', 'WGFGW', 'AFFFA', 'WBBBW'],
+    top: ['.....', '.f.f.', '.....', '.x.x.', '.....', '.....']
+  },
+  baron: {
+    name: 'The Magnet Baron',
+    style: 'gunner',
+    paint: '#4ea1ff',
+    hp: 2.8,
+    dmg: 1.15,
+    taunt: 'Come closer. I insist.',
+    base: ['.RRRRR.', 'WGFGFGW', 'AFFCFFA', 'WGFFFGW', 'AHFFFHA', 'W.WWW.W'],
+    top: ['.......', '.t.g.t.', '..p.p..', '.l...l.', '.s...e.', '.......']
+  },
+  king: {
+    name: 'The Junk King',
+    style: 'brawler',
+    paint: '#f2b705',
+    hp: 3.2,
+    dmg: 1.25,
+    taunt: 'Kneel before the scrap.',
+    base: ['...XXX...', 'S.RGGGR.S', 'GrHFFFHrG', '..WFCFW..', '..WGFGW..', '..AHHHA..', '..WMMMW..'],
+    top: ['.........', '.........', '..c...c..', '...z.x...', '..o.s.o..', '...w.p...', '.........']
+  }
+};
+/** Turns a boss sketch into a design. Melee and joints face away from the cockpit. */
+function bossDesign(id) {
+  const B_ = STORY_BOSSES[id],
+    base = new Map(),
+    top = new Map(),
+    h = B_.base.length,
+    w = B_.base[0].length;
+  let cx = 0,
+    cy = 0;
+  B_.base.forEach((row, y) => [...row].forEach((ch, x) => ch === 'C' && ((cx = x), (cy = y))));
+  const outward = (x, y) => {
+    // the direction (0 front, 1 right, 2 back, 3 left) whose neighbour is empty, preferring away from the cockpit
+    const dirs = [0, 1, 2, 3].filter(d => {
+      const nx = x + FX[d],
+        ny = y + FY[d];
+      return !(B_.base[ny] && B_.base[ny][nx] && B_.base[ny][nx] !== '.');
+    });
+    const away = d => FX[d] * (x - cx) + FY[d] * (y - cy);
+    return dirs.sort((a, b) => away(b) - away(a))[0] ?? 0;
+  };
+  const jointRot = (x, y) => {
+    // joints point at the neighbour that is further from the cockpit
+    let best = 0,
+      bd = -1;
+    for (let d = 0; d < 4; d++) {
+      const nx = x + FX[d],
+        ny = y + FY[d];
+      if (!(B_.base[ny] && B_.base[ny][nx] && B_.base[ny][nx] !== '.')) continue;
+      const dd = Math.abs(nx - cx) + Math.abs(ny - cy);
+      if (dd > bd) ((bd = dd), (best = d));
+    }
+    return best;
+  };
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const ch = B_.base[y][x],
+        id2 = BOSS_LEGEND_B[ch];
+      if (!id2) continue;
+      const m = MOD[id2],
+        gx = x - cx,
+        gy = y - cy,
+        rot = isJoint(id2) ? jointRot(x, y) : m.dir ? outward(x, y) : 0;
+      base.set(key(gx, gy), { id: id2, rot, x: gx, y: gy });
+      const t = B_.top[y] && BOSS_LEGEND_T[B_.top[y][x]];
+      if (t) top.set(key(gx, gy), { id: t, rot: 0, x: gx, y: gy });
+    }
+  return { base, top };
+}
+
+/* ---------- arena layouts ---------- */
+const wallH = (x, y, w) => ({ x, y, w, h: 36 }),
+  wallV = (x, y, h) => ({ x, y, w: 36, h });
+const STORY_LAYOUTS = {
+  lanes: () => ({
+    st: [wallH(420, 380, 480), wallH(1100, 380, 480), wallH(420, 834, 480), wallH(1100, 834, 480)],
+    zn: [
+      { kind: 'ramp', x: 945, y: 200, w: 110, h: 70, ang: 0 },
+      { kind: 'ramp', x: 945, y: 980, w: 110, h: 70, ang: Math.PI },
+      { kind: 'oil', x: AW / 2, y: AH / 2, r: 70 }
+    ],
+    junk: 10
+  }),
+  maze: () => {
+    const st = [];
+    for (let i = 0; i < 4; i++)
+      for (let j = 0; j < 3; j++) {
+        const x = 520 + i * 280,
+          y = 230 + j * 330;
+        st.push((i + j) % 2 ? wallV(x, y, 200) : wallH(x - 80, y + 80, 200));
+      }
+    return { st, zn: [{ kind: 'pad', x: AW / 2 - 45, y: AH / 2 - 30, w: 90, h: 60, ang: 0 }], junk: 6 };
+  },
+  ramps: () => ({
+    st: [wallV(700, 300, 260), wallV(1264, 690, 260)],
+    zn: [
+      { kind: 'ramp', x: 520, y: 760, w: 110, h: 70, ang: 0 },
+      { kind: 'ramp', x: 1370, y: 420, w: 110, h: 70, ang: Math.PI },
+      { kind: 'ramp', x: 945, y: 300, w: 110, h: 70, ang: 0 },
+      { kind: 'ramp', x: 945, y: 880, w: 110, h: 70, ang: Math.PI },
+      { kind: 'tramp', x: AW / 2 - 40, y: AH / 2 - 40, w: 80, h: 80 }
+    ],
+    junk: 8
+  }),
+  pit: () => {
+    // a ring of short walls around an open pit: room to circle a big boss
+    const st = [],
+      R = 430;
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2 + Math.PI / 8,
+        x = AW / 2 + Math.cos(a) * R,
+        y = AH / 2 + Math.sin(a) * R * 0.92;
+      st.push(Math.abs(Math.cos(a)) > 0.7 ? wallV(x - 18, y - 70, 140) : wallH(x - 70, y - 18, 140));
+    }
+    return { st, zn: [{ kind: 'oil', x: AW / 2, y: AH / 2, r: 60 }], junk: 6 };
+  },
+  canyon: () => ({
+    st: [
+      wallH(WM, 300, 620),
+      wallH(AW - WM - 620, 300, 620),
+      wallH(WM, 914, 620),
+      wallH(AW - WM - 620, 914, 620),
+      wallV(820, 300, 240),
+      wallV(1144, 710, 240)
+    ],
+    zn: [
+      { kind: 'ramp', x: 945, y: 560, w: 110, h: 70, ang: 0 },
+      { kind: 'oil', x: 560, y: AH / 2, r: 55 },
+      { kind: 'oil', x: AW - 560, y: AH / 2, r: 55 }
+    ],
+    junk: 8
+  }),
+  bridge: () => ({
+    st: [wallH(600, 420, 300), wallH(1100, 420, 300), wallH(600, 794, 300), wallH(1100, 794, 300)],
+    zn: [gimmickZone('lava', AW / 2, 180), gimmickZone('lava', AW / 2, AH - 180)],
+    junk: 6
+  }),
+  docks: () => {
+    const st = [];
+    for (const [x, y] of [
+      [520, 220],
+      [520, 900],
+      [1360, 220],
+      [1360, 900],
+      [880, 500],
+      [1000, 680]
+    ])
+      st.push({ x, y, w: 120, h: 54 });
+    return {
+      st,
+      zn: [gimmickZone('belt', AW / 2, 300), gimmickZone('belt', AW / 2, AH - 300)],
+      junk: 8
+    };
+  },
+  ring: () => ({
+    st: [wallV(560, 380, 480), wallV(AW - 596, 380, 480)],
+    zn: [
+      { kind: 'spikes', x: AW / 2 - 75, y: 200, w: 150, h: 22 },
+      { kind: 'spikes', x: AW / 2 - 75, y: AH - 222, w: 150, h: 22 },
+      { kind: 'pad', x: 320, y: 200, w: 90, h: 60, ang: 0 },
+      { kind: 'pad', x: AW - 410, y: AH - 260, w: 90, h: 60, ang: Math.PI }
+    ],
+    junk: 6
+  }),
+  castle: () => ({
+    // outer walls with gates, a courtyard in the middle
+    st: [
+      wallH(560, 260, 330),
+      wallH(1110, 260, 330),
+      wallH(560, 954, 330),
+      wallH(1110, 954, 330),
+      wallV(560, 260, 240),
+      wallV(560, 750, 240),
+      wallV(AW - 596, 260, 240),
+      wallV(AW - 596, 750, 240)
+    ],
+    zn: [{ kind: 'tramp', x: AW / 2 - 40, y: AH / 2 - 40, w: 80, h: 80 }],
+    junk: 8
+  })
+};
+/** Builds a mission arena: the hand-made layout (or the normal generator) plus salvage crates. */
+function storyField(th) {
+  const M = storyMission();
+  let f;
+  if (M.layout && STORY_LAYOUTS[M.layout]) {
+    const L = STORY_LAYOUTS[M.layout]();
+    f = {
+      st: L.st,
+      zn: L.zn,
+      ob: [],
+      pk: [
+        { kind: 'repair', x: AW / 2, y: AH / 2 + 120, val: 0.25, cd: 0 },
+        { kind: 'power', x: AW / 2, y: AH * 0.3, p: pick(POWER_IDS), cd: 8 },
+        { kind: 'power', x: AW / 2, y: AH * 0.7, p: pick(POWER_IDS), cd: 8 },
+        { kind: 'coins', x: AW / 2 - 300, y: AH / 2, val: 30, cd: 0 },
+        { kind: 'coins', x: AW / 2 + 300, y: AH / 2, val: 30, cd: 0 }
+      ],
+      sp: [
+        [260, AH / 2, Math.PI / 2],
+        [AW - 260, AH / 2, -Math.PI / 2]
+      ]
+    };
+    for (let i = 0, t = 0; i < L.junk && t < 400; t++) {
+      const k = pick(th.junk),
+        r = (JUNK[k] || PROPS[k]).r,
+        x = rnd(WM + 60, AW - WM - 60),
+        y = rnd(WM + 60, AH - WM - 60);
+      if (storyFree(f, x, y, r + 20)) {
+        f.ob.push(mkObj(k, x, y));
+        i++;
+      }
+    }
+  } else f = genArena('battle', th);
+  for (const s of G.story.salvageLeft) {
+    let x = s.x,
+      y = s.y;
+    if (x == null || !storyFree(f, x, y, 40))
+      for (let t = 0; t < 300; t++) {
+        x = rnd(WM + 80, AW - WM - 80);
+        y = rnd(WM + 80, AH - WM - 80);
+        if (storyFree(f, x, y, 40) && Math.abs(x - AW / 2) < AW * 0.42) break;
+      }
+    s.x = x;
+    s.y = y;
+    f.pk.push({ kind: 'salvage', sid: s.sid, id: s.id, gear: s.gear, x, y, cd: 0 });
+  }
+  return f;
+}
+function storyFree(f, x, y, r) {
+  return (
+    f.st.every(s => circRectDist(x, y, s) > r) &&
+    f.sp.every(p => Math.hypot(p[0] - x, p[1] - y) > r + 160) &&
+    f.ob.every(o => Math.hypot(o.x - x, o.y - y) > o.r + r) &&
+    f.zn.every(z => !inZone(x, y, z.r !== undefined ? { x: z.x, y: z.y, r: z.r + r } : z))
+  );
+}
+
+/* ---------- progress ---------- */
+let STORYP = { stars: {}, seen: {} };
+function loadStory() {
+  try {
+    const s = JSON.parse(load('sd.story') || 'null');
+    if (s && s.stars) STORYP = { stars: s.stars, seen: s.seen || {} };
+  } catch (e) {}
+}
+const saveStory = () => store('sd.story', STORYP);
+const storyStars = id => STORYP.stars[id] || 0;
+const totalStars = () => STORY.reduce((a, m) => a + storyStars(m.id), 0);
+/** A mission is open when the one before it (in story order) is beaten. */
+function storyOpen(id) {
+  const i = STORY.findIndex(m => m.id === id);
+  return i === 0 || storyStars(STORY[i - 1].id) > 0;
+}
+const nextMission = () => STORY.find(m => !storyStars(m.id) && storyOpen(m.id)) || null;
+const storyBadge = () => `${totalStars()}★`;
+const storyMission = () => (G.story ? STORY_BY[G.story.mid] : null);
+const stickerUnlocked = st =>
+  !st.unlock ||
+  (st.unlock.lvl && levelInfo().lvl >= st.unlock.lvl) ||
+  (st.unlock.ach && PROG.ach.includes(st.unlock.ach)) ||
+  (st.unlock.story && storyStars(st.unlock.story) > 0);
+
+/* ---------- running a mission ---------- */
+function startStory(id) {
+  const M = STORY_BY[id];
+  if (!M || !storyOpen(id)) return;
+  const prevDiff = G.diff;
+  const salv = [];
+  for (let i = 0; i < (M.salvage || 0); i++) {
+    const gear = i === 0;
+    const pool = MODS.filter(
+      m => m.id !== 'cockpit' && m.rar <= Math.min(4, 1 + STORY_REGIONS.findIndex(r => r.id === M.region))
+    );
+    salv.push({ sid: i + 1, id: pick(pool).id, gear, x: null, y: null });
+  }
+  G.storyNext = {
+    mid: id,
+    prevDiff,
+    rounds: M.rounds,
+    sched: Array.from({ length: M.rounds }, (_, i) => (M.sched && M.sched[i]) || null),
+    salvageLeft: salv,
+    got: 0,
+    stolen: 0,
+    gearGot: [],
+    boss: M.boss ? STORY_BOSSES[M.boss] : null
+  };
+  G.diff = M.diff;
+  G.started = true;
+  startMatch('solo', G.storyNext.sched, 'balanced');
+}
+/** Called by startMatch once the profile is fresh. */
+function storySetup() {
+  const S = G.story,
+    M = storyMission();
+  if (M.coins) G.coins += M.coins;
+  const bot = makeBot(M.diff);
+  const r = M.rival || STORY_BOSSES[M.boss];
+  Object.assign(bot, { name: r.name, style: r.style, likes: r.likes || ['melee'], paint: r.paint });
+  if (r.taunt) bot.say = [r.taunt];
+  bot.coins += M.coins || 0;
+  G.bot = bot;
+  G.oppName = bot.name;
+  G.oppPaint = bot.paint === G.paint ? PAINTS.find(p => p !== G.paint) : bot.paint;
+  G.oppLook = randomLook(M.diff);
+  G.oppBadge = G.oppLook.badge;
+  if (S.boss) G.oppLook = { ...G.oppLook, title: 'legend' };
+}
+function storyThemeIndex() {
+  const M = storyMission(),
+    i = THEMES.findIndex(t => t.id === M.theme);
+  return i >= 0 ? i : 0;
+}
+/** The boss replaces the bot's own car with its hand-built one. */
+function storyBotExtras() {
+  const S = G.story;
+  if (!S || !S.boss) return {};
+  return {
+    design: packDesign(bossDesign(storyMission().boss)),
+    tune: [],
+    boss: { hp: S.boss.hp, dmg: S.boss.dmg, story: 1 }
+  };
+}
+/** Salvage pickup: you get it, or the rival steals it for good. */
+function storyGrab(v, p) {
+  const S = G.story;
+  if (!S) return;
+  S.salvageLeft = S.salvageLeft.filter(s => s.sid !== p.sid);
+  if (v.idx !== B.me) {
+    S.stolen++;
+    txt(p.x, p.y - 26, 'STOLEN!', '#ff5c7a', 1.4);
+    sfx('squeak', p.x, p.y);
+    commentate('stolen', { car: v });
+    return;
+  }
+  if (p.gear) {
+    const g = addGear(p.id, 1, true, storyMission().name);
+    if (g) S.gearGot.push(g);
+    txt(p.x, p.y - 26, 'GEAR: ' + MOD[p.id].name.toUpperCase(), '#ffd257', 1.8);
+    sfx('jackpot', p.x, p.y);
+  } else {
+    gainWithSupport(p.id, 1);
+    S.got++;
+    txt(p.x, p.y - 26, '+1 ' + MOD[p.id].name.toUpperCase(), '#5be7ff', 1.4);
+    sfx('reveal', p.x, p.y);
+  }
+  commentate('salvage', { car: v });
+}
+/** Boss phases: at 2/3 and 1/3 health the boss gets angrier. */
+function storyTick() {
+  if (!G.story || !G.story.boss || !B || B.seq !== 'play') return;
+  const v = B.cars.find(c => c.boss);
+  if (!v || v.dead) return;
+  const hp = carHealth(v);
+  v.phase = v.phase || 1;
+  const want = hp < 0.34 ? 3 : hp < 0.67 ? 2 : 1;
+  if (want > v.phase) {
+    v.phase = want;
+    v.rateMul = (v.rateMul || 1) * 1.25;
+    v.c.topCap *= 1.08;
+    v.c.accel *= 1.12;
+    B.banner = {
+      text: want === 3 ? 'FINAL PHASE' : 'PHASE 2',
+      col: '#ff5c7a',
+      t: 2.2,
+      sub: v.name + ' is getting angry'
+    };
+    sfx('alarm');
+    B.shake = Math.max(B.shake || 0, 8);
+    commentate('phase', { car: v, n: want });
+  }
+}
+const carHealth = v => {
+  let a = 0;
+  for (const I of v.insts) if (I.alive) a += Math.max(0, I.hp);
+  return v.total ? a / v.total : 0;
+};
+/** Called from showFinal: stars, first-time rewards and unlocks. */
+function storyFinish(won, tot) {
+  const S = G.story,
+    M = storyMission();
+  G.diff = S.prevDiff;
+  const before = storyStars(M.id),
+    lostRound = G.log.some(r => !r.win),
+    bonus = M.salvage && M.kind === 'salvage' ? S.got + S.gearGot.length >= M.salvage : tot.d >= tot.t * 2;
+  const stars = won ? 1 + (lostRound ? 0 : 1) + (bonus ? 1 : 0) : 0;
+  const res = { won, stars, before, first: won && !before, bolts: 0, drops: [...S.gearGot], unlocks: [] };
+  if (stars > before) STORYP.stars[M.id] = stars;
+  if (won) {
+    const R = M.reward || {};
+    res.bolts = res.first ? R.bolts || 0 : Math.round((R.bolts || 0) * 0.25);
+    res.bolts += (stars - before > 0 ? stars - before : 0) * 15;
+    if (res.first && R.gear) {
+      const g = addGear(R.gear, R.gearLvl || 1, true, M.name);
+      if (g) res.drops.push(g);
+    }
+    if (res.first && R.sticker) res.unlocks.push('Sticker: ' + STICKER[R.sticker].name);
+    if (res.first && R.ach) {
+      const p = grant(0, [R.ach]);
+      for (const it of p.unlocked) res.unlocks.push(it.name);
+    }
+  } else res.bolts = 15;
+  addBolts(res.bolts);
+  saveStory();
+  return res;
+}
+function storyResultHtml(r) {
+  if (!r) return '';
+  const M = storyMission();
+  return `<div class="storyres"><div class="stars big" aria-label="${r.stars} of 3 stars">${[1, 2, 3].map(i => `<i class="${i <= r.stars ? 'on' : ''}"></i>`).join('')}</div>
+    <p class="small">${r.won ? (r.first ? 'Mission complete! The road continues.' : 'Mission replayed.') : 'Mission failed. The road is still here.'} ${M.kind === 'salvage' ? `Salvage: ${G.story.got + G.story.gearGot.length}/${M.salvage}${G.story.stolen ? ` · ${G.story.stolen} stolen` : ''}` : ''}</p>
+    ${spoilsHtml({ bolts: r.bolts, drops: r.drops })}
+    ${r.unlocks.map(u => `<div class="unl">Unlocked: <b>${esc(u)}</b></div>`).join('')}</div>`;
+}
+
+/* ---------- the road map ---------- */
+let storySel = null;
+function storyPanelHtml() {
+  const n = nextMission(),
+    done = STORY.filter(m => storyStars(m.id)).length;
+  return `<p>Four regions, ${STORY.length} missions and four bosses. Find gear and stickers on the way to the Junk King.</p>
+    <div class="mstat"><b>${done}/${STORY.length}</b><span>missions</span></div><div class="mstat"><b>${totalStars()}/${STORY.length * 3}</b><span>stars</span></div>
+    ${n ? `<p class="small">Next: <b>${esc(n.name)}</b> · ${esc(STORY_REGIONS.find(r => r.id === n.region).name)}</p>` : '<p class="small">The Junk King is beaten. Go for three stars everywhere.</p>'}
+    <button class="btn mgo" id="mStory">Open the Scrap Road</button>`;
+}
+function openStory() {
+  hideOverlays();
+  if (G.story) {
+    G.diff = G.story.prevDiff ?? G.diff;
+    G.story = null;
+  }
+  if (G.phase !== 'menu') {
+    G.phase = 'menu';
+    updateHUD();
+    demoStart();
+  }
+  if (!storySel || !STORY_BY[storySel]) storySel = (nextMission() || STORY[STORY.length - 1]).id;
+  renderStory();
+  $('#ovStory').hidden = false;
+}
+/** Node positions along a winding road (0..1000 × 0..560). */
+function roadPoints() {
+  const pts = [];
+  STORY.forEach((m, i) => {
+    const t = i / (STORY.length - 1),
+      x = 70 + t * 860,
+      y = 280 + Math.sin(t * Math.PI * 3.2) * 170 + (m.kind === 'boss' ? 0 : 0);
+    pts.push([x, y]);
+  });
+  return pts;
+}
+function renderStory() {
+  const pts = roadPoints(),
+    M = STORY_BY[storySel],
+    R = STORY_REGIONS.find(r => r.id === M.region),
+    open = storyOpen(M.id),
+    st = storyStars(M.id);
+  const path = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(0) + ' ' + p[1].toFixed(0)).join(' ');
+  const regionBands = STORY_REGIONS.map((r, i) => {
+    const ms = STORY.map((m, j) => [m, j]).filter(([m]) => m.region === r.id),
+      x0 = pts[ms[0][1]][0] - 40,
+      x1 = pts[ms[ms.length - 1][1]][0] + 40;
+    return `<g><rect x="${x0}" y="20" width="${x1 - x0}" height="520" fill="${r.col}" opacity=".05"/><text x="${x0 + 10}" y="46" fill="${r.col}" font-family="Chakra Petch" font-size="16" font-weight="700">${esc(r.name)}</text></g>`;
+  }).join('');
+  const nodes = STORY.map((m, i) => {
+    const [x, y] = pts[i],
+      o = storyOpen(m.id),
+      s = storyStars(m.id),
+      boss = m.kind === 'boss',
+      col = STORY_REGIONS.find(r => r.id === m.region).col,
+      r = boss ? 26 : 17;
+    return `<g class="rnode${m.id === storySel ? ' sel' : ''}${o ? '' : ' locked'}" data-m="${m.id}" tabindex="0" role="button" aria-label="${esc(m.name)}${o ? '' : ' (locked)'}">
+      ${m.id === storySel ? `<circle cx="${x}" cy="${y}" r="${r + 9}" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="4 4"/>` : ''}
+      ${boss ? `<polygon points="${x},${y - r} ${x + r},${y} ${x},${y + r} ${x - r},${y}" fill="${o ? '#172642' : '#0d1628'}" stroke="${o ? col : '#34507e'}" stroke-width="3"/>` : `<circle cx="${x}" cy="${y}" r="${r}" fill="${o ? '#172642' : '#0d1628'}" stroke="${o ? col : '#34507e'}" stroke-width="3"/>`}
+      ${o ? `<text x="${x}" y="${y + 5}" text-anchor="middle" fill="#e6f1ff" font-family="Chakra Petch" font-size="${boss ? 16 : 13}" font-weight="700">${boss ? '☠' : i + 1}</text>` : `<g fill="none" stroke="#4d6283" stroke-width="2"><rect x="${x - 5}" y="${y - 1}" width="10" height="8" fill="#4d6283"/><path d="M${x - 3} ${y - 1}v-3a3 3 0 0 1 6 0v3"/></g>`}
+      ${s ? `<text x="${x}" y="${y + r + 18}" text-anchor="middle" fill="#ffd257" font-size="12">${'★'.repeat(s)}${'☆'.repeat(3 - s)}</text>` : ''}
+    </g>`;
+  }).join('');
+  const rw = M.reward || {};
+  const rewards = [
+    rw.bolts ? `${rw.bolts} bolts` : '',
+    rw.gear ? `Gear: ${MOD[rw.gear].name}${rw.gearLvl > 1 ? ' +' + (rw.gearLvl - 1) : ''}` : '',
+    rw.sticker ? `Sticker: ${STICKER[rw.sticker].name}` : '',
+    rw.ach ? `Achievement: ${ACHIEVEMENTS[rw.ach].name}` : ''
+  ].filter(Boolean);
+  const kindText = {
+    duel: 'Duel',
+    salvage: 'Salvage hunt',
+    special: M.sched ? [...new Set(M.sched.filter(Boolean))].map(s => SPECIALS[s].name).join(' + ') : 'Special',
+    boss: 'Boss fight'
+  }[M.kind];
+  const goal3 = M.kind === 'salvage' ? `Find all ${M.salvage} salvage crates` : 'Deal twice the damage you take';
+  const boss = M.boss ? STORY_BOSSES[M.boss] : null;
+  $('#ovStory').innerHTML = `<div class="story">
+    <header><div><span class="label">Story mode</span><h2>Scrap Road</h2></div>
+      <div class="sr-sum"><b>${totalStars()}</b><span>/ ${STORY.length * 3} stars</span></div>
+      <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b><span>bolts</span></div>
+      <button class="btn ghost" id="srWork">Workbench</button><button class="btn ghost" id="srBack">Main menu</button></header>
+    <div class="sr-body">
+      <div class="sr-map"><svg viewBox="0 0 1000 560" role="group" aria-label="Mission map">${regionBands}
+        <path d="${path}" fill="none" stroke="#263b60" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="${path}" fill="none" stroke="#ffb423" stroke-width="2" stroke-dasharray="10 12" opacity=".6"/>
+        ${nodes}</svg></div>
+      <aside class="sr-card" style="--rc:${R.col}">
+        <span class="label" style="color:${R.col}">${esc(R.name)} · ${esc(kindText)}</span>
+        <h3>${esc(M.name)}</h3>
+        ${boss ? `<p class="bossline">Boss: <b>${esc(boss.name)}</b> · ${Math.round(boss.hp * 100)}% health, phases at ⅔ and ⅓</p>` : M.rival ? `<p class="small">Rival: <b>${esc(M.rival.name)}</b> · ${esc(DIFF[M.diff].name)}</p>` : ''}
+        <p>${esc(M.intro)}</p>
+        <div class="sr-facts"><span>${M.rounds} round${M.rounds > 1 ? 's' : ''}</span><span>${esc(THEMES[THEMES.findIndex(t => t.id === M.theme)].name)}</span>${M.salvage ? `<span>${M.salvage} salvage crates</span>` : ''}${M.coins ? `<span>+${M.coins} starting coins</span>` : ''}</div>
+        <div class="sr-goals"><span class="label">Stars</span>
+          <div class="${st >= 1 ? 'on' : ''}">★ Win the mission</div>
+          <div class="${st >= 2 ? 'on' : ''}">★ Do not lose a round</div>
+          <div class="${st >= 3 ? 'on' : ''}">★ ${esc(goal3)}</div></div>
+        <div class="sr-rew"><span class="label">${st ? 'First-clear rewards (claimed)' : 'Rewards'}</span>${rewards.map(r => `<span>${esc(r)}</span>`).join('')}</div>
+        <button class="btn mgo" id="srGo" ${open ? '' : 'disabled'}>${open ? (st ? 'Replay mission' : 'Start mission') : 'Beat the previous mission first'}</button>
+      </aside>
+    </div></div>`;
+  $$('#ovStory .rnode').forEach(n => {
+    const sel = () => {
+      storySel = n.dataset.m;
+      sfx('ui');
+      renderStory();
+    };
+    n.addEventListener('click', sel);
+    n.addEventListener('keydown', e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), sel()));
+  });
+  $('#srGo').addEventListener('click', () => {
+    if (!storyOpen(M.id)) return;
+    sfx('go');
+    $('#ovStory').hidden = true;
+    startStory(M.id);
+  });
+  $('#srWork').addEventListener('click', () => {
+    $('#ovStory').hidden = true;
+    openWorkbench(() => openStory());
+  });
+  $('#srBack').addEventListener('click', () => {
+    $('#ovStory').hidden = true;
+    sfx('ui');
+    showMenu();
+  });
+}
+/** Boss health bar across the top of the arena. */
+function drawBossBar(c) {
+  if (!G.story || !G.story.boss || !B) return;
+  const v = B.cars.find(x => x.boss);
+  if (!v) return;
+  const w = Math.min(560, view.w * 0.5),
+    x = view.w / 2 - w / 2,
+    y = 92,
+    hp = v.dead ? 0 : carHealth(v);
+  c.save();
+  c.textBaseline = 'alphabetic';
+  c.fillStyle = 'rgba(10,16,32,.86)';
+  c.fillRect(x - 10, y - 22, w + 20, 40);
+  c.font = '700 13px "Chakra Petch", sans-serif';
+  c.fillStyle = '#ff5c7a';
+  c.textAlign = 'left';
+  c.fillText(`BOSS · PHASE ${v.phase || 1}/3`, x, y - 6);
+  c.fillStyle = '#e6f1ff';
+  c.textAlign = 'right';
+  c.fillText(v.name, x + w, y - 6);
+  for (let i = 0; i < 3; i++) {
+    const sx = x + (i * w) / 3 + (i ? 3 : 0),
+      sw = w / 3 - 3,
+      seg = clamp((hp - (2 - i) / 3) * 3, 0, 1);
+    c.fillStyle = '#2b1b22';
+    c.fillRect(sx, y, sw, 9);
+    c.fillStyle = '#ff5c7a';
+    c.fillRect(sx, y, sw * seg, 9);
+  }
+  c.restore();
 }
 /* ===== js/ui/effects.js ===== */
 /* Holo lightning: a brief electric crackle along a random edge of a panel. */
@@ -27695,6 +30932,8 @@ const SETTINGS = {
   nums: true,
   marks: true,
   voice: true,
+  comm: true,
+  commVoice: true,
   motion: true,
   crateSpin: true,
   perf: false,
@@ -27741,6 +30980,8 @@ function openSettings(back) {
     <label class="vol"><span>Battle music</span><input type="range" id="setMusic" aria-label="Battle music volume" min="0" max="1" step="0.05" value="${SETTINGS.music}"><b id="setMusicV">${Math.round(SETTINGS.music * 100)}%</b></label>
     ${toggle('setMute', 'Mute all sound', MUTE)}
     ${toggle('setVoice', 'Announcer voice', SETTINGS.voice !== false)}
+    ${toggle('setComm', 'Commentators (captions)', SETTINGS.comm !== false)}
+    ${toggle('setCommVoice', 'Commentator voices', SETTINGS.commVoice !== false)}
     ${toggle('setMotion', 'Decorative motion', SETTINGS.motion)}
     ${toggle('setCrateSpin', 'Animate mystery crates', SETTINGS.crateSpin)}
     ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
@@ -27770,6 +31011,8 @@ function openSettings(back) {
   });
   for (const [id, k] of [
     ['setVoice', 'voice'],
+    ['setComm', 'comm'],
+    ['setCommVoice', 'commVoice'],
     ['setMotion', 'motion'],
     ['setFps', 'fps'],
     ['setCrateSpin', 'crateSpin'],
@@ -28002,12 +31245,13 @@ function demoTick(dt) {
 // Main menu (over a live bot battle), multiplayer lobby, the main loop and start-up.
 const inMatch = () => !['intro', 'menu', 'final'].includes(G.phase) && G.mode !== undefined && G.started;
 const MENU_TABS = [
+  { id: 'story', name: 'Scrap Road', ico: 'SR', col: '#ffb423', badge: () => storyBadge() },
   { id: 'solo', name: 'Duel vs bot', ico: '1P', col: '#3fe0a0' },
-  { id: 'online', name: 'Online 1v1', ico: '2P', col: '#5be7ff' },
   { id: 'run', name: 'Scrap Gauntlet', ico: '☠', col: '#ff5c7a' },
+  { id: 'online', name: 'Online 1v1', ico: '2P', col: '#5be7ff' },
   { id: 'sand', name: 'Sandbox', ico: 'LAB', col: '#c58bff' },
-  { id: 'sandmp', name: 'Sandbox online', ico: 'MP', col: '#c58bff', badge: () => 'soon' },
-  { id: 'style', name: 'Garage style', ico: '★', col: '#ffd257', badge: () => 'Lv ' + levelInfo().lvl },
+  { id: 'work', name: 'Workbench', ico: 'WB', col: '#ffb423', badge: () => GEAR.bolts + ' bolts' },
+  { id: 'style', name: 'Locker', ico: '★', col: '#ffd257', badge: () => 'Lv ' + levelInfo().lvl },
   { id: 'codex', name: 'Module codex', ico: 'K', col: '#8da3c2' }
 ];
 const TAGLINES = [
@@ -28037,7 +31281,7 @@ function showMenu() {
   }
   const L = levelInfo();
   $('#ovMenu').classList.toggle('live', !resume);
-  const tab = MENU_TABS.some(t => t.id === load('sd.menuTab')) ? load('sd.menuTab') : 'solo';
+  const tab = MENU_TABS.some(t => t.id === load('sd.menuTab')) ? load('sd.menuTab') : 'story';
   const item = t =>
     `<button class="mrail-i" data-tab="${t.id}" style="--rc:${t.col}" aria-pressed="${t.id === tab}"><span class="mi-ico">${t.ico}</span><span class="mi-t">${t.name}</span>${t.badge ? `<span class="mi-b">${t.badge()}</span>` : ''}</button>`;
   const group = (label, ids) =>
@@ -28051,11 +31295,12 @@ function showMenu() {
     ${resume ? '<button class="btn ok mresume" id="mResume">▶ Resume match</button>' : ''}
     <div class="mbody">
       <nav class="mrail" aria-label="Game modes">
-        ${group('Play', ['solo', 'online', 'run'])}
-        ${group('Build', ['sand', 'sandmp'])}
-        ${group('Garage', ['style', 'codex'])}
+        ${group('Play', ['story', 'solo', 'run', 'online'])}
+        ${group('Build', ['sand'])}
+        ${group('Garage', ['work', 'style', 'codex'])}
       </nav>
       <div class="mpanels">
+        ${panel('story', '#ffb423', 'Scrap Road', storyPanelHtml())}
         ${panel(
           'solo',
           '#3fe0a0',
@@ -28063,6 +31308,14 @@ function showMenu() {
           `<p>A bot rival who drafts, shops and builds with the same rules as you.</p>
           <span class="mlab">Difficulty</span><div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
           <span class="mlab">Rounds</span><div class="seg" id="roundSeg" aria-label="Match length">${ROUND_CHOICES.map(n => `<button data-n="${n}" aria-pressed="${n === (G.rounds || 10)}">${n}</button>`).join('')}</div>
+          <span class="mlab">Format</span><div class="seg" id="fmtSeg" aria-label="Match format">${Object.entries(
+            MATCH_FORMATS
+          )
+            .map(
+              ([k, f]) =>
+                `<button data-f="${k}" title="${esc(f.desc)}" aria-pressed="${k === chosenFormat}">${esc(f.short)}</button>`
+            )
+            .join('')}</div><p class="small" id="fmtDesc">${esc(MATCH_FORMATS[chosenFormat].desc)}</p>
           <button class="btn mgo" id="mSolo">Play vs bot</button>`
         )}
         ${panel(
@@ -28089,19 +31342,21 @@ function showMenu() {
           <button class="btn mgo" id="mSand">Open sandbox</button>`
         )}
         ${panel(
-          'sandmp',
-          '#c58bff',
-          'Sandbox online <em class="msoon">soon</em>',
-          `<p>Build freely with friends in one shared arena: no rounds, no drafting, instant respawns, and mini games like sumo, races and scrap soccer.</p>
-          <button class="btn mgo" disabled>Coming soon</button>`
+          'work',
+          '#ffb423',
+          'Workbench',
+          `<p>Your own parts. Upgrade them with bolts, weld on quirks and find them again as draft cards in Duel, Story and Gauntlet.</p>
+          <div class="mstat"><b>${GEAR.bolts}</b><span>bolts</span></div><div class="mstat"><b>${GEAR.items.length}</b><span>gear pieces</span></div>
+          <button class="btn mgo" id="mWork">Open the Workbench</button>`
         )}
         ${panel(
           'style',
           '#ffd257',
-          'Garage style',
+          'Locker',
           `<p>${esc(titleName(G.style.title))} · ${unlockedCount()} of ${totalCosmetics()} unlocked</p>
           <div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">Scrap Cred level ${L.lvl} · ${L.into}/${L.need} XP</span>
-          <button class="btn mgo" id="mStyle">Customize</button>`
+          <p class="small">Skins, stickers, trails and titles. Stickers give small perks, and two stickers that match your skin unlock a set bonus.</p>
+          <button class="btn mgo" id="mStyle">Open the Locker</button>`
         )}
       </div>
     </div>
@@ -28128,6 +31383,25 @@ function showMenu() {
       sfx('ui');
     })
   );
+  $$('#fmtSeg button').forEach(b =>
+    b.addEventListener('click', () => {
+      chosenFormat = b.dataset.f;
+      $$('#fmtSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      $('#fmtDesc').textContent = MATCH_FORMATS[chosenFormat].desc;
+      store('sd.format', chosenFormat);
+      sfx('ui');
+    })
+  );
+  $('#mWork').addEventListener('click', () => {
+    $('#ovMenu').hidden = true;
+    sfx('ui');
+    openWorkbench(showMenu);
+  });
+  $('#mStory').addEventListener('click', () => {
+    sfx('ui');
+    leave();
+    openStory();
+  });
   $$('#roundSeg button').forEach(b =>
     b.addEventListener('click', () => {
       G.rounds = +b.dataset.n;
@@ -28384,7 +31658,13 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   G.rounds = ROUND_CHOICES.includes(rn) ? rn : 10;
   G.mpRounds = G.rounds;
   MUTE = load('sd.mute') == 1;
+  const pt = load('sd.paint');
+  if (pt && /^#[0-9a-f]{6}$/i.test(pt)) G.paint = pt;
+  const fm = load('sd.format');
+  if (fm && MATCH_FORMATS[fm]) chosenFormat = fm;
+  loadStory();
   loadStyle();
+  loadGear();
   try {
     G.favorites = new Set(JSON.parse(load('sd.favorites') || '[]').filter(id => MOD[id]));
   } catch (e) {}
@@ -28403,6 +31683,51 @@ requestAnimationFrame(loop);
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
   window.__SD = {
+    STORY,
+    sanitizeLook,
+    ACHIEVEMENTS,
+    STORY_BY,
+    STORY_BOSSES,
+    STORY_LAYOUTS,
+    STICKERS,
+    STICKER,
+    STICKER_SETS,
+    QUIRKS,
+    bossDesign,
+    startStory,
+    storyField,
+    storyFinish,
+    storyGrab,
+    storyTick,
+    openStory,
+    STORYP: () => STORYP,
+    GEAR: () => GEAR,
+    setGear: g => (GEAR = g),
+    addGear,
+    addBolts,
+    gearUpgrade,
+    gearPickQuirk,
+    gearFuse,
+    gearScrap,
+    gearBonus,
+    gearCfg,
+    flairCfg,
+    activeSet,
+    applyGear,
+    findGear,
+    matchSpoils,
+    openWorkbench,
+    commentate,
+    crowdStep,
+    stepCommentary,
+    throwGift,
+    crowdGiftTaken,
+    stepGifts,
+    COMM: () => COMM,
+    carHealth,
+    stickerUnlocked,
+    openStyle,
+    draftOptions,
     prepareBot,
     stepLogic,
     groupOn,

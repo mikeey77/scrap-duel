@@ -38,6 +38,8 @@ body.in-arena #btnPause {
 body:has(#ovCodex:not([hidden])) #demoFeed,
 body:has(#ovSettings:not([hidden])) #demoFeed,
 body:has(#ovStyle:not([hidden])) #demoFeed,
+body:has(#ovWork:not([hidden])) #demoFeed,
+body:has(#ovStory:not([hidden])) #demoFeed,
 body:has(#ovLobby:not([hidden])) #demoFeed {
   display: none;
 }

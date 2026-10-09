@@ -794,6 +794,7 @@ function weapons(v, dt) {
   const fireK = (buffOf(v, 'overdrive') ? 1.6 : 1) * (v.rateMul || 1);
   if (v.regen && !v.dead && B.seq === 'play')
     for (const I of v.insts) if (I.alive && I.hp < I.max) I.hp = Math.min(I.max, I.hp + I.max * v.regen * dt);
+  if ((v.gearHeal || (v.flair && v.flair.mend)) && !v.dead && B.seq === 'play') gearRegen(v, dt);
   const jam = v.jam > 0,
     sensor = !!v.has.sensor && !jam,
     cone = sensor ? 0.44 : 0.14,
@@ -851,7 +852,7 @@ function weapons(v, dt) {
           });
       }
       if (m.bombbay) {
-        I.cd -= dt * fireK;
+        I.cd -= dt * fireK * (I.gRate || 1);
         if (v.z > 25 && I.cd <= 0) {
           I.cd = 0.35;
           B.lobs.push({
@@ -899,7 +900,7 @@ function weapons(v, dt) {
         }
       }
       if (m.pd && !jam) {
-        I.cd -= dt * fireK;
+        I.cd -= dt * fireK * (I.gRate || 1);
         I.pa = (I.pa || 0) + dt * 2;
         if (I.cd <= 0) {
           let tgt = null,
@@ -1019,7 +1020,7 @@ function weapons(v, dt) {
           reach = m.mel.reach || 1,
           cx = px + Math.cos(fa) * S * 0.6 * reach,
           cy = py + Math.sin(fa) * S * 0.6 * reach;
-        I.cd -= dt * fireK;
+        I.cd -= dt * fireK * (I.gRate || 1);
         let target = null;
         for (const e of foes) {
           const b = carBlockAt(e, cx, cy, S * 0.45 * reach);
@@ -1056,7 +1057,7 @@ function weapons(v, dt) {
         }
       }
       if (m.flipper && !I.blocked) {
-        I.cd -= dt * fireK;
+        I.cd -= dt * fireK * (I.gRate || 1);
         if (I.cd <= 0) {
           const fa = faceAng(v, I),
             cx = px + Math.cos(fa) * S * 0.9,
@@ -1100,7 +1101,7 @@ function weapons(v, dt) {
       let aimA = fa;
       const want = Math.atan2(v.aimY - py, v.aimX - px);
       if (W.kind === 'tesla') {
-        I.cd -= dt * fireK;
+        I.cd -= dt * fireK * (I.gRate || 1);
         if (I.cd <= 0 && v.fire && !jam) {
           const first = autoTarget(v, px, py, W.rng);
           if (first) {
@@ -1128,7 +1129,7 @@ function weapons(v, dt) {
         aimA = fa + clamp(wrap(want - fa), -cone, cone);
         I.ta = aimA;
       }
-      I.cd -= dt * fireK;
+      I.cd -= dt * fireK * (I.gRate || 1);
       if (W.spin) I.spin = clamp(I.spin + (v.fire ? dt : -dt * 1.5), CT(v, 'minispool') ? 1 : 0, 1);
       const spr = (W.spr || 0) * (v.anchored ? 0.5 : 1),
         mx = px + Math.cos(aimA) * S * 0.85,

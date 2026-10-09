@@ -1,6 +1,6 @@
 // Garage Style: cosmetics are earned by playing (Scrap Cred levels) and by achievements. Nothing is bought.
 const STYLE_SLOTS = [
-  ['livery', 'Livery'],
+  ['livery', 'Skin'],
   ['trail', 'Trail'],
   ['wreck', 'Wreck effect'],
   ['title', 'Title']
@@ -101,7 +101,11 @@ const COSMETICS = {
       desc: 'Grabbed three power-ups in one round.',
       unlock: { ach: 'powered' }
     },
-    { id: 'legend', name: 'Scrap Legend', desc: 'Reached Scrap Cred level 20.', unlock: { lvl: 20 } }
+    { id: 'legend', name: 'Scrap Legend', desc: 'Reached Scrap Cred level 20.', unlock: { lvl: 20 } },
+    { id: 'yardboss', name: 'Yard Boss', desc: 'Took out the garbage. Literally.', unlock: { ach: 'road1' } },
+    { id: 'canyon', name: 'Canyon Runner', desc: 'Outlasted the Twin Drill.', unlock: { ach: 'road2' } },
+    { id: 'baron', name: 'Unstuck', desc: 'Escaped the Magnet Baron.', unlock: { ach: 'road3' } },
+    { id: 'junkking', name: 'The New Junk King', desc: 'Sits on a throne of scrap.', unlock: { ach: 'kingslayer' } }
   ]
 };
 const ACHIEVEMENTS = {
@@ -123,8 +127,19 @@ const ACHIEVEMENTS = {
   night: { name: 'Night Owl', desc: 'Win a Night Shift round.' },
   sumo: { name: 'Sumo Champ', desc: 'Win a Sumo Ring round.' },
   powered: { name: 'Juiced', desc: 'Grab three power-ups in one round.' },
-  jackpot: { name: 'Jackpot', desc: 'Hit the 1 in 100 jackpot in a Scrap Crate.' }
+  jackpot: { name: 'Jackpot', desc: 'Hit the 1 in 100 jackpot in a Scrap Crate.' },
+  road1: { name: 'Bin Day', desc: 'Beat Mother Crusher on the Scrap Road.' },
+  road2: { name: 'Drill Sergeant', desc: 'Beat the Twin Drill on the Scrap Road.' },
+  road3: { name: 'Demagnetised', desc: 'Beat the Magnet Baron on the Scrap Road.' },
+  kingslayer: { name: 'Kingslayer', desc: 'Beat the Junk King at the end of the Scrap Road.' }
 };
 const XP = { round: 25, roundWin: 25, specialWin: 15, match: 50, matchWin: 100 };
 const xpForLevel = lvl => 100 + 50 * (lvl - 1); // XP needed to go from lvl to lvl + 1
-const DEFAULT_STYLE = { livery: 'factory', trail: 'none', wreck: 'classic', title: 'rookie', badge: 'shield.bolt.0' };
+const DEFAULT_STYLE = {
+  livery: 'factory',
+  trail: 'none',
+  wreck: 'classic',
+  title: 'rookie',
+  badge: 'shield.bolt.0',
+  stickers: []
+};

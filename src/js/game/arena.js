@@ -929,6 +929,7 @@ function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
     a *= 1 - m.res[type];
   if (v.has.gnome && v.insts.some(g => g.id === 'gnome' && g.alive)) a *= 0.92;
   if (I.sprung && type === 'ram') a *= 0.75;
+  if (I.gFrag || I.gSpiky || v.flair || (attacker && attacker.flair)) a = flairHurt(v, I, a, type, attacker);
   if (a >= 70 && Math.random() < 0.3 && SETTINGS.nums !== false)
     txt(v.x + rnd(-30, 30), v.y - v.rad - 20, pick(HIT_QUIPS), '#ffd257', 1.1);
   if (type === 'fire') {
@@ -1015,6 +1016,7 @@ function killInst(v, I, quiet) {
   if (I.id === 'cockpit' && (v.cargo || 0) > 0) planSpill(v, ...ipos(v, I));
   I.alive = false;
   v.lost.push(I.id);
+  if (I.gBurst && !quiet) gearBreak(v, I);
   const [x, y] = ipos(v, I);
   if (B.rec && !quiet) B.ev.push(['lesson', v.idx, x, y, `${MOD[I.id].name} destroyed`]);
   if (!quiet) boom(x, y, I.id === 'cockpit' ? 2 : 0.8);

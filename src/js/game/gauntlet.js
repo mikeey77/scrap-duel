@@ -120,8 +120,11 @@ function applyCarMods(v, c) {
     v.boss = true;
     v.dmgOut = c.boss.dmg;
   }
+  if (c.gear) applyGear(v, c.gear);
+  if (c.flair) applyFlair(v, c.flair);
+  v.gearHeal = v.insts.some(I => I.gRegen);
   if (c.run) {
-    v.dmgOut = 1 + c.run.dmgOut;
+    v.dmgOut = (v.dmgOut || 1) * (1 + c.run.dmgOut);
     v.dmgIn = 1 - c.run.dmgIn;
     v.rateMul = 1 + c.run.rate;
     v.regen = c.run.regen;
@@ -246,13 +249,17 @@ function showRunOver() {
     record = reached > best;
   if (record) store('sd.runBest', reached);
   const prog = grant(20 + R.cleared * 12 + R.bosses * 40, []);
+  const spoils = matchSpoils(R.cleared >= 5, 0, {
+    bolts: R.cleared * 8 + R.bosses * 30 - 20,
+    from: 'Gauntlet wave ' + R.wave
+  });
   G.phase = 'final';
   $('#resultCard').innerHTML =
     `<span class="label">Scrap Gauntlet · run over</span><h2 style="color:${record ? '#3fe0a0' : '#ff5c7a'}">${record ? 'New record!' : 'Run over'}</h2>
     <div class="runstats"><div><b>${reached}</b><span>wave reached</span></div><div><b>${R.bosses}</b><span>bosses beaten</span></div><div><b>${Math.max(best, reached)}</b><span>best ever</span></div></div>
     ${R.relics.length ? `<div class="relicrow">${R.relics.map(id => `<span title="${esc(RUN_RELICS[id].desc)}">${RUN_RELICS[id].icon} ${esc(RUN_RELICS[id].name)}</span>`).join('')}</div>` : ''}
     <p class="small">${esc(pick(['Your car has been donated to science.', 'The scrapyard thanks you for your contribution.', 'Somewhere, a mechanic is crying.', 'Not bad for a pile of bolts.']))}</p>
-    ${progressHtml(prog)}
+    ${progressHtml(prog)}${spoilsHtml(spoils)}
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="runAgain">Run it back</button><button class="btn ghost" id="runHome">Main menu</button></div>`;
   $('#ovResult').hidden = false;
   Announcer.say(record ? 'New record' : 'Game over');

@@ -77,6 +77,12 @@ function drawVehicle(c, v, alpha) {
           I.W && I.W.kind !== 'lob' && I.W.kind !== 'tesla'
             ? I.ta - v.a - (I.la || 0) + Math.PI / 2
             : (I.rot * Math.PI) / 2;
+        if (I.mw) {
+          c.save();
+          c.globalCompositeOperation = 'lighter';
+          glowDisc(c, S * (0.95 + Math.sin(ANIM * 5) * 0.12), '#ffd257');
+          c.restore();
+        }
         if (I.m.glow || I.m.rar >= 3) {
           c.save();
           c.globalCompositeOperation = 'lighter';
@@ -102,6 +108,16 @@ function drawVehicle(c, v, alpha) {
         });
         if (layer === 'b' && look.livery !== 'factory' && liveryPart(I.id))
           drawLivery(c, look.livery, v.paint, I.gcx, I.gcy, S, liveryCtx(v.grid, I.gcx, I.gcy, v.minGy));
+        if (layer === 'b' && look.stickers && look.stickers.length) {
+          const si = stickerCells(v).indexOf(I);
+          if (si >= 0 && look.stickers[si]) {
+            c.save();
+            c.rotate(-0.3 + si * 0.35);
+            drawSticker(c, look.stickers[si], S * 0.28);
+            c.restore();
+          }
+        }
+        if (I.gear) drawGearPip(c, I);
         const r = I.hp / I.max;
         if (r < 0.5) {
           c.fillStyle = `rgba(25,12,4,${(0.5 - r) * 1.1})`;
@@ -492,6 +508,7 @@ function drawZone(c, z) {
   }
 }
 function drawPickup(c, p) {
+  if (p.kind === 'salvage' || p.kind === 'gift') return p.cd > 0 ? undefined : drawSalvage(c, p);
   const ready = p.cd <= 0,
     bob = Math.sin(ANIM * 3 + p.x) * 3;
   c.save();
@@ -799,6 +816,23 @@ function drawRing(c) {
   c.stroke();
   c.restore();
 }
+/** Small level chevrons on a gear part (gold on masterwork). */
+function drawGearPip(c, I) {
+  const n = Math.min(4, I.gear.lvl - 1),
+    col = I.mw ? '#ffd257' : '#ffb423';
+  c.save();
+  c.translate(-S * 0.32, S * 0.3);
+  c.strokeStyle = col;
+  c.lineWidth = 1.6;
+  for (let i = 0; i <= n; i++) {
+    c.beginPath();
+    c.moveTo(-3, -i * 3.2 + 1.5);
+    c.lineTo(0, -i * 3.2 - 1.5);
+    c.lineTo(3, -i * 3.2 + 1.5);
+    c.stroke();
+  }
+  c.restore();
+}
 function drawArena() {
   const c = ax,
     d = dprOf();
@@ -813,6 +847,7 @@ function drawArena() {
   c.translate(view.w / 2 + sh, view.h / 2 + sh2);
   c.scale(s, s);
   c.translate(-cam.x, -cam.y);
+  drawStands(c);
   c.drawImage(ground, 0, 0);
   planAmbient(c);
   for (const z of B.zones) if (z.kind !== 'ramp' && z.kind !== 'tramp') drawZone(c, z);
@@ -1121,12 +1156,16 @@ function drawHUD(c) {
   if (fragile) rows.push(['CONNECTION NEAR BREAKING', fragile.hp / fragile.max, '#ff8268']);
   bars(c, 12, 12, pw, rows, false, 26);
   planPortrait(c, v, 32, 28);
+  drawHypeBar(c, 12, 12 + 8 + rows.length * 26 + 3, pw, v, false);
   const e = B.cars.find(x => x !== v);
   if (e) {
     const r2 = [[e.name.toUpperCase(), e.dead ? 0 : integrity(e), e.paint]];
     bars(c, W - 12 - pw, 12, pw, r2, true, 26);
     planPortrait(c, e, W - 32, 28);
+    drawHypeBar(c, W - 12 - pw, 12 + 8 + 26 + 3, pw, e, true);
   }
+  drawBossBar(c);
+  drawCommentary(c);
   c.textAlign = 'center';
   c.textBaseline = 'top';
   if (G.phase === 'battle' || B.replay) {
@@ -1169,7 +1208,7 @@ function drawHUD(c) {
     c.textBaseline = 'top';
     c.font = '700 10px "Barlow Semi Condensed", sans-serif';
     let sx = 12;
-    const sy = 12 + 8 + rows.length * 26 + 4;
+    const sy = 12 + 8 + rows.length * 26 + 4 + (B.crowd && G.mode !== 'sandbox' ? 20 : 0); // under the hype meter
     for (const [t, lvl] of syn) {
       const label = `${TAGS[t].toUpperCase()} ${'★'.repeat(lvl)}`,
         w = c.measureText(label).width + 12;

@@ -6,6 +6,8 @@ const SETTINGS = {
   nums: true,
   marks: true,
   voice: true,
+  comm: true,
+  commVoice: true,
   motion: true,
   crateSpin: true,
   perf: false,
@@ -52,6 +54,8 @@ function openSettings(back) {
     <label class="vol"><span>Battle music</span><input type="range" id="setMusic" aria-label="Battle music volume" min="0" max="1" step="0.05" value="${SETTINGS.music}"><b id="setMusicV">${Math.round(SETTINGS.music * 100)}%</b></label>
     ${toggle('setMute', 'Mute all sound', MUTE)}
     ${toggle('setVoice', 'Announcer voice', SETTINGS.voice !== false)}
+    ${toggle('setComm', 'Commentators (captions)', SETTINGS.comm !== false)}
+    ${toggle('setCommVoice', 'Commentator voices', SETTINGS.commVoice !== false)}
     ${toggle('setMotion', 'Decorative motion', SETTINGS.motion)}
     ${toggle('setCrateSpin', 'Animate mystery crates', SETTINGS.crateSpin)}
     ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
@@ -81,6 +85,8 @@ function openSettings(back) {
   });
   for (const [id, k] of [
     ['setVoice', 'voice'],
+    ['setComm', 'comm'],
+    ['setCommVoice', 'commVoice'],
     ['setMotion', 'motion'],
     ['setFps', 'fps'],
     ['setCrateSpin', 'crateSpin'],

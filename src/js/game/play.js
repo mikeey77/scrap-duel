@@ -467,6 +467,12 @@ function stepArena(rdt) {
   updateCam(rdt);
   if (sim) simulate(dt);
   else clientStep(dt);
+  if (sim && !B.demo && !B.replay) {
+    storyTick();
+    crowdStep(dt);
+    stepGifts(dt);
+  }
+  stepCommentary(rdt);
   stepFx(dt);
   B.shake *= Math.exp(-8 * rdt);
 }
@@ -610,8 +616,10 @@ function updateCam(rdt) {
   const s = view.sc * cam.z,
     hw = view.worldW / (2 * s),
     hh = view.worldH / (2 * s);
-  const cx = hw * 2 >= AW ? AW / 2 : clamp(cam.tx, hw, AW - hw),
-    cy = hh * 2 >= AH ? AH / 2 : clamp(cam.ty, hh, AH - hh);
+  // the camera may peek a little past the walls so the crowd in the stands is visible near the edges
+  const pk = B.demo ? 0 : STAND * 0.75,
+    cx = hw * 2 >= AW + pk * 2 ? AW / 2 : clamp(cam.tx, hw - pk, AW - hw + pk),
+    cy = hh * 2 >= AH + pk * 2 ? AH / 2 : clamp(cam.ty, hh - pk, AH - hh + pk);
   cam.x += (cx - cam.x) * k;
   cam.y += (cy - cam.y) * k;
 }
