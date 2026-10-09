@@ -23,7 +23,8 @@ const CONTROLS = [
   ['W A S D', 'Drive and steer'],
   ['Mouse', 'Aim'],
   ['Left click / Space', 'Fire (hold)'],
-  ['Right click', 'Action: piston, flipper, catapult, tractor'],
+  ['Right click', 'Action: piston, flipper, catapult, tractor, hinges and rams'],
+  ['1 – 9', 'Action groups (bind parts with Keys in the garage)'],
   ['Shift', 'Boosters and nitro'],
   ['J', 'Jump jets'],
   ['Q / E', 'Strafe (omni wheels)'],
@@ -35,6 +36,7 @@ const CONTROLS = [
   ['X', 'Release couplers'],
   ['Esc / P', 'Pause'],
   ['Garage', 'R turn part · T rotate · X remove · M mirror · Ctrl+Z undo'],
+  ['Garage tools', 'G keys · L wire logic chips · [ ] beam length'],
   ['Draft', '1 / 2 / 3 take a card · R reroll']
 ];
 const controlsHtml = () =>

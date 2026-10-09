@@ -4908,7 +4908,7 @@ img.badge {
 
     <div class="overlay" id="ovIntro" hidden>
       <div class="card">
-        <span class="label">Vehicle combat · builder preview</span>
+        <span class="label">How to play</span>
         <h1>SCRAP DUEL</h1>
         <p class="lede">
           Weld a battle car together in your bay. Chassis parts go on the bottom layer; guns and gadgets bolt on top of
@@ -4930,6 +4930,11 @@ img.badge {
           <dd>
             WASD or arrows drive. Mouse aims; left-click or Space fires. Equipped gadgets and their cooldowns appear in
             battle. J jumps; right-click activates gadgets or reels a harpoon.
+          </dd>
+          <dt>Moving parts</dt>
+          <dd>
+            Hinges, rotators, rams and springs move everything bolted beyond them. Bind any of them, or a weapon, to
+            keys 1–9 with the Keys tool (G). Logic chips flip keys by themselves; connect them with the Wire tool (L).
           </dd>
         </dl>
         <p class="small">
@@ -22986,6 +22991,14 @@ function drawHUD(c) {
       'Shift',
       `boost${abilityCooldown(v, 'bcd') > 0 ? ' ' + abilityCooldown(v, 'bcd').toFixed(1) + 's' : ''}`
     ]);
+  const rmbJoints = (v.joints || []).filter(J => J.alive && !J.g && J.id !== 'suspension');
+  if (rmbJoints.length && !ctl.some(c => c[0] === 'RMB'))
+    ctl.push([
+      'RMB',
+      [
+        ...new Set(rmbJoints.map(J => (J.id === 'rotator' ? 'reverse spin' : J.id === 'hinge' ? 'swing' : 'extend')))
+      ].join(' / ')
+    ]);
   for (const [g, names] of groupHints(v)) ctl.push([g, names]);
   if (h.jump) ctl.push(['J', `jump${v.jumpCd > 0 ? ' ' + v.jumpCd.toFixed(1) : ''}`]);
   if (h.omni) ctl.push(['Q/E', 'strafe']);
@@ -27699,7 +27712,8 @@ const CONTROLS = [
   ['W A S D', 'Drive and steer'],
   ['Mouse', 'Aim'],
   ['Left click / Space', 'Fire (hold)'],
-  ['Right click', 'Action: piston, flipper, catapult, tractor'],
+  ['Right click', 'Action: piston, flipper, catapult, tractor, hinges and rams'],
+  ['1 – 9', 'Action groups (bind parts with Keys in the garage)'],
   ['Shift', 'Boosters and nitro'],
   ['J', 'Jump jets'],
   ['Q / E', 'Strafe (omni wheels)'],
@@ -27711,6 +27725,7 @@ const CONTROLS = [
   ['X', 'Release couplers'],
   ['Esc / P', 'Pause'],
   ['Garage', 'R turn part · T rotate · X remove · M mirror · Ctrl+Z undo'],
+  ['Garage tools', 'G keys · L wire logic chips · [ ] beam length'],
   ['Draft', '1 / 2 / 3 take a card · R reroll']
 ];
 const controlsHtml = () =>

@@ -1195,6 +1195,14 @@ function drawHUD(c) {
       'Shift',
       `boost${abilityCooldown(v, 'bcd') > 0 ? ' ' + abilityCooldown(v, 'bcd').toFixed(1) + 's' : ''}`
     ]);
+  const rmbJoints = (v.joints || []).filter(J => J.alive && !J.g && J.id !== 'suspension');
+  if (rmbJoints.length && !ctl.some(c => c[0] === 'RMB'))
+    ctl.push([
+      'RMB',
+      [
+        ...new Set(rmbJoints.map(J => (J.id === 'rotator' ? 'reverse spin' : J.id === 'hinge' ? 'swing' : 'extend')))
+      ].join(' / ')
+    ]);
   for (const [g, names] of groupHints(v)) ctl.push([g, names]);
   if (h.jump) ctl.push(['J', `jump${v.jumpCd > 0 ? ' ' + v.jumpCd.toFixed(1) : ''}`]);
   if (h.omni) ctl.push(['Q/E', 'strafe']);
