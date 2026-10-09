@@ -16,16 +16,29 @@ npm run dist:win-zip # unsigned zip of the app, buildable from Linux/macOS
 - `desktop/main.cjs` – window, `app://` protocol, saved window size, F11 fullscreen, GPU flags
 - `desktop/preload.cjs` – the small bridge the page uses (`window.desktop`: fullscreen, quit, version)
 - Fonts and PeerJS are bundled by `build.mjs` (no CDN needed)
-- Settings → *Show frame rate* shows FPS; slow high-DPI screens switch to performance mode automatically
+- Settings → _Show frame rate_ shows FPS; slow high-DPI screens switch to performance mode automatically
 
-## Gauntlet & arenas release
+## Scrap Road update
+
+- **Scrap Road** (story mode): 4 regions and 19 missions on a road map. Missions have hand-made arena layouts, special rounds, salvage crates to grab before the rival steals them, and three stars each. Every region ends with a boss: Mother Crusher, the Twin Drill, the Magnet Baron and the Junk King, hand-built giant cars that get angrier at ⅔ and ⅓ health.
+- **Workbench and gear**: parts you find (after Duel matches, Gauntlet runs, missions and bosses) are yours to keep. Upgrade them with bolts up to a level 5 Masterwork, pick a quirk at level 3 (every quirk is a trade-off), fuse duplicates or scrap them. In Duel, Story and Gauntlet your gear turns up as a draft card.
+- **Locker** (replaces Garage Style): skins, stickers, trails, wreck effects, titles and your badge. Stickers show on your car and give small perks; two stickers from your skin's set unlock a set bonus. Perks only work offline; online only the picture travels.
+- **The show**: commentators Dash Danvers and Doc Gasket call the fight with captions and voices, the crowd in the stands cheers and boos, and a full hype meter makes the crowd throw you a gift (repair, coins or a power-up; offline only).
+- Match formats (Classic, Lives, Bounty, Hill) are selectable again for Duel vs bot. Your paint colour is remembered.
+- Removed: the "Sandbox online" placeholder, unused CSS from older menus, Netlify leftovers and dead code.
+
+Settings → _Commentators (captions)_ and _Commentator voices_ switch the duo off. Multiplayer protocol 10: both players need the same version.
+
+## Earlier releases
+
+### Gauntlet & arenas
 
 - **Scrap Gauntlet** (roguelike): survive endless waves with three hearts. Rivals grow stronger every wave; every fifth wave is a boss (extra HP and damage) that drops a heart and a relic (Duct Tape, Nitro Coffee, Hair Trigger, Thick Skin, Repair Drone, …). Your best wave is saved.
 - **17 arenas**: ten new ones with gimmicks — Volcano Forge (lava), Space Station (low gravity, air vents), Car Wash (soap, blowers), Desert Canyon (sandstorm gusts), Haunted Mansion (lights out), Toy Room, Robot Factory (conveyor belts), Pinball Table (bumpers), Giant Kitchen (stove plates) and Soggy Swamp (mud).
 - Richer sound: room reverb, stereo position, pitch variation and reworked hits, explosions and UI clicks.
 - More jokes: bot banter, hit quips, talking test dummies, kill messages, menu taglines, a cockpit that dozes off when you leave the garage.
 
-## Shapes and branches release
+### Shapes and branches
 
 - 190 playable modules, including 50 new designs: ten each for fire, cold, scrap economy, slippery terrain and cables.
 - Real 1×1, 1×2, 1×3, 2×2, 2×3, L and T footprints. Placement, rotation, collision, supports, damage, bots and Auto-place all use the occupied cells. Large drafts include a usable support pad and extra bay space.
@@ -41,7 +54,7 @@ npm run dist:win-zip # unsigned zip of the app, buildable from Linux/macOS
 
 Weather rules, 2v2 and spectating during building remain future work.
 
-## Previous release
+### Before that
 
 - Random common weapons for each starter, on the same simple chassis.
 - Draft and crate rewards include any missing mounting supports. Scrap Frames and Steel Girders are always in the shop.
@@ -52,15 +65,14 @@ Weather rules, 2v2 and spectating during building remain future work.
 - Original synthesized battle music, separate music volume, and contextual equipped ability/cooldown reminders.
 - One point per round, two points in the finale; replay annotations for broken connections and exposed cockpits.
 - Multiplayer ping/quality display and a 30-second recovery window. Keep both pages open: reloading or intentionally leaving ends the session. PeerJS matchmaking and a viable peer-to-peer network connection are required.
-- Wrapped mobile toolbar, fixed mobile build actions, and space reserved for the hosting badge.
 
 ## Controls
 
-Drive with WASD or arrows. Aim with the mouse; fire with left-click or Space. Jump is J when equipped. Only equipped gadgets appear in the battle reminder, alongside their controls and cooldowns. On touch: left stick drives, right stick aims; push farther to fire. The Fire button shoots while aiming gently. Fullscreen availability depends on the browser.
+Drive with WASD or arrows. Aim with the mouse; fire with left-click or Space. Jump is J when equipped. Only equipped gadgets appear in the battle reminder, alongside their controls and cooldowns.
 
 New gadgets: right-click activates/reels cables; Z drops beads or foam, V releases a decoy duck, H rings the pickup bell, and C toggles grip studs or activates the rescue jack. The scrap conveyor switches between repairs and ammunition when firing begins. Their buttons appear only when equipped.
 
-In the garage: click/drag to place, right-click to remove, R changes the next part's facing, T rotates placed parts, X removes, M mirrors. Ctrl+Z undoes and Ctrl+Y redoes.
+In the garage: click/drag to place, right-click to remove, R changes the next part's facing, T rotates placed parts, X removes, M mirrors. Ctrl+Z undoes and Ctrl+Y redoes. G binds parts to keys 1–9, L wires logic chips, [ and ] change a beam's length.
 
 ## Code layout
 
@@ -95,4 +107,3 @@ npm test
 ```
 
 The suite checks randomized starters, support grants, functional placement, undo, scoring, controls, filters, crate accounting, replay events, music lifecycle, and two-peer battle recovery including score and cooldown synchronization. Shape/content checks cover all 50 modules, four-way footprints, full support requirements, non-anchor removal/replacement, connected Auto-place, combat/render execution, cargo rewards and spills, real tow forces, rescue/press timing, serialized new states, Scrap Run deposits, selectable scoring and layer-specific damage reports. Browser playtesting covers layout and actual PeerJS connections.
-

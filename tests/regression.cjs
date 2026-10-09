@@ -1727,7 +1727,7 @@ test('crowd: damage builds hype, full hype throws a gift offline, never online',
   a.startMatch('solo');
   a.openBuild();
   a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
-  run(5000);
+  run(6500);
   const b = a.getB();
   assert.equal(b.seq, 'play');
   a.crowdStep(0.016);

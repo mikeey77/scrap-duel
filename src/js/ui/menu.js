@@ -440,6 +440,8 @@ requestAnimationFrame(loop);
 if (window.__SD_TEST__)
   window.__SD = {
     STORY,
+    openDraft,
+    openSettings,
     sanitizeLook,
     ACHIEVEMENTS,
     STORY_BY,

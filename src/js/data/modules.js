@@ -3546,7 +3546,6 @@ for (const L of [1, 2, 3, 4])
   );
 
 const MOD = Object.fromEntries(MODS.map(m => [m.id, m]));
-const STARTER = { frame: 10, wheel: 4, armor: 4, mg: 2, spike: 2 };
 const STARTER_GUNS = ['mg', 'smg', 'nailgun', 'pulse', 'rivet'];
 function starterKit(guns = [pick(STARTER_GUNS), pick(STARTER_GUNS)]) {
   const kit = { frame: 10, wheel: 4, armor: 4, spike: 2 };

@@ -469,9 +469,10 @@ function stepArena(rdt) {
   else clientStep(dt);
   if (sim && !B.demo && !B.replay) {
     storyTick();
-    crowdStep(dt);
     stepGifts(dt);
   }
+  // both peers watch the fight for the commentators; only the offline host throws gifts
+  if (!B.demo && !B.replay) crowdStep(dt);
   stepCommentary(rdt);
   stepFx(dt);
   B.shake *= Math.exp(-8 * rdt);

@@ -109,7 +109,7 @@ const commReset = () =>
   (COMM = { q: [], cur: null, t: 0, gap: 1.5, last: {}, used: {}, B: B, firstDone: false, sayAt: 0 });
 /** Queues a line for an event. ctx.car is the car that did it; its rival becomes {b}. */
 function commentate(kind, ctx = {}) {
-  if (!B || B.demo || B.replay || SETTINGS.comm === false || !CALLS[kind]) return;
+  if (!B || B.demo || B.replay || G.mode === 'sandbox' || SETTINGS.comm === false || !CALLS[kind]) return;
   if (!COMM || COMM.B !== B) commReset();
   const now = B.time || 0,
     pri = COMM_PRI[kind] || 1;
@@ -222,7 +222,7 @@ function drawCommentary(c) {
 /* ---------- crowd and hype ---------- */
 const HYPE_GIFT = 100;
 const GIFT_KINDS = ['repair', 'coins', 'power'];
-const crowdOn = () => B && !B.demo && !B.replay;
+const crowdOn = () => B && !B.demo && !B.replay && G.mode !== 'sandbox';
 /** Per-battle crowd state; created lazily. */
 function crowdState() {
   if (B.crowd) return B.crowd;
@@ -389,50 +389,99 @@ function stepGifts(dt) {
 
 /* ---------- drawing: stands, salvage, gifts, hype ---------- */
 const STAND = 90; // world px of stands behind every wall
-/** Pre-renders the four stands once per battle; heads are drawn per section with a bounce. */
+/** Pre-renders the four stands (bleachers and every fan) once per battle at half resolution. */
+const SKIN_COLS = ['#c99a74', '#a8764f', '#e0b896', '#7a5236', '#d6a77f'];
+const FAN_COLS = ['#7a3d3a', '#36557a', '#7a6a2e', '#3d6a52', '#5e4a7a', '#7a4a62', '#6b6e74', '#7a5434'];
 function standsCanvas() {
   if (B.standsImg) return B.standsImg;
   const cv = document.createElement('canvas'),
     W = AW + STAND * 2,
     H = AH + STAND * 2,
-    sc = 0.5; // half resolution is plenty for a blurry crowd
+    sc = 0.5;
   cv.width = W * sc;
   cv.height = H * sc;
   const c = cv.getContext('2d');
   c.scale(sc, sc);
+  c.translate(STAND, STAND); // world coordinates
   c.fillStyle = '#121a2c';
-  c.fillRect(0, 0, W, H);
-  // bleacher steps
+  c.fillRect(-STAND, -STAND, W, H);
   for (let r = 0; r < 4; r++) {
     c.fillStyle = r % 2 ? '#18233a' : '#1c2943';
-    const d = 8 + r * 20;
-    c.fillRect(d, d, W - d * 2, 12);
-    c.fillRect(d, H - d - 12, W - d * 2, 12);
-    c.fillRect(d, d, 12, H - d * 2);
-    c.fillRect(W - d - 12, d, 12, H - d * 2);
+    const d = -STAND + 8 + r * 20;
+    c.fillRect(d, d, AW - d * 2, 12);
+    c.fillRect(d, AH - d - 12, AW - d * 2, 12);
+    c.fillRect(d, d, 12, AH - d * 2);
+    c.fillRect(AW - d - 12, d, 12, AH - d * 2);
+  }
+  let n = 0;
+  const fan = (x, y) => {
+    n++;
+    c.fillStyle = FAN_COLS[(n * 7) % FAN_COLS.length];
+    c.beginPath();
+    c.arc(x, y + 7, 6, Math.PI, 0);
+    c.fill();
+    c.fillStyle = SKIN_COLS[(n * 3) % SKIN_COLS.length];
+    c.beginPath();
+    c.arc(x, y - 2, 3.6, 0, Math.PI * 2);
+    c.fill();
+    if (n % 5 === 0) {
+      c.fillRect(x - 6, y - 7, 1.8, 8);
+      c.fillRect(x + 4.2, y - 7, 1.8, 8);
+    }
+  };
+  for (const [r, d] of [-STAND + 22, -STAND + 46, -STAND + 70].entries()) {
+    for (let x = -STAND + 30 + r * 7; x < AW + STAND - 30; x += 22) {
+      fan(x, d);
+      fan(x, AH - d + 8);
+    }
+    for (let y = -STAND + 60 + r * 7; y < AH + STAND - 60; y += 22) {
+      fan(d, y);
+      fan(AW - d, y);
+    }
   }
   B.standsImg = cv;
   return cv;
 }
-const SKIN_COLS = ['#c99a74', '#a8764f', '#e0b896', '#7a5236', '#d6a77f'];
-const FAN_COLS = ['#7a3d3a', '#36557a', '#7a6a2e', '#3d6a52', '#5e4a7a', '#7a4a62', '#6b6e74', '#7a5434'];
+const STAND_SEC = 160; // world px per bouncing section
 function drawStands(c) {
-  if (!crowdOn() && !(B && B.demo)) return;
+  if (!B) return;
   const img = standsCanvas(),
     C = B.crowd,
     mood = C ? C.mood : 0.15,
     boo = C ? C.boo : 0,
-    t = ANIM;
-  c.drawImage(img, -STAND, -STAND, AW + STAND * 2, AH + STAND * 2);
-  // heads: rows along each side, bouncing with the mood. Sections near a car cheer for that car's colour.
-  const rowsAt = [-STAND + 22, -STAND + 46, -STAND + 70];
-  // only the heads on screen are drawn (the stands are mostly hidden behind the camera clamp)
-  const s = view.sc * cam.z,
-    vx0 = cam.x - view.w / (2 * s) - 20,
-    vx1 = cam.x + view.w / (2 * s) + 20,
-    vy0 = cam.y - view.h / (2 * s) - 20,
-    vy1 = cam.y + view.h / (2 * s) + 20;
-  c.save();
+    t = ANIM,
+    s = view.sc * cam.z,
+    vx0 = cam.x - view.w / (2 * s),
+    vx1 = cam.x + view.w / (2 * s),
+    vy0 = cam.y - view.h / (2 * s),
+    vy1 = cam.y + view.h / (2 * s);
+  const top = vy0 < 0,
+    bot = vy1 > AH,
+    left = vx0 < 0,
+    right = vx1 > AW;
+  if (!(top || bot || left || right)) return;
+  const k = img.width / (AW + STAND * 2),
+    hop = i => Math.max(0, Math.sin(t * (4 + mood * 6) + i * 1.7)) * (1 + mood * 6) * (1 - boo * 0.7);
+  // one drawImage per visible section; each section of fans hops on its own beat
+  const part = (sx, sy, sw, sh, dx, dy) =>
+    c.drawImage(img, (sx + STAND) * k, (sy + STAND) * k, sw * k, sh * k, dx, dy, sw, sh);
+  const x0 = Math.max(-STAND, vx0),
+    x1 = Math.min(AW + STAND, vx1),
+    y0 = Math.max(-STAND, vy0),
+    y1 = Math.min(AH + STAND, vy1);
+  for (let x = Math.floor((x0 + STAND) / STAND_SEC) * STAND_SEC - STAND; x < x1; x += STAND_SEC) {
+    const w = Math.min(STAND_SEC, AW + STAND - x),
+      i = Math.round(x / STAND_SEC);
+    if (top) part(x, -STAND, w, STAND, x, -STAND + hop(i) * 0.6);
+    if (bot) part(x, AH, w, STAND, x, AH - hop(i + 40) * 0.6);
+  }
+  for (let y = Math.floor((Math.max(y0, 0) + 0) / STAND_SEC) * STAND_SEC; y < Math.min(y1, AH); y += STAND_SEC) {
+    const h = Math.min(STAND_SEC, AH - y),
+      i = Math.round(y / STAND_SEC);
+    if (left) part(-STAND, y, STAND, h, -STAND + hop(i + 80) * 0.6, y);
+    if (right) part(AW, y, STAND, h, AW - hop(i + 120) * 0.6, y);
+  }
+  // flags in the colour of the nearest car, waving harder with hype
   const cars = B.cars || [];
   const fanCol = (x, y) => {
     let best = null,
@@ -443,59 +492,23 @@ function drawStands(c) {
     }
     return best ? best.paint : '#ffb423';
   };
-  const head = (x, y, seed) => {
-    const amp = (1.5 + mood * 7) * (0.6 + 0.4 * Math.sin(seed * 7.1)),
-      j = Math.max(0, Math.sin(t * (5 + mood * 6) + seed * 3.3)) * amp * (1 - boo * 0.7);
-    c.fillStyle = FAN_COLS[Math.abs(Math.floor(seed * 13)) % FAN_COLS.length];
-    c.beginPath();
-    c.arc(x, y - j + 7, 6, Math.PI, 0);
-    c.fill();
-    c.fillStyle = SKIN_COLS[Math.abs(Math.floor(seed * 7)) % SKIN_COLS.length];
-    c.beginPath();
-    c.arc(x, y - j - 2, 3.6, 0, Math.PI * 2);
-    c.fill();
-    if (mood > 0.5 && Math.abs(Math.floor(seed)) % 4 === 0) {
-      // arms up
-      c.fillRect(x - 6, y - j - 7, 1.8, 8);
-      c.fillRect(x + 4.2, y - j - 7, 1.8, 8);
-    }
-  };
-  // first seat at or after the visible edge, on the row's own 22 px grid so seats never shift
-  const snap = (base, from) => base + Math.max(0, Math.ceil((from - base) / 22)) * 22;
-  const top = vy0 < 0,
-    bot = vy1 > AH,
-    left = vx0 < 0,
-    right = vx1 > AW;
-  for (let r = 0; r < 3; r++) {
-    const d = rowsAt[r];
-    if (top || bot)
-      for (let x = snap(-STAND + 30 + r * 7, vx0); x < Math.min(AW + STAND - 30, vx1); x += 22) {
-        if (top) head(x, d, x * 0.37 + r);
-        if (bot) head(x, AH - d + 8, x * 0.53 + r + 9);
-      }
-    if (left || right)
-      for (let y = snap(-STAND + 60 + r * 7, vy0); y < Math.min(AH + STAND - 60, vy1); y += 22) {
-        if (left) head(d, y, y * 0.41 + r + 3);
-        if (right) head(AW - d, y, y * 0.29 + r + 5);
-      }
-  }
-  // flags in the colour of the nearest car, waving harder with hype
-  for (let k = 0; k < 14; k++) {
-    if (!(k % 2 ? bot : top)) continue;
-    const side = k % 2,
-      x = 100 + (k * (AW - 200)) / 13,
-      y = side ? AH + STAND - 12 : -STAND + 12,
-      col = fanCol(x, side ? AH : 0),
-      w = Math.sin(t * (3 + mood * 5) + k) * (4 + mood * 10);
+  c.save();
+  for (let q = 0; q < 14; q++) {
+    const side = q % 2;
+    if (!(side ? bot : top)) continue;
+    const x = 100 + (q * (AW - 200)) / 13;
+    if (x < vx0 - 30 || x > vx1 + 30) continue;
+    const y = side ? AH + STAND - 12 : -STAND + 12,
+      w = Math.sin(t * (3 + mood * 5) + q) * (4 + mood * 10),
+      fy = y + (side ? -28 : 28);
     c.strokeStyle = '#8b939c';
     c.lineWidth = 2;
     c.beginPath();
     c.moveTo(x, y);
-    c.lineTo(x, y + (side ? -28 : 28));
+    c.lineTo(x, fy);
     c.stroke();
-    c.fillStyle = col;
+    c.fillStyle = fanCol(x, side ? AH : 0);
     c.beginPath();
-    const fy = y + (side ? -28 : 28);
     c.moveTo(x, fy);
     c.lineTo(x + 18 + w * 0.3, fy + (side ? 6 : -6) + w * 0.4);
     c.lineTo(x, fy + (side ? 12 : -12));

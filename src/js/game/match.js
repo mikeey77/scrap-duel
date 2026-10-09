@@ -1065,7 +1065,7 @@ function showFinal() {
       .map(([t]) => TAGS[t])
       .join(' + ') || 'Scrap';
   $('#resultCard').innerHTML =
-    `<span class="label">${esc(MATCH_FORMATS[G.format].name)} · Match over${tie ? ' · tie broken on damage dealt' : ''}</span><h2 style="color:${won ? '#5cc38f' : '#e2504a'}">${won ? 'Victory' : 'Defeat'}</h2>
+    `<span class="label">${G.story ? `Scrap Road · ${esc(storyMission().name)}` : `${esc(MATCH_FORMATS[G.format].name)} · Match over`}${tie ? ' · tie broken on damage dealt' : ''}</span><h2 style="color:${won ? '#5cc38f' : '#e2504a'}">${won ? 'Victory' : 'Defeat'}</h2>
     ${podiumHTML(won)}
     <div class="score" style="justify-content:center;font-size:34px"><span class="me">${G.format === 'lives' ? '♥ ' + G.lives[0] : s[0]}</span>–<span class="op">${G.format === 'lives' ? G.lives[1] + ' ♥' : s[1]}</span></div>
     ${funAwardsHTML()}
@@ -1092,7 +1092,7 @@ function showFinal() {
   if (won && SETTINGS.motion !== false)
     setTimeout(() => {
       const r = $('#resultCard').getBoundingClientRect && $('#resultCard').getBoundingClientRect();
-      if (r) {
+      if (r && $('#resFx')) {
         GFX.start($('#resFx'));
         GFX.confetti(r.left + r.width / 2, r.top + 80, 120);
       }

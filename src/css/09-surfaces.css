@@ -3,7 +3,6 @@
 .panel,
 .overlay > .card,
 .overlay .card,
-.mode2,
 .codex,
 .waitcard {
   background: var(--brackets), linear-gradient(180deg, rgba(23, 38, 66, 0.92), rgba(14, 24, 44, 0.94));

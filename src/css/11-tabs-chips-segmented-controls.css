@@ -44,9 +44,7 @@ select {
 .catalog-filters select,
 .mname,
 .codein,
-#shopCategory,
-.format-picker select,
-.ac-form input {
+#shopCategory {
   background: rgba(5, 10, 20, 0.7) !important;
   border: 1px solid var(--line) !important;
   border-radius: 0 !important;
@@ -54,8 +52,7 @@ select {
 }
 .catalog-filters input[type='search']:focus,
 .mname:focus,
-.codein:focus,
-.ac-form input:focus {
+.codein:focus {
   border-color: var(--holo) !important;
   outline: none;
   box-shadow: 0 0 0 3px rgba(91, 231, 255, 0.15);

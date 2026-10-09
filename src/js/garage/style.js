@@ -50,13 +50,15 @@ function grant(xp, achIds) {
   const before = allItems()
       .filter(i => isUnlocked(i))
       .map(i => i.slot + i.id),
-    lvl0 = levelInfo().lvl;
+    lvl0 = levelInfo().lvl,
+    st0 = STICKERS.filter(stickerUnlocked).map(x => x.id);
   PROG.xp += xp;
   const newAch = achIds.filter(a => ACHIEVEMENTS[a] && !PROG.ach.includes(a));
   PROG.ach.push(...newAch);
   saveProg();
   const unlocked = allItems().filter(i => isUnlocked(i) && !before.includes(i.slot + i.id));
-  return { xp, newAch, unlocked, lvl0, lvl: levelInfo().lvl };
+  const stickers = STICKERS.filter(x => stickerUnlocked(x) && !st0.includes(x.id));
+  return { xp, newAch, unlocked, stickers, lvl0, lvl: levelInfo().lvl };
 }
 function progressRound({ win, special, integ, by, powers = 0 }) {
   if (G.mode === 'sandbox') return null;
@@ -88,7 +90,8 @@ function progressHtml(p) {
   const L = levelInfo();
   return `<div class="prog"><div class="prow"><b>+${p.xp} Scrap Cred</b><span>Level ${L.lvl}${p.lvl > p.lvl0 ? ' · LEVEL UP!' : ''}</span></div><div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div>
     ${p.newAch.map(a => `<div class="achv">Achievement · <b>${esc(ACHIEVEMENTS[a].name)}</b> <span>${esc(ACHIEVEMENTS[a].desc)}</span></div>`).join('')}
-    ${p.unlocked.map(i => `<div class="unl">Unlocked ${esc(STYLE_SLOTS.find(s => s[0] === i.slot)[1].toLowerCase())}: <b>${esc(i.name)}</b></div>`).join('')}</div>`;
+    ${p.unlocked.map(i => `<div class="unl">Unlocked ${esc(STYLE_SLOTS.find(s => s[0] === i.slot)[1].toLowerCase())}: <b>${esc(i.name)}</b></div>`).join('')}
+    ${(p.stickers || []).map(x => `<div class="unl">Unlocked sticker: <b>${esc(x.name)}</b> · ${esc(x.perk)}</div>`).join('')}</div>`;
 }
 
 /* ---------- the Locker screen ---------- */

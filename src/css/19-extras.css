@@ -462,17 +462,6 @@ img.badge {
   padding: 4px 8px;
   border: 1px solid rgba(255, 180, 35, 0.35);
 }
-.runbest {
-  color: var(--hazard);
-}
-@media (min-width: 1080px) {
-  #ovMenu .modes2 {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  }
-  #ovMenu .menu2 {
-    width: min(1400px, 96vw) !important;
-  }
-}
 
 #tagline {
   transition:
@@ -482,12 +471,6 @@ img.badge {
 #tagline.swap {
   opacity: 0;
   transform: translateY(6px);
-}
-.rseg-l {
-  align-self: center;
-  padding: 0 10px;
-  font-size: 12px;
-  color: var(--muted, #97a0a8);
 }
 
 /* ---- desktop app ---- */
@@ -507,35 +490,6 @@ img.badge {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(91, 231, 255, 0.4);
   background-clip: padding-box;
-}
-#ovMenu .mode2 .row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px;
-}
-#ovMenu .mode2 .row #mHost {
-  grid-column: 1 / -1;
-}
-#ovMenu .mode2 .codein {
-  letter-spacing: 0.12em;
-  text-align: center;
-  font-size: 16px;
-}
-#ovMenu .mode2 .row .btn {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-.btn.quit-app {
-  margin-left: auto;
-}
-
-@media (max-height: 760px) {
-  #ovMenu .hero2 h1 {
-    font-size: clamp(56px, 9vh, 96px);
-  }
-  #ovMenu .mode2 p {
-    font-size: 12px;
-  }
 }
 
 #fpsMeter {

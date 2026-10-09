@@ -27,7 +27,6 @@ const G = {
   ws: new Set(),
   log: [],
   zoom: 1,
-  rerolls: 0,
   freeRerolls: 0,
   mirror: false,
   hist: [],

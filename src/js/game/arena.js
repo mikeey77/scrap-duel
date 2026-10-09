@@ -720,7 +720,6 @@ function impulse(v, jx, jy, px, py, noSpin) {
 const integrity = v => v.insts.reduce((s, I) => s + (I.alive ? Math.max(0, I.hp) : 0), 0) / v.total;
 const enemyOf = v => B.cars.find(c => c !== v && !c.dead);
 const others = v => B.cars.filter(c => c !== v);
-const isHost = () => !B || B.net !== 'client';
 
 /* FX that also replicate to a remote client */
 function fx(o) {

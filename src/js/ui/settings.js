@@ -63,7 +63,7 @@ function openSettings(back) {
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
     ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
     ${toggle('setFps', 'Show frame rate (FPS)', SETTINGS.fps)}
-    <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Garage Style progress</button></div>
+    <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Locker progress</button></div>
     <button class="btn" id="setDone">Done</button>`;
   $('#ovSettings').hidden = false;
   $('#setVol').addEventListener('input', e => {

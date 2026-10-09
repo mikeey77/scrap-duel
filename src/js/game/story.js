@@ -770,10 +770,12 @@ function storyFinish(won, tot) {
       const g = addGear(R.gear, R.gearLvl || 1, true, M.name);
       if (g) res.drops.push(g);
     }
-    if (res.first && R.sticker) res.unlocks.push('Sticker: ' + STICKER[R.sticker].name);
+    if (res.first && R.sticker) res.unlocks.push(['sticker', STICKER[R.sticker].name]);
     if (res.first && R.ach) {
       const p = grant(0, [R.ach]);
-      for (const it of p.unlocked) res.unlocks.push(it.name);
+      for (const a of p.newAch) res.unlocks.push(['achievement', ACHIEVEMENTS[a].name]);
+      for (const it of p.unlocked)
+        res.unlocks.push([STYLE_SLOTS.find(x => x[0] === it.slot)[1].toLowerCase(), it.name]);
     }
   } else res.bolts = 15;
   addBolts(res.bolts);
@@ -786,7 +788,7 @@ function storyResultHtml(r) {
   return `<div class="storyres"><div class="stars big" aria-label="${r.stars} of 3 stars">${[1, 2, 3].map(i => `<i class="${i <= r.stars ? 'on' : ''}"></i>`).join('')}</div>
     <p class="small">${r.won ? (r.first ? 'Mission complete! The road continues.' : 'Mission replayed.') : 'Mission failed. The road is still here.'} ${M.kind === 'salvage' ? `Salvage: ${G.story.got + G.story.gearGot.length}/${M.salvage}${G.story.stolen ? ` · ${G.story.stolen} stolen` : ''}` : ''}</p>
     ${spoilsHtml({ bolts: r.bolts, drops: r.drops })}
-    ${r.unlocks.map(u => `<div class="unl">Unlocked: <b>${esc(u)}</b></div>`).join('')}</div>`;
+    ${r.unlocks.map(([k, n]) => `<div class="unl">Unlocked ${esc(k)}: <b>${esc(n)}</b></div>`).join('')}</div>`;
 }
 
 /* ---------- the road map ---------- */

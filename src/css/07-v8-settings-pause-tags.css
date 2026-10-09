@@ -30,11 +30,6 @@
   height: 18px;
   accent-color: var(--hazard);
 }
-.pbtns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 .ctrls {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
@@ -53,14 +48,8 @@
 }
 
 /* Playtest update: accessible workshop, safe-area controls and lightweight reels. */
-:root {
-  --host-safe: 0px;
-} /* room for the 'Powered by Netlify' badge (iframe #nl-badge-frame, bottom right) */
-#app {
-  padding-bottom: calc(var(--host-safe) + env(safe-area-inset-bottom));
-}
 .overlay {
-  padding-bottom: calc(var(--host-safe) + 16px);
+  padding-bottom: 16px;
 }
 .toolbar {
   flex-wrap: wrap;
@@ -207,10 +196,6 @@
 .tile .q.zero {
   color: var(--muted);
 }
-.footprint-tag {
-  color: #7fe0ff;
-  border-color: #7fe0ff55;
-}
 #synergy progress {
   display: block;
   grid-column: 1/-1;
@@ -305,25 +290,6 @@
 }
 body:has(#setMotion:not(:checked)) #bay::before {
   animation: none;
-}
-.format-picker {
-  display: grid;
-  gap: 7px;
-  font-size: 13px;
-  margin: 10px 0;
-  color: #c7dfed;
-}
-.format-picker select {
-  width: 100%;
-  padding: 9px;
-  background: #152433;
-  color: #fff;
-  border: 1px solid #7fe0ff55;
-  border-radius: 7px;
-}
-.format-picker small {
-  color: #94aabd;
-  min-height: 32px;
 }
 .format-status {
   padding: 4px 7px;

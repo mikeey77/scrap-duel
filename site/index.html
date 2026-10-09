@@ -1480,29 +1480,6 @@ main {
   gap: 22px;
   margin: auto;
 }
-.menu .hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  text-align: center;
-}
-.menu .hero h1 {
-  font-family: var(--f-display);
-  font-weight: 400;
-  font-size: clamp(48px, 10vw, 96px);
-  line-height: 0.9;
-  margin: 0;
-  color: var(--hazard);
-  text-shadow:
-    0 6px 0 #6a4f00,
-    0 12px 30px rgba(242, 183, 5, 0.25);
-}
-.menu .hero p {
-  margin: 0;
-  color: var(--muted);
-  max-width: 60ch;
-}
 .modes {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1571,27 +1548,6 @@ main {
 .seg button[aria-pressed='true'] {
   background: var(--panel-3);
   color: var(--fg);
-}
-.mfoot {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.mfoot input {
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 7px 10px;
-  width: 180px;
-}
-.mfoot label {
-  font-size: 13px;
-  color: var(--muted);
-  display: flex;
-  gap: 6px;
-  align-items: center;
 }
 .code {
   font-family: var(--f-display);
@@ -1809,107 +1765,11 @@ textarea {
 #ovIntro {
   background: rgba(10, 12, 14, 0.72);
 }
-.menu2 {
-  width: min(620px, 100%);
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  padding: 28px 24px;
-  margin: auto 0;
-}
-.hero2 h1 {
-  font-family: var(--f-display);
-  font-weight: 400;
-  font-size: clamp(54px, 9vw, 104px);
-  line-height: 0.86;
-  margin: 6px 0 10px;
-  color: var(--hazard);
-  text-shadow:
-    0 6px 0 #6a4f00,
-    0 14px 40px rgba(242, 183, 5, 0.3);
-  transform: skewX(-6deg);
-}
-.hero2 p {
-  margin: 0;
-  color: #c9ced3;
-  max-width: 48ch;
-}
-.modes2 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-.mode2 {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 14px;
-  border-radius: 12px;
-  background: rgba(35, 40, 45, 0.82);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--rc);
-  transition:
-    transform 0.15s,
-    box-shadow 0.15s;
-  min-width: 0;
-}
-.mode2:hover,
-.mode2:focus-within {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 30px -16px var(--rc);
-}
-.mode2 .mh {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.mode2 .ico {
-  font-family: var(--f-display);
-  font-size: 14px;
-  color: var(--rc);
-  border: 2px solid var(--rc);
-  border-radius: 6px;
-  padding: 2px 6px;
-  min-width: 34px;
-  text-align: center;
-}
-.mode2 h3 {
-  margin: 0;
-  font-family: var(--f-display);
-  font-weight: 400;
-  font-size: 18px;
-}
-.mode2 p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--muted);
-  flex: 1;
-}
-.mode2 .btn {
-  align-self: flex-start;
-}
-.mode2 .row {
-  display: flex;
-  gap: 6px;
-}
-.mode2 .codein {
-  flex: 1;
-  min-width: 0;
-  font-size: 18px;
-  padding: 4px;
-}
 .mname {
   background: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 6px 8px;
-}
-.menu2 .mfoot {
-  justify-content: flex-start;
-}
-.mnote {
-  margin: 0;
-  max-width: 60ch;
 }
 .xpbar {
   height: 6px;
@@ -2344,11 +2204,6 @@ textarea {
   height: 18px;
   accent-color: var(--hazard);
 }
-.pbtns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 .ctrls {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
@@ -2367,14 +2222,8 @@ textarea {
 }
 
 /* Playtest update: accessible workshop, safe-area controls and lightweight reels. */
-:root {
-  --host-safe: 0px;
-} /* room for the 'Powered by Netlify' badge (iframe #nl-badge-frame, bottom right) */
-#app {
-  padding-bottom: calc(var(--host-safe) + env(safe-area-inset-bottom));
-}
 .overlay {
-  padding-bottom: calc(var(--host-safe) + 16px);
+  padding-bottom: 16px;
 }
 .toolbar {
   flex-wrap: wrap;
@@ -2521,10 +2370,6 @@ textarea {
 .tile .q.zero {
   color: var(--muted);
 }
-.footprint-tag {
-  color: #7fe0ff;
-  border-color: #7fe0ff55;
-}
 #synergy progress {
   display: block;
   grid-column: 1/-1;
@@ -2619,25 +2464,6 @@ textarea {
 }
 body:has(#setMotion:not(:checked)) #bay::before {
   animation: none;
-}
-.format-picker {
-  display: grid;
-  gap: 7px;
-  font-size: 13px;
-  margin: 10px 0;
-  color: #c7dfed;
-}
-.format-picker select {
-  width: 100%;
-  padding: 9px;
-  background: #152433;
-  color: #fff;
-  border: 1px solid #7fe0ff55;
-  border-radius: 7px;
-}
-.format-picker small {
-  color: #94aabd;
-  min-height: 32px;
 }
 .format-status {
   padding: 4px 7px;
@@ -2792,7 +2618,6 @@ h4 {
 .panel,
 .overlay > .card,
 .overlay .card,
-.mode2,
 .codex,
 .waitcard {
   background: var(--brackets), linear-gradient(180deg, rgba(23, 38, 66, 0.92), rgba(14, 24, 44, 0.94));
@@ -2928,9 +2753,7 @@ select {
 .catalog-filters select,
 .mname,
 .codein,
-#shopCategory,
-.format-picker select,
-.ac-form input {
+#shopCategory {
   background: rgba(5, 10, 20, 0.7) !important;
   border: 1px solid var(--line) !important;
   border-radius: 0 !important;
@@ -2938,60 +2761,12 @@ select {
 }
 .catalog-filters input[type='search']:focus,
 .mname:focus,
-.codein:focus,
-.ac-form input:focus {
+.codein:focus {
   border-color: var(--holo) !important;
   outline: none;
   box-shadow: 0 0 0 3px rgba(91, 231, 255, 0.15);
 }
 /* ---------- menu ---------- */
-.hero2 h1 {
-  font-family: var(--f-display);
-  font-weight: 700;
-  font-size: clamp(56px, 9vw, 112px);
-  line-height: 0.84;
-  letter-spacing: -0.01em;
-  transform: none;
-  color: transparent;
-  background: linear-gradient(180deg, #fff6dd 0%, var(--hazard) 46%, #c97a00 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  text-shadow: none;
-  filter: drop-shadow(0 0 22px rgba(255, 180, 35, 0.28));
-}
-.hero2 h1::after {
-  content: '';
-  display: block;
-  height: 2px;
-  width: 64%;
-  margin-top: 14px;
-  background: linear-gradient(90deg, var(--holo), transparent);
-}
-.hero2 p {
-  color: #b9cde6;
-  font-size: 17px;
-  max-width: 34ch;
-}
-.mode2 {
-  border-top: 1px solid var(--line);
-  box-shadow: inset 0 2px 0 var(--rc);
-}
-.mode2 .mh .ico {
-  font-family: var(--f-display);
-  font-weight: 700;
-  font-size: 13px;
-  line-height: 1;
-  padding: 5px 7px;
-  border-radius: 0;
-  border-width: 1px;
-  background: rgba(5, 10, 20, 0.5);
-}
-.mode2:hover {
-  transform: none;
-  box-shadow:
-    inset 0 2px 0 var(--rc),
-    0 0 0 1px rgba(91, 231, 255, 0.25);
-}
 .xpbar {
   background: rgba(5, 10, 20, 0.7);
   border-radius: 0;
@@ -3152,11 +2927,6 @@ select {
   color: var(--holo);
   background: rgba(91, 231, 255, 0.08);
   clip-path: var(--chamfer-s);
-}
-.sock.s2 {
-  color: #ffd27a;
-  border-color: rgba(255, 180, 35, 0.45);
-  background: rgba(255, 180, 35, 0.08);
 }
 .sock.none {
   color: var(--muted);
@@ -3322,28 +3092,10 @@ select {
 }
 /* Wide screens: the four modes sit in one row under the title, no scrolling. */
 @media (min-width: 1080px) {
-  #ovMenu .menu2 {
-    width: min(1280px, 100%);
-    margin: auto auto 0 0;
-    padding-bottom: 36px;
-  }
-  #ovMenu .modes2 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  #ovMenu .mode2 {
-    justify-content: flex-start;
-  }
-  #ovMenu .mode2 > .btn,
-  #ovMenu .mode2 > .row {
-    margin-top: auto;
-  }
   #ovMenu.live {
     background:
       linear-gradient(0deg, rgba(6, 10, 20, 0.96) 0%, rgba(6, 10, 20, 0.7) 42%, rgba(6, 10, 20, 0.1) 75%),
       linear-gradient(90deg, rgba(6, 10, 20, 0.7) 0%, rgba(6, 10, 20, 0) 45%);
-  }
-  #ovMenu .mfoot {
-    justify-content: flex-start;
   }
   body:has(#ovMenu.live:not([hidden])) #demoFeed {
     bottom: auto;
@@ -4343,17 +4095,6 @@ img.badge {
   padding: 4px 8px;
   border: 1px solid rgba(255, 180, 35, 0.35);
 }
-.runbest {
-  color: var(--hazard);
-}
-@media (min-width: 1080px) {
-  #ovMenu .modes2 {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  }
-  #ovMenu .menu2 {
-    width: min(1400px, 96vw) !important;
-  }
-}
 
 #tagline {
   transition:
@@ -4363,12 +4104,6 @@ img.badge {
 #tagline.swap {
   opacity: 0;
   transform: translateY(6px);
-}
-.rseg-l {
-  align-self: center;
-  padding: 0 10px;
-  font-size: 12px;
-  color: var(--muted, #97a0a8);
 }
 
 /* ---- desktop app ---- */
@@ -4388,35 +4123,6 @@ img.badge {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(91, 231, 255, 0.4);
   background-clip: padding-box;
-}
-#ovMenu .mode2 .row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px;
-}
-#ovMenu .mode2 .row #mHost {
-  grid-column: 1 / -1;
-}
-#ovMenu .mode2 .codein {
-  letter-spacing: 0.12em;
-  text-align: center;
-  font-size: 16px;
-}
-#ovMenu .mode2 .row .btn {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-.btn.quit-app {
-  margin-left: auto;
-}
-
-@media (max-height: 760px) {
-  #ovMenu .hero2 h1 {
-    font-size: clamp(56px, 9vh, 96px);
-  }
-  #ovMenu .mode2 p {
-    font-size: 12px;
-  }
 }
 
 #fpsMeter {
@@ -4453,11 +4159,6 @@ img.badge {
   gap: 22px;
   padding: 28px 40px 24px;
   margin: 0 auto 0 0;
-}
-.mtop {
-  display: flex;
-  gap: 10px;
-  align-items: center;
 }
 .mbrand h1 {
   font-family: var(--f-display);
@@ -4565,14 +4266,6 @@ img.badge {
   text-transform: uppercase;
   color: var(--muted);
 }
-.mi-live {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--ok);
-  box-shadow: 0 0 8px var(--ok);
-}
 .mpanels {
   min-height: 300px;
 }
@@ -4653,17 +4346,6 @@ img.badge {
 }
 .mstat span {
   color: var(--muted);
-}
-.msoon {
-  font-style: normal;
-  font-size: 11px;
-  vertical-align: middle;
-  margin-left: 6px;
-  padding: 2px 6px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--rc);
-  border: 1px solid color-mix(in srgb, var(--rc) 50%, transparent);
 }
 .mfoot3 {
   display: flex;
@@ -5519,10 +5201,16 @@ button.stslot:hover {
             Hinges, rotators, rams and springs move everything bolted beyond them. Bind any of them, or a weapon, to
             keys 1–9 with the Keys tool (G). Logic chips flip keys by themselves; connect them with the Wire tool (L).
           </dd>
+          <dt>Your stuff</dt>
+          <dd>
+            Gear you find stays yours: upgrade it at the Workbench and it turns up as a draft card. The Locker holds
+            skins and stickers; stickers matching your skin's set give a bonus. Scrap Road is the story: missions,
+            bosses and loot on the way to the Junk King.
+          </dd>
         </dl>
         <p class="small">
-          Pick 5, 10 or 25 rounds. Each round is worth one point; the final round is worth two. Play a bot rival, a
-          friend online, survive the Scrap Gauntlet, or mess around in the sandbox.
+          Pick 5, 10 or 25 rounds. Each round is worth one point; the final round is worth two. Follow the Scrap Road,
+          play a bot rival or a friend online, survive the Scrap Gauntlet, or mess around in the sandbox.
         </p>
         <button class="btn" id="btnStart">Back to the menu</button>
       </div>
@@ -9161,7 +8849,6 @@ for (const L of [1, 2, 3, 4])
   );
 
 const MOD = Object.fromEntries(MODS.map(m => [m.id, m]));
-const STARTER = { frame: 10, wheel: 4, armor: 4, mg: 2, spike: 2 };
 const STARTER_GUNS = ['mg', 'smg', 'nailgun', 'pulse', 'rivet'];
 function starterKit(guns = [pick(STARTER_GUNS), pick(STARTER_GUNS)]) {
   const kit = { frame: 10, wheel: 4, armor: 4, spike: 2 };
@@ -9715,22 +9402,6 @@ const PAINTS = ['#f2b705', '#e2504a', '#4ea1ff', '#5cc38f', '#c58bff', '#ff8fc7'
 let ROUNDS = 10;
 const ROUND_CHOICES = [5, 10, 25];
 const setRounds = n => (ROUNDS = ROUND_CHOICES.includes(+n) ? +n : 10);
-const MATCH_IDEAS = [
-  [
-    'Balanced rounds',
-    'One point per round and two points in the finale. Early wins count while the finale still offers a comeback.'
-  ],
-  [
-    'Scrap lives',
-    'Both start with 20 lives; losing costs 2 + round number. Ends when someone hits zero, so close games run long and blowouts end early.'
-  ],
-  ['Hill finale', 'Balanced scoring, with King of the Hill guaranteed in the double-point finale.'],
-  ['Bounty', 'Defeating the leader awards 1–4 points based on their winning streak, plus bonus scrap.'],
-  [
-    'Draft duel',
-    'Rounds alternate between brawls and objective modes (push the piano into their goal, steal the golden duck).'
-  ]
-];
 /* ===== js/data/themes-extra.js ===== */
 // Ten more arenas. Each one has its own floor, walls, junk and a gimmick (see js/game/arena-gimmicks.js).
 // `extra` lists gimmick zones placed on the left half (the arena is mirrored), `wind` adds gusts,
@@ -12522,7 +12193,6 @@ const G = {
   ws: new Set(),
   log: [],
   zoom: 1,
-  rerolls: 0,
   freeRerolls: 0,
   mirror: false,
   hist: [],
@@ -16744,13 +16414,15 @@ function grant(xp, achIds) {
   const before = allItems()
       .filter(i => isUnlocked(i))
       .map(i => i.slot + i.id),
-    lvl0 = levelInfo().lvl;
+    lvl0 = levelInfo().lvl,
+    st0 = STICKERS.filter(stickerUnlocked).map(x => x.id);
   PROG.xp += xp;
   const newAch = achIds.filter(a => ACHIEVEMENTS[a] && !PROG.ach.includes(a));
   PROG.ach.push(...newAch);
   saveProg();
   const unlocked = allItems().filter(i => isUnlocked(i) && !before.includes(i.slot + i.id));
-  return { xp, newAch, unlocked, lvl0, lvl: levelInfo().lvl };
+  const stickers = STICKERS.filter(x => stickerUnlocked(x) && !st0.includes(x.id));
+  return { xp, newAch, unlocked, stickers, lvl0, lvl: levelInfo().lvl };
 }
 function progressRound({ win, special, integ, by, powers = 0 }) {
   if (G.mode === 'sandbox') return null;
@@ -16782,7 +16454,8 @@ function progressHtml(p) {
   const L = levelInfo();
   return `<div class="prog"><div class="prow"><b>+${p.xp} Scrap Cred</b><span>Level ${L.lvl}${p.lvl > p.lvl0 ? ' · LEVEL UP!' : ''}</span></div><div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div>
     ${p.newAch.map(a => `<div class="achv">Achievement · <b>${esc(ACHIEVEMENTS[a].name)}</b> <span>${esc(ACHIEVEMENTS[a].desc)}</span></div>`).join('')}
-    ${p.unlocked.map(i => `<div class="unl">Unlocked ${esc(STYLE_SLOTS.find(s => s[0] === i.slot)[1].toLowerCase())}: <b>${esc(i.name)}</b></div>`).join('')}</div>`;
+    ${p.unlocked.map(i => `<div class="unl">Unlocked ${esc(STYLE_SLOTS.find(s => s[0] === i.slot)[1].toLowerCase())}: <b>${esc(i.name)}</b></div>`).join('')}
+    ${(p.stickers || []).map(x => `<div class="unl">Unlocked sticker: <b>${esc(x.name)}</b> · ${esc(x.perk)}</div>`).join('')}</div>`;
 }
 
 /* ---------- the Locker screen ---------- */
@@ -17861,7 +17534,6 @@ function impulse(v, jx, jy, px, py, noSpin) {
 const integrity = v => v.insts.reduce((s, I) => s + (I.alive ? Math.max(0, I.hp) : 0), 0) / v.total;
 const enemyOf = v => B.cars.find(c => c !== v && !c.dead);
 const others = v => B.cars.filter(c => c !== v);
-const isHost = () => !B || B.net !== 'client';
 
 /* FX that also replicate to a remote client */
 function fx(o) {
@@ -24794,9 +24466,10 @@ function stepArena(rdt) {
   else clientStep(dt);
   if (sim && !B.demo && !B.replay) {
     storyTick();
-    crowdStep(dt);
     stepGifts(dt);
   }
+  // both peers watch the fight for the commentators; only the offline host throws gifts
+  if (!B.demo && !B.replay) crowdStep(dt);
   stepCommentary(rdt);
   stepFx(dt);
   B.shake *= Math.exp(-8 * rdt);
@@ -25828,7 +25501,7 @@ const commReset = () =>
   (COMM = { q: [], cur: null, t: 0, gap: 1.5, last: {}, used: {}, B: B, firstDone: false, sayAt: 0 });
 /** Queues a line for an event. ctx.car is the car that did it; its rival becomes {b}. */
 function commentate(kind, ctx = {}) {
-  if (!B || B.demo || B.replay || SETTINGS.comm === false || !CALLS[kind]) return;
+  if (!B || B.demo || B.replay || G.mode === 'sandbox' || SETTINGS.comm === false || !CALLS[kind]) return;
   if (!COMM || COMM.B !== B) commReset();
   const now = B.time || 0,
     pri = COMM_PRI[kind] || 1;
@@ -25941,7 +25614,7 @@ function drawCommentary(c) {
 /* ---------- crowd and hype ---------- */
 const HYPE_GIFT = 100;
 const GIFT_KINDS = ['repair', 'coins', 'power'];
-const crowdOn = () => B && !B.demo && !B.replay;
+const crowdOn = () => B && !B.demo && !B.replay && G.mode !== 'sandbox';
 /** Per-battle crowd state; created lazily. */
 function crowdState() {
   if (B.crowd) return B.crowd;
@@ -26108,50 +25781,99 @@ function stepGifts(dt) {
 
 /* ---------- drawing: stands, salvage, gifts, hype ---------- */
 const STAND = 90; // world px of stands behind every wall
-/** Pre-renders the four stands once per battle; heads are drawn per section with a bounce. */
+/** Pre-renders the four stands (bleachers and every fan) once per battle at half resolution. */
+const SKIN_COLS = ['#c99a74', '#a8764f', '#e0b896', '#7a5236', '#d6a77f'];
+const FAN_COLS = ['#7a3d3a', '#36557a', '#7a6a2e', '#3d6a52', '#5e4a7a', '#7a4a62', '#6b6e74', '#7a5434'];
 function standsCanvas() {
   if (B.standsImg) return B.standsImg;
   const cv = document.createElement('canvas'),
     W = AW + STAND * 2,
     H = AH + STAND * 2,
-    sc = 0.5; // half resolution is plenty for a blurry crowd
+    sc = 0.5;
   cv.width = W * sc;
   cv.height = H * sc;
   const c = cv.getContext('2d');
   c.scale(sc, sc);
+  c.translate(STAND, STAND); // world coordinates
   c.fillStyle = '#121a2c';
-  c.fillRect(0, 0, W, H);
-  // bleacher steps
+  c.fillRect(-STAND, -STAND, W, H);
   for (let r = 0; r < 4; r++) {
     c.fillStyle = r % 2 ? '#18233a' : '#1c2943';
-    const d = 8 + r * 20;
-    c.fillRect(d, d, W - d * 2, 12);
-    c.fillRect(d, H - d - 12, W - d * 2, 12);
-    c.fillRect(d, d, 12, H - d * 2);
-    c.fillRect(W - d - 12, d, 12, H - d * 2);
+    const d = -STAND + 8 + r * 20;
+    c.fillRect(d, d, AW - d * 2, 12);
+    c.fillRect(d, AH - d - 12, AW - d * 2, 12);
+    c.fillRect(d, d, 12, AH - d * 2);
+    c.fillRect(AW - d - 12, d, 12, AH - d * 2);
+  }
+  let n = 0;
+  const fan = (x, y) => {
+    n++;
+    c.fillStyle = FAN_COLS[(n * 7) % FAN_COLS.length];
+    c.beginPath();
+    c.arc(x, y + 7, 6, Math.PI, 0);
+    c.fill();
+    c.fillStyle = SKIN_COLS[(n * 3) % SKIN_COLS.length];
+    c.beginPath();
+    c.arc(x, y - 2, 3.6, 0, Math.PI * 2);
+    c.fill();
+    if (n % 5 === 0) {
+      c.fillRect(x - 6, y - 7, 1.8, 8);
+      c.fillRect(x + 4.2, y - 7, 1.8, 8);
+    }
+  };
+  for (const [r, d] of [-STAND + 22, -STAND + 46, -STAND + 70].entries()) {
+    for (let x = -STAND + 30 + r * 7; x < AW + STAND - 30; x += 22) {
+      fan(x, d);
+      fan(x, AH - d + 8);
+    }
+    for (let y = -STAND + 60 + r * 7; y < AH + STAND - 60; y += 22) {
+      fan(d, y);
+      fan(AW - d, y);
+    }
   }
   B.standsImg = cv;
   return cv;
 }
-const SKIN_COLS = ['#c99a74', '#a8764f', '#e0b896', '#7a5236', '#d6a77f'];
-const FAN_COLS = ['#7a3d3a', '#36557a', '#7a6a2e', '#3d6a52', '#5e4a7a', '#7a4a62', '#6b6e74', '#7a5434'];
+const STAND_SEC = 160; // world px per bouncing section
 function drawStands(c) {
-  if (!crowdOn() && !(B && B.demo)) return;
+  if (!B) return;
   const img = standsCanvas(),
     C = B.crowd,
     mood = C ? C.mood : 0.15,
     boo = C ? C.boo : 0,
-    t = ANIM;
-  c.drawImage(img, -STAND, -STAND, AW + STAND * 2, AH + STAND * 2);
-  // heads: rows along each side, bouncing with the mood. Sections near a car cheer for that car's colour.
-  const rowsAt = [-STAND + 22, -STAND + 46, -STAND + 70];
-  // only the heads on screen are drawn (the stands are mostly hidden behind the camera clamp)
-  const s = view.sc * cam.z,
-    vx0 = cam.x - view.w / (2 * s) - 20,
-    vx1 = cam.x + view.w / (2 * s) + 20,
-    vy0 = cam.y - view.h / (2 * s) - 20,
-    vy1 = cam.y + view.h / (2 * s) + 20;
-  c.save();
+    t = ANIM,
+    s = view.sc * cam.z,
+    vx0 = cam.x - view.w / (2 * s),
+    vx1 = cam.x + view.w / (2 * s),
+    vy0 = cam.y - view.h / (2 * s),
+    vy1 = cam.y + view.h / (2 * s);
+  const top = vy0 < 0,
+    bot = vy1 > AH,
+    left = vx0 < 0,
+    right = vx1 > AW;
+  if (!(top || bot || left || right)) return;
+  const k = img.width / (AW + STAND * 2),
+    hop = i => Math.max(0, Math.sin(t * (4 + mood * 6) + i * 1.7)) * (1 + mood * 6) * (1 - boo * 0.7);
+  // one drawImage per visible section; each section of fans hops on its own beat
+  const part = (sx, sy, sw, sh, dx, dy) =>
+    c.drawImage(img, (sx + STAND) * k, (sy + STAND) * k, sw * k, sh * k, dx, dy, sw, sh);
+  const x0 = Math.max(-STAND, vx0),
+    x1 = Math.min(AW + STAND, vx1),
+    y0 = Math.max(-STAND, vy0),
+    y1 = Math.min(AH + STAND, vy1);
+  for (let x = Math.floor((x0 + STAND) / STAND_SEC) * STAND_SEC - STAND; x < x1; x += STAND_SEC) {
+    const w = Math.min(STAND_SEC, AW + STAND - x),
+      i = Math.round(x / STAND_SEC);
+    if (top) part(x, -STAND, w, STAND, x, -STAND + hop(i) * 0.6);
+    if (bot) part(x, AH, w, STAND, x, AH - hop(i + 40) * 0.6);
+  }
+  for (let y = Math.floor((Math.max(y0, 0) + 0) / STAND_SEC) * STAND_SEC; y < Math.min(y1, AH); y += STAND_SEC) {
+    const h = Math.min(STAND_SEC, AH - y),
+      i = Math.round(y / STAND_SEC);
+    if (left) part(-STAND, y, STAND, h, -STAND + hop(i + 80) * 0.6, y);
+    if (right) part(AW, y, STAND, h, AW - hop(i + 120) * 0.6, y);
+  }
+  // flags in the colour of the nearest car, waving harder with hype
   const cars = B.cars || [];
   const fanCol = (x, y) => {
     let best = null,
@@ -26162,59 +25884,23 @@ function drawStands(c) {
     }
     return best ? best.paint : '#ffb423';
   };
-  const head = (x, y, seed) => {
-    const amp = (1.5 + mood * 7) * (0.6 + 0.4 * Math.sin(seed * 7.1)),
-      j = Math.max(0, Math.sin(t * (5 + mood * 6) + seed * 3.3)) * amp * (1 - boo * 0.7);
-    c.fillStyle = FAN_COLS[Math.abs(Math.floor(seed * 13)) % FAN_COLS.length];
-    c.beginPath();
-    c.arc(x, y - j + 7, 6, Math.PI, 0);
-    c.fill();
-    c.fillStyle = SKIN_COLS[Math.abs(Math.floor(seed * 7)) % SKIN_COLS.length];
-    c.beginPath();
-    c.arc(x, y - j - 2, 3.6, 0, Math.PI * 2);
-    c.fill();
-    if (mood > 0.5 && Math.abs(Math.floor(seed)) % 4 === 0) {
-      // arms up
-      c.fillRect(x - 6, y - j - 7, 1.8, 8);
-      c.fillRect(x + 4.2, y - j - 7, 1.8, 8);
-    }
-  };
-  // first seat at or after the visible edge, on the row's own 22 px grid so seats never shift
-  const snap = (base, from) => base + Math.max(0, Math.ceil((from - base) / 22)) * 22;
-  const top = vy0 < 0,
-    bot = vy1 > AH,
-    left = vx0 < 0,
-    right = vx1 > AW;
-  for (let r = 0; r < 3; r++) {
-    const d = rowsAt[r];
-    if (top || bot)
-      for (let x = snap(-STAND + 30 + r * 7, vx0); x < Math.min(AW + STAND - 30, vx1); x += 22) {
-        if (top) head(x, d, x * 0.37 + r);
-        if (bot) head(x, AH - d + 8, x * 0.53 + r + 9);
-      }
-    if (left || right)
-      for (let y = snap(-STAND + 60 + r * 7, vy0); y < Math.min(AH + STAND - 60, vy1); y += 22) {
-        if (left) head(d, y, y * 0.41 + r + 3);
-        if (right) head(AW - d, y, y * 0.29 + r + 5);
-      }
-  }
-  // flags in the colour of the nearest car, waving harder with hype
-  for (let k = 0; k < 14; k++) {
-    if (!(k % 2 ? bot : top)) continue;
-    const side = k % 2,
-      x = 100 + (k * (AW - 200)) / 13,
-      y = side ? AH + STAND - 12 : -STAND + 12,
-      col = fanCol(x, side ? AH : 0),
-      w = Math.sin(t * (3 + mood * 5) + k) * (4 + mood * 10);
+  c.save();
+  for (let q = 0; q < 14; q++) {
+    const side = q % 2;
+    if (!(side ? bot : top)) continue;
+    const x = 100 + (q * (AW - 200)) / 13;
+    if (x < vx0 - 30 || x > vx1 + 30) continue;
+    const y = side ? AH + STAND - 12 : -STAND + 12,
+      w = Math.sin(t * (3 + mood * 5) + q) * (4 + mood * 10),
+      fy = y + (side ? -28 : 28);
     c.strokeStyle = '#8b939c';
     c.lineWidth = 2;
     c.beginPath();
     c.moveTo(x, y);
-    c.lineTo(x, y + (side ? -28 : 28));
+    c.lineTo(x, fy);
     c.stroke();
-    c.fillStyle = col;
+    c.fillStyle = fanCol(x, side ? AH : 0);
     c.beginPath();
-    const fy = y + (side ? -28 : 28);
     c.moveTo(x, fy);
     c.lineTo(x + 18 + w * 0.3, fy + (side ? 6 : -6) + w * 0.4);
     c.lineTo(x, fy + (side ? 12 : -12));
@@ -29209,7 +28895,7 @@ function showFinal() {
       .map(([t]) => TAGS[t])
       .join(' + ') || 'Scrap';
   $('#resultCard').innerHTML =
-    `<span class="label">${esc(MATCH_FORMATS[G.format].name)} · Match over${tie ? ' · tie broken on damage dealt' : ''}</span><h2 style="color:${won ? '#5cc38f' : '#e2504a'}">${won ? 'Victory' : 'Defeat'}</h2>
+    `<span class="label">${G.story ? `Scrap Road · ${esc(storyMission().name)}` : `${esc(MATCH_FORMATS[G.format].name)} · Match over`}${tie ? ' · tie broken on damage dealt' : ''}</span><h2 style="color:${won ? '#5cc38f' : '#e2504a'}">${won ? 'Victory' : 'Defeat'}</h2>
     ${podiumHTML(won)}
     <div class="score" style="justify-content:center;font-size:34px"><span class="me">${G.format === 'lives' ? '♥ ' + G.lives[0] : s[0]}</span>–<span class="op">${G.format === 'lives' ? G.lives[1] + ' ♥' : s[1]}</span></div>
     ${funAwardsHTML()}
@@ -29236,7 +28922,7 @@ function showFinal() {
   if (won && SETTINGS.motion !== false)
     setTimeout(() => {
       const r = $('#resultCard').getBoundingClientRect && $('#resultCard').getBoundingClientRect();
-      if (r) {
+      if (r && $('#resFx')) {
         GFX.start($('#resFx'));
         GFX.confetti(r.left + r.width / 2, r.top + 80, 120);
       }
@@ -30658,10 +30344,12 @@ function storyFinish(won, tot) {
       const g = addGear(R.gear, R.gearLvl || 1, true, M.name);
       if (g) res.drops.push(g);
     }
-    if (res.first && R.sticker) res.unlocks.push('Sticker: ' + STICKER[R.sticker].name);
+    if (res.first && R.sticker) res.unlocks.push(['sticker', STICKER[R.sticker].name]);
     if (res.first && R.ach) {
       const p = grant(0, [R.ach]);
-      for (const it of p.unlocked) res.unlocks.push(it.name);
+      for (const a of p.newAch) res.unlocks.push(['achievement', ACHIEVEMENTS[a].name]);
+      for (const it of p.unlocked)
+        res.unlocks.push([STYLE_SLOTS.find(x => x[0] === it.slot)[1].toLowerCase(), it.name]);
     }
   } else res.bolts = 15;
   addBolts(res.bolts);
@@ -30674,7 +30362,7 @@ function storyResultHtml(r) {
   return `<div class="storyres"><div class="stars big" aria-label="${r.stars} of 3 stars">${[1, 2, 3].map(i => `<i class="${i <= r.stars ? 'on' : ''}"></i>`).join('')}</div>
     <p class="small">${r.won ? (r.first ? 'Mission complete! The road continues.' : 'Mission replayed.') : 'Mission failed. The road is still here.'} ${M.kind === 'salvage' ? `Salvage: ${G.story.got + G.story.gearGot.length}/${M.salvage}${G.story.stolen ? ` · ${G.story.stolen} stolen` : ''}` : ''}</p>
     ${spoilsHtml({ bolts: r.bolts, drops: r.drops })}
-    ${r.unlocks.map(u => `<div class="unl">Unlocked: <b>${esc(u)}</b></div>`).join('')}</div>`;
+    ${r.unlocks.map(([k, n]) => `<div class="unl">Unlocked ${esc(k)}: <b>${esc(n)}</b></div>`).join('')}</div>`;
 }
 
 /* ---------- the road map ---------- */
@@ -30989,7 +30677,7 @@ function openSettings(back) {
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
     ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
     ${toggle('setFps', 'Show frame rate (FPS)', SETTINGS.fps)}
-    <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Garage Style progress</button></div>
+    <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Locker progress</button></div>
     <button class="btn" id="setDone">Done</button>`;
   $('#ovSettings').hidden = false;
   $('#setVol').addEventListener('input', e => {
@@ -31684,6 +31372,8 @@ requestAnimationFrame(loop);
 if (window.__SD_TEST__)
   window.__SD = {
     STORY,
+    openDraft,
+    openSettings,
     sanitizeLook,
     ACHIEVEMENTS,
     STORY_BY,

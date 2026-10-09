@@ -152,11 +152,6 @@
   background: rgba(91, 231, 255, 0.08);
   clip-path: var(--chamfer-s);
 }
-.sock.s2 {
-  color: #ffd27a;
-  border-color: rgba(255, 180, 35, 0.45);
-  background: rgba(255, 180, 35, 0.08);
-}
 .sock.none {
   color: var(--muted);
   border-color: var(--line);

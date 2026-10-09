@@ -232,19 +232,3 @@ const PAINTS = ['#f2b705', '#e2504a', '#4ea1ff', '#5cc38f', '#c58bff', '#ff8fc7'
 let ROUNDS = 10;
 const ROUND_CHOICES = [5, 10, 25];
 const setRounds = n => (ROUNDS = ROUND_CHOICES.includes(+n) ? +n : 10);
-const MATCH_IDEAS = [
-  [
-    'Balanced rounds',
-    'One point per round and two points in the finale. Early wins count while the finale still offers a comeback.'
-  ],
-  [
-    'Scrap lives',
-    'Both start with 20 lives; losing costs 2 + round number. Ends when someone hits zero, so close games run long and blowouts end early.'
-  ],
-  ['Hill finale', 'Balanced scoring, with King of the Hill guaranteed in the double-point finale.'],
-  ['Bounty', 'Defeating the leader awards 1–4 points based on their winning streak, plus bonus scrap.'],
-  [
-    'Draft duel',
-    'Rounds alternate between brawls and objective modes (push the piano into their goal, steal the golden duck).'
-  ]
-];
