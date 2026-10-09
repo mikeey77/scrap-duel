@@ -19,7 +19,8 @@
   "16-results-vs.css",
   "17-arena-overlays.css",
   "18-gambling.css",
-  "19-extras.css"
+  "19-extras.css",
+  "20-menu-v3.css"
  ],
  "js": [
   "js/core/utils.js",

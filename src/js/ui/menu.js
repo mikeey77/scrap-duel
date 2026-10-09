@@ -1,5 +1,14 @@
 // Main menu (over a live bot battle), multiplayer lobby, the main loop and start-up.
 const inMatch = () => !['intro', 'menu', 'final'].includes(G.phase) && G.mode !== undefined && G.started;
+const MENU_TABS = [
+  { id: 'solo', name: 'Duel vs bot', ico: '1P', col: '#3fe0a0' },
+  { id: 'online', name: 'Online 1v1', ico: '2P', col: '#5be7ff', badge: () => '<i class="mi-live"></i>' },
+  { id: 'run', name: 'Scrap Gauntlet', ico: '☠', col: '#ff5c7a' },
+  { id: 'sand', name: 'Sandbox', ico: 'LAB', col: '#c58bff' },
+  { id: 'sandmp', name: 'Sandbox online', ico: 'MP', col: '#c58bff', badge: () => 'soon' },
+  { id: 'style', name: 'Garage style', ico: '★', col: '#ffd257', badge: () => 'Lv ' + levelInfo().lvl },
+  { id: 'codex', name: 'Module codex', ico: 'K', col: '#8da3c2' }
+];
 const TAGLINES = [
   'Weld a car from scrap, draft a new part every round, smash your rival.',
   'Now with 40% more duct tape.',
@@ -27,28 +36,77 @@ function showMenu() {
   }
   const L = levelInfo();
   $('#ovMenu').classList.toggle('live', !resume);
-  $('#ovMenu').innerHTML = `<div class="menu2">
-    <div class="hero2"><button class="acct-chip" id="acctChip" type="button"></button><span class="online-chip" id="onlineChip" hidden><i></i><b id="onlineN">1</b> online</span><h1>SCRAP<br>DUEL</h1>
-      <p id="tagline">Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
-    <div class="modes2">
-      <div class="mode2" style="--rc:#5cc38f"><div class="mh"><span class="ico">1P</span><h3>Singleplayer</h3></div><p>A bot rival who drafts, shops and builds with the same rules.</p>
-        <div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
-        <div class="seg rseg" id="roundSeg" aria-label="Match length"><span class="rseg-l">Rounds</span>${ROUND_CHOICES.map(n => `<button data-n="${n}" aria-pressed="${n === (G.rounds || 10)}">${n}</button>`).join('')}</div>
-        <button class="btn" id="mSolo">Play vs bot</button></div>
-      <div class="mode2" style="--rc:#4ea1ff"><div class="mh"><span class="ico">2P</span><h3>Multiplayer</h3></div><p>Host a room for a friend, or jump into an open 1v1.</p>
-        <input id="mName" class="mname" maxlength="16" value="${esc(G.name)}" aria-label="Your name" placeholder="Your name">
-        <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
-        <div class="rooms"><span class="rooms-h">Open 1v1 rooms</span><div id="roomList"></div></div></div>
-      <div class="mode2" style="--rc:#ff5c7a"><div class="mh"><span class="ico">☠</span><h3>Scrap Gauntlet</h3></div><p>Survive wave after wave with three hearts. A boss every fifth wave drops a relic.</p>
-        <span class="small runbest">Best run: ${runBest() ? 'wave ' + runBest() : 'none yet'}</span>
-        <button class="btn" id="mRun">Start a run</button></div>
-      <div class="mode2" style="--rc:#c58bff"><div class="mh"><span class="ico">LAB</span><h3>Sandbox</h3></div><p>Every module, 99 of each, a test arena with dummies.</p>
-        <button class="btn" id="mSand">Open sandbox</button></div>
-      <div class="mode2" style="--rc:#ffd257"><div class="mh"><span class="ico">${L.lvl}</span><h3>Garage Style</h3></div><p>${esc(titleName(G.style.title))} · ${unlockedCount()} of ${totalCosmetics()} unlocked</p>
-        <div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">Scrap Cred level ${L.lvl} · ${L.into}/${L.need} XP</span>
-        <button class="btn" id="mStyle">Customize</button></div>
+  const tab = MENU_TABS.some(t => t.id === load('sd.menuTab')) ? load('sd.menuTab') : 'solo';
+  const item = t =>
+    `<button class="mrail-i" data-tab="${t.id}" style="--rc:${t.col}" aria-pressed="${t.id === tab}"><span class="mi-ico">${t.ico}</span><span class="mi-t">${t.name}</span>${t.badge ? `<span class="mi-b">${t.badge()}</span>` : ''}</button>`;
+  const group = (label, ids) =>
+    `<div class="mrail-g"><span class="mrail-h">${label}</span>${MENU_TABS.filter(t => ids.includes(t.id))
+      .map(item)
+      .join('')}</div>`;
+  const panel = (id, col, title, body) =>
+    `<section class="mpanel" data-panel="${id}" style="--rc:${col}" ${id === tab ? '' : 'hidden'}><h2>${title}</h2>${body}</section>`;
+  $('#ovMenu').innerHTML = `<div class="menu3">
+    <div class="mtop"><button class="acct-chip" id="acctChip" type="button"></button><span class="online-chip" id="onlineChip" hidden><i></i><b id="onlineN">1</b> online</span></div>
+    <div class="mbrand"><h1>SCRAP <span>DUEL</span></h1><p id="tagline">Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
+    ${resume ? '<button class="btn ok mresume" id="mResume">▶ Resume match</button>' : ''}
+    <div class="mbody">
+      <nav class="mrail" aria-label="Game modes">
+        ${group('Play', ['solo', 'online', 'run'])}
+        ${group('Build', ['sand', 'sandmp'])}
+        ${group('Garage', ['style', 'codex'])}
+      </nav>
+      <div class="mpanels">
+        ${panel(
+          'solo',
+          '#3fe0a0',
+          'Duel vs bot',
+          `<p>A bot rival who drafts, shops and builds with the same rules as you.</p>
+          <span class="mlab">Difficulty</span><div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
+          <span class="mlab">Rounds</span><div class="seg" id="roundSeg" aria-label="Match length">${ROUND_CHOICES.map(n => `<button data-n="${n}" aria-pressed="${n === (G.rounds || 10)}">${n}</button>`).join('')}</div>
+          <button class="btn mgo" id="mSolo">Play vs bot</button>`
+        )}
+        ${panel(
+          'online',
+          '#5be7ff',
+          'Online 1v1',
+          `<p>Host a room for a friend, or jump into an open public match.</p>
+          <span class="mlab">Your name</span><input id="mName" class="mname" maxlength="16" value="${esc(G.name)}" aria-label="Your name" placeholder="Your name">
+          <div class="mrow"><button class="btn" id="mHost">Host room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
+          <div class="rooms"><span class="mlab">Open rooms</span><div id="roomList"></div></div>`
+        )}
+        ${panel(
+          'run',
+          '#ff5c7a',
+          'Scrap Gauntlet',
+          `<p>Survive wave after wave with three hearts. Every fifth wave a boss drops a relic.</p>
+          <div class="mstat"><b>${runBest() ? 'Wave ' + runBest() : '—'}</b><span>best run</span></div>
+          <button class="btn mgo" id="mRun">Start a run</button>`
+        )}
+        ${panel(
+          'sand',
+          '#c58bff',
+          'Sandbox',
+          `<p>Every module, 99 of each, no drafting. Build anything and test it on dummies.</p>
+          <button class="btn mgo" id="mSand">Open sandbox</button>`
+        )}
+        ${panel(
+          'sandmp',
+          '#c58bff',
+          'Sandbox online <em class="msoon">soon</em>',
+          `<p>Build freely with friends in one shared arena: no rounds, no drafting, instant respawns, and mini games like sumo, races and scrap soccer.</p>
+          <button class="btn mgo" disabled>Coming soon</button>`
+        )}
+        ${panel(
+          'style',
+          '#ffd257',
+          'Garage style',
+          `<p>${esc(titleName(G.style.title))} · ${unlockedCount()} of ${totalCosmetics()} unlocked</p>
+          <div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">Scrap Cred level ${L.lvl} · ${L.into}/${L.need} XP</span>
+          <button class="btn mgo" id="mStyle">Customize</button>`
+        )}
+      </div>
     </div>
-    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button><button class="btn ghost" id="mInstall" hidden>📲 Install app</button></div>
+    <div class="mfoot3"><button class="mlink" id="mHow">How to play</button><button class="mlink" id="mSettings">Settings</button><button class="mlink" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="mlink" id="mInstall" hidden>Install app</button></div>
   </div>`;
   $('#ovMenu').hidden = false;
   Install.render();
@@ -133,13 +191,21 @@ function showMenu() {
   $('#mSound').addEventListener('click', e => {
     MUTE = !MUTE;
     store('sd.mute', MUTE ? 1 : 0);
-    e.target.textContent = MUTE ? 'Sound off' : 'Sound on';
+    e.currentTarget.textContent = MUTE ? 'Sound off' : 'Sound on';
     sfx('ui');
   });
-  $('#mCodex').addEventListener('click', () => {
-    $('#ovMenu').hidden = true;
-    openCodex();
-  });
+  $$('.mrail-i').forEach(b =>
+    b.addEventListener('click', () => {
+      sfx('ui');
+      if (b.dataset.tab === 'codex') {
+        $('#ovMenu').hidden = true;
+        return openCodex();
+      }
+      store('sd.menuTab', b.dataset.tab);
+      $$('.mrail-i').forEach(x => x.setAttribute('aria-pressed', x === b));
+      $$('.mpanel').forEach(p => (p.hidden = p.dataset.panel !== b.dataset.tab));
+    })
+  );
   $('#mHow').addEventListener('click', () => {
     $('#ovMenu').hidden = true;
     $('#ovIntro').hidden = false;
