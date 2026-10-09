@@ -1,11 +1,4 @@
 /* ---------- arena overlays ---------- */
-.touchpad button {
-  border-radius: 50% !important;
-  background: radial-gradient(circle at 50% 35%, rgba(30, 52, 88, 0.92), rgba(8, 14, 28, 0.92)) !important;
-  border: 1px solid var(--holo-dim) !important;
-  font-family: var(--f-display);
-}
-.arena-tools button,
 .abtns .btn.ghost {
   clip-path: var(--chamfer-s);
   border-radius: 0 !important;
@@ -21,20 +14,6 @@
   border-radius: 0;
   clip-path: var(--chamfer-s);
   font-family: var(--f-display);
-}
-.mobile-workshop-nav {
-  border-radius: 0 !important;
-  clip-path: var(--chamfer-s);
-  background: rgba(10, 18, 34, 0.96) !important;
-}
-.mobile-workshop-nav button {
-  border-radius: 0 !important;
-  font-family: var(--f-display);
-}
-.mobile-workshop-nav button[aria-pressed='true'] {
-  color: #eafaff !important;
-  background: linear-gradient(180deg, rgba(91, 231, 255, 0.24), rgba(91, 231, 255, 0.08)) !important;
-  border-color: var(--holo) !important;
 }
 #build > .panel .pfoot {
   border-radius: 0 !important;
@@ -131,15 +110,6 @@
   justify-self: start;
   font-size: 12px !important;
   padding: 5px 10px !important;
-}
-@media (max-width: 520px) {
-  .rep-grid {
-    grid-template-columns: 110px 1fr;
-  }
-  .rep-map {
-    width: 110px;
-    height: 110px;
-  }
 }
 .nextup {
   --sc: var(--holo);

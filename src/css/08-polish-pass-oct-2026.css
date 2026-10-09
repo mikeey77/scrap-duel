@@ -1,8 +1,6 @@
 /* ---------- polish pass (Oct 2026) ---------- */
 /* The live menu sits over the demo battle: hide the match HUD and arena buttons behind it. */
-body:has(#ovMenu.live:not([hidden])) #hud,
-body:has(#ovMenu.live:not([hidden])) .arena-tools,
-body:has(#ovIntro:not([hidden])) .arena-tools {
+body:has(#ovMenu.live:not([hidden])) #hud {
   visibility: hidden;
 }
 /* Bay: keep the grid clear of the layer buttons (top) and the toolbar + hint (bottom). */
@@ -36,98 +34,12 @@ body.in-arena #btnPause {
   letter-spacing: -2px;
 }
 /* Phones in battle: no Forfeit or view buttons under your thumbs; both live in the pause menu. */
-body.touch-enabled.arena-battle .arena-tools,
-body.touch-enabled.arena-battle #bEnd {
-  display: none !important;
-}
-/* Phones in the waiting arena: Start/Back sit under the ready card, clear of the thumb buttons. */
-@media (max-width: 920px) {
-  body.in-arena.touch-enabled:not(.arena-battle) .abtns {
-    top: 168px;
-    bottom: auto;
-    left: 10px;
-    right: 10px;
-  }
-}
-@media (max-width: 920px) and (orientation: landscape) {
-  body.in-arena.touch-enabled:not(.arena-battle) .abtns {
-    top: 58px;
-    left: 160px;
-    right: 160px;
-  }
-}
-/* Phones in the arena: one compact HUD row. */
-@media (max-width: 920px) {
-  body.in-arena #hud {
-    flex-wrap: nowrap;
-  }
-  body.in-arena #hud .hbtn {
-    padding: 6px 10px;
-    min-height: 34px;
-  }
-  body.in-arena #hud .format-status {
-    display: none;
-  }
-  body.in-arena #hud .pill {
-    max-width: 104px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
 /* The menu's live ticker belongs to the menu: hide it under codex, settings and style screens. */
 body:has(#ovCodex:not([hidden])) #demoFeed,
 body:has(#ovSettings:not([hidden])) #demoFeed,
 body:has(#ovStyle:not([hidden])) #demoFeed,
 body:has(#ovLobby:not([hidden])) #demoFeed {
   display: none;
-}
-/* Landscape phones: the build actions become one slim row so the bay stays visible. */
-@media (max-width: 920px) and (orientation: landscape) {
-  #build > .panel .pfoot {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    padding: 5px !important;
-    gap: 5px !important;
-  }
-  #build > .panel .pfoot .autorow {
-    display: contents;
-  }
-  #build > .panel .pfoot .btn {
-    padding: 6px 4px;
-    font-size: 11px;
-    min-height: 32px;
-  }
-  #app {
-    padding-bottom: calc(52px + var(--host-safe) + env(safe-area-inset-bottom)) !important;
-  }
-  .mobile-workshop-nav {
-    padding: 4px;
-  }
-  .mobile-workshop-nav button {
-    min-height: 32px;
-  }
-  #bay {
-    height: calc(100dvh - 178px - var(--host-safe)) !important;
-    min-height: 180px !important;
-  }
-  #bayHint {
-    display: none;
-  }
-  #bay .layer-controls {
-    top: 6px;
-    left: 160px;
-    right: 190px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-  #bayScroll {
-    top: 34px;
-    padding-top: 6px;
-    padding-bottom: calc(var(--tb-h, 44px) + 12px);
-  }
-  #bay .toolbar {
-    bottom: 6px;
-  }
 }
 /* =====================================================================
    HOLO-WORKSHOP THEME (Oct 2026)

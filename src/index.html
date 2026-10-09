@@ -8,14 +8,8 @@
       content="Scrap Duel: build a battle car from scrap, draft new parts every round and duel a bot or a friend."
     />
     <title>Scrap Duel</title>
-    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#0a1020" />
-    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Scrap Duel" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -62,12 +56,7 @@
       </header>
       <main>
         <button id="reviewBack" class="btn review-return" hidden>Back to round report</button>
-        <section id="build" data-mobile-tab="bay">
-          <nav class="mobile-workshop-nav" aria-label="Mobile workshop">
-            <button data-mobile-tab="parts" aria-pressed="false">Parts &amp; shop</button>
-            <button data-mobile-tab="bay" aria-pressed="true">Build bay</button>
-            <button data-mobile-tab="stats" aria-pressed="false">Car &amp; stats</button>
-          </nav>
+        <section id="build">
           <aside class="panel" aria-label="Parts bin and shop">
             <div class="phead">
               <div class="tabs" role="tablist">
@@ -203,22 +192,10 @@
           </aside>
         </section>
         <section id="arena" hidden>
-          <canvas id="ac" aria-label="Arena: left stick drives; right stick aims, push farther to fire"></canvas>
-          <div class="arena-tools" aria-label="Arena view">
-            <button id="btnFullscreen">⛶ Fullscreen</button>
-            <button id="btnPortrait" aria-pressed="true">↻ Portrait view</button>
-          </div>
-          <div class="stick-guide left">DRIVE<br>left thumb</div>
-          <div class="stick-guide right">AIM<br>push to fire</div>
+          <canvas id="ac" aria-label="Arena: WASD drives, the mouse aims, left click fires"></canvas>
           <div class="waitcard" id="waitcard" hidden>
             <span><span class="dot"></span>You · ready</span
             ><span id="oppStatus"><span class="dot off"></span>Opponent · building</span>
-          </div>
-          <div class="touchpad" id="touchpad">
-            <button data-k="Space">Fire</button><button data-k="ShiftLeft">Boost</button><button data-k="KeyJ">Jump</button
-            ><button data-k="RMB">Action</button><button data-k="KeyZ">Drop</button
-            ><button data-k="KeyV">Counter</button><button data-k="KeyF">Blink</button
-            ><button data-k="KeyH">Horn</button><button data-k="KeyC">Anchor</button><button data-k="KeyX">Release</button>
           </div>
           <div class="abtns" id="abtns"></div>
         </section>
@@ -250,12 +227,10 @@
           <dd>
             WASD or arrows drive. Mouse aims; left-click or Space fires. Equipped gadgets and their cooldowns appear in battle. J jumps; right-click activates gadgets or reels a harpoon.
           </dd>
-          <dt>Touch</dt>
-          <dd>Left stick drives. Right stick aims; push it farther to fire, or use Fire. Portrait automatically rotates the arena. Equipped gadgets appear as thumb buttons.</dd>
         </dl>
         <p class="small">
-          Ten rounds per match. Each round is worth one point; the final round is worth two. Play a bot rival, a
-          friend online, or mess around in the sandbox.
+          Pick 5, 10 or 25 rounds. Each round is worth one point; the final round is worth two. Play a bot rival, a
+          friend online, survive the Scrap Gauntlet, or mess around in the sandbox.
         </p>
         <button class="btn" id="btnStart">Back to the menu</button>
       </div>
@@ -274,7 +249,6 @@
     <div class="overlay" id="ovPause" hidden><div class="card" id="pauseCard"></div></div>
     <div class="door-fx" id="doorFx" hidden aria-hidden="true"><i class="d-dark"></i><i class="d-l"><b>SCRAP</b></i><i class="d-r"><b>DUEL</b></i><span class="d-joke" id="doorJoke"></span></div>
     <div class="overlay" id="ovBlueprint" hidden><div class="card bp-card" id="bpCard"></div></div>
-    <div class="overlay" id="ovAccount" hidden><div class="card account-card" id="accountCard"></div></div>
     <div class="coach" id="coach" hidden></div>
     <div class="feed" id="demoFeed" hidden></div>
     <script>

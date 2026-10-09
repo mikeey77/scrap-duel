@@ -28,17 +28,16 @@ function showMenu() {
   const L = levelInfo();
   $('#ovMenu').classList.toggle('live', !resume);
   $('#ovMenu').innerHTML = `<div class="menu2">
-    <div class="hero2"><button class="acct-chip" id="acctChip" type="button"></button><span class="online-chip" id="onlineChip" hidden><i></i><b id="onlineN">1</b> online</span><h1>SCRAP<br>DUEL</h1>
+    <div class="hero2"><h1>SCRAP<br>DUEL</h1>
       <p id="tagline">Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
     <div class="modes2">
       <div class="mode2" style="--rc:#5cc38f"><div class="mh"><span class="ico">1P</span><h3>Singleplayer</h3></div><p>A bot rival who drafts, shops and builds with the same rules.</p>
         <div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
         <div class="seg rseg" id="roundSeg" aria-label="Match length"><span class="rseg-l">Rounds</span>${ROUND_CHOICES.map(n => `<button data-n="${n}" aria-pressed="${n === (G.rounds || 10)}">${n}</button>`).join('')}</div>
         <button class="btn" id="mSolo">Play vs bot</button></div>
-      <div class="mode2" style="--rc:#4ea1ff"><div class="mh"><span class="ico">2P</span><h3>Multiplayer</h3></div><p>Host a room for a friend, or jump into an open 1v1.</p>
+      <div class="mode2" style="--rc:#4ea1ff"><div class="mh"><span class="ico">2P</span><h3>Multiplayer</h3></div><p>Host a room and share the code with a friend.</p>
         <input id="mName" class="mname" maxlength="16" value="${esc(G.name)}" aria-label="Your name" placeholder="Your name">
-        <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
-        <div class="rooms"><span class="rooms-h">Open 1v1 rooms</span><div id="roomList"></div></div></div>
+        <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div></div>
       <div class="mode2" style="--rc:#ff5c7a"><div class="mh"><span class="ico">☠</span><h3>Scrap Gauntlet</h3></div><p>Survive wave after wave with three hearts. A boss every fifth wave drops a relic.</p>
         <span class="small runbest">Best run: ${runBest() ? 'wave ' + runBest() : 'none yet'}</span>
         <button class="btn" id="mRun">Start a run</button></div>
@@ -48,11 +47,9 @@ function showMenu() {
         <div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">Scrap Cred level ${L.lvl} · ${L.into}/${L.need} XP</span>
         <button class="btn" id="mStyle">Customize</button></div>
     </div>
-    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button><button class="btn ghost" id="mInstall" hidden>📲 Install app</button></div>
+    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button></div>
   </div>`;
   $('#ovMenu').hidden = false;
-  Install.render();
-  $('#mInstall').onclick = () => Install.run();
   clearInterval(showMenu.tag);
   showMenu.tag = setInterval(() => {
     const t = $('#tagline');
@@ -63,19 +60,6 @@ function showMenu() {
       t.classList.remove('swap');
     }, 350);
   }, 7000);
-  Lobby.render();
-  Lobby.ping();
-  accountChip();
-  $('#acctChip').onclick = () => {
-    sfx('ui');
-    $('#ovMenu').hidden = true;
-    openAccount(showMenu);
-  };
-  if (Account.name) {
-    $('#mName').value = Account.name;
-    $('#mName').disabled = true;
-    $('#mName').title = 'Your account nickname';
-  }
   $$('#diffSeg button').forEach(b =>
     b.addEventListener('click', () => {
       G.diff = +b.dataset.i;
@@ -179,8 +163,7 @@ function lobbyUI() {
     <div class="lstat"><span><span class="dot on"></span>${esc(G.name)}</span><span><span class="dot${n.connected ? ' on' : ''}"></span>${n.connected ? esc(G.oppName) : 'Friend'}</span></div>
     ${
       host
-        ? `<div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div>
-    <label class="tgl lpub"><input type="checkbox" id="lPublic" ${Lobby.wantPublic ? 'checked' : ''}><span>List as a public 1v1 room</span></label>`
+        ? `<div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div>`
         : ''
     }
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>Start match</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Cancel</button></div>`;
@@ -189,17 +172,8 @@ function lobbyUI() {
       G.mpRounds = +b.dataset.n;
       $$('#lRounds button').forEach(x => x.setAttribute('aria-pressed', x === b));
       sfx('ui');
-      Lobby.list();
     })
   );
-  const lp = $('#lPublic');
-  if (lp)
-    lp.onchange = () => {
-      Lobby.wantPublic = lp.checked;
-      lp.checked ? Lobby.list() : Lobby.unlist();
-    };
-  if (host && n.ready && !n.connected) Lobby.list();
-  if (n.connected) Lobby.unlist();
   const s = $('#lStart');
   if (s)
     s.addEventListener('click', () => {
@@ -208,11 +182,9 @@ function lobbyUI() {
       const rounds = setRounds(G.mpRounds || 10);
       const sched = makeSchedule(rounds);
       Net.send({ t: 'begin', sched, format, rounds });
-      Lobby.unlist();
       beginMP(sched, format, rounds);
     });
   $('#lCancel').addEventListener('click', () => {
-    Lobby.unlist();
     Net.close();
     $('#ovLobby').hidden = true;
     showMenu();
@@ -260,9 +232,7 @@ function loop(t) {
     } else if ((G.phase === 'wait' || G.phase === 'battle') && B) {
       if (
         B.menuPaused &&
-        ['#ovMenu', '#ovCodex', '#ovSettings', '#ovStyle', '#ovIntro', '#ovPause', '#ovAccount'].every(
-          id => $(id).hidden
-        )
+        ['#ovMenu', '#ovCodex', '#ovSettings', '#ovStyle', '#ovIntro', '#ovPause'].every(id => $(id).hidden)
       ) {
         B.menuPaused = false;
         B.paused = false;
@@ -308,14 +278,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   try {
     G.favorites = new Set(JSON.parse(load('sd.favorites') || '[]').filter(id => MOD[id]));
   } catch (e) {}
-  Account.init();
-  Lobby.start();
-  Install.init();
 }
-// last chance to save when the tab closes or the phone switches apps
-addEventListener('pagehide', () => {
-  if (Account.token && Account.saveT) Account.saveNow();
-});
 resetWs();
 G.base = new Map([[key(0, 0), { id: 'cockpit', rot: 0, x: 0, y: 0 }]]);
 G.inv = { cockpit: 1 };
@@ -342,7 +305,6 @@ if (window.__SD_TEST__)
     oppHints,
     CRATE_THEMES,
     Announcer,
-    Lobby,
     intelUI,
     showFinal,
     unpackDesign,
@@ -354,8 +316,6 @@ if (window.__SD_TEST__)
     spinWheel,
     WHEEL_SEGS,
     GFX,
-    Account,
-    openAccount,
     showMenu,
     canPause,
     togglePause,
@@ -402,13 +362,8 @@ if (window.__SD_TEST__)
     toWorld,
     worldToScreen,
     screenVectorToWorld,
-    moveStick,
     sizeArena,
     updateCam,
-    touchAimAssist,
-    equippedTouchActions,
-    touchActionCooldown,
-    setMobileTab,
     enterWait,
     syncPresentation,
     clearArenaInput,

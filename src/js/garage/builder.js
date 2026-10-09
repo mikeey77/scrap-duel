@@ -16,7 +16,6 @@ const G = {
   layerView: 'both',
   showArcs: false,
   showLinks: false,
-  mobileTab: 'bay',
   leftTab: 'bin',
   base: new Map(),
   top: new Map(),
@@ -1245,17 +1244,6 @@ $('#btnLinks').onclick = () => {
   drawBP();
 };
 
-function setMobileTab(tab) {
-  G.mobileTab = tab;
-  $('#build').dataset.mobileTab = tab;
-  $$('.mobile-workshop-nav button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mobileTab === tab));
-  if (tab === 'bay')
-    requestAnimationFrame(() => {
-      sizeBP();
-      drawBP();
-    });
-}
-$$('.mobile-workshop-nav button').forEach(b => (b.onclick = () => setMobileTab(b.dataset.mobileTab)));
 function bfxTick(dt) {
   garageAmbient(dt);
   if (building()) {
@@ -1592,222 +1580,6 @@ function store(k, v) {
   try {
     localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
   } catch (e) {}
-  try {
-    if (ACCOUNT_SYNC.includes(k)) Account.queueSave();
-  } catch (e) {} // account code is not initialised yet during start-up
-}
-/* =================== ACCOUNT (nickname + PIN) ===================
-   Optional. Signed-in players keep XP, Garage Style, blueprints and settings on the
-   server (Netlify Function + Blobs) and get them back on any device. */
-const ACCOUNT_SYNC = [
-  'sd.runBest',
-  'sd.prog',
-  'sd.style',
-  'sd.bp0',
-  'sd.bp1',
-  'sd.bp2',
-  'sd.favorites',
-  'sd.settings',
-  'sd.diff',
-  'sd.paint'
-];
-const Account = {
-  name: null,
-  token: null,
-  state: 'idle', // idle | saving | saved | offline
-  saveT: 0,
-  init() {
-    try {
-      const a = JSON.parse(localStorage.getItem('sd.account') || 'null');
-      if (a && a.name && a.token) Object.assign(this, { name: a.name, token: a.token });
-    } catch (e) {}
-    if (this.name) G.name = this.name;
-  },
-  available: () => /^https?:$/.test(location.protocol),
-  async call(action, body) {
-    if (!this.available()) throw new Error('Accounts work on the hosted game, not from a local file.');
-    let r;
-    try {
-      r = await fetch('/api/account', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action, ...body }),
-        keepalive: action === 'save'
-      });
-    } catch (e) {
-      throw new Error('No connection to the account server. Check your internet and try again.');
-    }
-    let d = {};
-    try {
-      d = await r.json();
-    } catch (e) {}
-    if (!r.ok) {
-      const er = new Error(d.error || 'The account server is not available right now.');
-      er.status = r.status;
-      throw er;
-    }
-    return d;
-  },
-  localData() {
-    const d = {};
-    for (const k of ACCOUNT_SYNC) {
-      const v = load(k);
-      if (v != null) d[k] = v;
-    }
-    return d;
-  },
-  remember(name, token) {
-    Object.assign(this, { name, token });
-    try {
-      localStorage.setItem('sd.account', JSON.stringify({ name, token }));
-      localStorage.setItem('sd.name', JSON.stringify(name).slice(1, -1));
-    } catch (e) {}
-    G.name = name;
-  },
-  /** New player: the progress already on this device becomes the account's first save. */
-  async register(name, pin) {
-    const d = await this.call('register', { name, pin, data: this.localData() });
-    this.remember(d.name, d.token);
-    this.state = 'saved';
-    return d;
-  },
-  /** Existing player: the account's save replaces this device's progress (then the game reloads). */
-  async login(name, pin) {
-    const d = await this.call('login', { name, pin });
-    this.remember(d.name, d.token);
-    const keys = Object.keys(d.data || {});
-    if (!keys.length) {
-      await this.saveNow();
-      return { reload: false };
-    }
-    try {
-      for (const k of ACCOUNT_SYNC) {
-        if (k in d.data) localStorage.setItem(k, d.data[k]);
-      }
-    } catch (e) {}
-    return { reload: true };
-  },
-  async logout() {
-    const { name, token } = this;
-    Object.assign(this, { name: null, token: null, state: 'idle' });
-    try {
-      localStorage.removeItem('sd.account');
-    } catch (e) {}
-    try {
-      if (name) await this.call('logout', { name, token });
-    } catch (e) {}
-  },
-  queueSave() {
-    if (!this.token) return;
-    clearTimeout(this.saveT);
-    this.saveT = setTimeout(() => this.saveNow(), 2500);
-  },
-  async saveNow() {
-    if (!this.token) return;
-    clearTimeout(this.saveT);
-    this.state = 'saving';
-    accountChip();
-    try {
-      await this.call('save', { name: this.name, token: this.token, data: this.localData() });
-      this.state = 'saved';
-    } catch (e) {
-      this.state = 'offline';
-      if (e.status === 401) {
-        Object.assign(this, { name: null, token: null });
-        try {
-          localStorage.removeItem('sd.account');
-        } catch (er) {}
-        toast('You were signed out. Sign in again to keep saving.');
-      }
-    }
-    accountChip();
-  }
-};
-/** Small status chip in the menu: who is signed in and whether the save is up to date. */
-function accountChip() {
-  const el = $('#acctChip');
-  if (!el) return;
-  if (!Account.name) {
-    el.innerHTML = `<span class="ac-dot off"></span><span>Playing as guest</span><b>Sign in</b>`;
-    el.title = 'Sign in with a nickname and PIN to keep your progress on every device';
-    return;
-  }
-  const st = { saving: 'saving…', saved: 'saved', offline: 'not saved yet', idle: 'signed in' }[Account.state];
-  el.innerHTML = `<span class="ac-dot ${Account.state === 'offline' ? 'warn' : ''}"></span><span><b>${esc(Account.name)}</b> · ${st}</span>`;
-  el.title = 'Account';
-}
-function openAccount(back) {
-  const ov = $('#ovAccount'),
-    card = $('#accountCard');
-  const signedIn = !!Account.name;
-  let mode = 'login',
-    typed = G.name !== 'Player' ? G.name : '';
-  const draw = msg => {
-    if (Account.name) {
-      card.innerHTML = `<h2>${esc(Account.name)}</h2>
-        <p>Your XP, Garage Style, blueprints and settings are saved to this nickname. Sign in on another device with the same PIN to continue there.</p>
-        <p class="small">Last status: ${{ saving: 'saving…', saved: 'saved', offline: 'not saved yet (no connection)', idle: 'signed in' }[Account.state]}</p>
-        <div class="rbtns"><button class="btn" id="acSave">Save now</button><button class="btn ghost" id="acOut">Sign out</button><button class="btn ghost" id="acBack">Back</button></div>`;
-      $('#acSave').onclick = async () => {
-        await Account.saveNow();
-        draw();
-      };
-      $('#acOut').onclick = async () => {
-        await Account.logout();
-        sfx('ui');
-        draw();
-      };
-    } else {
-      card.innerHTML = `<h2>${mode === 'login' ? 'Sign in' : 'New player'}</h2>
-        <div class="seg ac-tabs"><button data-m="login" aria-pressed="${mode === 'login'}">Sign in</button><button data-m="register" aria-pressed="${mode === 'register'}">New player</button></div>
-        <p class="small">${mode === 'login' ? 'Your saved progress replaces the progress on this device.' : 'Pick a nickname and a PIN you will remember. Your current progress comes with you.'}</p>
-        <form id="acForm" class="ac-form" autocomplete="off">
-          <label>Nickname<input id="acName" maxlength="16" autocomplete="username" value="${esc(typed)}" required></label>
-          <label>PIN<input id="acPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" required></label>
-          ${msg ? `<p class="ac-msg" role="alert">${esc(msg)}</p>` : ''}
-          <div class="rbtns"><button class="btn" type="submit" id="acGo">${mode === 'login' ? 'Sign in' : 'Create player'}</button><button class="btn ghost" type="button" id="acBack">Back</button></div>
-        </form>
-        ${Account.available() ? '' : '<p class="small">Accounts work on the hosted game (scrap-duel.netlify.app).</p>'}`;
-      $$('.ac-tabs button').forEach(b => (b.onclick = () => ((mode = b.dataset.m), draw())));
-      $('#acForm').onsubmit = async e => {
-        e.preventDefault();
-        const name = $('#acName').value.trim(),
-          pin = $('#acPin').value.trim();
-        typed = name;
-        $('#acGo').disabled = true;
-        $('#acGo').textContent = mode === 'login' ? 'Signing in…' : 'Creating…';
-        try {
-          if (mode === 'register') {
-            await Account.register(name, pin);
-            sfx('legend');
-            toast(`Welcome, ${Account.name}. Your progress is saved.`, true);
-            draw();
-          } else {
-            const r = await Account.login(name, pin);
-            sfx('legend');
-            if (r.reload) {
-              card.innerHTML = '<h2>Loading your garage…</h2>';
-              setTimeout(() => location.reload(), 300);
-              return;
-            }
-            toast(`Signed in as ${Account.name}.`, true);
-            draw();
-          }
-        } catch (er) {
-          draw(er.message);
-        }
-      };
-      setTimeout(() => ($('#acName').value ? $('#acPin') : $('#acName')).focus(), 30);
-    }
-    const bk = $('#acBack');
-    if (bk)
-      bk.onclick = () => {
-        ov.hidden = true;
-        if (back) back();
-      };
-  };
-  draw();
-  ov.hidden = false;
 }
 function load(k) {
   try {
@@ -2227,7 +1999,6 @@ function renderBin() {
       setTool('place');
       renderBin();
       renderInspect();
-      if (document.documentElement.clientWidth <= 920) setMobileTab('bay');
     })
   );
 }
@@ -2603,7 +2374,6 @@ function openGarageReport(st, k) {
   G.phase = 'review';
   $('#ovResult').hidden = true;
   $('#build').hidden = false;
-  setMobileTab('bay');
   document.body.classList.add('reviewing');
   $('#reviewBack').onclick = closeGarageReport;
   $('#reviewBack').hidden = false;

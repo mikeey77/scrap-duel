@@ -810,7 +810,6 @@ function drawArena() {
     s = view.sc * cam.z;
   c.save();
   c.translate(view.w / 2 + sh, view.h / 2 + sh2);
-  c.rotate(view.rot);
   c.scale(s, s);
   c.translate(-cam.x, -cam.y);
   c.drawImage(ground, 0, 0);
@@ -903,7 +902,7 @@ function drawArena() {
     c.arc(l.x, l.y, 42, 0, Math.PI * 2);
     c.stroke();
   }
-  if (v && !B.touch && !v.dead && B.seq === 'play' && !B.demo && !B.replay) {
+  if (v && !v.dead && B.seq === 'play' && !B.demo && !B.replay) {
     c.strokeStyle = 'rgba(242,183,5,.85)';
     c.lineWidth = 2 / cam.z;
     const m = mouse;
@@ -1023,7 +1022,7 @@ function drawHitArrows(c, v, s) {
   for (const h of B.hitDirs) {
     c.save();
     c.translate(cx, cy);
-    c.rotate(h.a + view.rot);
+    c.rotate(h.a);
     c.globalAlpha = Math.min(1, h.t * 1.6);
     c.fillStyle = '#ff4d3a';
     c.beginPath();
@@ -1094,87 +1093,12 @@ function abilityCooldown(v, k) {
   const live = v.insts.filter(I => I.alive && I[k] > B.time);
   return live.length ? Math.max(0, Math.min(...live.map(I => I[k] - B.time))) : 0;
 }
-const TOUCH_LABELS = {
-  Space: 'Fire',
-  ShiftLeft: 'Boost',
-  KeyJ: 'Jump',
-  RMB: 'Action',
-  KeyZ: 'Drop',
-  KeyV: 'Counter',
-  KeyF: 'Blink',
-  KeyH: 'Horn',
-  KeyC: 'Anchor',
-  KeyX: 'Release'
-};
-function equippedTouchActions(v) {
-  if (!v) return {};
-  const h = v.has || {};
-  return {
-    Space: !!v.insts?.some(I => I.alive && (I.m.wpn || PLAN_FIRE.includes(I.id))),
-    ShiftLeft: !!(h.booster || h.nitro),
-    KeyJ: !!h.jump,
-    RMB: !!(h.piston || h.flipper || h.catapult || h.harpoon || h.tractor || PLAN_ACTION.some(id => h[id])),
-    KeyZ: !!(h.oil || h.glue || h.banana || h.mines || PLAN_DROP.some(id => h[id])),
-    KeyV: !!(h.smoke || h.decoy || h.jammer || h.flare || h.emp || h.flashbang || h.rubberduck),
-    KeyF: !!h.blink,
-    KeyH: !!(h.horn || h.prizebell),
-    KeyC: !!(h.anchor || h.gripstud || h.rescue),
-    KeyX: !!h.coupler
-  };
-}
-function touchActionCooldown(v, k) {
-  const ids =
-      k === 'RMB'
-        ? PLAN_ACTION
-        : k === 'KeyZ'
-          ? PLAN_DROP
-          : k === 'KeyV'
-            ? ['rubberduck']
-            : k === 'KeyH'
-              ? ['prizebell']
-              : k === 'KeyC'
-                ? ['rescue']
-                : [],
-    pc = Math.max(0, ...v.insts.filter(I => I.alive && ids.includes(I.id)).map(I => (I.planCd || 0) - B.time));
-  if (pc > 0) return pc;
-  return k === 'ShiftLeft'
-    ? abilityCooldown(v, 'bcd')
-    : k === 'RMB'
-      ? Math.max(abilityCooldown(v, 'pcd'), abilityCooldown(v, 'ccd'))
-      : k === 'KeyJ'
-        ? Math.max(0, v.jumpCd || 0)
-        : k === 'KeyV'
-          ? Math.max(0, v.cmCd || 0)
-          : k === 'KeyF'
-            ? Math.max(0, v.blinkCd || 0)
-            : k === 'KeyH'
-              ? Math.max(0, v.hornCd || 0)
-              : 0;
-}
-function updateTouchControls(v) {
-  const enabled = equippedTouchActions(v);
-  $$('#touchpad button').forEach(b => {
-    const k = b.dataset.k,
-      cd = touchActionCooldown(v, k),
-      state = k === 'KeyC' && v.anchored ? 'active' : cd > 0 ? 'cooling' : 'ready';
-    b.hidden = !enabled[k] || k === 'Space'; // the right stick already aims and fires
-    const label =
-      (k === 'RMB' && v.has.harpoon ? 'Reel / action' : k === 'KeyC' && v.anchored ? 'Lift anchor' : TOUCH_LABELS[k]) +
-      (cd > 0 ? '\n' + cd.toFixed(1) + 's' : '');
-    if (b.textContent !== label) {
-      b.textContent = label;
-      b.setAttribute('aria-label', label.replace('\n', ', '));
-    }
-    if (b.dataset.state !== state) b.dataset.state = state;
-  });
-}
 function drawHUD(c) {
   const W = view.w,
     H = view.h,
     v = myCar();
   if (!v) return;
   const h = v.has || {};
-  updateTouchControls(v);
   const rows = [[v.name.toUpperCase(), integrity(v), v.paint]];
   for (const I of v.shields)
     if (I.alive) {
@@ -1206,7 +1130,7 @@ function drawHUD(c) {
   c.textBaseline = 'top';
   if (G.phase === 'battle' || B.replay) {
     // timer on a plate so it never melts into the arena behind it
-    const ty = narrow ? Math.max(52, rows.length * 24 + 8) : 8; // on phones the timer sits under the health bars
+    const ty = narrow ? Math.max(52, rows.length * 24 + 8) : 8; // narrow windows: the timer sits under the health bars
     c.fillStyle = 'rgba(20,16,12,.78)';
     rr(c, W / 2 - 92, ty, 184, 50, 8);
     c.fill();
@@ -1280,7 +1204,7 @@ function drawHUD(c) {
   if (h.horn || h.prizebell) ctl.push(['H', 'horn']);
   if (h.anchor || h.gripstud || h.rescue) ctl.push(['C', v.anchored ? 'anchor up' : 'anchor']);
   if (h.coupler) ctl.push(['X', 'release']);
-  if (!B.touch) {
+  {
     c.textAlign = 'left';
     c.textBaseline = 'bottom';
     c.font = '600 12px "Barlow Semi Condensed", sans-serif';
@@ -1356,27 +1280,6 @@ function drawHUD(c) {
     c.font = '600 13px "Barlow Semi Condensed", sans-serif';
     c.fillStyle = '#ff8a6a';
     c.fillText('Connection hiccup… waiting for host', W / 2, H - 60);
-  }
-  if (B.touch) {
-    for (const [stick, col] of [
-      [B.joy, '#7fe0ff'],
-      [B.aimJoy, '#ffd257']
-    ])
-      if (stick) {
-        c.strokeStyle = col + '88';
-        c.lineWidth = 2;
-        c.beginPath();
-        c.arc(stick.sx, stick.sy, 54, 0, Math.PI * 2);
-        c.stroke();
-        if (stick === B.aimJoy) {
-          c.setLineDash([3, 5]);
-          c.beginPath();
-          c.arc(stick.sx, stick.sy, 54 * 0.68, 0, Math.PI * 2);
-          c.stroke();
-          c.setLineDash([]);
-        }
-        circ(c, stick.sx + stick.x * 54, stick.sy + stick.y * 54, 18, col + '99');
-      }
   }
 }
 
@@ -1456,7 +1359,7 @@ function drawNight(c, s, dark = 0.9, flash = 1) {
     if (v.dead) continue;
     light(v.x, v.y, v.rad + 90, 0.95);
     // headlight cone
-    const fa = v.a - Math.PI / 2 + view.rot,
+    const fa = v.a - Math.PI / 2,
       [sx, sy] = toS(v.x, v.y),
       L = 460 * s,
       g = n.createRadialGradient(sx, sy, v.rad * s, sx, sy, L);

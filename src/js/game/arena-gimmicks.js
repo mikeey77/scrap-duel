@@ -276,7 +276,7 @@ function drawGimmickOverlay(c, s) {
   const [wx, wy] = windForce(),
     k = Math.hypot(wx, wy);
   if (k > 20 && SETTINGS.motion !== false) {
-    const a = Math.atan2(wy, wx) + view.rot,
+    const a = Math.atan2(wy, wx),
       ca = Math.cos(a),
       sa = Math.sin(a),
       W = view.w,

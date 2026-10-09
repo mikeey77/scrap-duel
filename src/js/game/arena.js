@@ -7,56 +7,37 @@ const AW = 2000,
   WM = 22,
   S = 20;
 let B = null,
-  view = { w: 0, h: 0, sc: 1, rot: 0, worldW: 0, worldH: 0 },
+  view = { w: 0, h: 0, sc: 1, worldW: 0, worldH: 0 },
   ground = null,
   gx = null;
 const cam = { x: AW / 2, y: AH / 2, z: 1, tx: AW / 2, ty: AH / 2, tz: 1 };
 const CT = (car, id) => car.tune.has(id);
-function touchPreferred() {
-  return (
-    SETTINGS.touchControls === 'on' || (SETTINGS.touchControls !== 'off' && matchMedia('(pointer:coarse)').matches)
-  );
-}
 function screenVectorToWorld(x, y) {
-  return view.rot ? [y, -x] : [x, y];
+  return [x, y];
 }
 function worldToScreen(x, y, s = view.sc * cam.z) {
-  const dx = (x - cam.x) * s,
-    dy = (y - cam.y) * s;
-  return view.rot ? [view.w / 2 - dy, view.h / 2 + dx] : [view.w / 2 + dx, view.h / 2 + dy];
+  return [view.w / 2 + (x - cam.x) * s, view.h / 2 + (y - cam.y) * s];
 }
 function sizeArena() {
   const r = ac.getBoundingClientRect(),
     d = dprOf();
   view.w = r.width;
   view.h = r.height;
-  view.rot =
-    SETTINGS.rotatePortrait &&
-    !B?.demo &&
-    r.height > r.width &&
-    (touchPreferred() || document.documentElement.clientWidth <= 920)
-      ? Math.PI / 2
-      : 0;
-  view.worldW = view.rot ? r.height : r.width;
-  view.worldH = view.rot ? r.width : r.height;
+  view.worldW = r.width;
+  view.worldH = r.height;
   ac.width = Math.round(r.width * d);
   ac.height = Math.round(r.height * d);
   view.sc = Math.min(view.worldW / AW, view.worldH / AH);
-  $('#btnPortrait').setAttribute('aria-pressed', SETTINGS.rotatePortrait);
-  $('#btnPortrait').textContent = view.rot ? '↻ Rotated view' : '↻ Portrait view';
 }
 let presentationKey = '';
 function syncPresentation() {
-  const active = !!B && !B.demo && ['wait', 'battle', 'replay'].includes(G.phase),
-    touch = active && !!B && B.touch && !B.replay; // the menu demo never shows thumbsticks
+  const active = !!B && !B.demo && ['wait', 'battle', 'replay'].includes(G.phase);
   document.body.classList.toggle('reduced-motion', SETTINGS.motion === false);
   document.body.classList.toggle('arena-battle', active && G.phase === 'battle');
-  const key = active + ' ' + touch + ' ' + G.phase + ' ' + innerWidth + ' ' + innerHeight;
+  const key = active + ' ' + G.phase + ' ' + innerWidth + ' ' + innerHeight;
   if (key === presentationKey) return;
   presentationKey = key;
   document.body.classList.toggle('in-arena', active);
-  document.body.classList.toggle('touch-enabled', touch);
-  document.body.classList.toggle('touch-disabled', !touch);
   if (active) {
     const r = $('#hud').getBoundingClientRect();
     document.documentElement.style.setProperty('--arena-top', Math.ceil(r.bottom + 6) + 'px');
@@ -71,44 +52,30 @@ function clearArenaInput() {
   keys.clear();
   edges.clear();
   mouse.down = mouse.right = false;
-  if (B) {
-    B.joy = null;
-    B.aimJoy = null;
-  }
 }
-$('#btnFullscreen').onclick = async () => {
+/** Fullscreen: the desktop app asks its window; a browser falls back to the Fullscreen API. */
+async function toggleFullscreen() {
   try {
-    if (document.fullscreenElement) await document.exitFullscreen();
+    if (window.desktop && window.desktop.toggleFullscreen) await window.desktop.toggleFullscreen();
+    else if (document.fullscreenElement) await document.exitFullscreen();
     else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-    else if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
-    else return toast('This browser does not support fullscreen. Portrait play still fills the available screen.');
   } catch (e) {
-    toast('Fullscreen was unavailable. The arena still fits the available screen.');
+    toast('Fullscreen was unavailable.');
   }
   clearArenaInput();
   presentationKey = '';
   syncPresentation();
-};
-$('#btnPortrait').onclick = () => {
-  SETTINGS.rotatePortrait = !SETTINGS.rotatePortrait;
-  saveSettings();
-  clearArenaInput();
-  sizeArena();
-  cam.z = cam.tz = 1;
-};
+}
 $('#btnFS').onclick = () => {
   sfx('ui');
-  $('#btnFullscreen').onclick();
+  toggleFullscreen();
 };
-if (!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen))
-  $('#btnFS').hidden = true;
 document.addEventListener('fullscreenchange', () => {
   $('#btnFS').setAttribute('aria-pressed', !!document.fullscreenElement);
   presentationKey = '';
   syncPresentation();
-  $('#btnFullscreen').textContent = document.fullscreenElement ? '⛶ Exit fullscreen' : '⛶ Fullscreen';
 });
-window.visualViewport?.addEventListener('resize', () => {
+addEventListener('resize', () => {
   presentationKey = '';
   syncPresentation();
 });

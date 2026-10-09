@@ -151,17 +151,3 @@
   opacity: 1;
   animation: fadeup 0.35s both;
 }
-@media (max-width: 920px) {
-  #ovMenu.live {
-    background: rgba(10, 12, 14, 0.82);
-  }
-  .modes2 {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .menu2 {
-    padding: 12px 4px;
-  }
-  .feed {
-    display: none;
-  }
-}

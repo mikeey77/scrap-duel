@@ -129,11 +129,3 @@
 .stitem.locked i {
   color: var(--muted);
 }
-@media (max-width: 760px) {
-  .stbody {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .pity {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}

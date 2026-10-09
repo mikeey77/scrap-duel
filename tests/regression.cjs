@@ -1,436 +1,1380 @@
-const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),crypto=require('node:crypto');
-const html=fs.readFileSync(__dirname+'/../site/index.html','utf8');
-const source=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n');
+const fs = require('node:fs'),
+  vm = require('node:vm'),
+  assert = require('node:assert/strict'),
+  crypto = require('node:crypto');
+const html = fs.readFileSync(__dirname + '/../site/index.html', 'utf8');
+const source = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]).join('\n');
 new vm.Script(source);
 
-function runtime(options={}){
-  let clock=0,tid=0;const elements=new Map(),timers=new Map(),rafs=[],events=new Map(),storage=new Map();
-  const gradient={addColorStop(){}};
-  const ctx=new Proxy({createLinearGradient:()=>gradient,createRadialGradient:()=>gradient,createPattern:()=>({}),measureText:t=>({width:String(t).length*7}),getImageData:()=>({data:new Uint8ClampedArray(16)}),createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)})},{get:(o,k)=>k in o?o[k]:(()=>{}),set:(o,k,v)=>(o[k]=v,true)});
-  class El{
-    constructor(id=''){this.id=id;this.tagName='DIV';this.hidden=true;this.style={setProperty(k,v){this[k]=v;}};this.dataset={};this.attrs={};this.listeners={};this.value='';this.clientWidth=720;this.classList={add(){},remove(){},toggle(){}};}
-    set innerHTML(h){this.html=h;for(const m of h.matchAll(/id="([^"]+)"/g)){const e=new El(m[1]);e.hidden=false;elements.set(m[1],e);}}
-    get innerHTML(){return this.html||'';}
-    insertAdjacentHTML(where,h){this.innerHTML=this.innerHTML+h;}
-    addEventListener(k,f){(this.listeners[k]??=[]).push(f);}
-    setAttribute(k,v){this.attrs[k]=v;}getAttribute(k){return this.attrs[k];}
-    getContext(){return ctx;}toDataURL(){return 'data:image/png;base64,AA';}
-    getBoundingClientRect(){return {width:720,height:600,left:0,top:0,bottom:600};}
-    appendChild(e){elements.set(e.id,e);}focus(){}setSelectionRange(){}setPointerCapture(){}
-    click(){this.onclick?.({target:this});for(const f of this.listeners.click||[])f({target:this});}
+function runtime(options = {}) {
+  let clock = 0,
+    tid = 0;
+  const elements = new Map(),
+    timers = new Map(),
+    rafs = [],
+    events = new Map(),
+    storage = new Map();
+  const gradient = { addColorStop() {} };
+  const ctx = new Proxy(
+    {
+      createLinearGradient: () => gradient,
+      createRadialGradient: () => gradient,
+      createPattern: () => ({}),
+      measureText: t => ({ width: String(t).length * 7 }),
+      getImageData: () => ({ data: new Uint8ClampedArray(16) }),
+      createImageData: (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) })
+    },
+    { get: (o, k) => (k in o ? o[k] : () => {}), set: (o, k, v) => ((o[k] = v), true) }
+  );
+  class El {
+    constructor(id = '') {
+      this.id = id;
+      this.tagName = 'DIV';
+      this.hidden = true;
+      this.style = {
+        setProperty(k, v) {
+          this[k] = v;
+        }
+      };
+      this.dataset = {};
+      this.attrs = {};
+      this.listeners = {};
+      this.value = '';
+      this.clientWidth = 720;
+      this.classList = { add() {}, remove() {}, toggle() {} };
+    }
+    set innerHTML(h) {
+      this.html = h;
+      for (const m of h.matchAll(/id="([^"]+)"/g)) {
+        const e = new El(m[1]);
+        e.hidden = false;
+        elements.set(m[1], e);
+      }
+    }
+    get innerHTML() {
+      return this.html || '';
+    }
+    insertAdjacentHTML(where, h) {
+      this.innerHTML = this.innerHTML + h;
+    }
+    addEventListener(k, f) {
+      (this.listeners[k] ??= []).push(f);
+    }
+    setAttribute(k, v) {
+      this.attrs[k] = v;
+    }
+    getAttribute(k) {
+      return this.attrs[k];
+    }
+    getContext() {
+      return ctx;
+    }
+    toDataURL() {
+      return 'data:image/png;base64,AA';
+    }
+    getBoundingClientRect() {
+      return { width: 720, height: 600, left: 0, top: 0, bottom: 600 };
+    }
+    appendChild(e) {
+      elements.set(e.id, e);
+    }
+    focus() {}
+    setSelectionRange() {}
+    setPointerCapture() {}
+    click() {
+      this.onclick?.({ target: this });
+      for (const f of this.listeners.click || []) f({ target: this });
+    }
   }
-  for(const m of html.matchAll(/id="([^"]+)"/g))elements.set(m[1],new El(m[1]));
-  const doc={hidden:false,querySelector:s=>elements.get(s.slice(1))||(elements.set(s.slice(1),new El(s.slice(1))),elements.get(s.slice(1))),querySelectorAll:()=>[],createElement:()=>new El(),head:new El('head'),body:new El('body'),addEventListener(){},fonts:null,documentElement:{clientWidth:1440,clientHeight:900,style:{setProperty(){}}}};
-  const context={console,document:doc,performance:{now:()=>clock},crypto:crypto.webcrypto,atob,btoa,TextEncoder,TextDecoder,Math,Map,Set,WeakMap,JSON,Promise,Uint8Array,Uint8ClampedArray,Float32Array,Image:class{},devicePixelRatio:1,innerWidth:1440,innerHeight:900,
-    localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
-    matchMedia:()=>({matches:false,addEventListener(){}}),
-    addEventListener:(k,f)=>{(events.get(k)||events.set(k,[]).get(k)).push(f);},
-    requestAnimationFrame:f=>{rafs.push(f);return rafs.length;},cancelAnimationFrame(){},
-    setTimeout:(f,ms=0)=>{timers.set(++tid,{f,at:clock+ms});return tid;},clearTimeout:id=>timers.delete(id),
-    setInterval:(f,ms)=>{timers.set(++tid,{f,at:clock+ms,ms});return tid;},clearInterval:id=>timers.delete(id),
-    __SD_TEST__:true,...options};context.window=context;
-  vm.createContext(context);vm.runInContext(source,context,{timeout:15000});
-  return {api:context.__SD,context,elements,timers,rafs,
-    advance(ms){clock+=ms;for(const [id,t] of [...timers])if(t.at<=clock){if(t.ms)t.at=clock+t.ms;else timers.delete(id);t.f();}},
-    event(k,e){for(const f of events.get(k)||[])f(e);}};
+  for (const m of html.matchAll(/id="([^"]+)"/g)) elements.set(m[1], new El(m[1]));
+  const doc = {
+    hidden: false,
+    querySelector: s =>
+      elements.get(s.slice(1)) || (elements.set(s.slice(1), new El(s.slice(1))), elements.get(s.slice(1))),
+    querySelectorAll: () => [],
+    createElement: () => new El(),
+    head: new El('head'),
+    body: new El('body'),
+    addEventListener() {},
+    fonts: null,
+    documentElement: { clientWidth: 1440, clientHeight: 900, style: { setProperty() {} } }
+  };
+  const context = {
+    console,
+    document: doc,
+    performance: { now: () => clock },
+    crypto: crypto.webcrypto,
+    atob,
+    btoa,
+    TextEncoder,
+    TextDecoder,
+    Math,
+    Map,
+    Set,
+    WeakMap,
+    JSON,
+    Promise,
+    Uint8Array,
+    Uint8ClampedArray,
+    Float32Array,
+    Image: class {},
+    devicePixelRatio: 1,
+    innerWidth: 1440,
+    innerHeight: 900,
+    localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v) },
+    matchMedia: () => ({ matches: false, addEventListener() {} }),
+    addEventListener: (k, f) => {
+      (events.get(k) || events.set(k, []).get(k)).push(f);
+    },
+    requestAnimationFrame: f => {
+      rafs.push(f);
+      return rafs.length;
+    },
+    cancelAnimationFrame() {},
+    setTimeout: (f, ms = 0) => {
+      timers.set(++tid, { f, at: clock + ms });
+      return tid;
+    },
+    clearTimeout: id => timers.delete(id),
+    setInterval: (f, ms) => {
+      timers.set(++tid, { f, at: clock + ms, ms });
+      return tid;
+    },
+    clearInterval: id => timers.delete(id),
+    __SD_TEST__: true,
+    ...options
+  };
+  context.window = context;
+  vm.createContext(context);
+  vm.runInContext(source, context, { timeout: 15000 });
+  return {
+    api: context.__SD,
+    context,
+    elements,
+    timers,
+    rafs,
+    advance(ms) {
+      clock += ms;
+      for (const [id, t] of [...timers])
+        if (t.at <= clock) {
+          if (t.ms) t.at = clock + t.ms;
+          else timers.delete(id);
+          t.f();
+        }
+    },
+    event(k, e) {
+      for (const f of events.get(k) || []) f(e);
+    }
+  };
 }
-let passed=0;
-function test(name,f){try{f();passed++;console.log('PASS '+name);}catch(e){console.error('FAIL '+name);throw e;}}
-const r=runtime(),a=r.api,G=a.G;
-const start=()=>{a.startMatch('solo');a.openBuild();};
-test('catalog loads and every starter is connected, usable and owned',()=>{
-  const signatures=new Set();
-  for(let n=0;n<200;n++){
-    start();assert.equal(G.base.size+G.top.size,23);assert(a.designConnected(G.base));assert.equal(a.blockedList().length,0);
-    const used={};for(const e of [...G.base.values(),...G.top.values()])used[e.id]=(used[e.id]||0)+1;
-    for(const [id,count] of Object.entries(used))assert.equal(count,G.inv[id]);
+let passed = 0;
+function test(name, f) {
+  try {
+    f();
+    passed++;
+    console.log('PASS ' + name);
+  } catch (e) {
+    console.error('FAIL ' + name);
+    throw e;
+  }
+}
+const r = runtime(),
+  a = r.api,
+  G = a.G;
+const start = () => {
+  a.startMatch('solo');
+  a.openBuild();
+};
+test('catalog loads and every starter is connected, usable and owned', () => {
+  const signatures = new Set();
+  for (let n = 0; n < 200; n++) {
+    start();
+    assert.equal(G.base.size + G.top.size, 23);
+    assert(a.designConnected(G.base));
+    assert.equal(a.blockedList().length, 0);
+    const used = {};
+    for (const e of [...G.base.values(), ...G.top.values()]) used[e.id] = (used[e.id] || 0) + 1;
+    for (const [id, count] of Object.entries(used)) assert.equal(count, G.inv[id]);
     signatures.add(G.starterGuns.join(','));
   }
-  assert(signatures.size>10);assert.equal(a.MODS.length,205);
+  assert(signatures.size > 10);
+  assert.equal(a.MODS.length, 205);
 });
-test('all heavy drafted modules include enough free support',()=>{
-  for(const m of a.MODS.filter(m=>m.layer==='t'&&m.mnt===2)){
-    start();a.takeOption({type:'module',id:m.id,n:2});
-    assert.equal(a.draftSupportCount(m.id,2),0);assert(G.inv.girder>=2);
-    a.autoPlace(true);assert.equal(a.blockedList().length,0,m.name);
-    assert.equal([...G.top.values()].filter(e=>e.id===m.id).length,2,m.name);
+test('all heavy drafted modules include enough free support', () => {
+  for (const m of a.MODS.filter(m => m.layer === 't' && m.mnt === 2)) {
+    start();
+    a.takeOption({ type: 'module', id: m.id, n: 2 });
+    assert.equal(a.draftSupportCount(m.id, 2), 0);
+    assert(G.inv.girder >= 2);
+    a.autoPlace(true);
+    assert.equal(a.blockedList().length, 0, m.name);
+    assert.equal([...G.top.values()].filter(e => e.id === m.id).length, 2, m.name);
   }
 });
-test('auto-place never creates blocked directional parts',()=>{
-  for(let n=0;n<60;n++){
-    start();G.inv.spike+=4;G.inv.frame+=3;G.inv.mg=(G.inv.mg||0)+4;
-    a.autoPlace(true);assert.equal(a.blockedList().length,0);
+test('auto-place never creates blocked directional parts', () => {
+  for (let n = 0; n < 60; n++) {
+    start();
+    G.inv.spike += 4;
+    G.inv.frame += 3;
+    G.inv.mg = (G.inv.mg || 0) + 4;
+    a.autoPlace(true);
+    assert.equal(a.blockedList().length, 0);
     assert(a.designConnected(G.base));
-    for(const id of Object.keys(G.inv))assert([...G.base.values(),...G.top.values()].filter(e=>e.id===id).length<=G.inv[id]);
+    for (const id of Object.keys(G.inv))
+      assert([...G.base.values(), ...G.top.values()].filter(e => e.id === id).length <= G.inv[id]);
   }
 });
-test('auto-build creates a connected car and one undo returns the original design',()=>{
-  start();G.inv.spike+=6;G.inv.frame+=4;const before=JSON.stringify([[...G.base],[...G.top]]);
-  const historyLength=G.hist.length;
-  a.autoBuild();assert(a.designConnected(G.base));assert.equal(a.blockedList().length,0);assert.equal(G.hist.at(-1),before);assert.equal(G.hist.length,historyLength+1);
+test('auto-build creates a connected car and one undo returns the original design', () => {
+  start();
+  G.inv.spike += 6;
+  G.inv.frame += 4;
+  const before = JSON.stringify([[...G.base], [...G.top]]);
+  const historyLength = G.hist.length;
+  a.autoBuild();
+  assert(a.designConnected(G.base));
+  assert.equal(a.blockedList().length, 0);
+  assert.equal(G.hist.at(-1), before);
+  assert.equal(G.hist.length, historyLength + 1);
 });
-test('scoring is one point per round and a double-point finale everywhere',()=>{
-  assert.equal(Array.from({length:10},(_,i)=>a.roundPoints(i+1)).reduce((x,y)=>x+y),11);
-  assert.equal(a.pointsRemaining(0),11);assert.equal(a.pointsRemaining(1),10);assert.equal(a.pointsRemaining(9),2);assert.equal(a.pointsRemaining(10),0);
+test('scoring is one point per round and a double-point finale everywhere', () => {
+  assert.equal(
+    Array.from({ length: 10 }, (_, i) => a.roundPoints(i + 1)).reduce((x, y) => x + y),
+    11
+  );
+  assert.equal(a.pointsRemaining(0), 11);
+  assert.equal(a.pointsRemaining(1), 10);
+  assert.equal(a.pointsRemaining(9), 2);
+  assert.equal(a.pointsRemaining(10), 0);
 });
-test('Space fires while J remains a separate jump action',()=>{
-  start();G.phase='battle';const b=a.getB();
+test('Space fires while J remains a separate jump action', () => {
+  start();
+  G.phase = 'battle';
+  const b = a.getB();
   // readLocal needs only a car for aim; resetProfile does not start the arena.
-  a.setB({touch:false,cars:[],me:0});a.keys.add('Space');assert.equal(a.readLocal().fire,true);
-  a.keys.delete('Space');a.keys.add('KeyJ');assert.equal(a.readLocal().fire,false);a.keys.clear();a.setB(b);
+  a.setB({ cars: [], me: 0 });
+  a.keys.add('Space');
+  assert.equal(a.readLocal().fire, true);
+  a.keys.delete('Space');
+  a.keys.add('KeyJ');
+  assert.equal(a.readLocal().fire, false);
+  a.keys.clear();
+  a.setB(b);
 });
-test('search, rarity, favorites and mount filters combine',()=>{
-  start();G.catalogQ='machine';assert(a.catalogMatches(a.MOD.mg));assert(!a.catalogMatches(a.MOD.spike));
-  G.catalogQ='';G.catalogRarity='3';assert(!a.catalogMatches(a.MOD.mg));
-  G.catalogRarity='all';G.favoritesOnly=true;G.favorites=new Set(['mg']);assert(a.catalogMatches(a.MOD.mg));assert(!a.catalogMatches(a.MOD.pulse));
-  G.favoritesOnly=false;G.compatibleOnly=true;assert(a.catalogMatches(a.MOD.mg));assert(!a.catalogMatches(a.MOD.shield));G.compatibleOnly=false;
+test('search, rarity, favorites and mount filters combine', () => {
+  start();
+  G.catalogQ = 'machine';
+  assert(a.catalogMatches(a.MOD.mg));
+  assert(!a.catalogMatches(a.MOD.spike));
+  G.catalogQ = '';
+  G.catalogRarity = '3';
+  assert(!a.catalogMatches(a.MOD.mg));
+  G.catalogRarity = 'all';
+  G.favoritesOnly = true;
+  G.favorites = new Set(['mg']);
+  assert(a.catalogMatches(a.MOD.mg));
+  assert(!a.catalogMatches(a.MOD.pulse));
+  G.favoritesOnly = false;
+  G.compatibleOnly = true;
+  assert(a.catalogMatches(a.MOD.mg));
+  assert(!a.catalogMatches(a.MOD.shield));
+  G.compatibleOnly = false;
 });
-test('weak-link analysis identifies fragile branches',()=>{
-  start();G.base=new Map([['0,0',{id:'cockpit',x:0,y:0,rot:0}],['0,-1',{id:'frame',x:0,y:-1,rot:0}],['0,-2',{id:'frame',x:0,y:-2,rot:0}]]);G.top=new Map();
-  assert.equal(a.weakLinks().length,1);assert.equal(a.weakLinks()[0].y,-1);
+test('weak-link analysis identifies fragile branches', () => {
+  start();
+  G.base = new Map([
+    ['0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 }],
+    ['0,-1', { id: 'frame', x: 0, y: -1, rot: 0 }],
+    ['0,-2', { id: 'frame', x: 0, y: -2, rot: 0 }]
+  ]);
+  G.top = new Map();
+  assert.equal(a.weakLinks().length, 1);
+  assert.equal(a.weakLinks()[0].y, -1);
 });
-test('crate charges once, grants once and skip cannot duplicate rewards',()=>{
-  start();const count=()=>Object.values(G.inv).reduce((x,y)=>x+y,0),before=count();
-  a.openCrate();assert.equal(G.coins,40);const gained=count();assert(gained>before);
-  a.openCrate();assert.equal(G.coins,40);assert.equal(count(),gained);
-  r.elements.get('cSkip').click();r.elements.get('cSkip').click();assert.equal(count(),gained);
-  r.elements.get('cDone').click();assert(r.elements.get('ovCrate').hidden);
+test('crate charges once, grants once and skip cannot duplicate rewards', () => {
+  start();
+  const count = () => Object.values(G.inv).reduce((x, y) => x + y, 0),
+    before = count();
+  a.openCrate();
+  assert.equal(G.coins, 40);
+  const gained = count();
+  assert(gained > before);
+  a.openCrate();
+  assert.equal(G.coins, 40);
+  assert.equal(count(), gained);
+  r.elements.get('cSkip').click();
+  r.elements.get('cSkip').click();
+  assert.equal(count(), gained);
+  r.elements.get('cDone').click();
+  assert(r.elements.get('ovCrate').hidden);
 });
-test('connection loss preserves the car and pauses instead of ending immediately',()=>{
-  start();G.mode='mp';G.started=true;G.phase='battle';a.Net.role='host';a.Net.connected=true;a.Net.conn={close(){}};
-  const before=JSON.stringify([...G.base]);a.Net.lost();assert(a.Net.reconnecting);assert.equal(G.phase,'battle');assert.equal(JSON.stringify([...G.base]),before);assert(!r.elements.get('ovReconnect').hidden);
-  a.Net.resumeConnection();assert(!a.Net.reconnecting);assert.equal(G.phase,'battle');assert(r.elements.get('ovReconnect').hidden);
+test('connection loss preserves the car and pauses instead of ending immediately', () => {
+  start();
+  G.mode = 'mp';
+  G.started = true;
+  G.phase = 'battle';
+  a.Net.role = 'host';
+  a.Net.connected = true;
+  a.Net.conn = { close() {} };
+  const before = JSON.stringify([...G.base]);
+  a.Net.lost();
+  assert(a.Net.reconnecting);
+  assert.equal(G.phase, 'battle');
+  assert.equal(JSON.stringify([...G.base]), before);
+  assert(!r.elements.get('ovReconnect').hidden);
+  a.Net.resumeConnection();
+  assert(!a.Net.reconnecting);
+  assert.equal(G.phase, 'battle');
+  assert(r.elements.get('ovReconnect').hidden);
 });
-test('ping and connection quality update from round-trip messages',()=>{
-  a.Net.connected=true;a.Net.ping=null;r.advance(50);a.Net.recv({t:'pong',at:0});assert.equal(a.Net.ping,50);a.Net.updateStatus();assert(r.elements.get('netStatus').textContent.includes('50 ms'));
+test('ping and connection quality update from round-trip messages', () => {
+  a.Net.connected = true;
+  a.Net.ping = null;
+  r.advance(50);
+  a.Net.recv({ t: 'pong', at: 0 });
+  assert.equal(a.Net.ping, 50);
+  a.Net.updateStatus();
+  assert(r.elements.get('netStatus').textContent.includes('50 ms'));
 });
-test('reconnect timeout ends cleanly without deleting the vehicle',()=>{
-  a.Net.role='host';a.Net.conn={close(){}};a.Net.connected=true;a.Net.lost();r.advance(31000);assert.equal(G.phase,'final');assert(!a.Net.reconnecting);assert(G.base.size>0);a.Net.close();
+test('reconnect timeout ends cleanly without deleting the vehicle', () => {
+  a.Net.role = 'host';
+  a.Net.conn = { close() {} };
+  a.Net.connected = true;
+  a.Net.lost();
+  r.advance(31000);
+  assert.equal(G.phase, 'final');
+  assert(!a.Net.reconnecting);
+  assert(G.base.size > 0);
+  a.Net.close();
 });
-test('breaking a connector records the detached branch for replay',()=>{
-  start();const v=a.makeCar({base:new Map([['0,0',{id:'cockpit',x:0,y:0,rot:0}],['0,-1',{id:'frame',x:0,y:-1,rot:0}],['0,-2',{id:'frame',x:0,y:-2,rot:0}]]),top:new Map()},0,100,100,0,{tune:[]});
-  const b={rec:true,ev:[],fx:[],cars:[v],time:0,objs:[],uidc:0,nums:[],shots:[],debris:[],hitDirs:[]};a.setB(b);
-  a.killInst(v,v.insts.find(i=>i.id==='frame'&&i.cells.some(c=>c.gy===-1)));
-  assert(b.ev.some(e=>e[0]==='lesson'&&e[4].includes('attached part')));
+test('breaking a connector records the detached branch for replay', () => {
+  start();
+  const v = a.makeCar(
+    {
+      base: new Map([
+        ['0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 }],
+        ['0,-1', { id: 'frame', x: 0, y: -1, rot: 0 }],
+        ['0,-2', { id: 'frame', x: 0, y: -2, rot: 0 }]
+      ]),
+      top: new Map()
+    },
+    0,
+    100,
+    100,
+    0,
+    { tune: [] }
+  );
+  const b = {
+    rec: true,
+    ev: [],
+    fx: [],
+    cars: [v],
+    time: 0,
+    objs: [],
+    uidc: 0,
+    nums: [],
+    shots: [],
+    debris: [],
+    hitDirs: []
+  };
+  a.setB(b);
+  a.killInst(
+    v,
+    v.insts.find(i => i.id === 'frame' && i.cells.some(c => c.gy === -1))
+  );
+  assert(b.ev.some(e => e[0] === 'lesson' && e[4].includes('attached part')));
 });
-test('release version contains all requested UI affordances',()=>{
-  for(const text of ['id="cSkip"','id="btnArcs"','Weak links','Search modules','Battle music','Reconnect window expired','LMB/Space','data-k="KeyJ"'])assert(html.includes(text),text);
+test('release version contains all requested UI affordances', () => {
+  for (const text of [
+    'id="cSkip"',
+    'id="btnArcs"',
+    'Weak links',
+    'Search modules',
+    'Battle music',
+    'Reconnect window expired',
+    'LMB/Space'
+  ])
+    assert(html.includes(text), text);
   assert(!html.includes('round N is worth N points'));
 });
-test('two peers recover a dropped battle with authoritative score, clock and cooldowns',()=>{
-  const host=runtime(),guest=runtime(),h=host.api,g=guest.api;
-  for(const x of [h,g]){x.startMatch('solo');x.openBuild();x.G.mode='mp';x.G.started=true;}
-  h.Net.role='host';g.Net.role='client';
-  function pair(){
-    const messages=[];
-    const make=peer=>({peer,open:false,handlers:{},on(k,f){this.handlers[k]=f;},send(d){messages.push(()=>this.other.handlers.data?.(JSON.parse(JSON.stringify(d))));},close(){if(!this.open)return;this.open=false;this.handlers.close?.();this.other.open=false;this.other.handlers.close?.();}});
-    const hc=make('guest-id'),gc=make('host-id');hc.other=gc;gc.other=hc;
-    h.Net.bind(hc);g.Net.bind(gc);hc.open=gc.open=true;hc.handlers.open();gc.handlers.open();
-    const flush=()=>{let n=0;while(messages.length){assert(n++<100);messages.shift()();}};flush();return {hc,gc,flush};
+test('two peers recover a dropped battle with authoritative score, clock and cooldowns', () => {
+  const host = runtime(),
+    guest = runtime(),
+    h = host.api,
+    g = guest.api;
+  for (const x of [h, g]) {
+    x.startMatch('solo');
+    x.openBuild();
+    x.G.mode = 'mp';
+    x.G.started = true;
   }
-  let channel=pair();assert(h.Net.connected&&g.Net.connected);
-  const cfg=h.makeCfg(g.myCarCfg());h.toBattle({...cfg,net:'host',me:0});g.toBattle({...cfg,net:'client',me:1});
-  h.G.score=[3,1];h.getB().time=12;h.getB().t=78;h.getB().cars[0].insts[0].bcd=16;
-  channel.hc.close();assert(h.Net.reconnecting&&g.Net.reconnecting);assert.equal(h.G.phase,'battle');
-  channel=pair();assert(!h.Net.reconnecting&&!g.Net.reconnecting);assert.deepEqual([...g.G.score],[1,3]);assert.equal(g.getB().time,12);assert.equal(g.getB().t,78);assert.equal(g.getB().cars[0].insts[0].bcd,16);
-  h.Net.close();channel.flush();g.Net.close();
+  h.Net.role = 'host';
+  g.Net.role = 'client';
+  function pair() {
+    const messages = [];
+    const make = peer => ({
+      peer,
+      open: false,
+      handlers: {},
+      on(k, f) {
+        this.handlers[k] = f;
+      },
+      send(d) {
+        messages.push(() => this.other.handlers.data?.(JSON.parse(JSON.stringify(d))));
+      },
+      close() {
+        if (!this.open) return;
+        this.open = false;
+        this.handlers.close?.();
+        this.other.open = false;
+        this.other.handlers.close?.();
+      }
+    });
+    const hc = make('guest-id'),
+      gc = make('host-id');
+    hc.other = gc;
+    gc.other = hc;
+    h.Net.bind(hc);
+    g.Net.bind(gc);
+    hc.open = gc.open = true;
+    hc.handlers.open();
+    gc.handlers.open();
+    const flush = () => {
+      let n = 0;
+      while (messages.length) {
+        assert(n++ < 100);
+        messages.shift()();
+      }
+    };
+    flush();
+    return { hc, gc, flush };
+  }
+  let channel = pair();
+  assert(h.Net.connected && g.Net.connected);
+  const cfg = h.makeCfg(g.myCarCfg());
+  h.toBattle({ ...cfg, net: 'host', me: 0 });
+  g.toBattle({ ...cfg, net: 'client', me: 1 });
+  h.G.score = [3, 1];
+  h.getB().time = 12;
+  h.getB().t = 78;
+  h.getB().cars[0].insts[0].bcd = 16;
+  channel.hc.close();
+  assert(h.Net.reconnecting && g.Net.reconnecting);
+  assert.equal(h.G.phase, 'battle');
+  channel = pair();
+  assert(!h.Net.reconnecting && !g.Net.reconnecting);
+  assert.deepEqual([...g.G.score], [1, 3]);
+  assert.equal(g.getB().time, 12);
+  assert.equal(g.getB().t, 78);
+  assert.equal(g.getB().cars[0].insts[0].bcd, 16);
+  h.Net.close();
+  channel.flush();
+  g.Net.close();
 });
-test('recovery cannot double-award a completed round or skip a player draft',()=>{
-  const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.G.mode='mp';aa.Net.role='client';
-  const cfg=aa.makeCfg(aa.myCarCfg());aa.toBattle({...cfg,net:'client',me:1});
-  const result={round:1,win:0,why:'test',stats:aa.getB().stats};
-  aa.Net.recv({t:'recover',round:2,score:[1,0],sched:aa.G.sched,phase:'build',result,resultScoreIncluded:true});
-  assert.equal(aa.G.round,1);assert.deepEqual([...aa.G.score],[0,0]);assert.equal(aa.getB().seq,'end');
-  aa.G.phase='result';aa.Net.recv({t:'recover',round:2,score:[1,0],sched:aa.G.sched,phase:'build',result,resultScoreIncluded:true});
-  assert.equal(aa.G.round,1);assert.deepEqual([...aa.G.score],[0,1]);
+test('recovery cannot double-award a completed round or skip a player draft', () => {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('solo');
+  aa.openBuild();
+  aa.G.mode = 'mp';
+  aa.Net.role = 'client';
+  const cfg = aa.makeCfg(aa.myCarCfg());
+  aa.toBattle({ ...cfg, net: 'client', me: 1 });
+  const result = { round: 1, win: 0, why: 'test', stats: aa.getB().stats };
+  aa.Net.recv({
+    t: 'recover',
+    round: 2,
+    score: [1, 0],
+    sched: aa.G.sched,
+    phase: 'build',
+    result,
+    resultScoreIncluded: true
+  });
+  assert.equal(aa.G.round, 1);
+  assert.deepEqual([...aa.G.score], [0, 0]);
+  assert.equal(aa.getB().seq, 'end');
+  aa.G.phase = 'result';
+  aa.Net.recv({
+    t: 'recover',
+    round: 2,
+    score: [1, 0],
+    sched: aa.G.sched,
+    phase: 'build',
+    result,
+    resultScoreIncluded: true
+  });
+  assert.equal(aa.G.round, 1);
+  assert.deepEqual([...aa.G.score], [0, 1]);
 });
-test('music schedules sound in battle and stops for pause, recovery and zero volume',()=>{
-  let notes=0;
-  const param=()=>({value:0,setValueAtTime(){},setTargetAtTime(){},exponentialRampToValueAtTime(){}});
-  const node=()=>({gain:param(),frequency:param(),Q:param(),connect(){},disconnect(){},start(){notes++;},stop(){}});
-  class AudioContext {constructor(){this.state='running';this.currentTime=0;this.sampleRate=100;this.destination=node();}createGain(){return node();}createDynamicsCompressor(){return node();}createOscillator(){return node();}createBiquadFilter(){return node();}createBufferSource(){return node();}createBuffer(){return {getChannelData:()=>new Float32Array(100)};}resume(){this.state='running';}}
-  const rr=runtime({AudioContext}),aa=rr.api;aa.unlock();aa.G.phase='battle';aa.setB({t:90});aa.BattleMusic.update();assert(aa.BattleMusic.timer);assert(notes>0);
-  const timer=aa.BattleMusic.timer;aa.BattleMusic.update();assert.equal(aa.BattleMusic.timer,timer);
-  aa.getB().paused=true;aa.BattleMusic.update();assert.equal(aa.BattleMusic.timer,null);aa.getB().paused=false;aa.Net.reconnecting=true;aa.BattleMusic.update();assert.equal(aa.BattleMusic.timer,null);
-  aa.Net.reconnecting=false;aa.SETTINGS.music=0;aa.BattleMusic.update();assert.equal(aa.BattleMusic.timer,null);
+test('music schedules sound in battle and stops for pause, recovery and zero volume', () => {
+  let notes = 0;
+  const param = () => ({ value: 0, setValueAtTime() {}, setTargetAtTime() {}, exponentialRampToValueAtTime() {} });
+  const node = () => ({
+    gain: param(),
+    frequency: param(),
+    Q: param(),
+    connect() {},
+    disconnect() {},
+    start() {
+      notes++;
+    },
+    stop() {}
+  });
+  class AudioContext {
+    constructor() {
+      this.state = 'running';
+      this.currentTime = 0;
+      this.sampleRate = 100;
+      this.destination = node();
+    }
+    createGain() {
+      return node();
+    }
+    createDynamicsCompressor() {
+      return node();
+    }
+    createOscillator() {
+      return node();
+    }
+    createBiquadFilter() {
+      return node();
+    }
+    createBufferSource() {
+      return node();
+    }
+    createBuffer() {
+      return { getChannelData: () => new Float32Array(100) };
+    }
+    resume() {
+      this.state = 'running';
+    }
+  }
+  const rr = runtime({ AudioContext }),
+    aa = rr.api;
+  aa.unlock();
+  aa.G.phase = 'battle';
+  aa.setB({ t: 90 });
+  aa.BattleMusic.update();
+  assert(aa.BattleMusic.timer);
+  assert(notes > 0);
+  const timer = aa.BattleMusic.timer;
+  aa.BattleMusic.update();
+  assert.equal(aa.BattleMusic.timer, timer);
+  aa.getB().paused = true;
+  aa.BattleMusic.update();
+  assert.equal(aa.BattleMusic.timer, null);
+  aa.getB().paused = false;
+  aa.Net.reconnecting = true;
+  aa.BattleMusic.update();
+  assert.equal(aa.BattleMusic.timer, null);
+  aa.Net.reconnecting = false;
+  aa.SETTINGS.music = 0;
+  aa.BattleMusic.update();
+  assert.equal(aa.BattleMusic.timer, null);
 });
-function mobileRuntime(){
-  const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.SETTINGS.touchControls='on';aa.G.phase='battle';
-  const cfg=aa.makeCfg(aa.myCarCfg());aa.toBattle({...cfg,me:0,net:null});aa.getB().touch=true;aa.getB().seq='play';
-  rr.context.document.documentElement.clientWidth=390;
-  rr.elements.get('ac').getBoundingClientRect=()=>({left:10,top:50,width:390,height:720,bottom:770});
-  aa.sizeArena();aa.cam.x=1000;aa.cam.y=625;aa.cam.z=1;
-  return {rr,aa};
+function arenaRuntime() {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('solo');
+  aa.openBuild();
+  aa.G.phase = 'battle';
+  const cfg = aa.makeCfg(aa.myCarCfg());
+  aa.toBattle({ ...cfg, me: 0, net: null });
+  aa.getB().seq = 'play';
+  rr.elements.get('ac').getBoundingClientRect = () => ({ left: 10, top: 50, width: 1280, height: 720, bottom: 770 });
+  aa.sizeArena();
+  aa.cam.x = 1000;
+  aa.cam.y = 625;
+  aa.cam.z = 1;
+  return { rr, aa };
 }
-test('portrait projection and mouse aiming round-trip at every camera position',()=>{
-  const {aa}=mobileRuntime();assert.equal(aa.view.rot,Math.PI/2);
-  for(const rot of [0,Math.PI/2])for(const z of [1,1.6,2]){
-    aa.view.rot=rot;aa.cam.z=z;
-    for(const [x,y] of [[20,20],[1000,625],[1980,1230],[230,440]]){
-      const screen=aa.worldToScreen(x,y),world=aa.toWorld(screen[0]+10,screen[1]+50);
-      assert(Math.abs(world[0]-x)<1e-8);assert(Math.abs(world[1]-y)<1e-8);
+test('screen projection and mouse aiming round-trip at every camera position', () => {
+  const { aa } = arenaRuntime();
+  for (const z of [1, 1.6, 2]) {
+    aa.cam.z = z;
+    for (const [x, y] of [
+      [20, 20],
+      [1000, 625],
+      [1980, 1230],
+      [230, 440]
+    ]) {
+      const screen = aa.worldToScreen(x, y),
+        world = aa.toWorld(screen[0] + 10, screen[1] + 50);
+      assert(Math.abs(world[0] - x) < 1e-8);
+      assert(Math.abs(world[1] - y) < 1e-8);
     }
   }
 });
-test('rotated portrait camera keeps distant opponents visible without the old forced zoom',()=>{
-  const {aa}=mobileRuntime(),b=aa.getB();b.cars[0].x=180;b.cars[0].y=625;b.cars[1].x=1820;b.cars[1].y=625;
-  for(let i=0;i<200;i++)aa.updateCam(.05);
-  assert(aa.cam.z<=1.6);
-  for(const v of b.cars){const [x,y]=aa.worldToScreen(v.x,v.y);assert(x>0&&x<aa.view.w);assert(y>0&&y<aa.view.h);}
+test('the camera keeps distant opponents visible', () => {
+  const { aa } = arenaRuntime(),
+    b = aa.getB();
+  b.cars[0].x = 180;
+  b.cars[0].y = 625;
+  b.cars[1].x = 1820;
+  b.cars[1].y = 625;
+  for (let i = 0; i < 200; i++) aa.updateCam(0.05);
+  assert(aa.cam.z <= 1.6);
+  for (const v of b.cars) {
+    const [x, y] = aa.worldToScreen(v.x, v.y);
+    assert(x > 0 && x < aa.view.w);
+    assert(y > 0 && y < aa.view.h);
+  }
 });
-test('twin sticks aim without firing until the fire ring and preserve aim on release',()=>{
-  const {rr,aa}=mobileRuntime(),b=aa.getB(),canvas=rr.elements.get('ac');
-  const send=(type,id,x,y)=>{for(const f of canvas.listeners[type]||[])f({type,pointerType:'touch',pointerId:id,clientX:x,clientY:y,button:0,preventDefault(){}});};
-  send('pointerdown',7,330,620);send('pointermove',7,330,593);
-  let input=aa.readLocal();assert(!input.fire);assert(input.aimX<b.cars[0].x);assert(Math.abs(input.aimY-b.cars[0].y)<1e-8);
-  send('pointermove',7,330,569);assert(aa.readLocal().fire);
-  send('pointercancel',7,330,569);assert(!aa.readLocal().fire);assert(b.touchAim);
-  aa.keys.add('Space');assert(aa.readLocal().fire);aa.keys.clear();
+test('arena presentation leaves world coordinates and protocol intact', () => {
+  const { aa } = arenaRuntime();
+  const before = aa.getB().cars.map(v => [v.x, v.y, v.a]);
+  aa.syncPresentation();
+  assert.deepEqual(
+    aa.getB().cars.map(v => [v.x, v.y, v.a]),
+    before
+  );
+  assert(/NET_PROTOCOL\s*=\s*\d+\b/.test(html));
 });
-test('rotated drive stick and cancellation remain independent of the aiming finger',()=>{
-  const {rr,aa}=mobileRuntime(),b=aa.getB(),canvas=rr.elements.get('ac');b.cars[0].a=-Math.PI/2;
-  const send=(type,id,x,y)=>{for(const f of canvas.listeners[type]||[])f({type,pointerType:'touch',pointerId:id,clientX:x,clientY:y,button:0,preventDefault(){}});};
-  send('pointerdown',1,80,620);send('pointermove',1,80,570);send('pointerdown',2,320,620);send('pointermove',2,320,570);
-  const input=aa.readLocal();assert(input.th>.8);assert(Math.abs(input.st)<.001);assert(input.fire);
-  send('pointerup',1,80,570);assert.equal(b.joy,null);assert(aa.readLocal().fire);
-  rr.event('blur',{});assert.equal(b.aimJoy,null);assert(!aa.readLocal().fire);
+test('open overlays release held input and prevent background fire', () => {
+  const { rr, aa } = arenaRuntime();
+  aa.keys.add('Space');
+  aa.keys.add('KeyW');
+  rr.elements.get('ovSettings').hidden = false;
+  const i = aa.readLocal();
+  assert.equal(i.fire, false);
+  assert.equal(i.th, 0);
+  assert.equal(aa.keys.size, 0);
 });
-test('touch actions reflect equipment and real cooldowns',()=>{
-  const {aa}=mobileRuntime(),v=aa.getB().cars[0];let enabled=aa.equippedTouchActions(v);
-  assert(enabled.Space);assert(!enabled.KeyF);assert(!enabled.KeyC);assert(!enabled.KeyX);
-  v.has.blink=1;v.has.anchor=1;v.has.coupler=1;v.blinkCd=2.5;
-  enabled=aa.equippedTouchActions(v);assert(enabled.KeyF&&enabled.KeyC&&enabled.KeyX);assert.equal(aa.touchActionCooldown(v,'KeyF'),2.5);
+test('all fifty designs have unique names, intended shapes, tags and executable mechanics', () => {
+  const added = a.MODS.filter(m => m.plan && !m.odd);
+  assert.equal(added.length, 50);
+  assert.equal(new Set(a.MODS.map(m => m.name)).size, 205);
+  const counts = {};
+  for (const m of added) {
+    const b = a.shapeBounds(m);
+    counts[m.shapeName ? 'special' : `${b.w}x${b.h}`] = (counts[m.shapeName ? 'special' : `${b.w}x${b.h}`] || 0) + 1;
+    assert(m.tags.includes(m.branch));
+    assert(m.desc && m.con);
+  }
+  assert.deepEqual(counts, { '1x1': 15, '1x2': 10, '1x3': 5, '2x2': 10, '2x3': 5, special: 5 });
 });
-test('solo aim assist is optional and never affects multiplayer or night visibility',()=>{
-  const {aa}=mobileRuntime(),b=aa.getB(),v=b.cars[0],e=b.cars[1];v.x=800;v.y=625;e.x=1100;e.y=637;b.st=[];b.objs=[];b.clouds=[];
-  const before=[1400,625];aa.G.mode='mp';assert.deepEqual([...aa.touchAimAssist(v,...before)],before);
-  aa.G.mode='solo';b.special='night';assert.deepEqual([...aa.touchAimAssist(v,...before)],before);
-  b.special=null;const assisted=aa.touchAimAssist(v,...before);assert(assisted[1]>625&&assisted[1]<649);
-  b.clouds=[{x:e.x,y:e.y,r:120}];assert.deepEqual([...aa.touchAimAssist(v,...before)],before);
+test('odd parts cover every rarity, have glyphs and unusual shapes', () => {
+  const odd = a.MODS.filter(m => m.odd);
+  assert.equal(odd.length, 15);
+  assert.equal(new Set(a.MODS.map(m => m.id)).size, a.MODS.length);
+  for (let r = 0; r < 5; r++) assert.equal(odd.filter(m => m.rar === r).length, 3);
+  assert(odd.every(m => m.glyph && m.desc && m.con && m.art.k === 'plan'));
+  assert(odd.filter(m => a.cellCount(m) > 1).length >= 10);
+  const sh = new Set(
+    odd.map(m => {
+      const b = a.shapeBounds(m);
+      return b.w + 'x' + b.h + ':' + a.cellCount(m);
+    })
+  );
+  assert(sh.size >= 6);
 });
-test('garage tabs and arena presentation leave world coordinates and protocol intact',()=>{
-  const {rr,aa}=mobileRuntime();aa.setMobileTab('parts');assert.equal(rr.elements.get('build').dataset.mobileTab,'parts');aa.setMobileTab('bay');assert.equal(rr.elements.get('build').dataset.mobileTab,'bay');
-  const before=aa.getB().cars.map(v=>[v.x,v.y,v.a]);aa.syncPresentation();assert.deepEqual(aa.getB().cars.map(v=>[v.x,v.y,v.a]),before);
-  assert(/NET_PROTOCOL\s*=\s*9\b/.test(html));assert(/height:\s*100dvh/.test(html));assert(html.includes('Subtle touch aim assist (solo only)'));
+test('every new footprint rotates four times without changing occupied area or filling shape holes', () => {
+  for (const m of a.MODS.filter(m => m.plan)) {
+    for (let rot = 0; rot < 4; rot++) {
+      const cs = a.footprint(m.id, rot, 2, 3);
+      assert.equal(cs.length, a.cellCount(m));
+      assert.equal(new Set(cs.map(c => c.join(','))).size, cs.length);
+      const center = a.instCenter({ id: m.id, rot, x: 2, y: 3 });
+      assert(center.every(Number.isFinite));
+    }
+  }
+  const l = a.footprint('campfork', 0, 0, 0);
+  assert(!l.some(c => c[0] === 1 && c[1] === 0));
+  assert.equal(a.occupancy(new Map([['0,0', { id: 'campfork', rot: 0, x: 0, y: 0 }]])).size, 3);
 });
-test('open overlays release held touch input and prevent background fire',()=>{
-  const {rr,aa}=mobileRuntime();const b=aa.getB();b.aimJoy={x:1,y:0,m:1};aa.keys.add('Space');
-  rr.elements.get('ovSettings').hidden=false;const i=aa.readLocal();assert.equal(i.fire,false);assert.equal(i.th,0);assert.equal(b.aimJoy,null);assert.equal(aa.keys.size,0);
-  assert.deepEqual({...aa.equippedTouchActions(null)},{});
+test('multi-cell equipment needs every mount, cannot overlap, and removes as one module from any cell', () => {
+  start();
+  G.inv.popcorn = 2;
+  G.top.clear();
+  G.base.clear();
+  G.base.set('0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 });
+  for (let y = -2; y <= 2; y++)
+    for (let x = -2; x <= 2; x++) if (x || y) G.base.set(`${x},${y}`, { id: 'girder', rot: 0, x, y });
+  G.sel = 'popcorn';
+  G.rot = 0;
+  assert.equal(a.canPlaceTop('popcorn', 1, 1, a.occupancy(G.base)), null);
+  a.act(1, 1, 'place');
+  assert.equal(G.top.size, 1);
+  assert.equal(a.topAt('2,0').id, 'popcorn');
+  assert(a.canPlaceTop('popcorn', 2, 1, a.occupancy(G.base)));
+  G.layerView = 'both';
+  a.act(2, 0, 'remove');
+  assert.equal(G.top.size, 0);
+  G.base.delete('2,0');
+  assert(a.canPlaceTop('popcorn', 1, 1, a.occupancy(G.base)));
 });
-test('all fifty designs have unique names, intended shapes, tags and executable mechanics',()=>{
- const added=a.MODS.filter(m=>m.plan&&!m.odd);assert.equal(added.length,50);assert.equal(new Set(a.MODS.map(m=>m.name)).size,205);
- const counts={};for(const m of added){const b=a.shapeBounds(m);counts[m.shapeName?'special':`${b.w}x${b.h}`]=(counts[m.shapeName?'special':`${b.w}x${b.h}`]||0)+1;assert(m.tags.includes(m.branch));assert(m.desc&&m.con);}
- assert.deepEqual(counts,{'1x1':15,'1x2':10,'1x3':5,'2x2':10,'2x3':5,special:5});
+test('all fifty drafted modules remain connected and auto-place never creates equipment overlap', () => {
+  for (const m of a.MODS.filter(m => m.plan)) {
+    start();
+    a.takeOption({ type: 'module', id: m.id, n: 1 });
+    a.autoPlace(true);
+    assert(
+      [...G.base.values(), ...G.top.values()].some(e => e.id === m.id),
+      m.name + ' did not mount'
+    );
+    assert(a.designConnected(G.base), m.name);
+    assert.equal(a.blockedList().length, 0, m.name);
+    const occupied = a.occupancy(G.top);
+    assert.equal(
+      occupied.size,
+      [...G.top.values()].reduce((n, e) => n + a.cellCount(a.MOD[e.id]), 0),
+      m.name
+    );
+  }
 });
-test('odd parts cover every rarity, have glyphs and unusual shapes',()=>{
- const odd=a.MODS.filter(m=>m.odd);assert.equal(odd.length,15);assert.equal(new Set(a.MODS.map(m=>m.id)).size,a.MODS.length);
- for(let r=0;r<5;r++)assert.equal(odd.filter(m=>m.rar===r).length,3);
- assert(odd.every(m=>m.glyph&&m.desc&&m.con&&m.art.k==='plan'));
- assert(odd.filter(m=>a.cellCount(m)>1).length>=10);
- const sh=new Set(odd.map(m=>{const b=a.shapeBounds(m);return b.w+'x'+b.h+':'+a.cellCount(m);}));assert(sh.size>=6);
-});
-test('every new footprint rotates four times without changing occupied area or filling shape holes',()=>{
- for(const m of a.MODS.filter(m=>m.plan)){for(let rot=0;rot<4;rot++){const cs=a.footprint(m.id,rot,2,3);assert.equal(cs.length,a.cellCount(m));assert.equal(new Set(cs.map(c=>c.join(','))).size,cs.length);const center=a.instCenter({id:m.id,rot,x:2,y:3});assert(center.every(Number.isFinite));}}
- const l=a.footprint('campfork',0,0,0);assert(!l.some(c=>c[0]===1&&c[1]===0));assert.equal(a.occupancy(new Map([['0,0',{id:'campfork',rot:0,x:0,y:0}]] )).size,3);
-});
-test('multi-cell equipment needs every mount, cannot overlap, and removes as one module from any cell',()=>{
- start();G.inv.popcorn=2;G.top.clear();G.base.clear();G.base.set('0,0',{id:'cockpit',x:0,y:0,rot:0});
- for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(x||y)G.base.set(`${x},${y}`,{id:'girder',rot:0,x,y});
- G.sel='popcorn';G.rot=0;assert.equal(a.canPlaceTop('popcorn',1,1,a.occupancy(G.base)),null);a.act(1,1,'place');assert.equal(G.top.size,1);assert.equal(a.topAt('2,0').id,'popcorn');
- assert(a.canPlaceTop('popcorn',2,1,a.occupancy(G.base)));G.layerView='both';a.act(2,0,'remove');assert.equal(G.top.size,0);
- G.base.delete('2,0');assert(a.canPlaceTop('popcorn',1,1,a.occupancy(G.base)));
-});
-test('all fifty drafted modules remain connected and auto-place never creates equipment overlap',()=>{
- for(const m of a.MODS.filter(m=>m.plan)){start();a.takeOption({type:'module',id:m.id,n:1});a.autoPlace(true);assert([...G.base.values(),...G.top.values()].some(e=>e.id===m.id),m.name+' did not mount');assert(a.designConnected(G.base),m.name);assert.equal(a.blockedList().length,0,m.name);const occupied=a.occupancy(G.top);assert.equal(occupied.size,[...G.top.values()].reduce((n,e)=>n+a.cellCount(a.MOD[e.id]),0),m.name);}
-});
-function planScene(id){
- const {rr,aa}=mobileRuntime();const b=aa.getB(),base=new Map(),top=new Map();
- for(let y=-5;y<=3;y++)for(let x=-3;x<=3;x++)base.set(`${x},${y}`,{id:x===0&&y===0?'cockpit':'girder',x,y,rot:0});
- const m=aa.MOD[id],e={id,x:0,y:-2,rot:0};if(m.layer==='t')top.set('0,-2',e);else {for(const [x,y] of aa.footprint(id,0,0,-2))base.delete(`${x},${y}`);base.set('0,-2',e);}
- const v=aa.makeCar({base,top},0,700,600,0,{tune:[],name:'Module test',paint:'#fff'});b.cars[0]=v;b.cars[1].x=1500;b.cars[1].y=600;b.st=[];b.objs=[];b.zones=[];b.pk=[];b.seq='play';b.time=1;aa.G.phase='battle';v.fire=true;v.aimX=700;v.aimY=0;return {rr,aa,b,v,I:v.insts.find(i=>i.id===id)};
+function planScene(id) {
+  const { rr, aa } = arenaRuntime();
+  const b = aa.getB(),
+    base = new Map(),
+    top = new Map();
+  for (let y = -5; y <= 3; y++)
+    for (let x = -3; x <= 3; x++)
+      base.set(`${x},${y}`, { id: x === 0 && y === 0 ? 'cockpit' : 'girder', x, y, rot: 0 });
+  const m = aa.MOD[id],
+    e = { id, x: 0, y: -2, rot: 0 };
+  if (m.layer === 't') top.set('0,-2', e);
+  else {
+    for (const [x, y] of aa.footprint(id, 0, 0, -2)) base.delete(`${x},${y}`);
+    base.set('0,-2', e);
+  }
+  const v = aa.makeCar({ base, top }, 0, 700, 600, 0, { tune: [], name: 'Module test', paint: '#fff' });
+  b.cars[0] = v;
+  b.cars[1].x = 1500;
+  b.cars[1].y = 600;
+  b.st = [];
+  b.objs = [];
+  b.zones = [];
+  b.pk = [];
+  b.seq = 'play';
+  b.time = 1;
+  aa.G.phase = 'battle';
+  v.fire = true;
+  v.aimX = 700;
+  v.aimY = 0;
+  return { rr, aa, b, v, I: v.insts.find(i => i.id === id) };
 }
-test('every new module runs and renders in combat without invalid positions, HP or projectile values',()=>{
- for(const m of a.MODS.filter(m=>m.plan)){const {aa,b,v,I}=planScene(m.id);assert(I,m.name);for(let n=0;n<45;n++){b.time+=.05;aa.planTick(v,.05);aa.weapons(v,.05);}
-  for(const n of [v.x,v.y,v.c.mass,v.rad,I.hp])assert(Number.isFinite(n),m.name);for(const shot of b.shots)for(const k of ['x','y','vx','vy','life','dmg'])assert(Number.isFinite(shot[k]),m.name+':'+k);
-  aa.drawArena();
- }
+test('every new module runs and renders in combat without invalid positions, HP or projectile values', () => {
+  for (const m of a.MODS.filter(m => m.plan)) {
+    const { aa, b, v, I } = planScene(m.id);
+    assert(I, m.name);
+    for (let n = 0; n < 45; n++) {
+      b.time += 0.05;
+      aa.planTick(v, 0.05);
+      aa.weapons(v, 0.05);
+    }
+    for (const n of [v.x, v.y, v.c.mass, v.rad, I.hp]) assert(Number.isFinite(n), m.name);
+    for (const shot of b.shots)
+      for (const k of ['x', 'y', 'vx', 'vy', 'life', 'dmg']) assert(Number.isFinite(shot[k]), m.name + ':' + k);
+    aa.drawArena();
+  }
 });
-test('cargo collects world scrap once, rejects own parts and cannot farm spilled cargo rewards',()=>{
- const {aa,b,v}=planScene('pouch');const o=aa.mkObj('crate',v.x,v.y,0);o.uid=44;assert(aa.planTakeScrap(v,o));assert.equal(v.cargo,1);assert.equal(v.coins,2);assert(!aa.planTakeScrap(v,o));
- const part={...o,dead:false,kind:'part',uid:45};assert(!aa.planTakeScrap(v,part));
- aa.planSpill(v,v.x,v.y);assert.equal(v.cargo,0);assert(!aa.planTakeScrap(v,b.objs[0]));const other=b.cars[1];other.has.pouch=1;assert(aa.planTakeScrap(other,b.objs[0]));assert.equal(other.coins,0);
+test('cargo collects world scrap once, rejects own parts and cannot farm spilled cargo rewards', () => {
+  const { aa, b, v } = planScene('pouch');
+  const o = aa.mkObj('crate', v.x, v.y, 0);
+  o.uid = 44;
+  assert(aa.planTakeScrap(v, o));
+  assert.equal(v.cargo, 1);
+  assert.equal(v.coins, 2);
+  assert(!aa.planTakeScrap(v, o));
+  const part = { ...o, dead: false, kind: 'part', uid: 45 };
+  assert(!aa.planTakeScrap(v, part));
+  aa.planSpill(v, v.x, v.y);
+  assert.equal(v.cargo, 0);
+  assert(!aa.planTakeScrap(v, b.objs[0]));
+  const other = b.cars[1];
+  other.has.pouch = 1;
+  assert(aa.planTakeScrap(other, b.objs[0]));
+  assert.equal(other.coins, 0);
 });
-test('cargo cap limits round rewards and lost storage spills its contents',()=>{
- const {aa,b,v,I}=planScene('hopper');for(let n=0;n<70;n++){v.cargo=0;const o=aa.mkObj('crate',0,0,0);o.uid=100+n;aa.planTakeScrap(v,o);}assert.equal(v.coins,40);v.cargo=5;aa.killInst(v,I,true);aa.planTick(v,.05);assert.equal(v.cargo,0);assert(b.objs.length>=5);
+test('cargo cap limits round rewards and lost storage spills its contents', () => {
+  const { aa, b, v, I } = planScene('hopper');
+  for (let n = 0; n < 70; n++) {
+    v.cargo = 0;
+    const o = aa.mkObj('crate', 0, 0, 0);
+    o.uid = 100 + n;
+    aa.planTakeScrap(v, o);
+  }
+  assert.equal(v.coins, 40);
+  v.cargo = 5;
+  aa.killInst(v, I, true);
+  aa.planTick(v, 0.05);
+  assert.equal(v.cargo, 0);
+  assert(b.objs.length >= 5);
 });
-test('snowcap cancels only the first fire hit and bottlecap consumes collected scrap',()=>{
- const s=planScene('snowcap');assert.equal(s.aa.planHurt(s.v,s.I,20,'fire'),0);assert.equal(s.aa.planHurt(s.v,s.I,20,'fire'),20);
- const t=planScene('bottlecap');t.v.cargo=1;assert.equal(t.aa.planHurt(t.v,t.I,8,'light'),0);assert.equal(t.v.cargo,0);assert.equal(t.aa.planHurt(t.v,t.I,8,'light'),8);
+test('snowcap cancels only the first fire hit and bottlecap consumes collected scrap', () => {
+  const s = planScene('snowcap');
+  assert.equal(s.aa.planHurt(s.v, s.I, 20, 'fire'), 0);
+  assert.equal(s.aa.planHurt(s.v, s.I, 20, 'fire'), 20);
+  const t = planScene('bottlecap');
+  t.v.cargo = 1;
+  assert.equal(t.aa.planHurt(t.v, t.I, 8, 'light'), 0);
+  assert.equal(t.v.cargo, 0);
+  assert.equal(t.aa.planHurt(t.v, t.I, 8, 'light'), 8);
 });
-test('scrap spitter uses real cargo and bell, drops and counter have equipped cooldowns',()=>{
- const {aa,b,v,I}=planScene('spitter');v.cargo=2;I.cd=0;aa.planWeapon(v,I,.05);assert.equal(v.cargo,1);assert.equal(I.W.dmg,17);v.cargo=0;aa.planWeapon(v,I,.05);assert.equal(I.W.dmg,5);
- for(const [id,key] of [['soap','KeyZ'],['frostbead','KeyZ'],['foambath','KeyZ'],['rubberduck','KeyV']]){const p=planScene(id);p.aa.planActivate(p.v,key);const n=p.b.zones.length+p.b.decoys.length;p.aa.planActivate(p.v,key);assert.equal(p.b.zones.length+p.b.decoys.length,n);assert(p.I.planCd>p.b.time);assert(p.aa.equippedTouchActions(p.v)[key]);}
+test('scrap spitter uses real cargo and bell, drops and counter have equipped cooldowns', () => {
+  const { aa, b, v, I } = planScene('spitter');
+  v.cargo = 2;
+  I.cd = 0;
+  aa.planWeapon(v, I, 0.05);
+  assert.equal(v.cargo, 1);
+  assert.equal(I.W.dmg, 17);
+  v.cargo = 0;
+  aa.planWeapon(v, I, 0.05);
+  assert.equal(I.W.dmg, 5);
+  for (const [id, key] of [
+    ['soap', 'KeyZ'],
+    ['frostbead', 'KeyZ'],
+    ['foambath', 'KeyZ'],
+    ['rubberduck', 'KeyV']
+  ]) {
+    const p = planScene(id);
+    p.aa.planActivate(p.v, key);
+    const n = p.b.zones.length + p.b.decoys.length;
+    p.aa.planActivate(p.v, key);
+    assert.equal(p.b.zones.length + p.b.decoys.length, n);
+    assert(p.I.planCd > p.b.time);
+  }
 });
-test('dragon announces a real wind-up before firing and has a recovery cooldown',()=>{
- const {aa,b,v,I}=planScene('dragon');assert(aa.planWeapon(v,I,.6));assert.equal(I.charge,.6);assert.equal(aa.planWeapon(v,I,.7),false);assert(I.planBurst>0);assert(I.planCd>b.time);v.fire=false;I.planBurst=0;assert(aa.planWeapon(v,I,.1));assert.equal(I.charge,0);
+test('dragon announces a real wind-up before firing and has a recovery cooldown', () => {
+  const { aa, b, v, I } = planScene('dragon');
+  assert(aa.planWeapon(v, I, 0.6));
+  assert.equal(I.charge, 0.6);
+  assert.equal(aa.planWeapon(v, I, 0.7), false);
+  assert(I.planBurst > 0);
+  assert(I.planCd > b.time);
+  v.fire = false;
+  I.planBurst = 0;
+  assert(aa.planWeapon(v, I, 0.1));
+  assert.equal(I.charge, 0);
 });
-test('new cargo, cable and cooldown states survive snapshot and replay application',()=>{
- const {aa,b,v,I}=planScene('grapple');v.cargo=2;v.scrapEarned=4;I.planCd=8;I.heat=.7;v.planLinks=[{n:I.n,x:900,y:300,len:200,until:9}];b.scrapSeen=new Set([77]);const snap=aa.snapshot();v.cargo=0;I.planCd=0;v.planLinks=[];aa.applySnap(snap,true);assert.equal(v.cargo,2);assert.equal(I.planCd,8);assert.equal(v.planLinks[0].len,200);assert(b.scrapSeen.has(77));
+test('new cargo, cable and cooldown states survive snapshot and replay application', () => {
+  const { aa, b, v, I } = planScene('grapple');
+  v.cargo = 2;
+  v.scrapEarned = 4;
+  I.planCd = 8;
+  I.heat = 0.7;
+  v.planLinks = [{ n: I.n, x: 900, y: 300, len: 200, until: 9 }];
+  b.scrapSeen = new Set([77]);
+  const snap = aa.snapshot();
+  v.cargo = 0;
+  I.planCd = 0;
+  v.planLinks = [];
+  aa.applySnap(snap, true);
+  assert.equal(v.cargo, 2);
+  assert.equal(I.planCd, 8);
+  assert.equal(v.planLinks[0].len, 200);
+  assert(b.scrapSeen.has(77));
 });
-test('Scrap Run deposits only carried world scrap and ends at its announced target',()=>{
- const {aa,b,v}=planScene('pouch');aa.setupSpecial('scrap');b.zones=[{kind:'base',team:0,x:v.x-50,y:v.y-50,w:100,h:100}];v.cargo=5;aa.stepSpecial(.1);assert.equal(b.obj.score[0],5);assert.equal(v.cargo,0);v.cargo=15;aa.stepSpecial(.1);assert.equal(b.win,0);assert.equal(b.seq,'end');
+test('Scrap Run deposits only carried world scrap and ends at its announced target', () => {
+  const { aa, b, v } = planScene('pouch');
+  aa.setupSpecial('scrap');
+  b.zones = [{ kind: 'base', team: 0, x: v.x - 50, y: v.y - 50, w: 100, h: 100 }];
+  v.cargo = 5;
+  aa.stepSpecial(0.1);
+  assert.equal(b.obj.score[0], 5);
+  assert.equal(v.cargo, 0);
+  v.cargo = 15;
+  aa.stepSpecial(0.1);
+  assert.equal(b.win, 0);
+  assert.equal(b.seq, 'end');
 });
-test('Scrap Run timeout uses delivered scrap rather than health or undelivered cargo',()=>{
- const {aa,b,v}=planScene('pouch');aa.setupSpecial('scrap');b.obj.score=[4,7];v.cargo=20;const result=aa.specialTimeout();assert.equal(result[0],1);assert.equal(v.cargo,20);b.obj.score=[7,7];assert.equal(aa.specialTimeout(),null);
+test('Scrap Run timeout uses delivered scrap rather than health or undelivered cargo', () => {
+  const { aa, b, v } = planScene('pouch');
+  aa.setupSpecial('scrap');
+  b.obj.score = [4, 7];
+  v.cargo = 20;
+  const result = aa.specialTimeout();
+  assert.equal(result[0], 1);
+  assert.equal(v.cargo, 20);
+  b.obj.score = [7, 7];
+  assert.equal(aa.specialTimeout(), null);
 });
-test('format choices alter rules and awards while preserving the balanced default',()=>{
- const rr=runtime(),aa=rr.api;aa.startMatch('solo',null,'lives');assert.deepEqual([...aa.G.lives],[20,20]);assert.equal(aa.roundPoints(10),1);
- aa.startMatch('solo',null,'bounty');aa.G.score=[1,4];aa.G.bountyStreak=3;assert.deepEqual([...aa.formatAwards()],[2,1]);aa.G.bountyStreak=6;assert.deepEqual([...aa.formatAwards()],[3,1]);aa.G.score=[3,4];assert.deepEqual([...aa.formatAwards()],[1,1]);
- aa.startMatch('solo',null,'finalehill');assert.equal(aa.G.sched[9],'hill');assert.equal(aa.roundPoints(10),2);
- aa.startMatch('solo',null,'balanced');assert.equal(aa.roundPoints(10),2);assert.equal(Object.keys(aa.POWERUPS).length,6);
+test('format choices alter rules and awards while preserving the balanced default', () => {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('solo', null, 'lives');
+  assert.deepEqual([...aa.G.lives], [20, 20]);
+  assert.equal(aa.roundPoints(10), 1);
+  aa.startMatch('solo', null, 'bounty');
+  aa.G.score = [1, 4];
+  aa.G.bountyStreak = 3;
+  assert.deepEqual([...aa.formatAwards()], [2, 1]);
+  aa.G.bountyStreak = 6;
+  assert.deepEqual([...aa.formatAwards()], [3, 1]);
+  aa.G.score = [3, 4];
+  assert.deepEqual([...aa.formatAwards()], [1, 1]);
+  aa.startMatch('solo', null, 'finalehill');
+  assert.equal(aa.G.sched[9], 'hill');
+  assert.equal(aa.roundPoints(10), 2);
+  aa.startMatch('solo', null, 'balanced');
+  assert.equal(aa.roundPoints(10), 2);
+  assert.equal(Object.keys(aa.POWERUPS).length, 6);
 });
-test('new report tracks the actual damaged layer and first broken connection',()=>{
- const {aa,b,v,I}=planScene('tinder');aa.hurtInst(v,I,10,'kin',0,0,0,0,1);assert(v.damageMap['t|0,-2']>0);aa.killInst(v,I);assert.equal(v.firstBreak.id,'tinder');assert.equal(v.firstBreak.layer,'t');
+test('new report tracks the actual damaged layer and first broken connection', () => {
+  const { aa, b, v, I } = planScene('tinder');
+  aa.hurtInst(v, I, 10, 'kin', 0, 0, 0, 0, 1);
+  assert(v.damageMap['t|0,-2'] > 0);
+  aa.killInst(v, I);
+  assert.equal(v.firstBreak.id, 'tinder');
+  assert.equal(v.firstBreak.layer, 't');
 });
 
-test('every new module appears in a real catalog category',()=>{
- const cats=new Set(a.CATS.map(c=>c.id));for(const m of a.MODS.filter(m=>m.plan))assert(cats.has(m.cat),m.name+':'+m.cat);
+test('every new module appears in a real catalog category', () => {
+  const cats = new Set(a.CATS.map(c => c.id));
+  for (const m of a.MODS.filter(m => m.plan)) assert(cats.has(m.cat), m.name + ':' + m.cat);
 });
-test('replacing a support under a non-anchor equipment cell returns the complete part',()=>{
- start();G.base.clear();G.top.clear();G.ws=new Set();for(let y=-3;y<=2;y++)for(let x=-3;x<=3;x++){G.ws.add(`${x},${y}`);G.base.set(`${x},${y}`,{id:x||y?'girder':'cockpit',x,y,rot:0});}
- G.inv.popcorn=1;G.inv.frame=99;G.top.set('1,1',{id:'popcorn',x:1,y:1,rot:0});G.sel='frame';G.layerView='both';a.act(2,0,'place');assert.equal(G.top.size,0);assert.equal(G.base.get('2,0').id,'frame');
+test('replacing a support under a non-anchor equipment cell returns the complete part', () => {
+  start();
+  G.base.clear();
+  G.top.clear();
+  G.ws = new Set();
+  for (let y = -3; y <= 2; y++)
+    for (let x = -3; x <= 3; x++) {
+      G.ws.add(`${x},${y}`);
+      G.base.set(`${x},${y}`, { id: x || y ? 'girder' : 'cockpit', x, y, rot: 0 });
+    }
+  G.inv.popcorn = 1;
+  G.inv.frame = 99;
+  G.top.set('1,1', { id: 'popcorn', x: 1, y: 1, rot: 0 });
+  G.sel = 'frame';
+  G.layerView = 'both';
+  a.act(2, 0, 'place');
+  assert.equal(G.top.size, 0);
+  assert.equal(G.base.get('2,0').id, 'frame');
 });
-test('new tow cables have separate roots, follow a moving rival and pull both cars',()=>{
- const {aa,b,v,I}=planScene('towyoke'),enemy=b.cars[1];enemy.x=v.x+200;enemy.y=v.y;v.aimX=enemy.x;v.aimY=enemy.y;aa.planActivate(v,'RMB');assert.equal(v.planLinks.length,2);assert.notEqual(v.planLinks[0].off,v.planLinks[1].off);
- const old=v.planLinks[0].len;enemy.x+=30;aa.planTick(v,.05);assert.equal(v.planLinks.length,2);assert(v.vx>0);assert(enemy.vx<0);assert.equal(v.planLinks[0].len,old);
+test('new tow cables have separate roots, follow a moving rival and pull both cars', () => {
+  const { aa, b, v, I } = planScene('towyoke'),
+    enemy = b.cars[1];
+  enemy.x = v.x + 200;
+  enemy.y = v.y;
+  v.aimX = enemy.x;
+  v.aimY = enemy.y;
+  aa.planActivate(v, 'RMB');
+  assert.equal(v.planLinks.length, 2);
+  assert.notEqual(v.planLinks[0].off, v.planLinks[1].off);
+  const old = v.planLinks[0].len;
+  enemy.x += 30;
+  aa.planTick(v, 0.05);
+  assert.equal(v.planLinks.length, 2);
+  assert(v.vx > 0);
+  assert(enemy.vx < 0);
+  assert.equal(v.planLinks[0].len, old);
 });
-test('rescue jack rights a stopped car and ice press requires a wind-up',()=>{
- const s=planScene('rescue');s.v.flip=2;s.v.fire=false;s.aa.planActivate(s.v,'KeyC');s.aa.planTick(s.v,.2);assert(s.v.flip<2);assert(s.I.rescueUntil>s.b.time);
- const p=planScene('glacier');p.I.blocked=false;assert(p.aa.planWeapon(p.v,p.I,.4));assert(p.I.punch>0);assert(p.aa.planWeapon(p.v,p.I,.7));assert(p.I.planCd>p.b.time);
+test('rescue jack rights a stopped car and ice press requires a wind-up', () => {
+  const s = planScene('rescue');
+  s.v.flip = 2;
+  s.v.fire = false;
+  s.aa.planActivate(s.v, 'KeyC');
+  s.aa.planTick(s.v, 0.2);
+  assert(s.v.flip < 2);
+  assert(s.I.rescueUntil > s.b.time);
+  const p = planScene('glacier');
+  p.I.blocked = false;
+  assert(p.aa.planWeapon(p.v, p.I, 0.4));
+  assert(p.I.punch > 0);
+  assert(p.aa.planWeapon(p.v, p.I, 0.7));
+  assert(p.I.planCd > p.b.time);
 });
-test('finishing a lives round removes the announced lives and bounty grants its actual points',()=>{
- for(const format of ['lives','bounty']){const {rr,aa,b}=planScene('tinder');aa.G.mode='mp';aa.G.format=format;aa.G.round=4;aa.G.lives=[20,20];aa.G.score=[0,0];b.cfg={round:4,awards:[4,1]};b.tape=[];aa.endRound(0,'Test duel');aa.finishBattle();assert.equal(aa.G.phase,'result');assert.equal(aa.G.score[0],4);if(format==='lives'){assert.equal(aa.G.lives[1],14);assert(rr.elements.get('resultCard').innerHTML.includes('20–14 lives'));}else assert(rr.elements.get('resultCard').innerHTML.includes('Defeat the leader'));}
+test('finishing a lives round removes the announced lives and bounty grants its actual points', () => {
+  for (const format of ['lives', 'bounty']) {
+    const { rr, aa, b } = planScene('tinder');
+    aa.G.mode = 'mp';
+    aa.G.format = format;
+    aa.G.round = 4;
+    aa.G.lives = [20, 20];
+    aa.G.score = [0, 0];
+    b.cfg = { round: 4, awards: [4, 1] };
+    b.tape = [];
+    aa.endRound(0, 'Test duel');
+    aa.finishBattle();
+    assert.equal(aa.G.phase, 'result');
+    assert.equal(aa.G.score[0], 4);
+    if (format === 'lives') {
+      assert.equal(aa.G.lives[1], 14);
+      assert(rr.elements.get('resultCard').innerHTML.includes('20–14 lives'));
+    } else assert(rr.elements.get('resultCard').innerHTML.includes('Defeat the leader'));
+  }
 });
 
-test('garage damage map returns to the same report without changing the blueprint',()=>{
- const {rr,aa,v}=planScene('pouch');const before=JSON.stringify([...aa.G.base]);const st={damage:{'b|0,0':10},first:{id:'cockpit',k:'0,0',layer:'b'}};aa.openGarageReport(st,'b|0,0');assert.equal(aa.G.phase,'review');rr.elements.get('reviewBack').click();assert.equal(aa.G.phase,'result');assert.equal(rr.elements.get('ovResult').hidden,false);assert.equal(JSON.stringify([...aa.G.base]),before);
+test('garage damage map returns to the same report without changing the blueprint', () => {
+  const { rr, aa, v } = planScene('pouch');
+  const before = JSON.stringify([...aa.G.base]);
+  const st = { damage: { 'b|0,0': 10 }, first: { id: 'cockpit', k: '0,0', layer: 'b' } };
+  aa.openGarageReport(st, 'b|0,0');
+  assert.equal(aa.G.phase, 'review');
+  rr.elements.get('reviewBack').click();
+  assert.equal(aa.G.phase, 'result');
+  assert.equal(rr.elements.get('ovResult').hidden, false);
+  assert.equal(JSON.stringify([...aa.G.base]), before);
 });
-test('completed Bounty recovery preserves awarded points and winning streak exactly once',()=>{
- const {rr,aa,b}=planScene('tinder');aa.G.mode='mp';aa.G.round=1;aa.Net.role='client';b.net='client';b.me=1;b.tape=[];aa.endRound(0,'Recovery');const stats=b.stats;b.seq='play';
- aa.Net.recv({t:'recover',round:1,score:[4,0],lives:[20,20],format:'bounty',bounty:3,bountyWinner:0,sched:aa.G.sched,phase:'result',result:{round:1,win:0,points:4,stats,why:'Recovery'},resultScoreIncluded:true});
- aa.finishBattle();assert.deepEqual([...aa.G.score],[0,4]);assert.equal(aa.G.bountyStreak,3);assert.equal(aa.G.bountyWinner,1);
-});
-
-test('parts show a single available quantity and an On car state',()=>{
- const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.takeOption({type:'module',id:'pouch',n:2});const content=rr.elements.get('leftBody').innerHTML;assert(content.includes('×2'));assert(content.includes('On car'));assert(!content.includes(' owned'));assert(!content.includes(' loose · '));assert(rr.elements.get('binCount').textContent.includes('available'));
-});
-test('crate shakes, rolls and reveals over several seconds without changing the prize',()=>{
- const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();const count=()=>Object.values(aa.G.inv).reduce((n,v)=>n+v,0),before=count();aa.openCrate();const owned=count();assert(owned>before);
- const run=ms=>{for(let t=0;t<ms;t+=16){rr.advance(16);for(const f of rr.rafs.splice(0))f(rr.context.performance.now());}};
- run(3000);assert.equal(rr.elements.get('reelres').innerHTML,'','revealed too early');
- run(3600);assert(rr.elements.get('reelres').innerHTML.includes('Back to the garage'));assert.equal(count(),owned);rr.elements.get('cSkip').click();assert.equal(count(),owned);
-});
-test('one in a hundred crates is a jackpot with a legendary, coins and the achievement',()=>{
- const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.G.forceJackpot=true;aa.openCrate();rr.elements.get('cSkip').click();
- const html=rr.elements.get('reelres').innerHTML;assert(html.includes('JACKPOT'));assert.equal(aa.G.coins,100-60+150);
-});
-test('the prize wheel charges once, grants its slice and the MEGA slice gives two modules',()=>{
- const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();aa.G.coins=500;const count=()=>Object.values(aa.G.inv).reduce((n,v)=>n+v,0),before=count();
- aa.G.forceWheel=aa.WHEEL_SEGS.findIndex(g=>g.kind==='mega');aa.spinWheel();assert.equal(aa.G.coins,320);assert(count()>=before+2);
- rr.elements.get('cSkip').click();assert(rr.elements.get('reelres').innerHTML.includes('MEGA'));
- rr.elements.get('cDone').click();const ci=aa.WHEEL_SEGS.findIndex(g=>g.kind==='coins');aa.G.forceWheel=ci;aa.spinWheel();assert.equal(aa.G.coins,320-180+aa.WHEEL_SEGS[ci].n);
-});
-
-test('shop filters discovered parts by search and rarity and exposes their real footprints',()=>{
- const rr=runtime(),aa=rr.api;aa.startMatch('sandbox');aa.G.leftTab='shop';aa.G.catalogQ='Dragon Bellows';aa.refreshUI();let content=rr.elements.get('leftBody').innerHTML;assert(content.includes('data-buy="dragon"'));assert(!content.includes('data-buy="pouch"'));assert(content.includes('2×3 · 6 cells'));
- aa.G.catalogRarity='0';aa.refreshUI();content=rr.elements.get('leftBody').innerHTML;assert(!content.includes('data-buy="dragon"'));assert(content.includes('No discovered parts match'));
-});
-
-test('opening the menu pauses a solo battle and closing it resumes play',()=>{
- const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();
- const cfg=aa.makeCfg(aa.myCarCfg());aa.toBattle({...cfg,me:0,net:null});aa.getB().seq='play';
- aa.G.started=true;aa.showMenu();assert.equal(aa.getB().paused,true,'bot kept fighting behind the menu');
- const t=aa.getB().t;for(let n=0;n<5;n++){rr.advance(16);for(const f of rr.rafs.splice(0))f(rr.context.performance.now());}
- assert.equal(aa.getB().t,t);
- rr.elements.get('ovMenu').hidden=true;for(let n=0;n<5;n++){rr.advance(16);for(const f of rr.rafs.splice(0))f(rr.context.performance.now());}
- assert.equal(aa.getB().paused,false);
-});
-test('one Escape closes the codex without also opening the pause menu',()=>{
- const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();
- const cfg=aa.makeCfg(aa.myCarCfg());aa.toBattle({...cfg,me:0,net:null});aa.getB().seq='play';
- rr.elements.get('ovCodex').hidden=false;rr.elements.get('ovPause').hidden=true;
- const ev={code:'Escape',key:'Escape',target:{tagName:'BODY'},defaultPrevented:false,preventDefault(){this.defaultPrevented=true;},stopPropagation(){}};
- rr.event('keydown',ev);
- assert.equal(rr.elements.get('ovCodex').hidden,true);assert.equal(rr.elements.get('ovPause').hidden,true);assert.notEqual(aa.getB().paused,true);
+test('completed Bounty recovery preserves awarded points and winning streak exactly once', () => {
+  const { rr, aa, b } = planScene('tinder');
+  aa.G.mode = 'mp';
+  aa.G.round = 1;
+  aa.Net.role = 'client';
+  b.net = 'client';
+  b.me = 1;
+  b.tape = [];
+  aa.endRound(0, 'Recovery');
+  const stats = b.stats;
+  b.seq = 'play';
+  aa.Net.recv({
+    t: 'recover',
+    round: 1,
+    score: [4, 0],
+    lives: [20, 20],
+    format: 'bounty',
+    bounty: 3,
+    bountyWinner: 0,
+    sched: aa.G.sched,
+    phase: 'result',
+    result: { round: 1, win: 0, points: 4, stats, why: 'Recovery' },
+    resultScoreIncluded: true
+  });
+  aa.finishBattle();
+  assert.deepEqual([...aa.G.score], [0, 4]);
+  assert.equal(aa.G.bountyStreak, 3);
+  assert.equal(aa.G.bountyWinner, 1);
 });
 
-test('auto-build in the sandbox makes an armed, sensibly sized car',()=>{
- const rr=runtime(),aa=rr.api;aa.startMatch('sandbox');aa.openBuild();aa.autoBuild();
- const tops=[...aa.G.top.values()];
- assert(tops.some(e=>aa.MOD[e.id].wpn),'no weapons');assert(aa.G.base.size<120,'base of '+aa.G.base.size+' parts');assert.equal(aa.blockedList().length,0);assert(aa.designConnected(aa.G.base));
+test('parts show a single available quantity and an On car state', () => {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('solo');
+  aa.openBuild();
+  aa.takeOption({ type: 'module', id: 'pouch', n: 2 });
+  const content = rr.elements.get('leftBody').innerHTML;
+  assert(content.includes('×2'));
+  assert(content.includes('On car'));
+  assert(!content.includes(' owned'));
+  assert(!content.includes(' loose · '));
+  assert(rr.elements.get('binCount').textContent.includes('available'));
+});
+test('crate shakes, rolls and reveals over several seconds without changing the prize', () => {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('solo');
+  aa.openBuild();
+  const count = () => Object.values(aa.G.inv).reduce((n, v) => n + v, 0),
+    before = count();
+  aa.openCrate();
+  const owned = count();
+  assert(owned > before);
+  const run = ms => {
+    for (let t = 0; t < ms; t += 16) {
+      rr.advance(16);
+      for (const f of rr.rafs.splice(0)) f(rr.context.performance.now());
+    }
+  };
+  run(3000);
+  assert.equal(rr.elements.get('reelres').innerHTML, '', 'revealed too early');
+  run(3600);
+  assert(rr.elements.get('reelres').innerHTML.includes('Back to the garage'));
+  assert.equal(count(), owned);
+  rr.elements.get('cSkip').click();
+  assert.equal(count(), owned);
+});
+test('one in a hundred crates is a jackpot with a legendary, coins and the achievement', () => {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('solo');
+  aa.openBuild();
+  aa.G.forceJackpot = true;
+  aa.openCrate();
+  rr.elements.get('cSkip').click();
+  const html = rr.elements.get('reelres').innerHTML;
+  assert(html.includes('JACKPOT'));
+  assert.equal(aa.G.coins, 100 - 60 + 150);
+});
+test('the prize wheel charges once, grants its slice and the MEGA slice gives two modules', () => {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('solo');
+  aa.openBuild();
+  aa.G.coins = 500;
+  const count = () => Object.values(aa.G.inv).reduce((n, v) => n + v, 0),
+    before = count();
+  aa.G.forceWheel = aa.WHEEL_SEGS.findIndex(g => g.kind === 'mega');
+  aa.spinWheel();
+  assert.equal(aa.G.coins, 320);
+  assert(count() >= before + 2);
+  rr.elements.get('cSkip').click();
+  assert(rr.elements.get('reelres').innerHTML.includes('MEGA'));
+  rr.elements.get('cDone').click();
+  const ci = aa.WHEEL_SEGS.findIndex(g => g.kind === 'coins');
+  aa.G.forceWheel = ci;
+  aa.spinWheel();
+  assert.equal(aa.G.coins, 320 - 180 + aa.WHEEL_SEGS[ci].n);
 });
 
-test('match length follows the chosen rounds and the countdown takes three seconds',()=>{
- const r=runtime(),a=r.api;a.G.rounds=5;a.startMatch('solo');assert.equal(a.G.sched.length,5);assert(a.G.sched.filter(Boolean).length<=2);
- a.G.rounds=25;a.startMatch('solo');assert.equal(a.G.sched.length,25);
- a.openBuild();a.toBattle({...a.makeCfg(a.myCarCfg()),me:0,net:null});const b=a.getB();
- const run=ms=>{for(let t=0;t<ms;t+=16){r.advance(16);for(const f of r.rafs.splice(0))f(r.context.performance.now());}};
- run(3600);assert.equal(b.seq,'count','still counting after 3.6 s');
- run(1200);assert.equal(b.seq,'play');
+test('shop filters discovered parts by search and rarity and exposes their real footprints', () => {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('sandbox');
+  aa.G.leftTab = 'shop';
+  aa.G.catalogQ = 'Dragon Bellows';
+  aa.refreshUI();
+  let content = rr.elements.get('leftBody').innerHTML;
+  assert(content.includes('data-buy="dragon"'));
+  assert(!content.includes('data-buy="pouch"'));
+  assert(content.includes('2×3 · 6 cells'));
+  aa.G.catalogRarity = '0';
+  aa.refreshUI();
+  content = rr.elements.get('leftBody').innerHTML;
+  assert(!content.includes('data-buy="dragon"'));
+  assert(content.includes('No discovered parts match'));
 });
-test('badges sanitize, rivals give hints and the match ends with fun awards',()=>{
- const r=runtime(),a=r.api;
- assert.equal(a.validBadge('star.skull.2'),'star.skull.2');assert.equal(a.validBadge('<x>.evil.99'),'shield.bolt.0');
- a.startMatch('solo');a.openBuild();
- const d=a.defaultCar?a.defaultCar():null;
- const des={base:new Map([['0,0',{id:'cockpit',x:0,y:0,rot:0}],...[-3,-2,-1,1,2,3].map(x=>[x+',0',{id:'girder',x,y:0,rot:0}])]),top:new Map([['1,0',{id:'flamer',x:1,y:0,rot:0}],['-1,0',{id:'tinder',x:-1,y:0,rot:0}]])};
- const h=a.oppHints(des);assert(h.length>=1&&h.length<=2);assert(h.some(x=>/fire|wide/i.test(x)),h.join());
- a.G.lastReplay={me:0,cfg:{cars:[{design:a.packDesign(des),name:'Me',paint:'#fff',look:{}},{design:a.packDesign({base:new Map([['0,0',{id:'cockpit',x:0,y:0,rot:0}]]),top:new Map()}),name:'Bot',paint:'#f00',look:{}}]},tape:[]};
- a.G.fun={lost:[5,1],clutch:[0.03,1],wins:[1,0]};a.G.log=[{round:1,win:true,dealt:500,taken:200}];
- const aw=a.funAwards();const titles=aw.map(x=>x.title);
- assert(titles.includes('Widest Ride')&&titles.includes('Survived on 1 HP')&&titles.includes('Scrap Donor'),titles.join());
- assert(aw.some(x=>x.who===1),'the loser gets something too');
- for(const k of ['plain','frost','fire','magnet'])assert(a.CRATE_THEMES[k].name);
+
+test('opening the menu pauses a solo battle and closing it resumes play', () => {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('solo');
+  aa.openBuild();
+  const cfg = aa.makeCfg(aa.myCarCfg());
+  aa.toBattle({ ...cfg, me: 0, net: null });
+  aa.getB().seq = 'play';
+  aa.G.started = true;
+  aa.showMenu();
+  assert.equal(aa.getB().paused, true, 'bot kept fighting behind the menu');
+  const t = aa.getB().t;
+  for (let n = 0; n < 5; n++) {
+    rr.advance(16);
+    for (const f of rr.rafs.splice(0)) f(rr.context.performance.now());
+  }
+  assert.equal(aa.getB().t, t);
+  rr.elements.get('ovMenu').hidden = true;
+  for (let n = 0; n < 5; n++) {
+    rr.advance(16);
+    for (const f of rr.rafs.splice(0)) f(rr.context.performance.now());
+  }
+  assert.equal(aa.getB().paused, false);
 });
-test('all seventeen arenas generate, run their gimmicks and stay finite',()=>{
- const r=runtime(),a=r.api;assert.equal(a.THEMES.length,17);
- a.startMatch('solo');a.openBuild();
- for(let ti=0;ti<a.THEMES.length;ti++){
-  const th=a.THEMES[ti];a.G.nextTheme=ti;
-  const cfg=a.makeCfg(a.myCarCfg());assert.equal(cfg.theme,ti);
-  for(const k of Object.keys(th.extra||{}))assert(cfg.field.zn.some(z=>z.kind===k),th.id+' has '+k);
-  a.toBattle({...cfg,me:0,net:null});const b=a.getB();b.seq='play';b.t=40;
-  for(let n=0;n<60;n++){b.cars[0].throttle=1;a.simulate(0.05);}
-  for(const v of b.cars)assert([v.x,v.y,v.vx,v.vy].every(Number.isFinite),th.id);
-  assert(b.objs.every(o=>Number.isFinite(o.x)&&Number.isFinite(o.y)),th.id+' objects');
-  a.drawArena();
- }
+test('one Escape closes the codex without also opening the pause menu', () => {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('solo');
+  aa.openBuild();
+  const cfg = aa.makeCfg(aa.myCarCfg());
+  aa.toBattle({ ...cfg, me: 0, net: null });
+  aa.getB().seq = 'play';
+  rr.elements.get('ovCodex').hidden = false;
+  rr.elements.get('ovPause').hidden = true;
+  const ev = {
+    code: 'Escape',
+    key: 'Escape',
+    target: { tagName: 'BODY' },
+    defaultPrevented: false,
+    preventDefault() {
+      this.defaultPrevented = true;
+    },
+    stopPropagation() {}
+  };
+  rr.event('keydown', ev);
+  assert.equal(rr.elements.get('ovCodex').hidden, true);
+  assert.equal(rr.elements.get('ovPause').hidden, true);
+  assert.notEqual(aa.getB().paused, true);
 });
-test('Scrap Gauntlet: hearts, boss every fifth wave, relics and run over',()=>{
- const r=runtime(),a=r.api,G=a.G;G.diff=1;
- a.startRun();assert(G.run&&G.run.wave===1&&G.run.hearts===3);assert.equal(G.diff,0,'wave 1 is easy');
- const play=(win)=>{a.openBuild();a.toBattle({...a.makeCfg(a.myCarCfg()),me:0,net:null});const b=a.getB();b.seq='play';a.endRound(win,'test');a.finishBattle();};
- for(let w=1;w<5;w++){play(0);assert(!r.elements.get('ovResult').hidden);a.runNext(false,false);}
- assert.equal(G.run.wave,5);assert(G.run.boss&&G.run.boss.hp>1);
- a.openBuild();a.prepareBot();const cfg=a.makeCfg(a.botCarCfg());assert(cfg.cars[1].boss);a.toBattle({...cfg,me:0,net:null});
- const boss=a.getB().cars[1];assert(boss.boss&&boss.dmgOut>1);
- a.getB().seq='play';a.endRound(0,'boss down');a.finishBattle();assert.equal(G.run.bosses,1);assert.equal(G.run.hearts,4);
- a.runNext(false,true);const relic=r.elements.get('resultCard').innerHTML;assert(relic.includes('relic'));
- a.openRelicPick(()=>{});G.run.relics.push('tape','skin');const mods=a.runMods();assert(mods.hp>0&&mods.dmgIn>0);
- a.openBuild();a.toBattle({...a.makeCfg(a.myCarCfg()),me:0,net:null});const me=a.getB().cars[0];assert(me.dmgIn<1);
- G.run.hearts=1;a.getB().seq='play';a.endRound(1,'ouch');a.finishBattle();a.runNext(true,false);
- assert.equal(G.run,null);assert.equal(G.diff,1,'difficulty restored');assert(r.elements.get('resultCard').innerHTML.includes('wave reached'));
+
+test('auto-build in the sandbox makes an armed, sensibly sized car', () => {
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('sandbox');
+  aa.openBuild();
+  aa.autoBuild();
+  const tops = [...aa.G.top.values()];
+  assert(
+    tops.some(e => aa.MOD[e.id].wpn),
+    'no weapons'
+  );
+  assert(aa.G.base.size < 120, 'base of ' + aa.G.base.size + ' parts');
+  assert.equal(aa.blockedList().length, 0);
+  assert(aa.designConnected(aa.G.base));
 });
-test('car codes round-trip and report missing parts and bay size',()=>{
- process.on('unhandledRejection',e=>{console.error('FAIL async: '+e.message);process.exit(1);});
- const rr=runtime(),aa=rr.api;aa.startMatch('solo');aa.openBuild();
- const json=JSON.stringify({b:[...aa.G.base.values()].map(e=>[e.id,e.rot,e.x,e.y]),t:[...aa.G.top.values()].map(e=>[e.id,e.rot,e.x,e.y])});
- const code='SD1j.'+Buffer.from(json).toString('base64url');
- return aa.parseBlueprintCode(code).then(d=>{
-  assert.equal(d.base.size,aa.G.base.size);assert.equal(d.top.size,aa.G.top.size);
-  const n=aa.blueprintNeeds(d);assert.equal(n.miss.length,0);assert.equal(n.out,0);
- });
+
+test('match length follows the chosen rounds and the countdown takes three seconds', () => {
+  const r = runtime(),
+    a = r.api;
+  a.G.rounds = 5;
+  a.startMatch('solo');
+  assert.equal(a.G.sched.length, 5);
+  assert(a.G.sched.filter(Boolean).length <= 2);
+  a.G.rounds = 25;
+  a.startMatch('solo');
+  assert.equal(a.G.sched.length, 25);
+  a.openBuild();
+  a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
+  const b = a.getB();
+  const run = ms => {
+    for (let t = 0; t < ms; t += 16) {
+      r.advance(16);
+      for (const f of r.rafs.splice(0)) f(r.context.performance.now());
+    }
+  };
+  run(3600);
+  assert.equal(b.seq, 'count', 'still counting after 3.6 s');
+  run(1200);
+  assert.equal(b.seq, 'play');
+});
+test('badges sanitize, rivals give hints and the match ends with fun awards', () => {
+  const r = runtime(),
+    a = r.api;
+  assert.equal(a.validBadge('star.skull.2'), 'star.skull.2');
+  assert.equal(a.validBadge('<x>.evil.99'), 'shield.bolt.0');
+  a.startMatch('solo');
+  a.openBuild();
+  const d = a.defaultCar ? a.defaultCar() : null;
+  const des = {
+    base: new Map([
+      ['0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 }],
+      ...[-3, -2, -1, 1, 2, 3].map(x => [x + ',0', { id: 'girder', x, y: 0, rot: 0 }])
+    ]),
+    top: new Map([
+      ['1,0', { id: 'flamer', x: 1, y: 0, rot: 0 }],
+      ['-1,0', { id: 'tinder', x: -1, y: 0, rot: 0 }]
+    ])
+  };
+  const h = a.oppHints(des);
+  assert(h.length >= 1 && h.length <= 2);
+  assert(
+    h.some(x => /fire|wide/i.test(x)),
+    h.join()
+  );
+  a.G.lastReplay = {
+    me: 0,
+    cfg: {
+      cars: [
+        { design: a.packDesign(des), name: 'Me', paint: '#fff', look: {} },
+        {
+          design: a.packDesign({ base: new Map([['0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 }]]), top: new Map() }),
+          name: 'Bot',
+          paint: '#f00',
+          look: {}
+        }
+      ]
+    },
+    tape: []
+  };
+  a.G.fun = { lost: [5, 1], clutch: [0.03, 1], wins: [1, 0] };
+  a.G.log = [{ round: 1, win: true, dealt: 500, taken: 200 }];
+  const aw = a.funAwards();
+  const titles = aw.map(x => x.title);
+  assert(
+    titles.includes('Widest Ride') && titles.includes('Survived on 1 HP') && titles.includes('Scrap Donor'),
+    titles.join()
+  );
+  assert(
+    aw.some(x => x.who === 1),
+    'the loser gets something too'
+  );
+  for (const k of ['plain', 'frost', 'fire', 'magnet']) assert(a.CRATE_THEMES[k].name);
+});
+test('all seventeen arenas generate, run their gimmicks and stay finite', () => {
+  const r = runtime(),
+    a = r.api;
+  assert.equal(a.THEMES.length, 17);
+  a.startMatch('solo');
+  a.openBuild();
+  for (let ti = 0; ti < a.THEMES.length; ti++) {
+    const th = a.THEMES[ti];
+    a.G.nextTheme = ti;
+    const cfg = a.makeCfg(a.myCarCfg());
+    assert.equal(cfg.theme, ti);
+    for (const k of Object.keys(th.extra || {}))
+      assert(
+        cfg.field.zn.some(z => z.kind === k),
+        th.id + ' has ' + k
+      );
+    a.toBattle({ ...cfg, me: 0, net: null });
+    const b = a.getB();
+    b.seq = 'play';
+    b.t = 40;
+    for (let n = 0; n < 60; n++) {
+      b.cars[0].throttle = 1;
+      a.simulate(0.05);
+    }
+    for (const v of b.cars) assert([v.x, v.y, v.vx, v.vy].every(Number.isFinite), th.id);
+    assert(
+      b.objs.every(o => Number.isFinite(o.x) && Number.isFinite(o.y)),
+      th.id + ' objects'
+    );
+    a.drawArena();
+  }
+});
+test('Scrap Gauntlet: hearts, boss every fifth wave, relics and run over', () => {
+  const r = runtime(),
+    a = r.api,
+    G = a.G;
+  G.diff = 1;
+  a.startRun();
+  assert(G.run && G.run.wave === 1 && G.run.hearts === 3);
+  assert.equal(G.diff, 0, 'wave 1 is easy');
+  const play = win => {
+    a.openBuild();
+    a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
+    const b = a.getB();
+    b.seq = 'play';
+    a.endRound(win, 'test');
+    a.finishBattle();
+  };
+  for (let w = 1; w < 5; w++) {
+    play(0);
+    assert(!r.elements.get('ovResult').hidden);
+    a.runNext(false, false);
+  }
+  assert.equal(G.run.wave, 5);
+  assert(G.run.boss && G.run.boss.hp > 1);
+  a.openBuild();
+  a.prepareBot();
+  const cfg = a.makeCfg(a.botCarCfg());
+  assert(cfg.cars[1].boss);
+  a.toBattle({ ...cfg, me: 0, net: null });
+  const boss = a.getB().cars[1];
+  assert(boss.boss && boss.dmgOut > 1);
+  a.getB().seq = 'play';
+  a.endRound(0, 'boss down');
+  a.finishBattle();
+  assert.equal(G.run.bosses, 1);
+  assert.equal(G.run.hearts, 4);
+  a.runNext(false, true);
+  const relic = r.elements.get('resultCard').innerHTML;
+  assert(relic.includes('relic'));
+  a.openRelicPick(() => {});
+  G.run.relics.push('tape', 'skin');
+  const mods = a.runMods();
+  assert(mods.hp > 0 && mods.dmgIn > 0);
+  a.openBuild();
+  a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
+  const me = a.getB().cars[0];
+  assert(me.dmgIn < 1);
+  G.run.hearts = 1;
+  a.getB().seq = 'play';
+  a.endRound(1, 'ouch');
+  a.finishBattle();
+  a.runNext(true, false);
+  assert.equal(G.run, null);
+  assert.equal(G.diff, 1, 'difficulty restored');
+  assert(r.elements.get('resultCard').innerHTML.includes('wave reached'));
+});
+test('car codes round-trip and report missing parts and bay size', () => {
+  process.on('unhandledRejection', e => {
+    console.error('FAIL async: ' + e.message);
+    process.exit(1);
+  });
+  const rr = runtime(),
+    aa = rr.api;
+  aa.startMatch('solo');
+  aa.openBuild();
+  const json = JSON.stringify({
+    b: [...aa.G.base.values()].map(e => [e.id, e.rot, e.x, e.y]),
+    t: [...aa.G.top.values()].map(e => [e.id, e.rot, e.x, e.y])
+  });
+  const code = 'SD1j.' + Buffer.from(json).toString('base64url');
+  return aa.parseBlueprintCode(code).then(d => {
+    assert.equal(d.base.size, aa.G.base.size);
+    assert.equal(d.top.size, aa.G.top.size);
+    const n = aa.blueprintNeeds(d);
+    assert.equal(n.miss.length, 0);
+    assert.equal(n.out, 0);
+  });
 });
 
 console.log(`\n${passed} regression tests passed.`);

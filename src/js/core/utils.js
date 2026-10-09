@@ -2,7 +2,7 @@
 // Shared helpers: DOM shortcuts, math, grid keys, weighted random.
 const $ = s => document.querySelector(s),
   $$ = s => [...document.querySelectorAll(s)];
-// Performance mode renders the arena at 1x: big savings on high-density phone screens.
+// Performance mode renders the arena at 1x: big savings on high-density (4K/retina) screens.
 const dprOf = () => {
   let perf = false;
   try {

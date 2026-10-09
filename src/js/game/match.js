@@ -40,10 +40,6 @@ function newB(o) {
       flashCol: null,
       shake: 0,
       hitstop: 0,
-      touch: touchPreferred(),
-      joy: null,
-      aimJoy: null,
-      touchAim: null,
       chain: [],
       banner: null,
       ev: [],
@@ -277,7 +273,6 @@ function hideOverlays() {
     '#ovResult',
     '#ovReady',
     '#ovStyle',
-    '#ovAccount',
     '#ovBlueprint'
   ])
     $(id).hidden = true;

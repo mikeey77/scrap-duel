@@ -32,7 +32,7 @@ addEventListener('keydown', e => {
     B &&
     !B.paused &&
     !Net.reconnecting &&
-    ['#ovMenu', '#ovCodex', '#ovSettings', '#ovPause', '#ovAccount'].every(id => $(id).hidden) &&
+    ['#ovMenu', '#ovCodex', '#ovSettings', '#ovPause'].every(id => $(id).hidden) &&
     CTRL.includes(e.code)
   ) {
     e.preventDefault();
@@ -68,44 +68,11 @@ const toWorld = (cx, cy) => {
   return [x + cam.x, y + cam.y];
 };
 function arenaInputBlocked() {
-  return ['#ovMenu', '#ovCodex', '#ovSettings', '#ovPause', '#ovAccount'].some(id => !$(id).hidden);
-}
-function pointerIsTouch(ev) {
-  return SETTINGS.touchControls === 'on' || (ev.pointerType === 'touch' && SETTINGS.touchControls !== 'off');
-}
-function moveStick(stick, ev) {
-  const r = ac.getBoundingClientRect(),
-    x = (ev.clientX - r.left - stick.sx) / 54,
-    y = (ev.clientY - r.top - stick.sy) / 54,
-    m = Math.hypot(x, y),
-    f = m > 1 ? 1 / m : 1;
-  stick.x = x * f;
-  stick.y = y * f;
-  stick.m = Math.min(1, m);
+  return ['#ovMenu', '#ovCodex', '#ovSettings', '#ovPause'].some(id => !$(id).hidden);
 }
 ac.addEventListener('pointerdown', ev => {
   if (!B || B.paused || B.replay || B.demo || Net.reconnecting || arenaInputBlocked()) return;
   ev.preventDefault();
-  if (pointerIsTouch(ev)) {
-    B.touch = true;
-    const r = ac.getBoundingClientRect();
-    const stick = { id: ev.pointerId, sx: ev.clientX - r.left, sy: ev.clientY - r.top, x: 0, y: 0, m: 0 };
-    if (stick.sx < r.width * 0.5) {
-      if (B.joy) return;
-      B.joy = stick;
-    } else {
-      if (B.aimJoy) return;
-      B.aimJoy = stick;
-      mouse.down = false;
-      mouse.sx = undefined;
-      mouse.sy = undefined;
-    }
-    try {
-      ac.setPointerCapture(ev.pointerId);
-    } catch (e) {}
-    return;
-  }
-  B.touch = false;
   mouse.pointerId = ev.pointerId;
   mouse.sx = ev.clientX;
   mouse.sy = ev.clientY;
@@ -119,30 +86,11 @@ ac.addEventListener('pointerdown', ev => {
 });
 ac.addEventListener('pointermove', ev => {
   if (!B) return;
-  if (B.joy && ev.pointerId === B.joy.id) {
-    moveStick(B.joy, ev);
-    return;
-  }
-  if (B.aimJoy && ev.pointerId === B.aimJoy.id) {
-    moveStick(B.aimJoy, ev);
-    return;
-  }
-  if (!pointerIsTouch(ev)) {
-    mouse.sx = ev.clientX;
-    mouse.sy = ev.clientY;
-  }
+  mouse.sx = ev.clientX;
+  mouse.sy = ev.clientY;
 });
 const up = ev => {
   if (!B) return;
-  if (B.joy && ev.pointerId === B.joy.id) {
-    B.joy = null;
-    return;
-  }
-  if (B.aimJoy && ev.pointerId === B.aimJoy.id) {
-    B.aimJoy = null;
-    mouse.down = false;
-    return;
-  }
   if (ev.type === 'lostpointercapture') {
     if (ev.pointerId === mouse.pointerId) mouse.down = mouse.right = false;
     return;
@@ -154,27 +102,6 @@ ac.addEventListener('pointerup', up);
 ac.addEventListener('pointercancel', up);
 ac.addEventListener('lostpointercapture', up);
 ac.addEventListener('contextmenu', e => e.preventDefault());
-$$('#touchpad button').forEach(b => {
-  const k = b.dataset.k;
-  b.addEventListener('pointerdown', e => {
-    e.preventDefault();
-    if (!B || B.paused || Net.reconnecting || arenaInputBlocked() || !equippedTouchActions(myCar())[k]) return;
-    try {
-      b.setPointerCapture(e.pointerId);
-    } catch (err) {}
-    edges.add(k);
-    if (k === 'RMB') mouse.right = true;
-    else keys.add(k);
-  });
-  const off = () => {
-    if (k === 'RMB') mouse.right = false;
-    else keys.delete(k);
-  };
-  b.addEventListener('pointerup', off);
-  b.addEventListener('pointercancel', off);
-  b.addEventListener('lostpointercapture', off);
-});
-
 const ZERO_IN = {
   th: 0,
   st: 0,
@@ -208,69 +135,16 @@ function readLocal() {
     i.edges.clear();
     return i;
   }
-  if (B.touch && B.joy && v) {
-    const m = Math.hypot(B.joy.x, B.joy.y);
-    if (m > 0.15) {
-      const [jx, jy] = screenVectorToWorld(B.joy.x, B.joy.y);
-      const want = Math.atan2(jy, jx),
-        diff = wrap(want - (v.a - Math.PI / 2));
-      i.st = clamp(diff * 2.5, -1, 1);
-      i.th = Math.min(1, m) * (Math.abs(diff) < 1.8 ? 1 : 0.2);
-    }
-  } else {
+  {
     i.th = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
     i.st = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
   }
   i.sf = (keys.has('KeyE') ? 1 : 0) - (keys.has('KeyQ') ? 1 : 0);
   i.boost = keys.has('ShiftLeft') || keys.has('ShiftRight');
-  if (B.touch && v) {
-    const stick = B.aimJoy;
-    if (stick && stick.m > 0.16) {
-      const [x, y] = screenVectorToWorld(stick.x, stick.y),
-        m = Math.hypot(x, y);
-      B.touchAim = { x: x / m, y: y / m, range: clamp(stick.m * 800, 200, 800) };
-    }
-    const aim = B.touchAim || { x: Math.cos(v.a - Math.PI / 2), y: Math.sin(v.a - Math.PI / 2), range: 600 };
-    mouse.x = v.x + aim.x * aim.range;
-    mouse.y = v.y + aim.y * aim.range;
-    i.fire = keys.has('Space') || !!(stick && stick.m >= 0.68);
-    if (SETTINGS.touchAssist && G.mode !== 'mp' && i.fire) {
-      const assisted = touchAimAssist(v, mouse.x, mouse.y);
-      mouse.x = assisted[0];
-      mouse.y = assisted[1];
-    }
-  } else if (mouse.sx !== undefined) [mouse.x, mouse.y] = toWorld(mouse.sx, mouse.sy);
+  if (mouse.sx !== undefined) [mouse.x, mouse.y] = toWorld(mouse.sx, mouse.sy);
   i.aimX = mouse.x;
   i.aimY = mouse.y;
   return i;
-}
-function touchAimAssist(v, x, y) {
-  // Solo only, five-degree cone, no hidden targets, and no locking through obstacles.
-  if (G.mode === 'mp' || B.special === 'night') return [x, y];
-  const angle = Math.atan2(y - v.y, x - v.x),
-    range = Math.hypot(x - v.x, y - v.y);
-  const target = B.cars.find(
-    e =>
-      e !== v &&
-      !e.dead &&
-      !inSmoke(e.x, e.y) &&
-      Math.hypot(e.x - v.x, e.y - v.y) < Math.min(650, range + 100) &&
-      Math.abs(wrap(Math.atan2(e.y - v.y, e.x - v.x) - angle)) < Math.PI / 36
-  );
-  if (!target) return [x, y];
-  const hit = rayHit(
-    v.x,
-    v.y,
-    Math.atan2(target.y - v.y, target.x - v.x),
-    Math.hypot(target.x - v.x, target.y - v.y) + target.rad,
-    false,
-    v.idx
-  );
-  if (hit.hits[0]?.car !== target) return [x, y];
-  const [sx, sy] = worldToScreen(target.x, target.y);
-  if (sx < 0 || sy < 0 || sx > view.w || sy > view.h) return [x, y];
-  const a = angle + wrap(Math.atan2(target.y - v.y, target.x - v.x) - angle) * 0.35;
-  return [v.x + Math.cos(a) * range, v.y + Math.sin(a) * range];
 }
 function applyInput(v, i) {
   if (v.dead || B.seq !== 'play') {
@@ -700,7 +574,7 @@ function updateCam(rdt) {
         e = al.find(c => c !== m);
       const dx = Math.abs(m.x - e.x),
         dy = Math.abs(m.y - e.y);
-      const wMe = 0.6; // Keep both cars in view, including the rotated portrait arena.
+      const wMe = 0.6; // keep both cars in view
       cam.tx = m.x * wMe + e.x * (1 - wMe);
       cam.ty = m.y * wMe + e.y * (1 - wMe);
       cam.tz = clamp(
@@ -715,7 +589,7 @@ function updateCam(rdt) {
       cam.tz = G.phase === 'wait' ? 1.3 : 1.15;
     }
   }
-  // Fit in the rotated world dimensions; do not crop a portrait screen into a strip.
+  // keep the camera inside the arena
   const k = 1 - Math.exp(-4 * rdt);
   cam.z += (cam.tz - cam.z) * k;
   const s = view.sc * cam.z,

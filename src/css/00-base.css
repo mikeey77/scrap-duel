@@ -835,29 +835,6 @@ main {
 .waitcard .dot.off {
   background: var(--muted);
 }
-.touchpad {
-  position: absolute;
-  right: 12px;
-  bottom: 64px;
-  display: none;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  max-width: 60%;
-}
-.touchpad button {
-  background: rgba(20, 24, 28, 0.8);
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  padding: 10px 14px;
-  font-weight: 700;
-  font-size: 13px;
-}
-@media (pointer: coarse) {
-  .touchpad {
-    display: flex;
-  }
-}
 
 .overlay {
   position: fixed;
@@ -1390,42 +1367,6 @@ main {
     grid-template-columns: 260px minmax(0, 1fr) 280px;
   }
 }
-@media (max-width: 920px) {
-  #app {
-    height: auto;
-    min-height: 100%;
-  }
-  main {
-    flex: none;
-  }
-  #build {
-    grid-template-columns: minmax(0, 1fr);
-    height: auto;
-  }
-  #bay {
-    order: -1;
-    height: 72vh;
-    min-height: 440px;
-  }
-  .bin {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  #arena {
-    position: relative;
-    height: 76vh;
-  }
-  .opts {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .flow {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .waitcard {
-    white-space: normal;
-    flex-wrap: wrap;
-    width: calc(100% - 24px);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
@@ -1777,12 +1718,4 @@ main {
 }
 .ideas b {
   color: var(--fg);
-}
-@media (max-width: 920px) {
-  .modes {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .vs {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }

@@ -96,7 +96,7 @@ const Net = {
     lobbyUI();
     if (!this.rtcOK())
       return this.fail(
-        'This browser blocks peer-to-peer connections here. Host the game on a normal site (Netlify) to play online.'
+        'Peer-to-peer connections are blocked here. Check your internet connection or firewall and try again.'
       );
     try {
       await loadPeer();
@@ -152,7 +152,7 @@ const Net = {
     lobbyUI();
     if (!this.rtcOK())
       return this.fail(
-        'This browser blocks peer-to-peer connections here. Open the hosted version (Netlify) to play online.'
+        'Peer-to-peer connections are blocked here. Check your internet connection or firewall and try again.'
       );
     try {
       await loadPeer();
@@ -525,9 +525,6 @@ const Net = {
     };
   },
   close() {
-    try {
-      Lobby.unlist();
-    } catch (e) {}
     this.closing = true;
     clearInterval(this.heartbeat);
     clearInterval(this.recoveryTimer);

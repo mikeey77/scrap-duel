@@ -5,9 +5,6 @@ const SETTINGS = {
   shake: true,
   nums: true,
   marks: true,
-  rotatePortrait: true,
-  touchControls: 'auto',
-  touchAssist: false,
   voice: true,
   motion: true,
   crateSpin: true,
@@ -57,10 +54,7 @@ function openSettings(back) {
     ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
     ${toggle('setNums', 'Floating damage numbers', SETTINGS.nums)}
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
-    <label class="vol"><span>Controls</span><select id="setTouch" aria-label="Control style"><option value="auto" ${SETTINGS.touchControls === 'auto' ? 'selected' : ''}>Automatic</option><option value="on" ${SETTINGS.touchControls === 'on' ? 'selected' : ''}>Touch sticks</option><option value="off" ${SETTINGS.touchControls === 'off' ? 'selected' : ''}>Mouse &amp; keyboard</option></select></label>
-    ${toggle('setPortrait', 'Rotate the arena on phones held upright (portrait view)', SETTINGS.rotatePortrait)}
-    ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older phones)', SETTINGS.perf)}
-    ${toggle('setTouchAssist', 'Subtle touch aim assist (solo only)', SETTINGS.touchAssist)}
+    ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
     <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Garage Style progress</button></div>
     <button class="btn" id="setDone">Done</button>`;
   $('#ovSettings').hidden = false;
@@ -88,8 +82,6 @@ function openSettings(back) {
     ['setShake', 'shake'],
     ['setNums', 'nums'],
     ['setMarks', 'marks'],
-    ['setPortrait', 'rotatePortrait'],
-    ['setTouchAssist', 'touchAssist'],
     ['setPerf', 'perf']
   ])
     $('#' + id).addEventListener('change', e => {
@@ -100,16 +92,6 @@ function openSettings(back) {
         clearArenaInput();
       }
     });
-  $('#setTouch').onchange = e => {
-    SETTINGS.touchControls = e.target.value;
-    saveSettings();
-    if (B) {
-      clearArenaInput();
-      B.touch = touchPreferred();
-      presentationKey = '';
-      syncPresentation();
-    }
-  };
   $('#setTips').addEventListener('click', e => {
     seenTips = new Set();
     store('sd.tips', []);
@@ -157,7 +139,7 @@ function togglePause(force) {
       ${G.phase === 'wait' ? '<button class="btn ghost" id="pGarage"><i>⚒</i>Back to garage</button>' : ''}
       <button class="btn ghost" id="pSettings"><i>⚙</i>Settings</button>
       <button class="btn ghost" id="pControls"><i>⌨</i>Controls</button>
-      ${document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen ? `<button class="btn ghost" id="pFull"><i>⛶</i>${document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen'}</button>` : ''}
+      <button class="btn ghost" id="pFull"><i>⛶</i>${document.fullscreenElement || (window.desktop && window.desktop.isFullscreen) ? 'Exit fullscreen' : 'Fullscreen'}</button>
       ${forfeit ? '<button class="btn ghost warn" id="pForfeit"><i>⚑</i>Forfeit round</button>' : ''}
       <button class="btn ghost quit" id="pMenu"><i>⏏</i>Main menu</button>
     </div>
@@ -169,7 +151,7 @@ function togglePause(force) {
   const pf = $('#pFull');
   if (pf)
     pf.addEventListener('click', async () => {
-      await $('#btnFullscreen').onclick();
+      await toggleFullscreen();
       togglePause(false);
     });
   $('#pControls').addEventListener('click', () => ($('#pExtra').innerHTML = controlsHtml()));

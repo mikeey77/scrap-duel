@@ -8,14 +8,8 @@
       content="Scrap Duel: build a battle car from scrap, draft new parts every round and duel a bot or a friend."
     />
     <title>Scrap Duel</title>
-    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#0a1020" />
-    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Scrap Duel" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -860,29 +854,6 @@ main {
 .waitcard .dot.off {
   background: var(--muted);
 }
-.touchpad {
-  position: absolute;
-  right: 12px;
-  bottom: 64px;
-  display: none;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  max-width: 60%;
-}
-.touchpad button {
-  background: rgba(20, 24, 28, 0.8);
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  padding: 10px 14px;
-  font-weight: 700;
-  font-size: 13px;
-}
-@media (pointer: coarse) {
-  .touchpad {
-    display: flex;
-  }
-}
 
 .overlay {
   position: fixed;
@@ -1415,42 +1386,6 @@ main {
     grid-template-columns: 260px minmax(0, 1fr) 280px;
   }
 }
-@media (max-width: 920px) {
-  #app {
-    height: auto;
-    min-height: 100%;
-  }
-  main {
-    flex: none;
-  }
-  #build {
-    grid-template-columns: minmax(0, 1fr);
-    height: auto;
-  }
-  #bay {
-    order: -1;
-    height: 72vh;
-    min-height: 440px;
-  }
-  .bin {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  #arena {
-    position: relative;
-    height: 76vh;
-  }
-  .opts {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .flow {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .waitcard {
-    white-space: normal;
-    flex-wrap: wrap;
-    width: calc(100% - 24px);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
@@ -1803,14 +1738,6 @@ main {
 .ideas b {
   color: var(--fg);
 }
-@media (max-width: 920px) {
-  .modes {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .vs {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 /* ---------- v7: layout fixes ---------- */
 body {
   -webkit-user-select: none;
@@ -1867,60 +1794,6 @@ textarea {
     gap: 0;
   }
   #hud .format-status {
-    display: none;
-  }
-}
-@media (max-width: 920px) {
-  #app {
-    padding-inline: 8px;
-    padding-block: 6px;
-    gap: 6px;
-  }
-  #hud {
-    gap: 10px;
-    padding: 6px 8px;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-  }
-  #hud .brand {
-    font-size: 0;
-    gap: 0;
-  }
-  #hud .label {
-    display: none;
-  }
-  #hud .segs i {
-    width: 8px;
-  }
-  #hud .pill {
-    display: none;
-  }
-  #btnCodex {
-    display: none;
-  }
-  #bay {
-    height: 62vh;
-    min-height: 360px;
-  }
-  .bin {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  #arena {
-    height: calc(100vh - 70px);
-    height: calc(100dvh - 70px);
-  }
-  .overlay {
-    padding: 8px;
-    align-items: flex-start;
-  }
-}
-@media (max-width: 520px) {
-  #hud .grow {
-    display: none;
-  }
-  .toolbar .kbd,
-  .tool .kbd {
     display: none;
   }
 }
@@ -2076,20 +1949,6 @@ textarea {
 .feed div.new {
   opacity: 1;
   animation: fadeup 0.35s both;
-}
-@media (max-width: 920px) {
-  #ovMenu.live {
-    background: rgba(10, 12, 14, 0.82);
-  }
-  .modes2 {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .menu2 {
-    padding: 12px 4px;
-  }
-  .feed {
-    display: none;
-  }
 }
 /* ---------- v7: garage additions ---------- */
 .autorow {
@@ -2457,36 +2316,6 @@ textarea {
 .stitem.locked i {
   color: var(--muted);
 }
-@media (max-width: 760px) {
-  .stbody {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .pity {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-/* ---------- v7: phones ---------- */
-@media (max-width: 920px) {
-  .toolbar {
-    max-width: calc(100% - 16px);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .toolbar button {
-    flex-shrink: 0;
-  }
-}
-@media (max-width: 520px) {
-  #hud .brand {
-    display: none;
-  }
-  #hud {
-    gap: 8px;
-  }
-  .hbtn {
-    padding: 6px 10px;
-  }
-}
 /* ---------- v8: settings, pause, tags ---------- */
 .mptag {
   font-family: var(--f-display);
@@ -2681,72 +2510,8 @@ textarea {
 .vol {
   flex-wrap: wrap;
 }
-@media (max-width: 920px) {
-  #app {
-    padding-bottom: calc(var(--host-safe) + 112px + env(safe-area-inset-bottom));
-  }
-  #hud {
-    flex-wrap: wrap;
-    overflow: visible;
-  }
-  #bay {
-    height: 52dvh;
-    min-height: 360px;
-  }
-  .toolbar {
-    width: calc(100% - 16px);
-    max-width: none;
-    overflow: visible;
-  }
-  .toolbar button {
-    flex: 0 1 auto;
-    padding: 6px 8px;
-    font-size: 12px;
-  }
-  #build > .panel .pbody {
-    max-height: 420px;
-  }
-  #build > .panel .pfoot {
-    position: fixed;
-    bottom: calc(var(--host-safe) + env(safe-area-inset-bottom));
-    left: 12px;
-    right: 12px;
-    z-index: 8;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    padding: 8px;
-    background: rgba(12, 22, 32, 0.97);
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    box-shadow: 0 0 18px #0008;
-  }
-  #build > .panel .pfoot .autorow {
-    grid-column: 1 / -1;
-  }
-  #build > .panel .pfoot .btn {
-    font-size: 11px;
-    padding: 8px 5px;
-    min-height: 34px;
-  }
-  .touchpad {
-    bottom: 62px;
-    max-width: calc(100% - 24px);
-    flex-wrap: wrap;
-  }
-  .abtns {
-    flex-wrap: wrap;
-    max-width: calc(100% - 24px);
-  }
-  .net-status {
-    flex-basis: 100%;
-  }
-}
 
 /* Mobile workshop and arena presentation. No world or networking rules change. */
-.mobile-workshop-nav {
-  display: none;
-}
 .tile {
   transition:
     transform 0.15s ease,
@@ -2776,83 +2541,6 @@ textarea {
 .hbtn:active {
   transform: scale(0.97);
 }
-.arena-tools {
-  position: absolute;
-  left: 12px;
-  top: 112px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  z-index: 3;
-}
-.arena-tools button {
-  background: #111b26dd;
-  border: 1px solid #7fe0ff55;
-  color: #b8eaf5;
-  border-radius: 8px;
-  padding: 8px 10px;
-  min-height: 40px;
-  font-size: 12px;
-}
-.stick-guide {
-  display: none;
-  position: absolute;
-  bottom: 32px;
-  width: 108px;
-  height: 108px;
-  border: 1px solid #7fe0ff44;
-  background: #0c162044;
-  border-radius: 50%;
-  pointer-events: none;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font: 600 11px var(--f-mono);
-  color: #c1d7e5bb;
-  line-height: 1.6;
-}
-.stick-guide.left {
-  left: 26px;
-}
-.stick-guide.right {
-  right: 26px;
-  border-color: #f2b70555;
-  color: #ffe27abb;
-}
-.touch-enabled .stick-guide {
-  display: flex;
-}
-.touch-enabled .touchpad {
-  display: flex;
-  bottom: 154px;
-  right: 16px;
-  max-width: min(188px, 48%);
-  gap: 6px;
-}
-.touchpad button {
-  min-width: 52px;
-  min-height: 52px;
-  font-size: 12px;
-  white-space: pre-line;
-  line-height: 1.3;
-  touch-action: none;
-}
-.touchpad button[data-state='cooling'] {
-  border-color: #7fe0ff55;
-  color: #94aabd;
-  background: #102536dd;
-}
-.touchpad button[data-state='ready'] {
-  border-color: #f2b70588;
-  box-shadow: inset 0 0 10px #f2b7050d;
-}
-.touchpad button[data-state='active'] {
-  color: #ffd257;
-  background: #61501ddd;
-}
-.touch-disabled .touchpad {
-  display: none;
-}
 #bay::before {
   content: '';
   position: absolute;
@@ -2868,181 +2556,6 @@ textarea {
   }
   to {
     background-position: -100% 0;
-  }
-}
-@media (max-width: 920px) {
-  body.in-arena {
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
-  body.in-arena #app {
-    position: fixed;
-    inset: 0;
-    height: 100dvh;
-    min-height: 0;
-    padding: 6px 8px 0;
-  }
-  body.in-arena main {
-    flex: 1;
-    min-height: 0;
-  }
-  body.in-arena #arena {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: var(--arena-top, 62px);
-    bottom: calc(var(--host-safe) + env(safe-area-inset-bottom));
-    height: auto;
-    border: 0;
-    border-radius: 0;
-  }
-  body.in-arena #hud {
-    padding: 5px 8px;
-    gap: 8px;
-    min-height: 40px;
-  }
-  body.in-arena #hud .brand,
-  body.in-arena #hud .track,
-  body.in-arena #hud .hide-md,
-  body.in-arena #hud .hide-sm,
-  body.in-arena #hud .label,
-  body.in-arena #btnCodex {
-    display: none;
-  }
-  body.in-arena #hud .pill {
-    display: inline-flex;
-    padding: 4px 7px;
-    font-size: 10px;
-  }
-  body.in-arena .net-status {
-    flex-basis: auto;
-    margin-left: auto;
-    font-size: 10px;
-  }
-  body.in-arena .waitcard {
-    top: 116px;
-    left: 12px;
-    transform: none;
-    width: calc(100% - 24px);
-    font-size: 11px;
-  }
-  body.in-arena .arena-tools {
-    top: 112px;
-  }
-  body.in-arena #arena:has(#waitcard:not([hidden])) .arena-tools {
-    top: 210px;
-  }
-  body.in-arena .abtns {
-    left: 10px;
-    right: 10px;
-    bottom: 218px;
-    justify-content: center;
-    max-width: none;
-    gap: 5px;
-  }
-  body.in-arena .abtns .btn {
-    padding: 8px;
-    font-size: 11px;
-  }
-  body.in-arena .coach {
-    bottom: calc(var(--host-safe) + 160px);
-    max-width: calc(100% - 24px);
-    font-size: 12px;
-  }
-  body.in-arena .touchpad {
-    bottom: 150px;
-  }
-  .mobile-workshop-nav {
-    display: flex;
-    gap: 6px;
-    order: -2;
-    position: sticky;
-    top: 4px;
-    z-index: 5;
-    padding: 6px;
-    background: #101b26f5;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-  }
-  .mobile-workshop-nav button {
-    flex: 1;
-    min-height: 40px;
-    border: 1px solid var(--line);
-    background: #202b35;
-    border-radius: 6px;
-    color: var(--muted);
-    font-weight: 700;
-    font-size: 12px;
-  }
-  .mobile-workshop-nav button[aria-pressed='true'] {
-    color: #ffd257;
-    border-color: #f2b70588;
-    background: #403821;
-  }
-  #build[data-mobile-tab='bay'] > aside[aria-label='Parts bin and shop'],
-  #build[data-mobile-tab='stats'] > aside[aria-label='Parts bin and shop'],
-  #build[data-mobile-tab='parts'] > #bay,
-  #build[data-mobile-tab='stats'] > #bay {
-    display: none;
-  }
-  #build:not([data-mobile-tab='stats']) > aside[aria-label='Inspector'] {
-    display: contents;
-  }
-  #build:not([data-mobile-tab='stats']) > aside[aria-label='Inspector'] > .phead,
-  #build:not([data-mobile-tab='stats']) > aside[aria-label='Inspector'] > .pbody {
-    display: none;
-  }
-  #build > aside[aria-label='Parts bin and shop'] .pbody,
-  #build[data-mobile-tab='stats'] > aside[aria-label='Inspector'] .pbody {
-    max-height: calc(100dvh - 300px);
-    min-height: 220px;
-  }
-  #bay {
-    height: calc(100dvh - 290px);
-    min-height: 340px;
-  }
-  .bin {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .layer-controls {
-    gap: 4px;
-    top: 42px;
-  }
-  .layer-controls button {
-    font-size: 10px;
-    padding: 5px;
-  }
-}
-@media (max-width: 920px) and (orientation: landscape) {
-  body.in-arena .arena-tools,
-  body.in-arena #arena:has(#waitcard:not([hidden])) .arena-tools {
-    top: 72px;
-  }
-  body.in-arena .waitcard {
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: auto;
-    max-width: 50%;
-  }
-  body.in-arena .abtns {
-    bottom: 16px;
-    left: 150px;
-    right: 150px;
-  }
-  .touch-enabled .touchpad {
-    bottom: 118px;
-    max-width: 290px;
-  }
-  .touch-enabled .touchpad button {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 6px;
-  }
-  .stick-guide {
-    width: 90px;
-    height: 90px;
-    bottom: 16px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3102,8 +2615,7 @@ textarea {
   transform: translateX(-50%) scale(0.97);
 }
 .reviewing #build > aside,
-.reviewing .toolbar,
-.reviewing .mobile-workshop-nav {
+.reviewing .toolbar {
   display: none !important;
 }
 .reviewing #bay {
@@ -3140,29 +2652,6 @@ body:has(#setMotion:not(:checked)) #bay::before {
   border: 1px solid #7fe0ff44;
   border-radius: 7px;
 }
-@media (max-width: 920px) {
-  body.in-arena .arena-tools,
-  body.in-arena #arena:has(#waitcard:not([hidden])) .arena-tools {
-    top: auto !important;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90px;
-    flex-direction: column;
-    gap: 4px;
-  }
-  body.in-arena .arena-tools button {
-    min-height: 28px;
-    padding: 4px;
-    font-size: 10px;
-  }
-}
-@media (max-width: 920px) and (orientation: landscape) {
-  body.in-arena .arena-tools,
-  body.in-arena #arena:has(#waitcard:not([hidden])) .arena-tools {
-    bottom: 68px;
-  }
-}
 .reduced-motion #bay::before {
   animation: none;
 }
@@ -3177,9 +2666,7 @@ body:has(#setMotion:not(:checked)) #bay::before {
 }
 /* ---------- polish pass (Oct 2026) ---------- */
 /* The live menu sits over the demo battle: hide the match HUD and arena buttons behind it. */
-body:has(#ovMenu.live:not([hidden])) #hud,
-body:has(#ovMenu.live:not([hidden])) .arena-tools,
-body:has(#ovIntro:not([hidden])) .arena-tools {
+body:has(#ovMenu.live:not([hidden])) #hud {
   visibility: hidden;
 }
 /* Bay: keep the grid clear of the layer buttons (top) and the toolbar + hint (bottom). */
@@ -3213,98 +2700,12 @@ body.in-arena #btnPause {
   letter-spacing: -2px;
 }
 /* Phones in battle: no Forfeit or view buttons under your thumbs; both live in the pause menu. */
-body.touch-enabled.arena-battle .arena-tools,
-body.touch-enabled.arena-battle #bEnd {
-  display: none !important;
-}
-/* Phones in the waiting arena: Start/Back sit under the ready card, clear of the thumb buttons. */
-@media (max-width: 920px) {
-  body.in-arena.touch-enabled:not(.arena-battle) .abtns {
-    top: 168px;
-    bottom: auto;
-    left: 10px;
-    right: 10px;
-  }
-}
-@media (max-width: 920px) and (orientation: landscape) {
-  body.in-arena.touch-enabled:not(.arena-battle) .abtns {
-    top: 58px;
-    left: 160px;
-    right: 160px;
-  }
-}
-/* Phones in the arena: one compact HUD row. */
-@media (max-width: 920px) {
-  body.in-arena #hud {
-    flex-wrap: nowrap;
-  }
-  body.in-arena #hud .hbtn {
-    padding: 6px 10px;
-    min-height: 34px;
-  }
-  body.in-arena #hud .format-status {
-    display: none;
-  }
-  body.in-arena #hud .pill {
-    max-width: 104px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
 /* The menu's live ticker belongs to the menu: hide it under codex, settings and style screens. */
 body:has(#ovCodex:not([hidden])) #demoFeed,
 body:has(#ovSettings:not([hidden])) #demoFeed,
 body:has(#ovStyle:not([hidden])) #demoFeed,
 body:has(#ovLobby:not([hidden])) #demoFeed {
   display: none;
-}
-/* Landscape phones: the build actions become one slim row so the bay stays visible. */
-@media (max-width: 920px) and (orientation: landscape) {
-  #build > .panel .pfoot {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    padding: 5px !important;
-    gap: 5px !important;
-  }
-  #build > .panel .pfoot .autorow {
-    display: contents;
-  }
-  #build > .panel .pfoot .btn {
-    padding: 6px 4px;
-    font-size: 11px;
-    min-height: 32px;
-  }
-  #app {
-    padding-bottom: calc(52px + var(--host-safe) + env(safe-area-inset-bottom)) !important;
-  }
-  .mobile-workshop-nav {
-    padding: 4px;
-  }
-  .mobile-workshop-nav button {
-    min-height: 32px;
-  }
-  #bay {
-    height: calc(100dvh - 178px - var(--host-safe)) !important;
-    min-height: 180px !important;
-  }
-  #bayHint {
-    display: none;
-  }
-  #bay .layer-controls {
-    top: 6px;
-    left: 160px;
-    right: 190px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-  #bayScroll {
-    top: 34px;
-    padding-top: 6px;
-    padding-bottom: calc(var(--tb-h, 44px) + 12px);
-  }
-  #bay .toolbar {
-    bottom: 6px;
-  }
 }
 /* =====================================================================
    HOLO-WORKSHOP THEME (Oct 2026)
@@ -3605,76 +3006,6 @@ select {
 .xpbar i {
   background: linear-gradient(90deg, var(--holo), #b6f5ff);
 }
-/* ---------- account ---------- */
-.acct-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px 6px 10px;
-  margin-bottom: 4px;
-  font-family: var(--f-display);
-  font-size: 13px;
-  color: #cfeeff;
-  background: rgba(91, 231, 255, 0.07);
-  border: 1px solid var(--holo-dim);
-  clip-path: var(--chamfer-s);
-  cursor: pointer;
-}
-.acct-chip:hover {
-  border-color: var(--holo);
-}
-.acct-chip b {
-  color: var(--fg);
-}
-.acct-chip > b:last-child {
-  color: var(--hazard);
-  margin-left: 4px;
-}
-.ac-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ok);
-  box-shadow: 0 0 8px var(--ok);
-}
-.ac-dot.off {
-  background: var(--muted);
-  box-shadow: none;
-}
-.ac-dot.warn {
-  background: var(--hazard);
-  box-shadow: 0 0 8px var(--hazard);
-}
-.account-card {
-  max-width: 420px !important;
-}
-.ac-form {
-  display: grid;
-  gap: 12px;
-}
-.ac-form label {
-  display: grid;
-  gap: 5px;
-  font-family: var(--f-display);
-  font-size: 13px;
-  color: #9fd2ea;
-}
-.ac-form input {
-  padding: 11px 12px;
-  font-size: 17px;
-}
-.ac-form input[type='password'] {
-  letter-spacing: 0.4em;
-  font-family: var(--f-mono);
-}
-.ac-msg {
-  margin: 0;
-  color: var(--danger);
-  font-size: 14px;
-}
-.ac-tabs {
-  align-self: flex-start;
-}
 /* ---------- garage ---------- */
 #bay {
   border-radius: 0;
@@ -3970,13 +3301,6 @@ select {
   font-weight: 700;
 }
 /* ---------- arena overlays ---------- */
-.touchpad button {
-  border-radius: 50% !important;
-  background: radial-gradient(circle at 50% 35%, rgba(30, 52, 88, 0.92), rgba(8, 14, 28, 0.92)) !important;
-  border: 1px solid var(--holo-dim) !important;
-  font-family: var(--f-display);
-}
-.arena-tools button,
 .abtns .btn.ghost {
   clip-path: var(--chamfer-s);
   border-radius: 0 !important;
@@ -3992,20 +3316,6 @@ select {
   border-radius: 0;
   clip-path: var(--chamfer-s);
   font-family: var(--f-display);
-}
-.mobile-workshop-nav {
-  border-radius: 0 !important;
-  clip-path: var(--chamfer-s);
-  background: rgba(10, 18, 34, 0.96) !important;
-}
-.mobile-workshop-nav button {
-  border-radius: 0 !important;
-  font-family: var(--f-display);
-}
-.mobile-workshop-nav button[aria-pressed='true'] {
-  color: #eafaff !important;
-  background: linear-gradient(180deg, rgba(91, 231, 255, 0.24), rgba(91, 231, 255, 0.08)) !important;
-  border-color: var(--holo) !important;
 }
 #build > .panel .pfoot {
   border-radius: 0 !important;
@@ -4102,15 +3412,6 @@ select {
   justify-self: start;
   font-size: 12px !important;
   padding: 5px 10px !important;
-}
-@media (max-width: 520px) {
-  .rep-grid {
-    grid-template-columns: 110px 1fr;
-  }
-  .rep-map {
-    width: 110px;
-    height: 110px;
-  }
 }
 .nextup {
   --sc: var(--holo);
@@ -4682,76 +3983,14 @@ select {
   font-size: 18px;
   min-width: 44px;
 }
-.online-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font: 600 13px var(--f-mono, monospace);
-  color: var(--ok);
-  background: rgba(63, 224, 160, 0.08);
-  border: 1px solid rgba(63, 224, 160, 0.35);
-  padding: 4px 10px;
-  clip-path: var(--chamfer-s);
-  margin: 0 0 6px;
-}
-.online-chip[hidden] {
-  display: none;
-}
-.online-chip i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ok);
-  box-shadow: 0 0 8px var(--ok);
-  animation: pulse 1.6s ease-in-out infinite;
-}
-.rooms {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.rooms-h {
-  font-size: 12px;
-  color: var(--holo);
-  letter-spacing: 0.04em;
-}
-#roomList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 150px;
-  overflow: auto;
-}
-#roomList .room {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 10px;
-  align-items: center;
-  padding: 6px 8px;
-  background: rgba(91, 231, 255, 0.05);
-  border: 1px solid rgba(91, 231, 255, 0.2);
-}
-#roomList .room .btn {
-  padding: 6px 14px;
-  min-height: 0;
-}
 .rseg {
   margin: 6px 0;
-}
-.lpub {
-  justify-content: center;
-  margin: 6px 0 10px;
-  font-size: 14px;
 }
 #lRounds {
   justify-content: center;
   display: flex;
 }
 /* fullscreen lives in the top bar, rotation in Settings: no extra buttons over the battle */
-#arena .arena-tools {
-  display: none !important;
-}
 
 .d-joke {
   position: absolute;
@@ -4979,24 +4218,6 @@ select {
     display: none;
   }
 }
-@media (max-width: 760px) {
-  #bayIntel {
-    top: 84px;
-    right: 8px;
-    width: 128px;
-  }
-  #bayIntel .intel {
-    font-size: 11px;
-    padding: 4px;
-  }
-  #bayIntel .rival img.shadow {
-    width: 30px;
-    height: 30px;
-  }
-  #bayIntel .rival .ih {
-    font-size: 11px;
-  }
-}
 #resFx {
   position: fixed;
   inset: 0;
@@ -5150,7 +4371,12 @@ img.badge {
   opacity: 0;
   transform: translateY(6px);
 }
-.rseg-l { align-self: center; padding: 0 10px; font-size: 12px; color: var(--muted, #97a0a8); }
+.rseg-l {
+  align-self: center;
+  padding: 0 10px;
+  font-size: 12px;
+  color: var(--muted, #97a0a8);
+}
 </style>
   </head>
   <body>
@@ -5189,12 +4415,7 @@ img.badge {
       </header>
       <main>
         <button id="reviewBack" class="btn review-return" hidden>Back to round report</button>
-        <section id="build" data-mobile-tab="bay">
-          <nav class="mobile-workshop-nav" aria-label="Mobile workshop">
-            <button data-mobile-tab="parts" aria-pressed="false">Parts &amp; shop</button>
-            <button data-mobile-tab="bay" aria-pressed="true">Build bay</button>
-            <button data-mobile-tab="stats" aria-pressed="false">Car &amp; stats</button>
-          </nav>
+        <section id="build">
           <aside class="panel" aria-label="Parts bin and shop">
             <div class="phead">
               <div class="tabs" role="tablist">
@@ -5330,22 +4551,10 @@ img.badge {
           </aside>
         </section>
         <section id="arena" hidden>
-          <canvas id="ac" aria-label="Arena: left stick drives; right stick aims, push farther to fire"></canvas>
-          <div class="arena-tools" aria-label="Arena view">
-            <button id="btnFullscreen">⛶ Fullscreen</button>
-            <button id="btnPortrait" aria-pressed="true">↻ Portrait view</button>
-          </div>
-          <div class="stick-guide left">DRIVE<br>left thumb</div>
-          <div class="stick-guide right">AIM<br>push to fire</div>
+          <canvas id="ac" aria-label="Arena: WASD drives, the mouse aims, left click fires"></canvas>
           <div class="waitcard" id="waitcard" hidden>
             <span><span class="dot"></span>You · ready</span
             ><span id="oppStatus"><span class="dot off"></span>Opponent · building</span>
-          </div>
-          <div class="touchpad" id="touchpad">
-            <button data-k="Space">Fire</button><button data-k="ShiftLeft">Boost</button><button data-k="KeyJ">Jump</button
-            ><button data-k="RMB">Action</button><button data-k="KeyZ">Drop</button
-            ><button data-k="KeyV">Counter</button><button data-k="KeyF">Blink</button
-            ><button data-k="KeyH">Horn</button><button data-k="KeyC">Anchor</button><button data-k="KeyX">Release</button>
           </div>
           <div class="abtns" id="abtns"></div>
         </section>
@@ -5377,12 +4586,10 @@ img.badge {
           <dd>
             WASD or arrows drive. Mouse aims; left-click or Space fires. Equipped gadgets and their cooldowns appear in battle. J jumps; right-click activates gadgets or reels a harpoon.
           </dd>
-          <dt>Touch</dt>
-          <dd>Left stick drives. Right stick aims; push it farther to fire, or use Fire. Portrait automatically rotates the arena. Equipped gadgets appear as thumb buttons.</dd>
         </dl>
         <p class="small">
-          Ten rounds per match. Each round is worth one point; the final round is worth two. Play a bot rival, a
-          friend online, or mess around in the sandbox.
+          Pick 5, 10 or 25 rounds. Each round is worth one point; the final round is worth two. Play a bot rival, a
+          friend online, survive the Scrap Gauntlet, or mess around in the sandbox.
         </p>
         <button class="btn" id="btnStart">Back to the menu</button>
       </div>
@@ -5401,7 +4608,6 @@ img.badge {
     <div class="overlay" id="ovPause" hidden><div class="card" id="pauseCard"></div></div>
     <div class="door-fx" id="doorFx" hidden aria-hidden="true"><i class="d-dark"></i><i class="d-l"><b>SCRAP</b></i><i class="d-r"><b>DUEL</b></i><span class="d-joke" id="doorJoke"></span></div>
     <div class="overlay" id="ovBlueprint" hidden><div class="card bp-card" id="bpCard"></div></div>
-    <div class="overlay" id="ovAccount" hidden><div class="card account-card" id="accountCard"></div></div>
     <div class="coach" id="coach" hidden></div>
     <div class="feed" id="demoFeed" hidden></div>
     <script>
@@ -5411,7 +4617,7 @@ img.badge {
 // Shared helpers: DOM shortcuts, math, grid keys, weighted random.
 const $ = s => document.querySelector(s),
   $$ = s => [...document.querySelectorAll(s)];
-// Performance mode renders the arena at 1x: big savings on high-density phone screens.
+// Performance mode renders the arena at 1x: big savings on high-density (4K/retina) screens.
 const dprOf = () => {
   let perf = false;
   try {
@@ -11808,7 +11014,6 @@ const G = {
   layerView: 'both',
   showArcs: false,
   showLinks: false,
-  mobileTab: 'bay',
   leftTab: 'bin',
   base: new Map(),
   top: new Map(),
@@ -13037,17 +12242,6 @@ $('#btnLinks').onclick = () => {
   drawBP();
 };
 
-function setMobileTab(tab) {
-  G.mobileTab = tab;
-  $('#build').dataset.mobileTab = tab;
-  $$('.mobile-workshop-nav button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mobileTab === tab));
-  if (tab === 'bay')
-    requestAnimationFrame(() => {
-      sizeBP();
-      drawBP();
-    });
-}
-$$('.mobile-workshop-nav button').forEach(b => (b.onclick = () => setMobileTab(b.dataset.mobileTab)));
 function bfxTick(dt) {
   garageAmbient(dt);
   if (building()) {
@@ -13384,222 +12578,6 @@ function store(k, v) {
   try {
     localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
   } catch (e) {}
-  try {
-    if (ACCOUNT_SYNC.includes(k)) Account.queueSave();
-  } catch (e) {} // account code is not initialised yet during start-up
-}
-/* =================== ACCOUNT (nickname + PIN) ===================
-   Optional. Signed-in players keep XP, Garage Style, blueprints and settings on the
-   server (Netlify Function + Blobs) and get them back on any device. */
-const ACCOUNT_SYNC = [
-  'sd.runBest',
-  'sd.prog',
-  'sd.style',
-  'sd.bp0',
-  'sd.bp1',
-  'sd.bp2',
-  'sd.favorites',
-  'sd.settings',
-  'sd.diff',
-  'sd.paint'
-];
-const Account = {
-  name: null,
-  token: null,
-  state: 'idle', // idle | saving | saved | offline
-  saveT: 0,
-  init() {
-    try {
-      const a = JSON.parse(localStorage.getItem('sd.account') || 'null');
-      if (a && a.name && a.token) Object.assign(this, { name: a.name, token: a.token });
-    } catch (e) {}
-    if (this.name) G.name = this.name;
-  },
-  available: () => /^https?:$/.test(location.protocol),
-  async call(action, body) {
-    if (!this.available()) throw new Error('Accounts work on the hosted game, not from a local file.');
-    let r;
-    try {
-      r = await fetch('/api/account', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action, ...body }),
-        keepalive: action === 'save'
-      });
-    } catch (e) {
-      throw new Error('No connection to the account server. Check your internet and try again.');
-    }
-    let d = {};
-    try {
-      d = await r.json();
-    } catch (e) {}
-    if (!r.ok) {
-      const er = new Error(d.error || 'The account server is not available right now.');
-      er.status = r.status;
-      throw er;
-    }
-    return d;
-  },
-  localData() {
-    const d = {};
-    for (const k of ACCOUNT_SYNC) {
-      const v = load(k);
-      if (v != null) d[k] = v;
-    }
-    return d;
-  },
-  remember(name, token) {
-    Object.assign(this, { name, token });
-    try {
-      localStorage.setItem('sd.account', JSON.stringify({ name, token }));
-      localStorage.setItem('sd.name', JSON.stringify(name).slice(1, -1));
-    } catch (e) {}
-    G.name = name;
-  },
-  /** New player: the progress already on this device becomes the account's first save. */
-  async register(name, pin) {
-    const d = await this.call('register', { name, pin, data: this.localData() });
-    this.remember(d.name, d.token);
-    this.state = 'saved';
-    return d;
-  },
-  /** Existing player: the account's save replaces this device's progress (then the game reloads). */
-  async login(name, pin) {
-    const d = await this.call('login', { name, pin });
-    this.remember(d.name, d.token);
-    const keys = Object.keys(d.data || {});
-    if (!keys.length) {
-      await this.saveNow();
-      return { reload: false };
-    }
-    try {
-      for (const k of ACCOUNT_SYNC) {
-        if (k in d.data) localStorage.setItem(k, d.data[k]);
-      }
-    } catch (e) {}
-    return { reload: true };
-  },
-  async logout() {
-    const { name, token } = this;
-    Object.assign(this, { name: null, token: null, state: 'idle' });
-    try {
-      localStorage.removeItem('sd.account');
-    } catch (e) {}
-    try {
-      if (name) await this.call('logout', { name, token });
-    } catch (e) {}
-  },
-  queueSave() {
-    if (!this.token) return;
-    clearTimeout(this.saveT);
-    this.saveT = setTimeout(() => this.saveNow(), 2500);
-  },
-  async saveNow() {
-    if (!this.token) return;
-    clearTimeout(this.saveT);
-    this.state = 'saving';
-    accountChip();
-    try {
-      await this.call('save', { name: this.name, token: this.token, data: this.localData() });
-      this.state = 'saved';
-    } catch (e) {
-      this.state = 'offline';
-      if (e.status === 401) {
-        Object.assign(this, { name: null, token: null });
-        try {
-          localStorage.removeItem('sd.account');
-        } catch (er) {}
-        toast('You were signed out. Sign in again to keep saving.');
-      }
-    }
-    accountChip();
-  }
-};
-/** Small status chip in the menu: who is signed in and whether the save is up to date. */
-function accountChip() {
-  const el = $('#acctChip');
-  if (!el) return;
-  if (!Account.name) {
-    el.innerHTML = `<span class="ac-dot off"></span><span>Playing as guest</span><b>Sign in</b>`;
-    el.title = 'Sign in with a nickname and PIN to keep your progress on every device';
-    return;
-  }
-  const st = { saving: 'saving…', saved: 'saved', offline: 'not saved yet', idle: 'signed in' }[Account.state];
-  el.innerHTML = `<span class="ac-dot ${Account.state === 'offline' ? 'warn' : ''}"></span><span><b>${esc(Account.name)}</b> · ${st}</span>`;
-  el.title = 'Account';
-}
-function openAccount(back) {
-  const ov = $('#ovAccount'),
-    card = $('#accountCard');
-  const signedIn = !!Account.name;
-  let mode = 'login',
-    typed = G.name !== 'Player' ? G.name : '';
-  const draw = msg => {
-    if (Account.name) {
-      card.innerHTML = `<h2>${esc(Account.name)}</h2>
-        <p>Your XP, Garage Style, blueprints and settings are saved to this nickname. Sign in on another device with the same PIN to continue there.</p>
-        <p class="small">Last status: ${{ saving: 'saving…', saved: 'saved', offline: 'not saved yet (no connection)', idle: 'signed in' }[Account.state]}</p>
-        <div class="rbtns"><button class="btn" id="acSave">Save now</button><button class="btn ghost" id="acOut">Sign out</button><button class="btn ghost" id="acBack">Back</button></div>`;
-      $('#acSave').onclick = async () => {
-        await Account.saveNow();
-        draw();
-      };
-      $('#acOut').onclick = async () => {
-        await Account.logout();
-        sfx('ui');
-        draw();
-      };
-    } else {
-      card.innerHTML = `<h2>${mode === 'login' ? 'Sign in' : 'New player'}</h2>
-        <div class="seg ac-tabs"><button data-m="login" aria-pressed="${mode === 'login'}">Sign in</button><button data-m="register" aria-pressed="${mode === 'register'}">New player</button></div>
-        <p class="small">${mode === 'login' ? 'Your saved progress replaces the progress on this device.' : 'Pick a nickname and a PIN you will remember. Your current progress comes with you.'}</p>
-        <form id="acForm" class="ac-form" autocomplete="off">
-          <label>Nickname<input id="acName" maxlength="16" autocomplete="username" value="${esc(typed)}" required></label>
-          <label>PIN<input id="acPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" required></label>
-          ${msg ? `<p class="ac-msg" role="alert">${esc(msg)}</p>` : ''}
-          <div class="rbtns"><button class="btn" type="submit" id="acGo">${mode === 'login' ? 'Sign in' : 'Create player'}</button><button class="btn ghost" type="button" id="acBack">Back</button></div>
-        </form>
-        ${Account.available() ? '' : '<p class="small">Accounts work on the hosted game (scrap-duel.netlify.app).</p>'}`;
-      $$('.ac-tabs button').forEach(b => (b.onclick = () => ((mode = b.dataset.m), draw())));
-      $('#acForm').onsubmit = async e => {
-        e.preventDefault();
-        const name = $('#acName').value.trim(),
-          pin = $('#acPin').value.trim();
-        typed = name;
-        $('#acGo').disabled = true;
-        $('#acGo').textContent = mode === 'login' ? 'Signing in…' : 'Creating…';
-        try {
-          if (mode === 'register') {
-            await Account.register(name, pin);
-            sfx('legend');
-            toast(`Welcome, ${Account.name}. Your progress is saved.`, true);
-            draw();
-          } else {
-            const r = await Account.login(name, pin);
-            sfx('legend');
-            if (r.reload) {
-              card.innerHTML = '<h2>Loading your garage…</h2>';
-              setTimeout(() => location.reload(), 300);
-              return;
-            }
-            toast(`Signed in as ${Account.name}.`, true);
-            draw();
-          }
-        } catch (er) {
-          draw(er.message);
-        }
-      };
-      setTimeout(() => ($('#acName').value ? $('#acPin') : $('#acName')).focus(), 30);
-    }
-    const bk = $('#acBack');
-    if (bk)
-      bk.onclick = () => {
-        ov.hidden = true;
-        if (back) back();
-      };
-  };
-  draw();
-  ov.hidden = false;
 }
 function load(k) {
   try {
@@ -14019,7 +12997,6 @@ function renderBin() {
       setTool('place');
       renderBin();
       renderInspect();
-      if (document.documentElement.clientWidth <= 920) setMobileTab('bay');
     })
   );
 }
@@ -14395,7 +13372,6 @@ function openGarageReport(st, k) {
   G.phase = 'review';
   $('#ovResult').hidden = true;
   $('#build').hidden = false;
-  setMobileTab('bay');
   document.body.classList.add('reviewing');
   $('#reviewBack').onclick = closeGarageReport;
   $('#reviewBack').hidden = false;
@@ -16311,56 +15287,37 @@ const AW = 2000,
   WM = 22,
   S = 20;
 let B = null,
-  view = { w: 0, h: 0, sc: 1, rot: 0, worldW: 0, worldH: 0 },
+  view = { w: 0, h: 0, sc: 1, worldW: 0, worldH: 0 },
   ground = null,
   gx = null;
 const cam = { x: AW / 2, y: AH / 2, z: 1, tx: AW / 2, ty: AH / 2, tz: 1 };
 const CT = (car, id) => car.tune.has(id);
-function touchPreferred() {
-  return (
-    SETTINGS.touchControls === 'on' || (SETTINGS.touchControls !== 'off' && matchMedia('(pointer:coarse)').matches)
-  );
-}
 function screenVectorToWorld(x, y) {
-  return view.rot ? [y, -x] : [x, y];
+  return [x, y];
 }
 function worldToScreen(x, y, s = view.sc * cam.z) {
-  const dx = (x - cam.x) * s,
-    dy = (y - cam.y) * s;
-  return view.rot ? [view.w / 2 - dy, view.h / 2 + dx] : [view.w / 2 + dx, view.h / 2 + dy];
+  return [view.w / 2 + (x - cam.x) * s, view.h / 2 + (y - cam.y) * s];
 }
 function sizeArena() {
   const r = ac.getBoundingClientRect(),
     d = dprOf();
   view.w = r.width;
   view.h = r.height;
-  view.rot =
-    SETTINGS.rotatePortrait &&
-    !B?.demo &&
-    r.height > r.width &&
-    (touchPreferred() || document.documentElement.clientWidth <= 920)
-      ? Math.PI / 2
-      : 0;
-  view.worldW = view.rot ? r.height : r.width;
-  view.worldH = view.rot ? r.width : r.height;
+  view.worldW = r.width;
+  view.worldH = r.height;
   ac.width = Math.round(r.width * d);
   ac.height = Math.round(r.height * d);
   view.sc = Math.min(view.worldW / AW, view.worldH / AH);
-  $('#btnPortrait').setAttribute('aria-pressed', SETTINGS.rotatePortrait);
-  $('#btnPortrait').textContent = view.rot ? '↻ Rotated view' : '↻ Portrait view';
 }
 let presentationKey = '';
 function syncPresentation() {
-  const active = !!B && !B.demo && ['wait', 'battle', 'replay'].includes(G.phase),
-    touch = active && !!B && B.touch && !B.replay; // the menu demo never shows thumbsticks
+  const active = !!B && !B.demo && ['wait', 'battle', 'replay'].includes(G.phase);
   document.body.classList.toggle('reduced-motion', SETTINGS.motion === false);
   document.body.classList.toggle('arena-battle', active && G.phase === 'battle');
-  const key = active + ' ' + touch + ' ' + G.phase + ' ' + innerWidth + ' ' + innerHeight;
+  const key = active + ' ' + G.phase + ' ' + innerWidth + ' ' + innerHeight;
   if (key === presentationKey) return;
   presentationKey = key;
   document.body.classList.toggle('in-arena', active);
-  document.body.classList.toggle('touch-enabled', touch);
-  document.body.classList.toggle('touch-disabled', !touch);
   if (active) {
     const r = $('#hud').getBoundingClientRect();
     document.documentElement.style.setProperty('--arena-top', Math.ceil(r.bottom + 6) + 'px');
@@ -16375,44 +15332,30 @@ function clearArenaInput() {
   keys.clear();
   edges.clear();
   mouse.down = mouse.right = false;
-  if (B) {
-    B.joy = null;
-    B.aimJoy = null;
-  }
 }
-$('#btnFullscreen').onclick = async () => {
+/** Fullscreen: the desktop app asks its window; a browser falls back to the Fullscreen API. */
+async function toggleFullscreen() {
   try {
-    if (document.fullscreenElement) await document.exitFullscreen();
+    if (window.desktop && window.desktop.toggleFullscreen) await window.desktop.toggleFullscreen();
+    else if (document.fullscreenElement) await document.exitFullscreen();
     else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-    else if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
-    else return toast('This browser does not support fullscreen. Portrait play still fills the available screen.');
   } catch (e) {
-    toast('Fullscreen was unavailable. The arena still fits the available screen.');
+    toast('Fullscreen was unavailable.');
   }
   clearArenaInput();
   presentationKey = '';
   syncPresentation();
-};
-$('#btnPortrait').onclick = () => {
-  SETTINGS.rotatePortrait = !SETTINGS.rotatePortrait;
-  saveSettings();
-  clearArenaInput();
-  sizeArena();
-  cam.z = cam.tz = 1;
-};
+}
 $('#btnFS').onclick = () => {
   sfx('ui');
-  $('#btnFullscreen').onclick();
+  toggleFullscreen();
 };
-if (!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen))
-  $('#btnFS').hidden = true;
 document.addEventListener('fullscreenchange', () => {
   $('#btnFS').setAttribute('aria-pressed', !!document.fullscreenElement);
   presentationKey = '';
   syncPresentation();
-  $('#btnFullscreen').textContent = document.fullscreenElement ? '⛶ Exit fullscreen' : '⛶ Fullscreen';
 });
-window.visualViewport?.addEventListener('resize', () => {
+addEventListener('resize', () => {
   presentationKey = '';
   syncPresentation();
 });
@@ -17770,7 +16713,7 @@ function drawGimmickOverlay(c, s) {
   const [wx, wy] = windForce(),
     k = Math.hypot(wx, wy);
   if (k > 20 && SETTINGS.motion !== false) {
-    const a = Math.atan2(wy, wx) + view.rot,
+    const a = Math.atan2(wy, wx),
       ca = Math.cos(a),
       sa = Math.sin(a),
       W = view.w,
@@ -22382,7 +21325,6 @@ function drawArena() {
     s = view.sc * cam.z;
   c.save();
   c.translate(view.w / 2 + sh, view.h / 2 + sh2);
-  c.rotate(view.rot);
   c.scale(s, s);
   c.translate(-cam.x, -cam.y);
   c.drawImage(ground, 0, 0);
@@ -22475,7 +21417,7 @@ function drawArena() {
     c.arc(l.x, l.y, 42, 0, Math.PI * 2);
     c.stroke();
   }
-  if (v && !B.touch && !v.dead && B.seq === 'play' && !B.demo && !B.replay) {
+  if (v && !v.dead && B.seq === 'play' && !B.demo && !B.replay) {
     c.strokeStyle = 'rgba(242,183,5,.85)';
     c.lineWidth = 2 / cam.z;
     const m = mouse;
@@ -22595,7 +21537,7 @@ function drawHitArrows(c, v, s) {
   for (const h of B.hitDirs) {
     c.save();
     c.translate(cx, cy);
-    c.rotate(h.a + view.rot);
+    c.rotate(h.a);
     c.globalAlpha = Math.min(1, h.t * 1.6);
     c.fillStyle = '#ff4d3a';
     c.beginPath();
@@ -22666,87 +21608,12 @@ function abilityCooldown(v, k) {
   const live = v.insts.filter(I => I.alive && I[k] > B.time);
   return live.length ? Math.max(0, Math.min(...live.map(I => I[k] - B.time))) : 0;
 }
-const TOUCH_LABELS = {
-  Space: 'Fire',
-  ShiftLeft: 'Boost',
-  KeyJ: 'Jump',
-  RMB: 'Action',
-  KeyZ: 'Drop',
-  KeyV: 'Counter',
-  KeyF: 'Blink',
-  KeyH: 'Horn',
-  KeyC: 'Anchor',
-  KeyX: 'Release'
-};
-function equippedTouchActions(v) {
-  if (!v) return {};
-  const h = v.has || {};
-  return {
-    Space: !!v.insts?.some(I => I.alive && (I.m.wpn || PLAN_FIRE.includes(I.id))),
-    ShiftLeft: !!(h.booster || h.nitro),
-    KeyJ: !!h.jump,
-    RMB: !!(h.piston || h.flipper || h.catapult || h.harpoon || h.tractor || PLAN_ACTION.some(id => h[id])),
-    KeyZ: !!(h.oil || h.glue || h.banana || h.mines || PLAN_DROP.some(id => h[id])),
-    KeyV: !!(h.smoke || h.decoy || h.jammer || h.flare || h.emp || h.flashbang || h.rubberduck),
-    KeyF: !!h.blink,
-    KeyH: !!(h.horn || h.prizebell),
-    KeyC: !!(h.anchor || h.gripstud || h.rescue),
-    KeyX: !!h.coupler
-  };
-}
-function touchActionCooldown(v, k) {
-  const ids =
-      k === 'RMB'
-        ? PLAN_ACTION
-        : k === 'KeyZ'
-          ? PLAN_DROP
-          : k === 'KeyV'
-            ? ['rubberduck']
-            : k === 'KeyH'
-              ? ['prizebell']
-              : k === 'KeyC'
-                ? ['rescue']
-                : [],
-    pc = Math.max(0, ...v.insts.filter(I => I.alive && ids.includes(I.id)).map(I => (I.planCd || 0) - B.time));
-  if (pc > 0) return pc;
-  return k === 'ShiftLeft'
-    ? abilityCooldown(v, 'bcd')
-    : k === 'RMB'
-      ? Math.max(abilityCooldown(v, 'pcd'), abilityCooldown(v, 'ccd'))
-      : k === 'KeyJ'
-        ? Math.max(0, v.jumpCd || 0)
-        : k === 'KeyV'
-          ? Math.max(0, v.cmCd || 0)
-          : k === 'KeyF'
-            ? Math.max(0, v.blinkCd || 0)
-            : k === 'KeyH'
-              ? Math.max(0, v.hornCd || 0)
-              : 0;
-}
-function updateTouchControls(v) {
-  const enabled = equippedTouchActions(v);
-  $$('#touchpad button').forEach(b => {
-    const k = b.dataset.k,
-      cd = touchActionCooldown(v, k),
-      state = k === 'KeyC' && v.anchored ? 'active' : cd > 0 ? 'cooling' : 'ready';
-    b.hidden = !enabled[k] || k === 'Space'; // the right stick already aims and fires
-    const label =
-      (k === 'RMB' && v.has.harpoon ? 'Reel / action' : k === 'KeyC' && v.anchored ? 'Lift anchor' : TOUCH_LABELS[k]) +
-      (cd > 0 ? '\n' + cd.toFixed(1) + 's' : '');
-    if (b.textContent !== label) {
-      b.textContent = label;
-      b.setAttribute('aria-label', label.replace('\n', ', '));
-    }
-    if (b.dataset.state !== state) b.dataset.state = state;
-  });
-}
 function drawHUD(c) {
   const W = view.w,
     H = view.h,
     v = myCar();
   if (!v) return;
   const h = v.has || {};
-  updateTouchControls(v);
   const rows = [[v.name.toUpperCase(), integrity(v), v.paint]];
   for (const I of v.shields)
     if (I.alive) {
@@ -22778,7 +21645,7 @@ function drawHUD(c) {
   c.textBaseline = 'top';
   if (G.phase === 'battle' || B.replay) {
     // timer on a plate so it never melts into the arena behind it
-    const ty = narrow ? Math.max(52, rows.length * 24 + 8) : 8; // on phones the timer sits under the health bars
+    const ty = narrow ? Math.max(52, rows.length * 24 + 8) : 8; // narrow windows: the timer sits under the health bars
     c.fillStyle = 'rgba(20,16,12,.78)';
     rr(c, W / 2 - 92, ty, 184, 50, 8);
     c.fill();
@@ -22852,7 +21719,7 @@ function drawHUD(c) {
   if (h.horn || h.prizebell) ctl.push(['H', 'horn']);
   if (h.anchor || h.gripstud || h.rescue) ctl.push(['C', v.anchored ? 'anchor up' : 'anchor']);
   if (h.coupler) ctl.push(['X', 'release']);
-  if (!B.touch) {
+  {
     c.textAlign = 'left';
     c.textBaseline = 'bottom';
     c.font = '600 12px "Barlow Semi Condensed", sans-serif';
@@ -22928,27 +21795,6 @@ function drawHUD(c) {
     c.font = '600 13px "Barlow Semi Condensed", sans-serif';
     c.fillStyle = '#ff8a6a';
     c.fillText('Connection hiccup… waiting for host', W / 2, H - 60);
-  }
-  if (B.touch) {
-    for (const [stick, col] of [
-      [B.joy, '#7fe0ff'],
-      [B.aimJoy, '#ffd257']
-    ])
-      if (stick) {
-        c.strokeStyle = col + '88';
-        c.lineWidth = 2;
-        c.beginPath();
-        c.arc(stick.sx, stick.sy, 54, 0, Math.PI * 2);
-        c.stroke();
-        if (stick === B.aimJoy) {
-          c.setLineDash([3, 5]);
-          c.beginPath();
-          c.arc(stick.sx, stick.sy, 54 * 0.68, 0, Math.PI * 2);
-          c.stroke();
-          c.setLineDash([]);
-        }
-        circ(c, stick.sx + stick.x * 54, stick.sy + stick.y * 54, 18, col + '99');
-      }
   }
 }
 
@@ -23028,7 +21874,7 @@ function drawNight(c, s, dark = 0.9, flash = 1) {
     if (v.dead) continue;
     light(v.x, v.y, v.rad + 90, 0.95);
     // headlight cone
-    const fa = v.a - Math.PI / 2 + view.rot,
+    const fa = v.a - Math.PI / 2,
       [sx, sy] = toS(v.x, v.y),
       L = 460 * s,
       g = n.createRadialGradient(sx, sy, v.rad * s, sx, sy, L);
@@ -23085,7 +21931,7 @@ addEventListener('keydown', e => {
     B &&
     !B.paused &&
     !Net.reconnecting &&
-    ['#ovMenu', '#ovCodex', '#ovSettings', '#ovPause', '#ovAccount'].every(id => $(id).hidden) &&
+    ['#ovMenu', '#ovCodex', '#ovSettings', '#ovPause'].every(id => $(id).hidden) &&
     CTRL.includes(e.code)
   ) {
     e.preventDefault();
@@ -23121,44 +21967,11 @@ const toWorld = (cx, cy) => {
   return [x + cam.x, y + cam.y];
 };
 function arenaInputBlocked() {
-  return ['#ovMenu', '#ovCodex', '#ovSettings', '#ovPause', '#ovAccount'].some(id => !$(id).hidden);
-}
-function pointerIsTouch(ev) {
-  return SETTINGS.touchControls === 'on' || (ev.pointerType === 'touch' && SETTINGS.touchControls !== 'off');
-}
-function moveStick(stick, ev) {
-  const r = ac.getBoundingClientRect(),
-    x = (ev.clientX - r.left - stick.sx) / 54,
-    y = (ev.clientY - r.top - stick.sy) / 54,
-    m = Math.hypot(x, y),
-    f = m > 1 ? 1 / m : 1;
-  stick.x = x * f;
-  stick.y = y * f;
-  stick.m = Math.min(1, m);
+  return ['#ovMenu', '#ovCodex', '#ovSettings', '#ovPause'].some(id => !$(id).hidden);
 }
 ac.addEventListener('pointerdown', ev => {
   if (!B || B.paused || B.replay || B.demo || Net.reconnecting || arenaInputBlocked()) return;
   ev.preventDefault();
-  if (pointerIsTouch(ev)) {
-    B.touch = true;
-    const r = ac.getBoundingClientRect();
-    const stick = { id: ev.pointerId, sx: ev.clientX - r.left, sy: ev.clientY - r.top, x: 0, y: 0, m: 0 };
-    if (stick.sx < r.width * 0.5) {
-      if (B.joy) return;
-      B.joy = stick;
-    } else {
-      if (B.aimJoy) return;
-      B.aimJoy = stick;
-      mouse.down = false;
-      mouse.sx = undefined;
-      mouse.sy = undefined;
-    }
-    try {
-      ac.setPointerCapture(ev.pointerId);
-    } catch (e) {}
-    return;
-  }
-  B.touch = false;
   mouse.pointerId = ev.pointerId;
   mouse.sx = ev.clientX;
   mouse.sy = ev.clientY;
@@ -23172,30 +21985,11 @@ ac.addEventListener('pointerdown', ev => {
 });
 ac.addEventListener('pointermove', ev => {
   if (!B) return;
-  if (B.joy && ev.pointerId === B.joy.id) {
-    moveStick(B.joy, ev);
-    return;
-  }
-  if (B.aimJoy && ev.pointerId === B.aimJoy.id) {
-    moveStick(B.aimJoy, ev);
-    return;
-  }
-  if (!pointerIsTouch(ev)) {
-    mouse.sx = ev.clientX;
-    mouse.sy = ev.clientY;
-  }
+  mouse.sx = ev.clientX;
+  mouse.sy = ev.clientY;
 });
 const up = ev => {
   if (!B) return;
-  if (B.joy && ev.pointerId === B.joy.id) {
-    B.joy = null;
-    return;
-  }
-  if (B.aimJoy && ev.pointerId === B.aimJoy.id) {
-    B.aimJoy = null;
-    mouse.down = false;
-    return;
-  }
   if (ev.type === 'lostpointercapture') {
     if (ev.pointerId === mouse.pointerId) mouse.down = mouse.right = false;
     return;
@@ -23207,27 +22001,6 @@ ac.addEventListener('pointerup', up);
 ac.addEventListener('pointercancel', up);
 ac.addEventListener('lostpointercapture', up);
 ac.addEventListener('contextmenu', e => e.preventDefault());
-$$('#touchpad button').forEach(b => {
-  const k = b.dataset.k;
-  b.addEventListener('pointerdown', e => {
-    e.preventDefault();
-    if (!B || B.paused || Net.reconnecting || arenaInputBlocked() || !equippedTouchActions(myCar())[k]) return;
-    try {
-      b.setPointerCapture(e.pointerId);
-    } catch (err) {}
-    edges.add(k);
-    if (k === 'RMB') mouse.right = true;
-    else keys.add(k);
-  });
-  const off = () => {
-    if (k === 'RMB') mouse.right = false;
-    else keys.delete(k);
-  };
-  b.addEventListener('pointerup', off);
-  b.addEventListener('pointercancel', off);
-  b.addEventListener('lostpointercapture', off);
-});
-
 const ZERO_IN = {
   th: 0,
   st: 0,
@@ -23261,69 +22034,16 @@ function readLocal() {
     i.edges.clear();
     return i;
   }
-  if (B.touch && B.joy && v) {
-    const m = Math.hypot(B.joy.x, B.joy.y);
-    if (m > 0.15) {
-      const [jx, jy] = screenVectorToWorld(B.joy.x, B.joy.y);
-      const want = Math.atan2(jy, jx),
-        diff = wrap(want - (v.a - Math.PI / 2));
-      i.st = clamp(diff * 2.5, -1, 1);
-      i.th = Math.min(1, m) * (Math.abs(diff) < 1.8 ? 1 : 0.2);
-    }
-  } else {
+  {
     i.th = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
     i.st = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
   }
   i.sf = (keys.has('KeyE') ? 1 : 0) - (keys.has('KeyQ') ? 1 : 0);
   i.boost = keys.has('ShiftLeft') || keys.has('ShiftRight');
-  if (B.touch && v) {
-    const stick = B.aimJoy;
-    if (stick && stick.m > 0.16) {
-      const [x, y] = screenVectorToWorld(stick.x, stick.y),
-        m = Math.hypot(x, y);
-      B.touchAim = { x: x / m, y: y / m, range: clamp(stick.m * 800, 200, 800) };
-    }
-    const aim = B.touchAim || { x: Math.cos(v.a - Math.PI / 2), y: Math.sin(v.a - Math.PI / 2), range: 600 };
-    mouse.x = v.x + aim.x * aim.range;
-    mouse.y = v.y + aim.y * aim.range;
-    i.fire = keys.has('Space') || !!(stick && stick.m >= 0.68);
-    if (SETTINGS.touchAssist && G.mode !== 'mp' && i.fire) {
-      const assisted = touchAimAssist(v, mouse.x, mouse.y);
-      mouse.x = assisted[0];
-      mouse.y = assisted[1];
-    }
-  } else if (mouse.sx !== undefined) [mouse.x, mouse.y] = toWorld(mouse.sx, mouse.sy);
+  if (mouse.sx !== undefined) [mouse.x, mouse.y] = toWorld(mouse.sx, mouse.sy);
   i.aimX = mouse.x;
   i.aimY = mouse.y;
   return i;
-}
-function touchAimAssist(v, x, y) {
-  // Solo only, five-degree cone, no hidden targets, and no locking through obstacles.
-  if (G.mode === 'mp' || B.special === 'night') return [x, y];
-  const angle = Math.atan2(y - v.y, x - v.x),
-    range = Math.hypot(x - v.x, y - v.y);
-  const target = B.cars.find(
-    e =>
-      e !== v &&
-      !e.dead &&
-      !inSmoke(e.x, e.y) &&
-      Math.hypot(e.x - v.x, e.y - v.y) < Math.min(650, range + 100) &&
-      Math.abs(wrap(Math.atan2(e.y - v.y, e.x - v.x) - angle)) < Math.PI / 36
-  );
-  if (!target) return [x, y];
-  const hit = rayHit(
-    v.x,
-    v.y,
-    Math.atan2(target.y - v.y, target.x - v.x),
-    Math.hypot(target.x - v.x, target.y - v.y) + target.rad,
-    false,
-    v.idx
-  );
-  if (hit.hits[0]?.car !== target) return [x, y];
-  const [sx, sy] = worldToScreen(target.x, target.y);
-  if (sx < 0 || sy < 0 || sx > view.w || sy > view.h) return [x, y];
-  const a = angle + wrap(Math.atan2(target.y - v.y, target.x - v.x) - angle) * 0.35;
-  return [v.x + Math.cos(a) * range, v.y + Math.sin(a) * range];
 }
 function applyInput(v, i) {
   if (v.dead || B.seq !== 'play') {
@@ -23753,7 +22473,7 @@ function updateCam(rdt) {
         e = al.find(c => c !== m);
       const dx = Math.abs(m.x - e.x),
         dy = Math.abs(m.y - e.y);
-      const wMe = 0.6; // Keep both cars in view, including the rotated portrait arena.
+      const wMe = 0.6; // keep both cars in view
       cam.tx = m.x * wMe + e.x * (1 - wMe);
       cam.ty = m.y * wMe + e.y * (1 - wMe);
       cam.tz = clamp(
@@ -23768,7 +22488,7 @@ function updateCam(rdt) {
       cam.tz = G.phase === 'wait' ? 1.3 : 1.15;
     }
   }
-  // Fit in the rotated world dimensions; do not crop a portrait screen into a strip.
+  // keep the camera inside the arena
   const k = 1 - Math.exp(-4 * rdt);
   cam.z += (cam.tz - cam.z) * k;
   const s = view.sc * cam.z,
@@ -24644,7 +23364,7 @@ const Net = {
     lobbyUI();
     if (!this.rtcOK())
       return this.fail(
-        'This browser blocks peer-to-peer connections here. Host the game on a normal site (Netlify) to play online.'
+        'Peer-to-peer connections are blocked here. Check your internet connection or firewall and try again.'
       );
     try {
       await loadPeer();
@@ -24700,7 +23420,7 @@ const Net = {
     lobbyUI();
     if (!this.rtcOK())
       return this.fail(
-        'This browser blocks peer-to-peer connections here. Open the hosted version (Netlify) to play online.'
+        'Peer-to-peer connections are blocked here. Check your internet connection or firewall and try again.'
       );
     try {
       await loadPeer();
@@ -25073,9 +23793,6 @@ const Net = {
     };
   },
   close() {
-    try {
-      Lobby.unlist();
-    } catch (e) {}
     this.closing = true;
     clearInterval(this.heartbeat);
     clearInterval(this.recoveryTimer);
@@ -25523,116 +24240,6 @@ function applySnap(S, silent) {
     NET_REPLAY = false;
   }
 }
-/* ===== js/net/lobby.js ===== */
-// Players online + public 1v1 rooms. Talks to netlify/functions/lobby.mjs.
-const Lobby = {
-  id: (() => {
-    const mk = () =>
-      connectionToken()
-        .replace(/[^a-z0-9]/gi, '')
-        .slice(0, 24);
-    try {
-      let x = sessionStorage.getItem('sd.pid');
-      if (!x) {
-        x = mk();
-        sessionStorage.setItem('sd.pid', x);
-      }
-      return x;
-    } catch (e) {
-      return mk();
-    }
-  })(),
-  online: 0,
-  rooms: [],
-  ok: false,
-  wantPublic: true,
-  listed: false,
-  timer: 0,
-  busy: false,
-  last: 0,
-  async ping(force) {
-    if (typeof fetch !== 'function' || this.busy || (!force && document.hidden)) return;
-    if (!force && Date.now() - this.last < 4000) return;
-    this.busy = true;
-    this.last = Date.now();
-    const room =
-      this.listed && Net.role === 'host' && Net.ready && !Net.connected && Net.code
-        ? { code: Net.code, name: G.name, rounds: G.mpRounds || 10 }
-        : null;
-    try {
-      const r = await fetch('/api/lobby', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ id: this.id, v: NET_PROTOCOL, room })
-      });
-      if (r.ok) {
-        const d = await r.json();
-        this.online = Math.max(1, d.online | 0);
-        this.rooms = (d.rooms || []).filter(x => x.v === NET_PROTOCOL && x.code !== Net.code);
-        this.ok = true;
-      } else this.ok = false;
-    } catch (e) {
-      this.ok = false;
-    }
-    this.busy = false;
-    this.render();
-  },
-  list() {
-    if (!this.wantPublic) return;
-    this.listed = true;
-    this.last = 0;
-    this.ping(true);
-  },
-  unlist() {
-    if (!this.listed) return;
-    this.listed = false;
-    this.last = 0;
-    this.ping(true);
-  },
-  start() {
-    clearInterval(this.timer);
-    this.ping(true);
-    this.timer = setInterval(() => this.ping(), 20000);
-  },
-  render() {
-    const o = $('#onlineChip');
-    if (o) {
-      o.hidden = !this.ok;
-      const n = $('#onlineN');
-      if (n) n.textContent = this.online;
-    }
-    const box = $('#roomList');
-    if (!box) return;
-    box.innerHTML = !this.ok
-      ? '<span class="small">Public rooms appear here when the server is reachable.</span>'
-      : this.rooms.length
-        ? this.rooms
-            .map(
-              r =>
-                `<div class="room"><b>${esc(r.name)}</b><span class="small">${r.rounds} rounds · ${esc(r.code)}</span><button class="btn" data-code="${esc(r.code)}">Join</button></div>`
-            )
-            .join('')
-        : '<span class="small">No open rooms right now. Host one and it shows up here.</span>';
-    box.querySelectorAll &&
-      box.querySelectorAll('button[data-code]').forEach(
-        b =>
-          (b.onclick = () => {
-            sfx('ui');
-            if (G.mode === 'mp') Net.close();
-            Net.join(b.dataset.code);
-          })
-      );
-  }
-};
-addEventListener('pagehide', () => {
-  try {
-    navigator.sendBeacon &&
-      navigator.sendBeacon(
-        '/api/lobby',
-        new Blob([JSON.stringify({ id: Lobby.id, bye: true })], { type: 'application/json' })
-      );
-  } catch (e) {}
-});
 /* ===== js/render/cosmetics-render.js ===== */
 // Drawing for cosmetics: liveries painted over body parts, movement trails and wreck effects.
 const LIVERY_CATS = new Set(['struct', 'defense']);
@@ -26285,10 +24892,6 @@ function newB(o) {
       flashCol: null,
       shake: 0,
       hitstop: 0,
-      touch: touchPreferred(),
-      joy: null,
-      aimJoy: null,
-      touchAim: null,
       chain: [],
       banner: null,
       ev: [],
@@ -26522,7 +25125,6 @@ function hideOverlays() {
     '#ovResult',
     '#ovReady',
     '#ovStyle',
-    '#ovAccount',
     '#ovBlueprint'
   ])
     $(id).hidden = true;
@@ -27772,9 +26374,6 @@ const SETTINGS = {
   shake: true,
   nums: true,
   marks: true,
-  rotatePortrait: true,
-  touchControls: 'auto',
-  touchAssist: false,
   voice: true,
   motion: true,
   crateSpin: true,
@@ -27824,10 +26423,7 @@ function openSettings(back) {
     ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
     ${toggle('setNums', 'Floating damage numbers', SETTINGS.nums)}
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
-    <label class="vol"><span>Controls</span><select id="setTouch" aria-label="Control style"><option value="auto" ${SETTINGS.touchControls === 'auto' ? 'selected' : ''}>Automatic</option><option value="on" ${SETTINGS.touchControls === 'on' ? 'selected' : ''}>Touch sticks</option><option value="off" ${SETTINGS.touchControls === 'off' ? 'selected' : ''}>Mouse &amp; keyboard</option></select></label>
-    ${toggle('setPortrait', 'Rotate the arena on phones held upright (portrait view)', SETTINGS.rotatePortrait)}
-    ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older phones)', SETTINGS.perf)}
-    ${toggle('setTouchAssist', 'Subtle touch aim assist (solo only)', SETTINGS.touchAssist)}
+    ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
     <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Garage Style progress</button></div>
     <button class="btn" id="setDone">Done</button>`;
   $('#ovSettings').hidden = false;
@@ -27855,8 +26451,6 @@ function openSettings(back) {
     ['setShake', 'shake'],
     ['setNums', 'nums'],
     ['setMarks', 'marks'],
-    ['setPortrait', 'rotatePortrait'],
-    ['setTouchAssist', 'touchAssist'],
     ['setPerf', 'perf']
   ])
     $('#' + id).addEventListener('change', e => {
@@ -27867,16 +26461,6 @@ function openSettings(back) {
         clearArenaInput();
       }
     });
-  $('#setTouch').onchange = e => {
-    SETTINGS.touchControls = e.target.value;
-    saveSettings();
-    if (B) {
-      clearArenaInput();
-      B.touch = touchPreferred();
-      presentationKey = '';
-      syncPresentation();
-    }
-  };
   $('#setTips').addEventListener('click', e => {
     seenTips = new Set();
     store('sd.tips', []);
@@ -27924,7 +26508,7 @@ function togglePause(force) {
       ${G.phase === 'wait' ? '<button class="btn ghost" id="pGarage"><i>⚒</i>Back to garage</button>' : ''}
       <button class="btn ghost" id="pSettings"><i>⚙</i>Settings</button>
       <button class="btn ghost" id="pControls"><i>⌨</i>Controls</button>
-      ${document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen ? `<button class="btn ghost" id="pFull"><i>⛶</i>${document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen'}</button>` : ''}
+      <button class="btn ghost" id="pFull"><i>⛶</i>${document.fullscreenElement || (window.desktop && window.desktop.isFullscreen) ? 'Exit fullscreen' : 'Fullscreen'}</button>
       ${forfeit ? '<button class="btn ghost warn" id="pForfeit"><i>⚑</i>Forfeit round</button>' : ''}
       <button class="btn ghost quit" id="pMenu"><i>⏏</i>Main menu</button>
     </div>
@@ -27936,7 +26520,7 @@ function togglePause(force) {
   const pf = $('#pFull');
   if (pf)
     pf.addEventListener('click', async () => {
-      await $('#btnFullscreen').onclick();
+      await toggleFullscreen();
       togglePause(false);
     });
   $('#pControls').addEventListener('click', () => ($('#pExtra').innerHTML = controlsHtml()));
@@ -28089,55 +26673,6 @@ function demoTick(dt) {
   ];
   demoFeed(pick(lines));
 }
-/* ===== js/ui/install.js ===== */
-// Installable app: registers the service worker and offers an "Install app" button in the menu.
-const Install = {
-  prompt: null,
-  installed: false,
-  init() {
-    if (typeof navigator === 'undefined') return;
-    try {
-      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost'))
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-    } catch (e) {}
-    this.installed =
-      matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone === true;
-    addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      this.prompt = e;
-      this.render();
-    });
-    addEventListener('appinstalled', () => {
-      this.installed = true;
-      this.prompt = null;
-      this.render();
-      window.__toast && window.__toast('Scrap Duel is installed. Find it on your home screen.', true);
-    });
-  },
-  /** iPhone/iPad Safari has no install prompt: we explain the Share → Add to Home Screen route instead. */
-  ios() {
-    if (typeof navigator === 'undefined') return false;
-    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !this.installed;
-  },
-  available() {
-    return !this.installed && (!!this.prompt || this.ios());
-  },
-  render() {
-    const b = $('#mInstall');
-    if (b) b.hidden = !this.available();
-  },
-  async run() {
-    sfx('ui');
-    if (this.prompt) {
-      this.prompt.prompt();
-      try {
-        await this.prompt.userChoice;
-      } catch (e) {}
-      this.prompt = null;
-      this.render();
-    } else if (this.ios()) window.__toast('On iPhone: tap the Share button, then "Add to Home Screen".', true);
-  }
-};
 /* ===== js/ui/menu.js ===== */
 // Main menu (over a live bot battle), multiplayer lobby, the main loop and start-up.
 const inMatch = () => !['intro', 'menu', 'final'].includes(G.phase) && G.mode !== undefined && G.started;
@@ -28169,17 +26704,16 @@ function showMenu() {
   const L = levelInfo();
   $('#ovMenu').classList.toggle('live', !resume);
   $('#ovMenu').innerHTML = `<div class="menu2">
-    <div class="hero2"><button class="acct-chip" id="acctChip" type="button"></button><span class="online-chip" id="onlineChip" hidden><i></i><b id="onlineN">1</b> online</span><h1>SCRAP<br>DUEL</h1>
+    <div class="hero2"><h1>SCRAP<br>DUEL</h1>
       <p id="tagline">Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
     <div class="modes2">
       <div class="mode2" style="--rc:#5cc38f"><div class="mh"><span class="ico">1P</span><h3>Singleplayer</h3></div><p>A bot rival who drafts, shops and builds with the same rules.</p>
         <div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
         <div class="seg rseg" id="roundSeg" aria-label="Match length"><span class="rseg-l">Rounds</span>${ROUND_CHOICES.map(n => `<button data-n="${n}" aria-pressed="${n === (G.rounds || 10)}">${n}</button>`).join('')}</div>
         <button class="btn" id="mSolo">Play vs bot</button></div>
-      <div class="mode2" style="--rc:#4ea1ff"><div class="mh"><span class="ico">2P</span><h3>Multiplayer</h3></div><p>Host a room for a friend, or jump into an open 1v1.</p>
+      <div class="mode2" style="--rc:#4ea1ff"><div class="mh"><span class="ico">2P</span><h3>Multiplayer</h3></div><p>Host a room and share the code with a friend.</p>
         <input id="mName" class="mname" maxlength="16" value="${esc(G.name)}" aria-label="Your name" placeholder="Your name">
-        <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
-        <div class="rooms"><span class="rooms-h">Open 1v1 rooms</span><div id="roomList"></div></div></div>
+        <div class="row"><button class="btn" id="mHost">Host</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div></div>
       <div class="mode2" style="--rc:#ff5c7a"><div class="mh"><span class="ico">☠</span><h3>Scrap Gauntlet</h3></div><p>Survive wave after wave with three hearts. A boss every fifth wave drops a relic.</p>
         <span class="small runbest">Best run: ${runBest() ? 'wave ' + runBest() : 'none yet'}</span>
         <button class="btn" id="mRun">Start a run</button></div>
@@ -28189,11 +26723,9 @@ function showMenu() {
         <div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">Scrap Cred level ${L.lvl} · ${L.into}/${L.need} XP</span>
         <button class="btn" id="mStyle">Customize</button></div>
     </div>
-    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button><button class="btn ghost" id="mInstall" hidden>📲 Install app</button></div>
+    <div class="mfoot">${resume ? '<button class="btn ok" id="mResume">Resume match</button>' : ''}<button class="btn ghost" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="btn ghost" id="mCodex">Module codex</button><button class="btn ghost" id="mHow">How to play</button><button class="btn ghost" id="mSettings">Settings</button></div>
   </div>`;
   $('#ovMenu').hidden = false;
-  Install.render();
-  $('#mInstall').onclick = () => Install.run();
   clearInterval(showMenu.tag);
   showMenu.tag = setInterval(() => {
     const t = $('#tagline');
@@ -28204,19 +26736,6 @@ function showMenu() {
       t.classList.remove('swap');
     }, 350);
   }, 7000);
-  Lobby.render();
-  Lobby.ping();
-  accountChip();
-  $('#acctChip').onclick = () => {
-    sfx('ui');
-    $('#ovMenu').hidden = true;
-    openAccount(showMenu);
-  };
-  if (Account.name) {
-    $('#mName').value = Account.name;
-    $('#mName').disabled = true;
-    $('#mName').title = 'Your account nickname';
-  }
   $$('#diffSeg button').forEach(b =>
     b.addEventListener('click', () => {
       G.diff = +b.dataset.i;
@@ -28320,8 +26839,7 @@ function lobbyUI() {
     <div class="lstat"><span><span class="dot on"></span>${esc(G.name)}</span><span><span class="dot${n.connected ? ' on' : ''}"></span>${n.connected ? esc(G.oppName) : 'Friend'}</span></div>
     ${
       host
-        ? `<div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div>
-    <label class="tgl lpub"><input type="checkbox" id="lPublic" ${Lobby.wantPublic ? 'checked' : ''}><span>List as a public 1v1 room</span></label>`
+        ? `<div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div>`
         : ''
     }
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>Start match</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Cancel</button></div>`;
@@ -28330,17 +26848,8 @@ function lobbyUI() {
       G.mpRounds = +b.dataset.n;
       $$('#lRounds button').forEach(x => x.setAttribute('aria-pressed', x === b));
       sfx('ui');
-      Lobby.list();
     })
   );
-  const lp = $('#lPublic');
-  if (lp)
-    lp.onchange = () => {
-      Lobby.wantPublic = lp.checked;
-      lp.checked ? Lobby.list() : Lobby.unlist();
-    };
-  if (host && n.ready && !n.connected) Lobby.list();
-  if (n.connected) Lobby.unlist();
   const s = $('#lStart');
   if (s)
     s.addEventListener('click', () => {
@@ -28349,11 +26858,9 @@ function lobbyUI() {
       const rounds = setRounds(G.mpRounds || 10);
       const sched = makeSchedule(rounds);
       Net.send({ t: 'begin', sched, format, rounds });
-      Lobby.unlist();
       beginMP(sched, format, rounds);
     });
   $('#lCancel').addEventListener('click', () => {
-    Lobby.unlist();
     Net.close();
     $('#ovLobby').hidden = true;
     showMenu();
@@ -28401,9 +26908,7 @@ function loop(t) {
     } else if ((G.phase === 'wait' || G.phase === 'battle') && B) {
       if (
         B.menuPaused &&
-        ['#ovMenu', '#ovCodex', '#ovSettings', '#ovStyle', '#ovIntro', '#ovPause', '#ovAccount'].every(
-          id => $(id).hidden
-        )
+        ['#ovMenu', '#ovCodex', '#ovSettings', '#ovStyle', '#ovIntro', '#ovPause'].every(id => $(id).hidden)
       ) {
         B.menuPaused = false;
         B.paused = false;
@@ -28449,14 +26954,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   try {
     G.favorites = new Set(JSON.parse(load('sd.favorites') || '[]').filter(id => MOD[id]));
   } catch (e) {}
-  Account.init();
-  Lobby.start();
-  Install.init();
 }
-// last chance to save when the tab closes or the phone switches apps
-addEventListener('pagehide', () => {
-  if (Account.token && Account.saveT) Account.saveNow();
-});
 resetWs();
 G.base = new Map([[key(0, 0), { id: 'cockpit', rot: 0, x: 0, y: 0 }]]);
 G.inv = { cockpit: 1 };
@@ -28483,7 +26981,6 @@ if (window.__SD_TEST__)
     oppHints,
     CRATE_THEMES,
     Announcer,
-    Lobby,
     intelUI,
     showFinal,
     unpackDesign,
@@ -28495,8 +26992,6 @@ if (window.__SD_TEST__)
     spinWheel,
     WHEEL_SEGS,
     GFX,
-    Account,
-    openAccount,
     showMenu,
     canPause,
     togglePause,
@@ -28543,13 +27038,8 @@ if (window.__SD_TEST__)
     toWorld,
     worldToScreen,
     screenVectorToWorld,
-    moveStick,
     sizeArena,
     updateCam,
-    touchAimAssist,
-    equippedTouchActions,
-    touchActionCooldown,
-    setMobileTab,
     enterWait,
     syncPresentation,
     clearArenaInput,
