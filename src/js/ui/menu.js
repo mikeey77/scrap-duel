@@ -403,6 +403,13 @@ requestAnimationFrame(loop);
 if (window.__SD_TEST__)
   window.__SD = {
     prepareBot,
+    stepJoints,
+    jointSnap,
+    applyJointSnap,
+    bpos,
+    ipos,
+    carBlockAt,
+    faceAng,
     botCarCfg,
     startRun,
     runNext,

@@ -198,7 +198,7 @@ test('catalog loads and every starter is connected, usable and owned', () => {
     signatures.add(G.starterGuns.join(','));
   }
   assert(signatures.size > 10);
-  assert.equal(a.MODS.length, 205);
+  assert.equal(a.MODS.length, 209);
 });
 test('all heavy drafted modules include enough free support', () => {
   for (const m of a.MODS.filter(m => m.layer === 't' && m.mnt === 2)) {
@@ -642,7 +642,7 @@ test('open overlays release held input and prevent background fire', () => {
 test('all fifty designs have unique names, intended shapes, tags and executable mechanics', () => {
   const added = a.MODS.filter(m => m.plan && !m.odd);
   assert.equal(added.length, 50);
-  assert.equal(new Set(a.MODS.map(m => m.name)).size, 205);
+  assert.equal(new Set(a.MODS.map(m => m.name)).size, 209);
   const counts = {};
   for (const m of added) {
     const b = a.shapeBounds(m);
@@ -1353,6 +1353,83 @@ test('Scrap Gauntlet: hearts, boss every fifth wave, relics and run over', () =>
   assert.equal(G.run, null);
   assert.equal(G.diff, 1, 'difficulty restored');
   assert(r.elements.get('resultCard').innerHTML.includes('wave reached'));
+});
+function jointCar(a, jid, rot, extra = []) {
+  const base = new Map(),
+    top = new Map();
+  base.set('0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 });
+  base.set('1,0', { id: jid, x: 1, y: 0, rot });
+  base.set('2,0', { id: 'girder', x: 2, y: 0, rot: 0 });
+  base.set('3,0', { id: 'girder', x: 3, y: 0, rot: 0 });
+  base.set('0,1', { id: 'wheel', x: 0, y: 1, rot: 0 });
+  for (const e of extra) (a.MOD[e.id].layer === 't' ? top : base).set(e.x + ',' + e.y, e);
+  return a.makeCar({ base, top }, 0, 1000, 600, 0, { tune: [], name: 'J', paint: '#fff' });
+}
+test('hinge swings its side 90 degrees, carries tops and stays in sync through snapshots', () => {
+  const r = runtime(),
+    a = r.api;
+  a.startMatch('sandbox');
+  a.openBuild();
+  a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
+  const v = jointCar(a, 'hinge', 1, [{ id: 'mg', x: 3, y: 0, rot: 0 }]);
+  assert.equal(v.joints.length, 1);
+  assert.equal(v.joints[0].kids.size, 2);
+  const far = v.blocks.find(b => b.gx === 3),
+    mg = v.insts.find(I => I.id === 'mg');
+  const rest = a.bpos(v, far);
+  v.rmb = true;
+  for (let i = 0; i < 30; i++) a.stepJoints(v, 0.05);
+  assert(Math.abs(v.joints[0].s - Math.PI / 2) < 1e-6, 'fully swung');
+  const moved = a.bpos(v, far);
+  // rest (3,0) around pivot (1,0) by +90° lands on (1,2) in car space; car angle 0 means world = local - com
+  assert(
+    Math.abs(moved[0] - rest[0] + 2 * 20) < 1e-6 && Math.abs(moved[1] - rest[1] - 2 * 20) < 1e-6,
+    JSON.stringify([rest, moved])
+  );
+  assert(Math.hypot(a.ipos(v, mg)[0] - moved[0], a.ipos(v, mg)[1] - moved[1]) < 1, 'the gun rides along');
+  assert(Math.abs(mg.la - Math.PI / 2) < 1e-6, 'and turns with it');
+  assert(a.carBlockAt(v, moved[0], moved[1], 0) === far, 'hits land on the moved cell');
+  const snap = a.jointSnap(v),
+    w = jointCar(a, 'hinge', 1, [{ id: 'mg', x: 3, y: 0, rot: 0 }]);
+  a.applyJointSnap(w, snap);
+  const wm = a.bpos(
+    w,
+    w.blocks.find(b => b.gx === 3)
+  );
+  assert(Math.hypot(wm[0] - moved[0], wm[1] - moved[1]) < 1);
+  v.rmb = false;
+  for (let i = 0; i < 30; i++) a.stepJoints(v, 0.05);
+  assert(Math.abs(v.joints[0].s) < 1e-6, 'swings back');
+});
+test('ram extends two cells, rotator spins, spring settles and a joint never moves the cockpit', () => {
+  const r = runtime(),
+    a = r.api;
+  a.startMatch('sandbox');
+  a.openBuild();
+  a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
+  const p = jointCar(a, 'hydraulic', 1),
+    far = p.blocks.find(b => b.gx === 3),
+    x0 = a.bpos(p, far)[0];
+  p.rmb = true;
+  for (let i = 0; i < 20; i++) a.stepJoints(p, 0.05);
+  assert(Math.abs(a.bpos(p, far)[0] - x0 - 40) < 1e-6, 'two cells out');
+  assert(p.rad >= p.radBase, 'collision radius grows with the arm');
+  const q = jointCar(a, 'rotator', 1);
+  q.rmb = false;
+  a.stepJoints(q, 0.5);
+  assert(q.joints[0].s > 1);
+  const s = jointCar(a, 'suspension', 1);
+  s.joints[0].vs = 80;
+  for (let i = 0; i < 200; i++) a.stepJoints(s, 0.02);
+  assert(Math.abs(s.joints[0].s) < 0.5, 'spring settles');
+  // a hinge whose far side is the cockpit stays rigid
+  const base = new Map([
+    ['0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 }],
+    ['1,0', { id: 'hinge', x: 1, y: 0, rot: 3 }],
+    ['2,0', { id: 'girder', x: 2, y: 0, rot: 0 }]
+  ]);
+  const rigid = a.makeCar({ base, top: new Map() }, 0, 500, 500, 0, { tune: [] });
+  assert.equal(rigid.joints.length, 0);
 });
 test('car codes round-trip and report missing parts and bay size', () => {
   process.on('unhandledRejection', e => {

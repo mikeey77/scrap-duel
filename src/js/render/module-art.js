@@ -123,6 +123,7 @@ function drawModule(c, id, s, ang, team, st) {
   c.lineJoin = 'round';
   c.lineCap = 'round';
   if (m.layer === 't' && A.k !== 'screen') topMount(c, h, s);
+  if (A.k === 'joint') return drawJointArt(c, id, s, ang, st);
   switch (A.k) {
     case 'cockpit': {
       const col = st.paint || (team === 'e' ? '#d6463e' : '#f2b705');

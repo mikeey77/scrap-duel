@@ -3298,6 +3298,68 @@ ODD_ROWS.forEach(([id, name, cat, rar, layer, props, shape, glyph, col, desc, co
   );
 });
 
+/* The four joint modules. Duel/Gauntlet: normal draftable parts with a catch; Sandbox: everything. */
+D(
+  'hinge',
+  'Hinge',
+  'struct',
+  1,
+  'b',
+  1,
+  55,
+  1.4,
+  'Hold its action to swing everything beyond the hinge 90°. Flip jaws, slap doors, swat cars.',
+  'Weak joint: break it and the whole swinging side falls off.',
+  ['joint'],
+  { k: 'joint' },
+  { dir: 1, joint: 1 }
+);
+D(
+  'rotator',
+  'Rotator',
+  'struct',
+  2,
+  'b',
+  1,
+  60,
+  2,
+  'Spins everything beyond it nonstop. Hold its action to reverse. Blades on a stick, anyone?',
+  'Dizzying: the car turns 10% slower.',
+  ['joint'],
+  { k: 'joint' },
+  { dir: 1, joint: 1, turn: -0.1 }
+);
+D(
+  'hydraulic',
+  'Hydraulic Ram',
+  'struct',
+  1,
+  'b',
+  1,
+  60,
+  1.8,
+  'Hold its action to shove everything beyond it two cells out. Surprise lunge!',
+  'Slow to extend, and the stretched rod is easy to snap.',
+  ['joint', 'melee'],
+  { k: 'joint' },
+  { dir: 1, joint: 1 }
+);
+D(
+  'suspension',
+  'Suspension Spring',
+  'struct',
+  0,
+  'b',
+  1,
+  50,
+  1,
+  'Springy mount: parts beyond it take 25% less ramming damage and bounce on hits.',
+  'Boing. Parts on it wobble a little.',
+  ['joint', 'def'],
+  { k: 'joint' },
+  { dir: 1, joint: 1 }
+);
+
 const MOD = Object.fromEntries(MODS.map(m => [m.id, m]));
 const STARTER = { frame: 10, wheel: 4, armor: 4, mg: 2, spike: 2 };
 const STARTER_GUNS = ['mg', 'smg', 'nailgun', 'pulse', 'rivet'];

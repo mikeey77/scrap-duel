@@ -51,6 +51,7 @@ function drawVehicle(c, v, alpha) {
   c.translate(-v.x, -v.y);
   const flipS = v.flip > 0 ? Math.cos(Math.min(1, v.flipAnim) * Math.PI) : 1,
     under = v.flip > 0 && flipS < 0;
+  if (!under) drawJointRods(c, v);
   for (const layer of ['b', 't'])
     for (const I of alive) {
       if (I.layer !== layer) continue;
@@ -58,7 +59,7 @@ function drawVehicle(c, v, alpha) {
       const [x, y] = ipos(v, I);
       c.save();
       c.translate(x, y);
-      c.rotate(v.a);
+      c.rotate(v.a + (I.la || 0));
       if (v.flip > 0) c.scale(1, flipS);
       if (under) {
         c.save();
@@ -73,7 +74,9 @@ function drawVehicle(c, v, alpha) {
         c.restore();
       } else {
         const rotA =
-          I.W && I.W.kind !== 'lob' && I.W.kind !== 'tesla' ? I.ta - v.a + Math.PI / 2 : (I.rot * Math.PI) / 2;
+          I.W && I.W.kind !== 'lob' && I.W.kind !== 'tesla'
+            ? I.ta - v.a - (I.la || 0) + Math.PI / 2
+            : (I.rot * Math.PI) / 2;
         if (I.m.glow || I.m.rar >= 3) {
           c.save();
           c.globalCompositeOperation = 'lighter';
@@ -94,7 +97,8 @@ function drawVehicle(c, v, alpha) {
           fired: v.tether && v.tether.inst === I,
           down: I.m.shield && I.sh <= 0,
           pa: I.pa,
-          active: I.active
+          active: I.active,
+          spin: I.id === 'rotator' ? I.s : 0
         });
         if (layer === 'b' && look.livery !== 'factory' && liveryPart(I.id))
           drawLivery(c, look.livery, v.paint, I.gcx, I.gcy, S, liveryCtx(v.grid, I.gcx, I.gcy, v.minGy));

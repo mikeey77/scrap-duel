@@ -596,6 +596,7 @@ function makeCar(design, idx, sx, sy, ang, opt) {
       for (let i = 0; i < I.m.drones + (tune.has('hive') ? 1 : 0); i++)
         v.drones.push({ bay: I, a: i * 2.4, x: sx, y: sy, hp: tune.has('hive') ? 12 : 24, cd: rnd(0, 0.5) });
   }
+  setupJoints(v);
   const bI = insts.find(I => I.m.ball);
   if (bI) {
     const [wx, wy] = ipos(v, bI);
@@ -633,6 +634,8 @@ function recalc(v, init) {
   v.I = I_;
   for (const b of v.blocks) if (b.inst.alive) rad = Math.max(rad, Math.hypot(b.gx * S - ncx, b.gy * S - ncy) + S);
   v.rad = rad;
+  v.radBase = rad;
+  if (v.moving) placeJointParts(v);
   v.shields = alive.filter(I => I.m.shield);
   v.has = {};
   for (const I of alive) v.has[I.id] = (v.has[I.id] || 0) + 1;
@@ -695,10 +698,12 @@ const lpos = (v, gxp, gyp) => {
     dy = gyp - v.comY;
   return [v.x + dx * c - dy * s, v.y + dx * s + dy * c];
 };
-const bpos = (v, b) => lpos(v, b.gx * S, b.gy * S);
-const ipos = (v, I) => lpos(v, I.gcx * S, I.gcy * S);
-const faceAng = (v, I) => v.a - Math.PI / 2 + (I.rot * Math.PI) / 2;
+// cells and parts on moving joints carry their own local position (lx, ly) and angle (la)
+const bpos = (v, b) => (b.chain ? lpos(v, b.lx, b.ly) : lpos(v, b.gx * S, b.gy * S));
+const ipos = (v, I) => (I.chain ? lpos(v, I.lx, I.ly) : lpos(v, I.gcx * S, I.gcy * S));
+const faceAng = (v, I) => v.a - Math.PI / 2 + (I.rot * Math.PI) / 2 + (I.la || 0);
 function impulse(v, jx, jy, px, py, noSpin) {
+  if (v.joints) kickSprings(v, jx, jy);
   if (v.anchored) return;
   const M = v.c.mass;
   v.vx += jx / M;
@@ -920,6 +925,7 @@ function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   if (m.res && m.res[type] !== undefined && !(type === 'light' && attacker && CT(attacker, 'apround')))
     a *= 1 - m.res[type];
   if (v.has.gnome && v.insts.some(g => g.id === 'gnome' && g.alive)) a *= 0.92;
+  if (I.sprung && type === 'ram') a *= 0.75;
   if (a >= 70 && Math.random() < 0.3 && SETTINGS.nums !== false)
     txt(v.x + rnd(-30, 30), v.y - v.rad - 20, pick(HIT_QUIPS), '#ffd257', 1.1);
   if (type === 'fire') {

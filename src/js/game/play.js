@@ -383,6 +383,8 @@ function botThink(v, dt) {
   if ((v.has.piston || v.has.flipper) && dist < v.rad + e.rad + 30 && facing < 0.7) inp.edges.add('RMB');
   if (v.has.catapult && v.hopper.length && dist < 520 && Math.random() < dt * 1.5) inp.edges.add('RMB');
   if (v.has.tractor && dist < 380 && P.melee) inp.rmb = true;
+  // moving parts: swing/lunge when close, rest otherwise (rotators spin on their own)
+  if (v.joints && v.joints.some(J => J.id === 'hinge' || J.id === 'hydraulic') && dist < 240) inp.rmb = (B.time * 1.6) % 2 < 1.1;
   if (v.has.harpoon && v.tether) inp.rmb = P.melee;
   if (PLAN_ACTION.some(id => v.has[id]) && dist < 450 && Math.random() < dt * 0.8) inp.edges.add('RMB');
   if (PLAN_DROP.some(id => v.has[id]) && dist < 280 && Math.random() < dt) inp.edges.add('KeyZ');
@@ -644,6 +646,7 @@ function simulate(dt) {
       }
     }
     planTick(v, dt);
+    stepJoints(v, dt);
     drive(v, dt);
     tickBoost(v, dt);
     collideStatic(v);

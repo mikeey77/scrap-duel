@@ -612,7 +612,8 @@ function snapshot() {
       v.gen || 0,
       r2(v.spawnT || 0),
       v.buff ? v.buff.p : 0,
-      v.buff ? r2(v.buff.t) : 0
+      v.buff ? r2(v.buff.t) : 0,
+      jointSnap(v)
     ]),
     sp: B.obj ? [r2(B.obj.score[0]), r2(B.obj.score[1]), B.obj.carrier, B.obj.owner ?? -1] : 0,
     ki: B.seq === 'death' ? B.killInfo || '' : 0,
@@ -751,6 +752,7 @@ function applySnap(S, silent) {
       v.gen = d[25];
     }
     v.spawnT = d[26] || 0;
+    applyJointSnap(v, d[29]);
     v.buff = d[27] ? { p: d[27], t: d[28] } : null;
     let changed = false;
     d[11].forEach((q, n) => {
