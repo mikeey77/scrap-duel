@@ -2188,6 +2188,21 @@ function renderInspect() {
    <div class="tags">${socketBadge(m)}${cellCount(m) > 1 ? footprintHTML(m) : ''}${m.tags.map(t => `<span class="btag">${TAGS[t]}</span>`).join('')}${m.dir ? `<span class="btag" title="Next placement faces this way (R)">${'▲▶▼◀'[G.rot]}</span>` : ''}</div></div>
    <div class="stl">${statChips(m)}</div>
    <div class="trade"><span class="small">${left(m.id)} available · worth <span class="coin">${m.price}</span></span><span class="grow"></span>${G.found.has(m.id) && m.id !== 'cockpit' ? `<button class="buy" id="iBuy" ${G.coins < m.price ? 'disabled' : ''}>Buy +1</button><button class="buy" id="iSell" ${left(m.id) <= 0 ? 'disabled' : ''}>Sell 1 · ${Math.floor(m.price / 2)}</button>` : ''}</div>`;
+  if (m.beam) {
+    $('#inspect').insertAdjacentHTML(
+      'beforeend',
+      `<div class="seg beamlen" aria-label="Beam length">${[1, 2, 3, 4].map(L => `<button data-l="${L}" aria-pressed="${L === m.beam}">${L} cell${L > 1 ? 's' : ''}</button>`).join('')}</div>`
+    );
+    $$('#inspect .beamlen button').forEach(
+      b =>
+        (b.onclick = () => {
+          G.sel = 'beam' + b.dataset.l;
+          renderBin();
+          renderInspect();
+          drawBP();
+        })
+    );
+  }
   const ib = $('#iBuy');
   if (ib) ib.addEventListener('click', () => buy(m.id));
   const is = $('#iSell');

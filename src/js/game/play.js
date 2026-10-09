@@ -56,7 +56,13 @@ addEventListener('keydown', e => {
     else if (e.code === 'KeyT') setTool('rotate');
     else if (e.code === 'KeyG') setTool('keys');
     else if (e.code === 'KeyL') setTool('wire');
-    else if (e.code === 'KeyX' || e.code === 'Delete') setTool('remove');
+    else if ((e.code === 'BracketLeft' || e.code === 'BracketRight') && MOD[G.sel] && MOD[G.sel].beam) {
+      const L = clamp(MOD[G.sel].beam + (e.code === 'BracketRight' ? 1 : -1), 1, 4);
+      G.sel = 'beam' + L;
+      setTool('place');
+      renderBin();
+      renderInspect();
+    } else if (e.code === 'KeyX' || e.code === 'Delete') setTool('remove');
     else if (e.code === 'Equal') setZoom(G.zoom * 1.2);
     else if (e.code === 'Minus') setZoom(G.zoom / 1.2);
   }

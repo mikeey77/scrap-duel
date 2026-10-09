@@ -12,8 +12,8 @@
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="fonts/fonts.css" />
     <style>
-<!-- @styles -->
-</style>
+      <!-- @styles -->
+    </style>
   </head>
   <body>
     <div id="app">
@@ -33,16 +33,18 @@
         </div>
         <span id="formatStatus" class="format-status" hidden></span><span class="pill" id="tPhase">Setup</span>
         <div class="hstat"><span class="label">Coins</span><span class="coin" id="tCoins">0</span></div>
-        <div class="hstat">
-          <span class="label" id="tScoreLbl">Score</span><span class="score" id="tScore"></span>
-        </div>
+        <div class="hstat"><span class="label" id="tScoreLbl">Score</span><span class="score" id="tScore"></span></div>
         <span class="stake hide-sm" id="tStake"></span>
         <div class="grow"></div>
         <div class="hstat hide-md icostat" title="Parts on your car">
-          <svg class="si" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z" opacity=".85"/></svg><span class="v" id="tParts">0</span>
+          <svg class="si" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+            <path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z" opacity=".85" /></svg
+          ><span class="v" id="tParts">0</span>
         </div>
         <div class="hstat hide-md icostat" title="Modules discovered">
-          <svg class="si" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M3 2h8l2 2v10H3zM5 6h6v1.5H5zM5 9h6v1.5H5z"/></svg><span class="v" id="tFound">0 / 100</span>
+          <svg class="si" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+            <path d="M3 2h8l2 2v10H3zM5 6h6v1.5H5zM5 9h6v1.5H5z" /></svg
+          ><span class="v" id="tFound">0 / 100</span>
         </div>
         <button class="hbtn" id="btnCodex">Codex <span class="kbd">K</span></button
         ><button class="hbtn" id="btnFS" title="Fullscreen (F11)" aria-label="Fullscreen">⛶</button
@@ -72,16 +74,21 @@
             </div>
             <div id="bayHint"></div>
             <div id="bayIntel" aria-live="polite">
-              <div class="intel win" title="The arena of the next round"><canvas id="winCv" width="190" height="84"></canvas><span id="winLbl">Next arena</span></div>
+              <div class="intel win" title="The arena of the next round">
+                <canvas id="winCv" width="190" height="84"></canvas><span id="winLbl">Next arena</span>
+              </div>
               <div class="intel rival" id="rivalIntel"></div>
             </div>
             <div class="layer-controls" aria-label="Builder view">
               <span class="seg" role="group" aria-label="Layers"
                 ><button data-layer="both" aria-pressed="true" title="Show chassis and equipment">All</button
                 ><button data-layer="base" aria-pressed="false" title="Show only the chassis blocks">▦ Chassis</button
-                ><button data-layer="top" aria-pressed="false" title="Show equipment and every free socket">⬢ Sockets</button></span
+                ><button data-layer="top" aria-pressed="false" title="Show equipment and every free socket">
+                  ⬢ Sockets
+                </button></span
               ><button id="btnArcs" aria-pressed="false" title="Show where each weapon can shoot">⌔ Arcs</button
-              ><button id="btnLinks" aria-pressed="false" title="Show blocks that would drop parts off if destroyed">⚠ Weak links</button
+              ><button id="btnLinks" aria-pressed="false" title="Show blocks that would drop parts off if destroyed">
+                ⚠ Weak links</button
               ><button id="btnLogic" aria-pressed="false" title="Show logic wires">⚡ Logic</button>
             </div>
             <div class="toolbar" role="toolbar" aria-label="Builder tools">
@@ -92,22 +99,29 @@
               </button>
               <button data-tool="rotate" aria-pressed="false" title="Rotate a placed part (T)">
                 <svg viewBox="0 0 16 16">
-                  <path
-                    d="M13 8a5 5 0 1 1-1.5-3.5M13 2v3h-3"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    fill="none"
-                  /></svg
+                  <path d="M13 8a5 5 0 1 1-1.5-3.5M13 2v3h-3" stroke="currentColor" stroke-width="2" fill="none" /></svg
                 >Rotate
               </button>
               <button data-tool="keys" aria-pressed="false" title="Put weapons and moving parts on keys 1–9 (G)">
                 <svg viewBox="0 0 16 16">
-                  <rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.6" fill="none" /><path d="M7 6.5l1.5-1V11" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
+                  <rect
+                    x="2"
+                    y="3"
+                    width="12"
+                    height="10"
+                    rx="2"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    fill="none"
+                  />
+                  <path d="M7 6.5l1.5-1V11" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
                 >Keys
               </button>
               <button data-tool="wire" aria-pressed="false" title="Wire logic chips together (L)">
                 <svg viewBox="0 0 16 16">
-                  <circle cx="3.5" cy="12" r="2" fill="currentColor" /><circle cx="12.5" cy="4" r="2" fill="currentColor" /><path d="M3.5 12C3.5 6 12.5 10 12.5 4" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
+                  <circle cx="3.5" cy="12" r="2" fill="currentColor" />
+                  <circle cx="12.5" cy="4" r="2" fill="currentColor" />
+                  <path d="M3.5 12C3.5 6 12.5 10 12.5 4" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
                 >Wire
               </button>
               <button data-tool="remove" aria-pressed="false" title="Remove (X or right-click)">
@@ -123,10 +137,21 @@
               </button>
               <span class="sep"></span>
               <button id="btnMirror" class="icon-only" title="Mirror placements left/right (M)" aria-label="Mirror">
-                <svg viewBox="0 0 16 16"><path d="M8 1v14" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2" fill="none"/><path d="M6 4L1 8l5 4zM10 4l5 4-5 4z" fill="currentColor"/></svg>
+                <svg viewBox="0 0 16 16">
+                  <path d="M8 1v14" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2" fill="none" />
+                  <path d="M6 4L1 8l5 4zM10 4l5 4-5 4z" fill="currentColor" />
+                </svg>
               </button>
-              <button id="btnUndo" class="icon-only" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 16 16"><path d="M5 3L1 7l4 4M1 7h9a4 4 0 0 1 0 8H7" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
-              <button id="btnRedo" class="icon-only" title="Redo (Ctrl+Y)" aria-label="Redo"><svg viewBox="0 0 16 16"><path d="M11 3l4 4-4 4M15 7H6a4 4 0 0 0 0 8h3" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
+              <button id="btnUndo" class="icon-only" title="Undo (Ctrl+Z)" aria-label="Undo">
+                <svg viewBox="0 0 16 16">
+                  <path d="M5 3L1 7l4 4M1 7h9a4 4 0 0 1 0 8H7" stroke="currentColor" stroke-width="2" fill="none" />
+                </svg>
+              </button>
+              <button id="btnRedo" class="icon-only" title="Redo (Ctrl+Y)" aria-label="Redo">
+                <svg viewBox="0 0 16 16">
+                  <path d="M11 3l4 4-4 4M15 7H6a4 4 0 0 0 0 8h3" stroke="currentColor" stroke-width="2" fill="none" />
+                </svg>
+              </button>
             </div>
             <div id="toast" role="status"></div>
           </div>
@@ -138,21 +163,17 @@
                 <span class="label">Vehicle</span>
                 <div class="specs">
                   <div class="spec">
-                    <span>Structure</span><span class="v" id="sHp"></span
-                    ><i class="meter"><b id="mHp"></b></i>
+                    <span>Structure</span><span class="v" id="sHp"></span><i class="meter"><b id="mHp"></b></i>
                   </div>
                   <div class="spec"><span>Mass</span><span class="v" id="sMass"></span></div>
                   <div class="spec">
-                    <span>Top speed</span><span class="v" id="sSpeed"></span
-                    ><i class="meter"><b id="mSpeed"></b></i>
+                    <span>Top speed</span><span class="v" id="sSpeed"></span><i class="meter"><b id="mSpeed"></b></i>
                   </div>
                   <div class="spec">
-                    <span>Turning</span><span class="v" id="sTurn"></span
-                    ><i class="meter"><b id="mTurn"></b></i>
+                    <span>Turning</span><span class="v" id="sTurn"></span><i class="meter"><b id="mTurn"></b></i>
                   </div>
                   <div class="spec">
-                    <span>Firepower</span><span class="v" id="sDps"></span
-                    ><i class="meter"><b id="mDps"></b></i>
+                    <span>Firepower</span><span class="v" id="sDps"></span><i class="meter"><b id="mDps"></b></i>
                   </div>
                 </div>
               </div>
@@ -176,7 +197,11 @@
               <div>
                 <span class="label">Blueprints</span>
                 <div class="slots" id="slots"></div>
-                <div class="bp-share"><button class="btn ghost" id="bpShare" title="Get a code for this car that a friend can paste">Share this car</button><button class="btn ghost" id="bpImport" title="Paste a car code from a friend">Paste a code</button></div>
+                <div class="bp-share">
+                  <button class="btn ghost" id="bpShare" title="Get a code for this car that a friend can paste">
+                    Share this car</button
+                  ><button class="btn ghost" id="bpImport" title="Paste a car code from a friend">Paste a code</button>
+                </div>
               </div>
             </div>
             <div class="pfoot">
@@ -213,9 +238,8 @@
         <span class="label">Vehicle combat · builder preview</span>
         <h1>SCRAP DUEL</h1>
         <p class="lede">
-          Weld a battle car together in your bay. Chassis parts go on the bottom layer; guns and gadgets bolt
-          on top of support blocks. Draft a branch every round, win coins, spend them on parts, crates and a
-          bigger bay.
+          Weld a battle car together in your bay. Chassis parts go on the bottom layer; guns and gadgets bolt on top of
+          support blocks. Draft a branch every round, win coins, spend them on parts, crates and a bigger bay.
         </p>
         <ol class="flow">
           <li><b>Draft</b><span>Flip three cards, take one</span></li>
@@ -226,12 +250,13 @@
         <dl class="keys">
           <dt>Garage</dt>
           <dd>
-            Click to place, drag to paint, right-click removes. R turns the next part, T rotates placed ones.
-            Scroll to zoom.
+            Click to place, drag to paint, right-click removes. R turns the next part, T rotates placed ones. Scroll to
+            zoom.
           </dd>
           <dt>Drive</dt>
           <dd>
-            WASD or arrows drive. Mouse aims; left-click or Space fires. Equipped gadgets and their cooldowns appear in battle. J jumps; right-click activates gadgets or reels a harpoon.
+            WASD or arrows drive. Mouse aims; left-click or Space fires. Equipped gadgets and their cooldowns appear in
+            battle. J jumps; right-click activates gadgets or reels a harpoon.
           </dd>
         </dl>
         <p class="small">
@@ -253,12 +278,16 @@
     <div class="overlay" id="ovSettings" hidden><div class="card" id="settingsCard"></div></div>
     <div class="overlay" id="ovReconnect" hidden><div class="card" id="reconnectCard"></div></div>
     <div class="overlay" id="ovPause" hidden><div class="card" id="pauseCard"></div></div>
-    <div class="door-fx" id="doorFx" hidden aria-hidden="true"><i class="d-dark"></i><i class="d-l"><b>SCRAP</b></i><i class="d-r"><b>DUEL</b></i><span class="d-joke" id="doorJoke"></span></div>
+    <div class="door-fx" id="doorFx" hidden aria-hidden="true">
+      <i class="d-dark"></i><i class="d-l"><b>SCRAP</b></i
+      ><i class="d-r"><b>DUEL</b></i
+      ><span class="d-joke" id="doorJoke"></span>
+    </div>
     <div class="overlay" id="ovBlueprint" hidden><div class="card bp-card" id="bpCard"></div></div>
     <div class="coach" id="coach" hidden></div>
     <div class="feed" id="demoFeed" hidden></div>
     <script>
-<!-- @scripts -->
-</script>
+      <!-- @scripts -->
+    </script>
   </body>
 </html>

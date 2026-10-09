@@ -198,7 +198,7 @@ test('catalog loads and every starter is connected, usable and owned', () => {
     signatures.add(G.starterGuns.join(','));
   }
   assert(signatures.size > 10);
-  assert.equal(a.MODS.length, 216);
+  assert.equal(a.MODS.length, 224);
 });
 test('all heavy drafted modules include enough free support', () => {
   for (const m of a.MODS.filter(m => m.layer === 't' && m.mnt === 2)) {
@@ -642,7 +642,7 @@ test('open overlays release held input and prevent background fire', () => {
 test('all fifty designs have unique names, intended shapes, tags and executable mechanics', () => {
   const added = a.MODS.filter(m => m.plan && !m.odd);
   assert.equal(added.length, 50);
-  assert.equal(new Set(a.MODS.map(m => m.name)).size, 216);
+  assert.equal(new Set(a.MODS.map(m => m.name)).size, 224);
   const counts = {};
   for (const m of added) {
     const b = a.shapeBounds(m);
@@ -1535,6 +1535,33 @@ test('logic chips: timer, toggle, delay, gates and the snoop sensor drive action
   assert.equal(JSON.stringify(back.top.get('4,0').w), '["1,0","2,0"]');
   assert.equal(back.top.get('2,0').i, 5);
   assert.equal(back.top.get('2,0').g, 2);
+});
+test('shapes: wedge, half plate, corner fillet, round bumper and beams 1-4', async () => {
+  const r = runtime(),
+    a = r.api;
+  for (const id of ['slopeplate', 'halfplate', 'cornerpiece', 'roundbumper', 'beam1', 'beam2', 'beam3', 'beam4'])
+    assert(a.MOD[id], 'module ' + id);
+  assert(a.MOD.slopeplate.res.ram > 0 && a.MOD.roundbumper.res.ram > a.MOD.slopeplate.res.ram);
+  for (let L = 1; L <= 4; L++)
+    for (let rot = 0; rot < 4; rot++) {
+      const cs = a.footprint('beam' + L, rot, 0, 0);
+      assert.equal(cs.length, L, `beam${L} rot ${rot}`);
+      const xs = new Set(cs.map(c => c[0])),
+        ys = new Set(cs.map(c => c[1]));
+      assert(xs.size === 1 || ys.size === 1, 'beam is straight');
+    }
+  const base = new Map(),
+    top = new Map();
+  base.set('0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 });
+  base.set('1,0', { id: 'slopeplate', x: 1, y: 0, rot: 1 });
+  base.set('-1,0', { id: 'halfplate', x: -1, y: 0, rot: 0 });
+  base.set('0,1', { id: 'cornerpiece', x: 0, y: 1, rot: 2 });
+  base.set('0,-1', { id: 'beam3', x: 0, y: -1, rot: 0 });
+  const back = await a.parseBlueprintCode(await a.blueprintCode(base, top));
+  for (const [k, e] of base) {
+    assert.equal(back.base.get(k).id, e.id);
+    assert.equal(back.base.get(k).rot, e.rot);
+  }
 });
 test('car codes round-trip and report missing parts and bay size', () => {
   process.on('unhandledRejection', e => {

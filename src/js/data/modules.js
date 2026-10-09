@@ -3467,6 +3467,84 @@ D(
   {}
 );
 
+/* Shapes: sloped, thin, rounded and long chassis pieces. Same grid cells, different look and armour. */
+D(
+  'slopeplate',
+  'Wedge Plate',
+  'defense',
+  0,
+  'b',
+  0,
+  70,
+  1.2,
+  'Sloped armour: rams glance off (−30%) and blades skid (−20%).',
+  'Too slanted to hold a top module.',
+  ['def'],
+  { k: 'shape', s: 'wedge' },
+  { dir: 1, res: { ram: 0.3, melee: 0.2 } }
+);
+D(
+  'halfplate',
+  'Half Plate',
+  'struct',
+  0,
+  'b',
+  0,
+  35,
+  0.5,
+  'Half the weight of a frame. Light builds and long arms love it.',
+  'Paper thin, holds nothing on top.',
+  [],
+  { k: 'shape', s: 'half' },
+  { dir: 1 }
+);
+D(
+  'cornerpiece',
+  'Corner Fillet',
+  'struct',
+  0,
+  'b',
+  0,
+  50,
+  0.8,
+  'Rounds off a corner so walls and rams slide past (−15% ram).',
+  'Fiddly: holds no top module.',
+  ['def'],
+  { k: 'shape', s: 'corner' },
+  { dir: 1, res: { ram: 0.15 } }
+);
+D(
+  'roundbumper',
+  'Round Bumper',
+  'defense',
+  1,
+  'b',
+  1,
+  90,
+  1.5,
+  'A fat round buffer: rams bounce off (−35% ram damage).',
+  'Only room for a light top module.',
+  ['def'],
+  { k: 'shape', s: 'round' },
+  { res: { ram: 0.35 } }
+);
+for (const L of [1, 2, 3, 4])
+  D(
+    `beam${L}`,
+    `Scrap Beam ×${L}`,
+    'struct',
+    0,
+    'b',
+    1,
+    45 * L,
+    Math.round(0.8 * L * 10) / 10,
+    `A straight ${L}-cell beam in one piece. In the garage, [ and ] change its length.`,
+    'One piece: snap it anywhere and the whole beam goes.',
+    [],
+    { k: 'shape', s: 'beam' },
+    { size: L, beam: L, dir: 1 }
+  );
+
 const MOD = Object.fromEntries(MODS.map(m => [m.id, m]));
 const STARTER = { frame: 10, wheel: 4, armor: 4, mg: 2, spike: 2 };
 const STARTER_GUNS = ['mg', 'smg', 'nailgun', 'pulse', 'rivet'];

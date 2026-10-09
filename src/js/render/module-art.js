@@ -125,6 +125,7 @@ function drawModule(c, id, s, ang, team, st) {
   if (m.layer === 't' && A.k !== 'screen') topMount(c, h, s);
   if (A.k === 'joint') return drawJointArt(c, id, s, ang, st);
   if (A.k === 'logic') return drawLogicArt(c, id, s, ang, st);
+  if (A.k === 'shape') return drawShapeArt(c, m, s, ang, st);
   switch (A.k) {
     case 'cockpit': {
       const col = st.paint || (team === 'e' ? '#d6463e' : '#f2b705');
@@ -1942,4 +1943,71 @@ function designURL(design, size, paint, livery, overlay) {
   }
   if (overlay) overlay(c, ox, oy, cs);
   return cv.toDataURL();
+}
+
+/** Art for the shape pieces (wedge, half plate, corner fillet, round bumper, beams). */
+function drawShapeArt(c, m, s, ang, st) {
+  const h = s / 2,
+    L = m.size || 1,
+    steel = (st && st.cellPaint) || '#8d99a6',
+    dk = mix(steel, -0.35),
+    lt = mix(steel, 0.25);
+  c.save();
+  c.rotate(ang);
+  c.lineJoin = 'round';
+  const shape = () => {
+    c.beginPath();
+    switch (m.art.s) {
+      case 'wedge':
+        c.moveTo(-h * 0.92, h * 0.92);
+        c.lineTo(h * 0.92, h * 0.92);
+        c.lineTo(h * 0.92, -h * 0.92);
+        c.closePath();
+        break;
+      case 'half':
+        c.rect(-h * 0.92, 0, h * 1.84, h * 0.92);
+        break;
+      case 'corner':
+        c.moveTo(-h * 0.92, h * 0.92);
+        c.lineTo(h * 0.92, h * 0.92);
+        c.lineTo(h * 0.92, -h * 0.92);
+        c.arc(h * 0.92, h * 0.92, h * 1.84, -Math.PI / 2, Math.PI, true);
+        c.closePath();
+        break;
+      case 'round':
+        c.arc(0, 0, h * 0.95, 0, Math.PI * 2);
+        break;
+      default: {
+        const y0 = -h * L,
+          hh = s * L;
+        rr(c, -h * 0.62, y0 + h * 0.08, h * 1.24, hh - h * 0.16, h * 0.2);
+      }
+    }
+  };
+  shape();
+  const g = c.createLinearGradient(-h, -h * L, h, h * L);
+  g.addColorStop(0, lt);
+  g.addColorStop(1, steel);
+  c.fillStyle = g;
+  c.fill();
+  c.strokeStyle = dk;
+  c.lineWidth = s * 0.06;
+  c.stroke();
+  if (m.art.s === 'beam') {
+    for (let i = 0; i < L; i++) {
+      const y = -h * L + s * (i + 0.5);
+      circ(c, 0, y - h * 0.45, s * 0.06, dk);
+      circ(c, 0, y + h * 0.45, s * 0.06, dk);
+      line(c, [-h * 0.35, y, h * 0.35, y], dk, s * 0.04);
+    }
+  } else if (m.art.s === 'round') {
+    circ(c, 0, 0, h * 0.55, null, dk, s * 0.05);
+    circ(c, 0, 0, h * 0.18, dk);
+  } else if (m.art.s === 'wedge') {
+    for (let i = 1; i < 4; i++)
+      line(c, [h * 0.92 - (i * h) / 2.2, h * 0.92, h * 0.92, h * 0.92 - (i * h) / 2.2], lt, s * 0.03);
+  } else if (m.art.s === 'half') {
+    line(c, [-h * 0.7, h * 0.45, h * 0.7, h * 0.45], dk, s * 0.04);
+  }
+  c.restore();
 }
