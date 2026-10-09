@@ -89,9 +89,15 @@ function setupField(kind, f) {
 
 /* ---------- designs and car configs ---------- */
 const myDesign = () => ({ base: G.base, top: G.top });
+// extra per-part settings (key group, later paint/logic) travel with the design
+const packEntry = e => {
+  const o = { id: e.id, rot: e.rot, x: e.x, y: e.y };
+  if (e.g) o.g = e.g;
+  return o;
+};
 const packDesign = d => ({
-  base: [...d.base].map(([k, e]) => [k, { id: e.id, rot: e.rot, x: e.x, y: e.y }]),
-  top: [...d.top].map(([k, e]) => [k, { id: e.id, rot: e.rot, x: e.x, y: e.y }])
+  base: [...d.base].map(([k, e]) => [k, packEntry(e)]),
+  top: [...d.top].map(([k, e]) => [k, packEntry(e)])
 });
 const unpackDesign = p => ({ base: new Map(p.base), top: new Map(p.top) });
 const MATCH_FORMATS = {

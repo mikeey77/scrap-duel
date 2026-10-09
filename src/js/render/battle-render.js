@@ -1195,6 +1195,7 @@ function drawHUD(c) {
       'Shift',
       `boost${abilityCooldown(v, 'bcd') > 0 ? ' ' + abilityCooldown(v, 'bcd').toFixed(1) + 's' : ''}`
     ]);
+  for (const [g, names] of groupHints(v)) ctl.push([g, names]);
   if (h.jump) ctl.push(['J', `jump${v.jumpCd > 0 ? ' ' + v.jumpCd.toFixed(1) : ''}`]);
   if (h.omni) ctl.push(['Q/E', 'strafe']);
   if (h.oil || h.glue || h.banana || h.mines || PLAN_DROP.some(id => h[id]))

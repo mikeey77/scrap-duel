@@ -4772,6 +4772,11 @@ img.badge {
                   /></svg
                 >Rotate
               </button>
+              <button data-tool="keys" aria-pressed="false" title="Put weapons and moving parts on keys 1–9 (G)">
+                <svg viewBox="0 0 16 16">
+                  <rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.6" fill="none" /><path d="M7 6.5l1.5-1V11" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
+                >Keys
+              </button>
               <button data-tool="remove" aria-pressed="false" title="Remove (X or right-click)">
                 <svg viewBox="0 0 16 16">
                   <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" fill="none" /></svg
@@ -12379,6 +12384,7 @@ function drawBP() {
     c.restore();
   }
   drawSockets(c, occ);
+  drawGroupBadges(c);
   drawBuilderDiagnostics(c, occ);
   planGarageReport(c);
   for (const [k, e] of [...G.base, ...G.top]) {
@@ -12695,9 +12701,11 @@ function hintFor() {
               : `${m.name} needs a ${SOCKET[m.mnt]} ${MOUNTNAME[m.mnt]}. None free: place a ${m.mnt > 1 ? 'Steel Girder' : 'Scrap Frame'} first.`;
           })()
         : `${m.name}: ${left(G.sel)} available. Dots mark where it can attach.`
-      : G.tool === 'rotate'
-        ? 'Click a part to turn it 90°. Top modules turn first.'
-        : 'Click a part to put it back in the bin. Top modules come off first.';
+      : G.tool === 'keys'
+        ? 'Click a weapon or moving part to put it on key 1–9 (right-click counts down). In battle, hold that number key.'
+        : G.tool === 'rotate'
+          ? 'Click a part to turn it 90°. Top modules turn first.'
+          : 'Click a part to put it back in the bin. Top modules come off first.';
   const [x, y] = hover,
     k = key(x, y);
   if (!G.ws.has(k)) return 'Outside the bay. Buy or draft an expansion to build here.';
@@ -12802,6 +12810,19 @@ function actCore(x, y, mode, quiet) {
     }
     G.base.set(k, { id, rot: G.rot, x, y });
     fxPlace(x, y, 'b', k);
+  } else if (mode === 'keys' || mode === 'keysBack') {
+    const t = G.layerView === 'base' ? null : topAt(k),
+      e = t && groupable(MOD[t.id]) ? t : own && groupable(MOD[G.base.get(own).id]) ? G.base.get(own) : null;
+    if (!e) {
+      if (t || own) toast('Only weapons and moving parts can go on a key.');
+      return;
+    }
+    e.g = ((e.g || 0) + (mode === 'keysBack' ? 9 : 1)) % 10;
+    if (!e.g) delete e.g;
+    pops.set((e === t ? 't' : 'b') + k, performance.now());
+    sfx('beep');
+    refreshUI();
+    return;
   } else if (mode === 'rotate') {
     const t = G.layerView === 'base' ? null : topAt(k);
     if (t) {
@@ -13005,7 +13026,7 @@ async function pipeBytes(bytes, stream) {
   return new Uint8Array(await out.arrayBuffer());
 }
 function designJSON(base, top) {
-  const pack = m => [...m.values()].map(e => [e.id, e.rot, e.x, e.y]);
+  const pack = m => [...m.values()].map(e => (e.g ? [e.id, e.rot, e.x, e.y, e.g] : [e.id, e.rot, e.x, e.y]));
   return JSON.stringify({ b: pack(base), t: pack(top) });
 }
 async function blueprintCode(base = G.base, top = G.top) {
@@ -13030,7 +13051,12 @@ async function parseBlueprintCode(code) {
   }
   const d = JSON.parse(new TextDecoder().decode(bytes));
   const ok = e =>
-    Array.isArray(e) && MOD[e[0]] && [0, 1, 2, 3].includes(e[1]) && Number.isInteger(e[2]) && Number.isInteger(e[3]);
+    Array.isArray(e) &&
+    MOD[e[0]] &&
+    [0, 1, 2, 3].includes(e[1]) &&
+    Number.isInteger(e[2]) &&
+    Number.isInteger(e[3]) &&
+    (e[4] === undefined || (Number.isInteger(e[4]) && e[4] >= 0 && e[4] <= 9));
   if (
     !d ||
     !Array.isArray(d.b) ||
@@ -13041,7 +13067,8 @@ async function parseBlueprintCode(code) {
   )
     throw new Error('That code is damaged. Ask for it again.');
   if (!d.b.some(e => e[0] === 'cockpit')) throw new Error('That car has no cockpit.');
-  const mk = list => new Map(list.map(([id, rot, x, y]) => [key(x, y), { id, rot, x, y }]));
+  const mk = list =>
+    new Map(list.map(([id, rot, x, y, g]) => [key(x, y), g ? { id, rot, x, y, g } : { id, rot, x, y }]));
   return { base: mk(d.b), top: mk(d.t) };
 }
 /** What you still need to build a design: missing parts, their cost, and whether the bay is big enough. */
@@ -13184,7 +13211,7 @@ bp.addEventListener('pointerdown', ev => {
   if (!c) return;
   ev.preventDefault();
   bp.setPointerCapture(ev.pointerId);
-  dragMode = ev.button === 2 ? 'remove' : G.tool;
+  dragMode = ev.button === 2 ? (G.tool === 'keys' ? 'keysBack' : 'remove') : G.tool;
   lastK = key(...c);
   act(c[0], c[1], dragMode);
 });
@@ -13196,7 +13223,7 @@ bp.addEventListener('pointermove', ev => {
     $('#bayHint').textContent = hintFor();
     drawBP();
   }
-  if (dragMode && c && k !== lastK && dragMode !== 'rotate') {
+  if (dragMode && c && k !== lastK && !['rotate', 'keys', 'keysBack'].includes(dragMode)) {
     lastK = k;
     act(c[0], c[1], dragMode);
   }
@@ -16135,6 +16162,7 @@ function makeCar(design, idx, sx, sy, ang, opt) {
     const [gcx, gcy] = instCenter(e),
       I = mk(e.id, e.rot, gcx, gcy, 'b');
     I.k = k;
+    I.g = e.g | 0;
     for (const [x, y] of footprint(e.id, e.rot, e.x, e.y)) {
       const b = { inst: I, gx: x, gy: y };
       I.cells.push(b);
@@ -16155,6 +16183,7 @@ function makeCar(design, idx, sx, sy, ang, opt) {
       continue;
     const [cx, cy] = instCenter(e),
       I = mk(e.id, e.rot, cx, cy, 't');
+    I.g = e.g | 0;
     I.anchorX = e.x;
     I.anchorY = e.y;
     I.k = k;
@@ -16820,6 +16849,63 @@ function flipCar(v) {
   v.flip = v.has.selfright ? 1.2 : 5;
   v.flipAnim = 0;
   txt(v.x, v.y - 40, 'FLIPPED', '#f2b705', 1.2);
+}
+/* ===== js/game/groups.js ===== */
+// Action groups: any weapon or moving part can be put on key 1–9 in the garage (Keys tool).
+// Group 0 means "default": weapons fire with left click/Space and moving parts follow right click.
+// Logic modules (js/game/logic.js) can switch groups on as well, as if the key were held.
+
+/** Parts that can be bound to a key: weapons (incl. fire-button gadgets) and moving parts. */
+const groupable = m => !!m && !!(m.joint || m.wpn || (typeof PLAN_FIRE !== 'undefined' && PLAN_FIRE.includes(m.id)));
+/** Is group g (1–9) active for this car: held key or a logic signal. */
+const groupOn = (v, g) => !!((v.groups | 0 | (v.logicGroups | 0)) & (1 << g));
+/** Moving part: its group if it has one, otherwise right click. */
+function actionHeld(v, J) {
+  return J.g ? groupOn(v, J.g) : !!v.rmb;
+}
+/** Weapon: its group if it has one, otherwise the normal fire button. */
+function partFiring(v, I, fireAll) {
+  return I.g ? groupOn(v, I.g) : fireAll;
+}
+/** Bitmask of number keys 1–9 held right now. */
+function heldGroups() {
+  let m = 0;
+  for (let g = 1; g <= 9; g++) if (keys.has('Digit' + g) || keys.has('Numpad' + g)) m |= 1 << g;
+  return m;
+}
+/** HUD hint lines: "1 Hinge ×2" for every group used on this car. */
+function groupHints(v) {
+  const by = {};
+  for (const I of v.insts) if (I.alive && I.g) (by[I.g] = by[I.g] || []).push(I.m.name);
+  return Object.entries(by).map(([g, names]) => {
+    const c = {};
+    for (const n of names) c[n] = (c[n] || 0) + 1;
+    return [
+      g,
+      Object.entries(c)
+        .map(([n, k]) => n + (k > 1 ? ' ×' + k : ''))
+        .join(', ')
+    ];
+  });
+}
+/** Garage: small amber key badges on bound parts. */
+function drawGroupBadges(c) {
+  const all = [...G.base.values(), ...G.top.values()].filter(e => e.g);
+  if (!all.length) return;
+  c.save();
+  c.font = `700 ${Math.max(9, cell * 0.32)}px "Chakra Petch", sans-serif`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  for (const e of all) {
+    const x = cpx(e.x) + cell * 0.18,
+      y = cpy(e.y) + cell * 0.18,
+      r = cell * 0.17;
+    c.fillStyle = '#ffb423';
+    c.fillRect(x - r, y - r, r * 2, r * 2);
+    c.fillStyle = '#0a1020';
+    c.fillText(String(e.g), x, y + 1);
+  }
+  c.restore();
 }
 /* ===== js/game/joints.js ===== */
 // Moving parts: Hinge, Rotator, Hydraulic Ram (piston) and Suspension Spring.
@@ -19151,596 +19237,602 @@ function weapons(v, dt) {
   const foes = others(v).filter(e => !e.dead);
   for (const I of v.insts) {
     if (!I.alive) continue;
-    B.curSrc = B.hitSrc = I.id; // anything this part fires or hits is credited to it
-    const m = I.m,
-      [px, py] = ipos(v, I);
-    if (emp && (I.W || m.mel || m.flipper || m.pd || m.tractor)) {
-      if (Math.random() < dt * 3) spark(px, py, 1, '#7fe0ff');
-      continue;
-    }
-    if (planWeapon(v, I, dt)) continue;
-    if (m.medic && B.time - v.lastHit > 3 && v.medPool > 0) {
-      for (const J of v.insts) {
-        if (!J.alive || J.hp >= J.max) continue;
-        const amt = Math.min(J.max * 0.015 * dt, v.medPool, J.max - J.hp);
-        J.hp += amt;
-        v.medPool -= amt;
+    const _fire = v.fire;
+    v.fire = partFiring(v, I, _fire);
+    try {
+      B.curSrc = B.hitSrc = I.id; // anything this part fires or hits is credited to it
+      const m = I.m,
+        [px, py] = ipos(v, I);
+      if (emp && (I.W || m.mel || m.flipper || m.pd || m.tractor)) {
+        if (Math.random() < dt * 3) spark(px, py, 1, '#7fe0ff');
+        continue;
       }
-      if (Math.random() < dt * 3)
-        fx({
-          k: 'spark',
-          x: px,
-          y: py,
-          vx: rnd(-20, 20),
-          vy: rnd(-60, -20),
-          life: 0.5,
-          max: 0.5,
-          col: '#5cc38f'
-        });
-    }
-    if (m.bombbay) {
-      I.cd -= dt * fireK;
-      if (v.z > 25 && I.cd <= 0) {
-        I.cd = 0.35;
-        B.lobs.push({
-          own: v.idx,
-          sx: px,
-          sy: py,
-          tx: px + v.vx * 0.25,
-          ty: py + v.vy * 0.25,
-          t: 0,
-          T: 0.3,
-          dmg: 40,
-          splash: 55,
-          dt: 'expl',
-          col: '#3a3f44',
-          small: 1
-        });
-        sfx('thump', px, py);
-      }
-    }
-    if (m.repair && B.time - v.lastHit > 2 && v.repairPool > 0) {
-      let worst = null,
-        wr = 1;
-      const nb = I.layer === 't' ? [I.base] : [];
-      for (const b of I.cells.length ? I.cells : [v.grid.get(I.k)])
-        for (const [dx, dy] of DIRS) {
-          const n = v.grid.get(key(b.gx + dx, b.gy + dy));
-          if (n && n.inst.alive) nb.push(n.inst);
+      if (planWeapon(v, I, dt)) continue;
+      if (m.medic && B.time - v.lastHit > 3 && v.medPool > 0) {
+        for (const J of v.insts) {
+          if (!J.alive || J.hp >= J.max) continue;
+          const amt = Math.min(J.max * 0.015 * dt, v.medPool, J.max - J.hp);
+          J.hp += amt;
+          v.medPool -= amt;
         }
-      for (const J of nb) {
-        if (J === I || !J.alive) continue;
-        const r = J.hp / J.max;
-        if (r < wr) {
-          wr = r;
-          worst = J;
-        }
-      }
-      if (worst) {
-        const amt = Math.min(20 * dt, v.repairPool, worst.max - worst.hp);
-        worst.hp += amt;
-        v.repairPool -= amt;
-        if (Math.random() < dt * 6) {
-          const [x, y] = ipos(v, worst);
-          fx({ k: 'spark', x, y, vx: rnd(-30, 30), vy: rnd(-60, -20), life: 0.4, max: 0.4, col: '#5cc38f' });
-        }
-      }
-    }
-    if (m.pd && !jam) {
-      I.cd -= dt * fireK;
-      I.pa = (I.pa || 0) + dt * 2;
-      if (I.cd <= 0) {
-        let tgt = null,
-          bd = 170;
-        for (const s of B.shots)
-          if (s.own !== v.idx && (s.kind === 'rocket' || s.kind === 'homing') && !(s.delay > 0)) {
-            const d = Math.hypot(s.x - px, s.y - py);
-            if (d < bd) {
-              bd = d;
-              tgt = s;
-            }
-          }
-        for (const l of B.lobs)
-          if (l.own !== v.idx && l.t / l.T > 0.4) {
-            const t = l.t / l.T,
-              lx = l.sx + (l.tx - l.sx) * t,
-              ly = l.sy + (l.ty - l.sy) * t,
-              d = Math.hypot(lx - px, ly - py);
-            if (d < bd) {
-              bd = d;
-              tgt = l;
-            }
-          }
-        if (tgt) {
-          I.cd = 0.7;
-          const lob = tgt.tx !== undefined,
-            tx = lob ? tgt.sx + ((tgt.tx - tgt.sx) * tgt.t) / tgt.T : tgt.x,
-            ty = lob ? tgt.sy + ((tgt.ty - tgt.sy) * tgt.t) / tgt.T : tgt.y;
-          I.pa = Math.atan2(ty - py, tx - px) - v.a;
-          fx({ k: 'tracer', x: px, y: py, x2: tx, y2: ty, life: 0.1, max: 0.1 });
-          sfx('pd', px, py);
-          if (Math.random() < 0.75) {
-            tgt.dead = 1;
-            boom(tx, ty, 0.4);
-          }
-        }
-      }
-    }
-    if (m.magnet)
-      for (const o of B.objs) {
-        if (!small(o)) continue;
-        const d = Math.hypot(o.x - px, o.y - py);
-        if (d < 240 && d > 10) {
-          o.vx += ((((px - o.x) / d) * 3200) / Math.max(1, o.m)) * dt;
-          o.vy += ((((py - o.y) / d) * 3200) / Math.max(1, o.m)) * dt;
-        }
-        if (v.stuck.length < 6 && Math.hypot(o.x - v.x, o.y - v.y) < v.rad + o.r * 0.5) {
-          const [gxp, gyp] = toLocal(v, o.x, o.y);
-          v.stuck.push({
-            kind: o.kind,
-            id: o.id,
-            gx: gxp,
-            gy: gyp,
-            r: o.r,
-            m: o.m,
-            hp: Math.max(30, o.hp),
-            a: o.a - v.a
+        if (Math.random() < dt * 3)
+          fx({
+            k: 'spark',
+            x: px,
+            y: py,
+            vx: rnd(-20, 20),
+            vy: rnd(-60, -20),
+            life: 0.5,
+            max: 0.5,
+            col: '#5cc38f'
           });
-          o.dead = true;
-          recalc(v);
-          txt(o.x, o.y - 20, '+cover', '#9aa3ab', 0.7);
+      }
+      if (m.bombbay) {
+        I.cd -= dt * fireK;
+        if (v.z > 25 && I.cd <= 0) {
+          I.cd = 0.35;
+          B.lobs.push({
+            own: v.idx,
+            sx: px,
+            sy: py,
+            tx: px + v.vx * 0.25,
+            ty: py + v.vy * 0.25,
+            t: 0,
+            T: 0.3,
+            dmg: 40,
+            splash: 55,
+            dt: 'expl',
+            col: '#3a3f44',
+            small: 1
+          });
+          sfx('thump', px, py);
         }
       }
-    if (m.vacuum)
-      for (const o of B.objs) {
-        if (!small(o) || o.m > 4) continue;
-        const d = Math.hypot(o.x - px, o.y - py);
-        if (d < 150) {
-          o.vx += ((px - o.x) / (d || 1)) * 900 * dt;
-          o.vy += ((py - o.y) / (d || 1)) * 900 * dt;
-          o.w += dt * 8;
-          if (d < 22) {
-            o.dead = true;
-            let w = null,
-              wr = 1;
-            for (const J of v.insts)
-              if (J.alive && J.hp / J.max < wr) {
-                wr = J.hp / J.max;
-                w = J;
-              }
-            if (w) w.hp = Math.min(w.max, w.hp + 25);
-            txt(px, py - 22, '+25 HP', '#5cc38f', 0.8);
+      if (m.repair && B.time - v.lastHit > 2 && v.repairPool > 0) {
+        let worst = null,
+          wr = 1;
+        const nb = I.layer === 't' ? [I.base] : [];
+        for (const b of I.cells.length ? I.cells : [v.grid.get(I.k)])
+          for (const [dx, dy] of DIRS) {
+            const n = v.grid.get(key(b.gx + dx, b.gy + dy));
+            if (n && n.inst.alive) nb.push(n.inst);
+          }
+        for (const J of nb) {
+          if (J === I || !J.alive) continue;
+          const r = J.hp / J.max;
+          if (r < wr) {
+            wr = r;
+            worst = J;
+          }
+        }
+        if (worst) {
+          const amt = Math.min(20 * dt, v.repairPool, worst.max - worst.hp);
+          worst.hp += amt;
+          v.repairPool -= amt;
+          if (Math.random() < dt * 6) {
+            const [x, y] = ipos(v, worst);
+            fx({ k: 'spark', x, y, vx: rnd(-30, 30), vy: rnd(-60, -20), life: 0.4, max: 0.4, col: '#5cc38f' });
           }
         }
       }
-    if (m.catapult && v.hopper.length < 3) {
-      const o = nearestObj(px, py, S * 2.4, null, small);
-      if (o) {
-        o.dead = true;
-        v.hopper.push({ kind: o.kind, id: o.id, m: o.m, r: o.r, hp: o.hp, explode: o.explode });
-        txt(o.x, o.y - 14, 'scooped', '#f2b705', 0.6);
-      }
-    }
-    if (m.tractor && v.rmb) {
-      I.active = 1;
-      let tg = null;
-      for (const e of foes) if (Math.hypot(e.x - v.aimX, e.y - v.aimY) < e.rad + 40) tg = { car: e };
-      if (!tg) {
-        const o = nearestObj(v.aimX, v.aimY, 90, null, o => !o.fixed);
-        if (o) tg = { o };
-      }
-      I.tgt = null;
-      if (tg) {
-        const t = tg.car || tg.o,
-          d = Math.hypot(t.x - px, t.y - py) || 1;
-        if (d < 420) {
-          I.tgt = t;
-          if (tg.o) {
-            t.vx += ((((px - t.x) / d) * 2400) / Math.max(1, t.m)) * dt;
-            t.vy += ((((py - t.y) / d) * 2400) / Math.max(1, t.m)) * dt;
-          } else impulse(t, ((px - t.x) / d) * 900 * dt * 60, ((py - t.y) / d) * 900 * dt * 60, t.x, t.y, true);
+      if (m.pd && !jam) {
+        I.cd -= dt * fireK;
+        I.pa = (I.pa || 0) + dt * 2;
+        if (I.cd <= 0) {
+          let tgt = null,
+            bd = 170;
+          for (const s of B.shots)
+            if (s.own !== v.idx && (s.kind === 'rocket' || s.kind === 'homing') && !(s.delay > 0)) {
+              const d = Math.hypot(s.x - px, s.y - py);
+              if (d < bd) {
+                bd = d;
+                tgt = s;
+              }
+            }
+          for (const l of B.lobs)
+            if (l.own !== v.idx && l.t / l.T > 0.4) {
+              const t = l.t / l.T,
+                lx = l.sx + (l.tx - l.sx) * t,
+                ly = l.sy + (l.ty - l.sy) * t,
+                d = Math.hypot(lx - px, ly - py);
+              if (d < bd) {
+                bd = d;
+                tgt = l;
+              }
+            }
+          if (tgt) {
+            I.cd = 0.7;
+            const lob = tgt.tx !== undefined,
+              tx = lob ? tgt.sx + ((tgt.tx - tgt.sx) * tgt.t) / tgt.T : tgt.x,
+              ty = lob ? tgt.sy + ((tgt.ty - tgt.sy) * tgt.t) / tgt.T : tgt.y;
+            I.pa = Math.atan2(ty - py, tx - px) - v.a;
+            fx({ k: 'tracer', x: px, y: py, x2: tx, y2: ty, life: 0.1, max: 0.1 });
+            sfx('pd', px, py);
+            if (Math.random() < 0.75) {
+              tgt.dead = 1;
+              boom(tx, ty, 0.4);
+            }
+          }
         }
       }
-    } else I.active = 0;
-    if (m.mel && !I.blocked) {
-      const fa = faceAng(v, I),
-        reach = m.mel.reach || 1,
-        cx = px + Math.cos(fa) * S * 0.6 * reach,
-        cy = py + Math.sin(fa) * S * 0.6 * reach;
-      I.cd -= dt * fireK;
-      let target = null;
-      for (const e of foes) {
-        const b = carBlockAt(e, cx, cy, S * 0.45 * reach);
-        if (b) {
-          target = { car: e, b };
-          break;
-        }
-      }
-      if (!target)
+      if (m.magnet)
         for (const o of B.objs) {
-          if (o.dead || o.z > 20 || (buffOf(v, 'ghost') && o.junk)) continue;
-          if (Math.hypot(o.x - cx, o.y - cy) <= o.r + S * 0.5 * reach) {
-            target = { o };
+          if (!small(o)) continue;
+          const d = Math.hypot(o.x - px, o.y - py);
+          if (d < 240 && d > 10) {
+            o.vx += ((((px - o.x) / d) * 3200) / Math.max(1, o.m)) * dt;
+            o.vy += ((((py - o.y) / d) * 3200) / Math.max(1, o.m)) * dt;
+          }
+          if (v.stuck.length < 6 && Math.hypot(o.x - v.x, o.y - v.y) < v.rad + o.r * 0.5) {
+            const [gxp, gyp] = toLocal(v, o.x, o.y);
+            v.stuck.push({
+              kind: o.kind,
+              id: o.id,
+              gx: gxp,
+              gy: gyp,
+              r: o.r,
+              m: o.m,
+              hp: Math.max(30, o.hp),
+              a: o.a - v.a
+            });
+            o.dead = true;
+            recalc(v);
+            txt(o.x, o.y - 20, '+cover', '#9aa3ab', 0.7);
+          }
+        }
+      if (m.vacuum)
+        for (const o of B.objs) {
+          if (!small(o) || o.m > 4) continue;
+          const d = Math.hypot(o.x - px, o.y - py);
+          if (d < 150) {
+            o.vx += ((px - o.x) / (d || 1)) * 900 * dt;
+            o.vy += ((py - o.y) / (d || 1)) * 900 * dt;
+            o.w += dt * 8;
+            if (d < 22) {
+              o.dead = true;
+              let w = null,
+                wr = 1;
+              for (const J of v.insts)
+                if (J.alive && J.hp / J.max < wr) {
+                  wr = J.hp / J.max;
+                  w = J;
+                }
+              if (w) w.hp = Math.min(w.max, w.hp + 25);
+              txt(px, py - 22, '+25 HP', '#5cc38f', 0.8);
+            }
+          }
+        }
+      if (m.catapult && v.hopper.length < 3) {
+        const o = nearestObj(px, py, S * 2.4, null, small);
+        if (o) {
+          o.dead = true;
+          v.hopper.push({ kind: o.kind, id: o.id, m: o.m, r: o.r, hp: o.hp, explode: o.explode });
+          txt(o.x, o.y - 14, 'scooped', '#f2b705', 0.6);
+        }
+      }
+      if (m.tractor && v.rmb) {
+        I.active = 1;
+        let tg = null;
+        for (const e of foes) if (Math.hypot(e.x - v.aimX, e.y - v.aimY) < e.rad + 40) tg = { car: e };
+        if (!tg) {
+          const o = nearestObj(v.aimX, v.aimY, 90, null, o => !o.fixed);
+          if (o) tg = { o };
+        }
+        I.tgt = null;
+        if (tg) {
+          const t = tg.car || tg.o,
+            d = Math.hypot(t.x - px, t.y - py) || 1;
+          if (d < 420) {
+            I.tgt = t;
+            if (tg.o) {
+              t.vx += ((((px - t.x) / d) * 2400) / Math.max(1, t.m)) * dt;
+              t.vy += ((((py - t.y) / d) * 2400) / Math.max(1, t.m)) * dt;
+            } else impulse(t, ((px - t.x) / d) * 900 * dt * 60, ((py - t.y) / d) * 900 * dt * 60, t.x, t.y, true);
+          }
+        }
+      } else I.active = 0;
+      if (m.mel && !I.blocked) {
+        const fa = faceAng(v, I),
+          reach = m.mel.reach || 1,
+          cx = px + Math.cos(fa) * S * 0.6 * reach,
+          cy = py + Math.sin(fa) * S * 0.6 * reach;
+        I.cd -= dt * fireK;
+        let target = null;
+        for (const e of foes) {
+          const b = carBlockAt(e, cx, cy, S * 0.45 * reach);
+          if (b) {
+            target = { car: e, b };
             break;
           }
         }
-      if (target) {
-        const melK = 1 + (v.aura.dmg_melee || 0),
-          dps = m.mel.dps * (I.id === 'saw' && CT(v, 'diamond') ? 1.4 : 1) * I.mount * melK;
-        if (m.mel.dps) {
-          applyHit(target, dps * dt, 'melee', cx, cy, fa, v.idx);
-          if (Math.random() < dt * 25) {
-            spark(cx, cy, 2);
-            sfx('grind', cx, cy);
+        if (!target)
+          for (const o of B.objs) {
+            if (o.dead || o.z > 20 || (buffOf(v, 'ghost') && o.junk)) continue;
+            if (Math.hypot(o.x - cx, o.y - cy) <= o.r + S * 0.5 * reach) {
+              target = { o };
+              break;
+            }
           }
-        } else if (I.cd <= 0) {
-          I.cd = m.mel.cd;
-          I.punch = 0.2;
-          applyHit(target, m.mel.hit * I.mount * melK, 'melee', cx, cy, fa, v.idx);
-          spark(cx, cy, 12);
-          B.shake = Math.max(B.shake, 3);
-          sfx('clang', cx, cy);
+        if (target) {
+          const melK = 1 + (v.aura.dmg_melee || 0),
+            dps = m.mel.dps * (I.id === 'saw' && CT(v, 'diamond') ? 1.4 : 1) * I.mount * melK;
+          if (m.mel.dps) {
+            applyHit(target, dps * dt, 'melee', cx, cy, fa, v.idx);
+            if (Math.random() < dt * 25) {
+              spark(cx, cy, 2);
+              sfx('grind', cx, cy);
+            }
+          } else if (I.cd <= 0) {
+            I.cd = m.mel.cd;
+            I.punch = 0.2;
+            applyHit(target, m.mel.hit * I.mount * melK, 'melee', cx, cy, fa, v.idx);
+            spark(cx, cy, 12);
+            B.shake = Math.max(B.shake, 3);
+            sfx('clang', cx, cy);
+          }
         }
       }
-    }
-    if (m.flipper && !I.blocked) {
-      I.cd -= dt * fireK;
-      if (I.cd <= 0) {
-        const fa = faceAng(v, I),
-          cx = px + Math.cos(fa) * S * 0.9,
-          cy = py + Math.sin(fa) * S * 0.9,
-          k = (CT(v, 'springsteel') ? 1.6 : 1) * (1 + (v.aura.flipPow || 0));
-        let fired = false;
-        for (const e of foes) {
-          if (e.z > 0 || !carBlockAt(e, cx, cy, S * 0.4)) continue;
-          fired = true;
-          const res = e.c.flipRes ? 0.15 : clamp(1.4 - e.c.mass / 40, 0.15, 1) * k;
-          e.vz = 320 * k;
-          e.z = 1;
-          impulse(e, Math.cos(fa) * 1600, Math.sin(fa) * 1600, cx, cy);
-          if (Math.random() < res) flipCar(e);
-          hitCarBlock(e, carBlockAt(e, cx, cy, S * 0.4), 25, 'melee', cx, cy, Math.cos(fa), Math.sin(fa), v.idx);
-          break;
-        }
-        if (!fired) {
-          const o = nearestObj(cx, cy, S * 0.5, null, o => !o.fixed && o.z === 0);
-          if (o) {
+      if (m.flipper && !I.blocked) {
+        I.cd -= dt * fireK;
+        if (I.cd <= 0) {
+          const fa = faceAng(v, I),
+            cx = px + Math.cos(fa) * S * 0.9,
+            cy = py + Math.sin(fa) * S * 0.9,
+            k = (CT(v, 'springsteel') ? 1.6 : 1) * (1 + (v.aura.flipPow || 0));
+          let fired = false;
+          for (const e of foes) {
+            if (e.z > 0 || !carBlockAt(e, cx, cy, S * 0.4)) continue;
             fired = true;
-            o.vz = clamp((900 * k * (o.r > 24 ? 0.5 : 1)) / Math.sqrt(Math.max(1, o.m)), 80, 700);
-            o.vx += Math.cos(fa) * 200;
-            o.vy += Math.sin(fa) * 200;
-            o.w += rnd(-10, 10);
-            dmgObj(o, 25, 'melee', v.idx);
-            txt(o.x, o.y - 24, 'FLIP!', '#f2b705', 0.8);
+            const res = e.c.flipRes ? 0.15 : clamp(1.4 - e.c.mass / 40, 0.15, 1) * k;
+            e.vz = 320 * k;
+            e.z = 1;
+            impulse(e, Math.cos(fa) * 1600, Math.sin(fa) * 1600, cx, cy);
+            if (Math.random() < res) flipCar(e);
+            hitCarBlock(e, carBlockAt(e, cx, cy, S * 0.4), 25, 'melee', cx, cy, Math.cos(fa), Math.sin(fa), v.idx);
+            break;
+          }
+          if (!fired) {
+            const o = nearestObj(cx, cy, S * 0.5, null, o => !o.fixed && o.z === 0);
+            if (o) {
+              fired = true;
+              o.vz = clamp((900 * k * (o.r > 24 ? 0.5 : 1)) / Math.sqrt(Math.max(1, o.m)), 80, 700);
+              o.vx += Math.cos(fa) * 200;
+              o.vy += Math.sin(fa) * 200;
+              o.w += rnd(-10, 10);
+              dmgObj(o, 25, 'melee', v.idx);
+              txt(o.x, o.y - 24, 'FLIP!', '#f2b705', 0.8);
+            }
+          }
+          if (fired) {
+            I.cd = 2.4 * (CT(v, 'springsteel') ? 1.3 : 1);
+            I.punch = 0.25;
+            spark(cx, cy, 8);
+            sfx('spring', cx, cy);
           }
         }
-        if (fired) {
-          I.cd = 2.4 * (CT(v, 'springsteel') ? 1.3 : 1);
-          I.punch = 0.25;
-          spark(cx, cy, 8);
-          sfx('spring', cx, cy);
-        }
       }
-    }
-    const W = I.W;
-    if (!W) continue;
-    const fa = faceAng(v, I);
-    let aimA = fa;
-    const want = Math.atan2(v.aimY - py, v.aimX - px);
-    if (W.kind === 'tesla') {
+      const W = I.W;
+      if (!W) continue;
+      const fa = faceAng(v, I);
+      let aimA = fa;
+      const want = Math.atan2(v.aimY - py, v.aimX - px);
+      if (W.kind === 'tesla') {
+        I.cd -= dt * fireK;
+        if (I.cd <= 0 && v.fire && !jam) {
+          const first = autoTarget(v, px, py, W.rng);
+          if (first) {
+            const pts = [[px, py]],
+              hit = [];
+            let cur = first;
+            for (let i = 0; i <= W.chain && cur; i++) {
+              damageTarget(cur, W.dmg * (i ? 0.7 : 1), 'energy', px, py, v.idx);
+              pts.push([cur.x, cur.y]);
+              hit.push(cur.car || cur.o);
+              const o = nearestObj(cur.x, cur.y, 140, hit);
+              cur = o ? { x: o.x, y: o.y, o } : null;
+            }
+            fx({ k: 'arc', pts, life: 0.16, max: 0.16 });
+            sfx('zap', px, py);
+            I.cd = W.cd;
+          }
+        }
+        continue;
+      }
+      if (I.turret) {
+        I.ta += clamp(wrap(want - I.ta), -track * dt, track * dt);
+        aimA = I.ta;
+      } else if (W.kind !== 'lob') {
+        aimA = fa + clamp(wrap(want - fa), -cone, cone);
+        I.ta = aimA;
+      }
       I.cd -= dt * fireK;
-      if (I.cd <= 0 && v.fire && !jam) {
-        const first = autoTarget(v, px, py, W.rng);
-        if (first) {
-          const pts = [[px, py]],
-            hit = [];
-          let cur = first;
-          for (let i = 0; i <= W.chain && cur; i++) {
-            damageTarget(cur, W.dmg * (i ? 0.7 : 1), 'energy', px, py, v.idx);
-            pts.push([cur.x, cur.y]);
-            hit.push(cur.car || cur.o);
-            const o = nearestObj(cur.x, cur.y, 140, hit);
-            cur = o ? { x: o.x, y: o.y, o } : null;
+      if (W.spin) I.spin = clamp(I.spin + (v.fire ? dt : -dt * 1.5), CT(v, 'minispool') ? 1 : 0, 1);
+      const spr = (W.spr || 0) * (v.anchored ? 0.5 : 1),
+        mx = px + Math.cos(aimA) * S * 0.85,
+        my = py + Math.sin(aimA) * S * 0.85;
+      if (I.blocked || (W.kind !== 'lob' && stuckBlocks(v, mx, my))) {
+        if (v.fire && Math.random() < dt * 4) spark(mx, my, 1);
+        continue;
+      }
+      const recoil = k => {
+        if (k && !v.anchored) impulse(v, -Math.cos(aimA) * k * 30, -Math.sin(aimA) * k * 30, px, py);
+      };
+      if (W.kind === 'rail') {
+        if (v.fire && I.cd <= 0) {
+          if (I.charge === 0) sfx('charge', px, py);
+          I.charge += dt;
+          if (I.charge >= W.charge) {
+            I.charge = 0;
+            I.cd = W.cd;
+            const r = rayHit(mx, my, aimA, W.rng, true, v.idx);
+            for (const h of r.hits) applyHit(h, W.dmg, W.dt, mx, my, aimA, v.idx);
+            fx({ k: 'rail', x: mx, y: my, a: aimA, l: r.end, life: 0.3, max: 0.3 });
+            B.shake = Math.max(B.shake, 5);
+            sfx('rail', px, py);
+            recoil(W.recoil);
           }
-          fx({ k: 'arc', pts, life: 0.16, max: 0.16 });
-          sfx('zap', px, py);
-          I.cd = W.cd;
-        }
+        } else I.charge = Math.max(0, I.charge - dt * 2);
+        continue;
       }
-      continue;
-    }
-    if (I.turret) {
-      I.ta += clamp(wrap(want - I.ta), -track * dt, track * dt);
-      aimA = I.ta;
-    } else if (W.kind !== 'lob') {
-      aimA = fa + clamp(wrap(want - fa), -cone, cone);
-      I.ta = aimA;
-    }
-    I.cd -= dt * fireK;
-    if (W.spin) I.spin = clamp(I.spin + (v.fire ? dt : -dt * 1.5), CT(v, 'minispool') ? 1 : 0, 1);
-    const spr = (W.spr || 0) * (v.anchored ? 0.5 : 1),
-      mx = px + Math.cos(aimA) * S * 0.85,
-      my = py + Math.sin(aimA) * S * 0.85;
-    if (I.blocked || (W.kind !== 'lob' && stuckBlocks(v, mx, my))) {
-      if (v.fire && Math.random() < dt * 4) spark(mx, my, 1);
-      continue;
-    }
-    const recoil = k => {
-      if (k && !v.anchored) impulse(v, -Math.cos(aimA) * k * 30, -Math.sin(aimA) * k * 30, px, py);
-    };
-    if (W.kind === 'rail') {
-      if (v.fire && I.cd <= 0) {
-        if (I.charge === 0) sfx('charge', px, py);
-        I.charge += dt;
-        if (I.charge >= W.charge) {
-          I.charge = 0;
-          I.cd = W.cd;
-          const r = rayHit(mx, my, aimA, W.rng, true, v.idx);
-          for (const h of r.hits) applyHit(h, W.dmg, W.dt, mx, my, aimA, v.idx);
-          fx({ k: 'rail', x: mx, y: my, a: aimA, l: r.end, life: 0.3, max: 0.3 });
-          B.shake = Math.max(B.shake, 5);
-          sfx('rail', px, py);
-          recoil(W.recoil);
-        }
-      } else I.charge = Math.max(0, I.charge - dt * 2);
-      continue;
-    }
-    if (W.kind === 'beam') {
-      I.beam = null;
-      if (!v.fire) continue;
-      const n = W.beams || 1;
-      I.beam = [];
-      for (let i = 0; i < n; i++) {
-        const a = aimA + (i - (n - 1) / 2) * 0.13,
-          r = rayHit(mx, my, a, W.rng, false, v.idx);
-        const h = r.hits[0];
-        if (h) {
-          applyHit(h, W.dps * dt, W.dt, mx, my, a, v.idx);
-          if (W.freeze) {
-            if (h.o) {
-              h.o.frozen = Math.max(h.o.frozen, (CT(v, 'cryo') ? 3 : 1.5) * (1 + (v.aura.freeze || 0)));
-              h.o.burn = 0;
-            } else h.car.frozen = Math.max(h.car.frozen, (CT(v, 'cryo') ? 2 : 1) * (1 + (v.aura.freeze || 0)));
+      if (W.kind === 'beam') {
+        I.beam = null;
+        if (!v.fire) continue;
+        const n = W.beams || 1;
+        I.beam = [];
+        for (let i = 0; i < n; i++) {
+          const a = aimA + (i - (n - 1) / 2) * 0.13,
+            r = rayHit(mx, my, a, W.rng, false, v.idx);
+          const h = r.hits[0];
+          if (h) {
+            applyHit(h, W.dps * dt, W.dt, mx, my, a, v.idx);
+            if (W.freeze) {
+              if (h.o) {
+                h.o.frozen = Math.max(h.o.frozen, (CT(v, 'cryo') ? 3 : 1.5) * (1 + (v.aura.freeze || 0)));
+                h.o.burn = 0;
+              } else h.car.frozen = Math.max(h.car.frozen, (CT(v, 'cryo') ? 2 : 1) * (1 + (v.aura.freeze || 0)));
+            }
+            if (Math.random() < 0.3)
+              spark(mx + Math.cos(a) * r.end, my + Math.sin(a) * r.end, 1, W.freeze ? '#e6faff' : '#bff');
           }
-          if (Math.random() < 0.3)
-            spark(mx + Math.cos(a) * r.end, my + Math.sin(a) * r.end, 1, W.freeze ? '#e6faff' : '#bff');
+          I.beam.push({ a, l: r.end });
         }
-        I.beam.push({ a, l: r.end });
+        if (Math.random() < dt * 8) sfx('hum', px, py);
+        continue;
       }
-      if (Math.random() < dt * 8) sfx('hum', px, py);
-      continue;
-    }
-    if (W.kind === 'flame' || W.kind === 'water') {
-      if (!v.fire) continue;
-      I.fl = (I.fl || 0) + dt * 36;
-      while (I.fl >= 1) {
-        I.fl--;
-        const a = aimA + rnd(-0.16, 0.16),
-          sp = rnd(320, 420);
-        B.shots.push({
-          own: v.idx,
-          kind: W.kind,
-          x: mx,
-          y: my,
-          vx: Math.cos(a) * sp + v.vx,
-          vy: Math.sin(a) * sp + v.vy,
-          life: W.rng / 370,
-          max: W.rng / 370,
-          dmg: W.kind === 'flame' ? W.dps / 36 : 0.4,
-          dt: W.kind === 'flame' ? 'fire' : 'kin',
-          push: W.push
-        });
-      }
-      if (Math.random() < dt * 6) sfx(W.kind === 'flame' ? 'flame' : 'water', px, py);
-      if (W.kind === 'water') recoil(0.25);
-      continue;
-    }
-    if (W.kind === 'rocket' && I.burst > 0) {
-      I.bt -= dt;
-      if (I.bt <= 0) {
-        I.burst--;
-        I.bt = W.fast ? 0.05 : 0.12;
-        const a = aimA + rnd(-1, 1) * W.spr;
-        B.shots.push({
-          own: v.idx,
-          kind: 'rocket',
-          x: mx,
-          y: my,
-          vx: Math.cos(a) * W.spd,
-          vy: Math.sin(a) * W.spd,
-          life: (W.rng / W.spd) * 1.4,
-          dmg: W.dmg,
-          dt: W.dt,
-          splash: W.splash
-        });
-        sfx('rocket', px, py);
-        if (I.burst === 0) I.cd = W.reload;
-      }
-      continue;
-    }
-    if (!v.fire || I.cd > 0) continue;
-    switch (W.kind) {
-      case 'bullet':
-      case 'shell':
-      case 'bolt':
-      case 'plasma': {
-        const rate = W.rate * (W.spin ? 0.25 + 0.75 * I.spin : 1);
-        for (let i = 0; i < (W.n || 1); i++) {
-          const a = aimA + rnd(-1, 1) * spr;
+      if (W.kind === 'flame' || W.kind === 'water') {
+        if (!v.fire) continue;
+        I.fl = (I.fl || 0) + dt * 36;
+        while (I.fl >= 1) {
+          I.fl--;
+          const a = aimA + rnd(-0.16, 0.16),
+            sp = rnd(320, 420);
           B.shots.push({
             own: v.idx,
             kind: W.kind,
             x: mx,
             y: my,
-            vx: Math.cos(a) * W.spd * rnd(0.95, 1.05) + v.vx * 0.4,
-            vy: Math.sin(a) * W.spd * rnd(0.95, 1.05) + v.vy * 0.4,
-            life: W.rng / W.spd,
-            dmg: W.dmg,
-            dt: W.dt,
-            splash: W.splash || 0,
-            big: W.big,
-            freeze: W.freeze ? W.freeze * (1 + (v.aura.freeze || 0)) : 0,
-            knockK: 1 + (v.aura.knock || 0),
-            knock: W.knock
+            vx: Math.cos(a) * sp + v.vx,
+            vy: Math.sin(a) * sp + v.vy,
+            life: W.rng / 370,
+            max: W.rng / 370,
+            dmg: W.kind === 'flame' ? W.dps / 36 : 0.4,
+            dt: W.kind === 'flame' ? 'fire' : 'kin',
+            push: W.push
           });
         }
-        I.cd = (1 / rate) * rnd(0.92, 1.08);
-        fx({
-          k: 'flash',
-          x: mx,
-          y: my,
-          life: 0.06,
-          max: 0.06,
-          r: W.kind === 'bullet' ? 5 : 10,
-          col: W.dt === 'energy' ? '#bff' : null
-        });
-        sfx(W.kind === 'bullet' ? (W.n ? 'shotgun' : 'gun') : W.kind === 'shell' ? 'cannon' : 'laser', px, py);
-        recoil(W.recoil);
-        break;
+        if (Math.random() < dt * 6) sfx(W.kind === 'flame' ? 'flame' : 'water', px, py);
+        if (W.kind === 'water') recoil(0.25);
+        continue;
       }
-      case 'bounce':
-        B.shots.push({
-          own: v.idx,
-          kind: 'bounce',
-          x: mx,
-          y: my,
-          vx: Math.cos(aimA) * W.spd,
-          vy: Math.sin(aimA) * W.spd,
-          life: 4,
-          dmg: W.dmg,
-          dt: 'kin',
-          bounces: W.bounces || (CT(v, 'ricochet') ? 5 : 3),
-          ang: 0,
-          saw: W.dt === 'melee'
-        });
-        I.cd = 1 / W.rate;
-        recoil(6);
-        sfx('thump', px, py);
-        break;
-      case 'sticky':
-        B.shots.push({
-          own: v.idx,
-          kind: 'sticky',
-          x: mx,
-          y: my,
-          vx: Math.cos(aimA) * W.spd,
-          vy: Math.sin(aimA) * W.spd,
-          life: W.rng / W.spd,
-          dmg: W.dmg,
-          dt: 'expl',
-          splash: W.splash
-        });
-        I.cd = 1 / W.rate;
-        sfx('thump', px, py);
-        break;
-      case 'homing': {
-        const tgt = jam ? null : autoTarget(v, v.aimX, v.aimY, 320);
-        for (let i = 0; i < 2; i++) {
-          const a = aimA + (i ? 0.25 : -0.25);
+      if (W.kind === 'rocket' && I.burst > 0) {
+        I.bt -= dt;
+        if (I.bt <= 0) {
+          I.burst--;
+          I.bt = W.fast ? 0.05 : 0.12;
+          const a = aimA + rnd(-1, 1) * W.spr;
           B.shots.push({
             own: v.idx,
-            kind: 'homing',
+            kind: 'rocket',
             x: mx,
             y: my,
             vx: Math.cos(a) * W.spd,
             vy: Math.sin(a) * W.spd,
-            life: (W.rng / W.spd) * 1.5,
+            life: (W.rng / W.spd) * 1.4,
             dmg: W.dmg,
             dt: W.dt,
-            splash: W.splash,
-            tgt
+            splash: W.splash
           });
+          sfx('rocket', px, py);
+          if (I.burst === 0) I.cd = W.reload;
         }
-        I.cd = 1 / W.rate;
-        sfx('rocket', px, py);
-        break;
+        continue;
       }
-      case 'rocket':
-        I.burst = W.burst;
-        I.bt = 0;
-        break;
-      case 'lob': {
-        const d = Math.hypot(v.aimX - px, v.aimY - py),
-          dd = clamp(d, W.min, W.rng);
-        const tx = px + ((v.aimX - px) / (d || 1)) * dd,
-          ty = py + ((v.aimY - py) / (d || 1)) * dd;
-        B.lobs.push({
-          own: v.idx,
-          sx: mx,
-          sy: my,
-          tx,
-          ty,
-          t: 0,
-          T: (dd / 360 + 0.35) * (W.slow ? 1.4 : 1),
-          dmg: W.dmg,
-          splash: W.splash,
-          dt: W.dt,
-          cluster: W.cluster,
-          napalm: W.napalm,
-          col: I.m.art.c
-        });
-        I.cd = 1 / W.rate;
-        fx({ k: 'flash', x: mx, y: my, life: 0.08, max: 0.08, r: 10 });
-        sfx('mortar', px, py);
-        break;
-      }
-      case 'arc': {
-        let first = null;
-        for (const e of foes) {
-          const nb = nearestBlock(e, px, py);
-          if (
-            nb &&
-            nb.d < W.rng &&
-            Math.abs(wrap(Math.atan2(nb.p[1] - py, nb.p[0] - px) - fa)) < 0.7 &&
-            !inSmoke(e.x, e.y)
-          ) {
-            first = { x: nb.p[0], y: nb.p[1], car: e, b: nb.b };
-            break;
+      if (!v.fire || I.cd > 0) continue;
+      switch (W.kind) {
+        case 'bullet':
+        case 'shell':
+        case 'bolt':
+        case 'plasma': {
+          const rate = W.rate * (W.spin ? 0.25 + 0.75 * I.spin : 1);
+          for (let i = 0; i < (W.n || 1); i++) {
+            const a = aimA + rnd(-1, 1) * spr;
+            B.shots.push({
+              own: v.idx,
+              kind: W.kind,
+              x: mx,
+              y: my,
+              vx: Math.cos(a) * W.spd * rnd(0.95, 1.05) + v.vx * 0.4,
+              vy: Math.sin(a) * W.spd * rnd(0.95, 1.05) + v.vy * 0.4,
+              life: W.rng / W.spd,
+              dmg: W.dmg,
+              dt: W.dt,
+              splash: W.splash || 0,
+              big: W.big,
+              freeze: W.freeze ? W.freeze * (1 + (v.aura.freeze || 0)) : 0,
+              knockK: 1 + (v.aura.knock || 0),
+              knock: W.knock
+            });
           }
+          I.cd = (1 / rate) * rnd(0.92, 1.08);
+          fx({
+            k: 'flash',
+            x: mx,
+            y: my,
+            life: 0.06,
+            max: 0.06,
+            r: W.kind === 'bullet' ? 5 : 10,
+            col: W.dt === 'energy' ? '#bff' : null
+          });
+          sfx(W.kind === 'bullet' ? (W.n ? 'shotgun' : 'gun') : W.kind === 'shell' ? 'cannon' : 'laser', px, py);
+          recoil(W.recoil);
+          break;
         }
-        if (!first) {
-          let bd = W.rng;
-          for (const o of B.objs) {
-            const d = Math.hypot(o.x - px, o.y - py) - o.r;
-            if (d < bd && Math.abs(wrap(Math.atan2(o.y - py, o.x - px) - fa)) < 0.7) {
-              bd = d;
-              first = { x: o.x, y: o.y, o };
+        case 'bounce':
+          B.shots.push({
+            own: v.idx,
+            kind: 'bounce',
+            x: mx,
+            y: my,
+            vx: Math.cos(aimA) * W.spd,
+            vy: Math.sin(aimA) * W.spd,
+            life: 4,
+            dmg: W.dmg,
+            dt: 'kin',
+            bounces: W.bounces || (CT(v, 'ricochet') ? 5 : 3),
+            ang: 0,
+            saw: W.dt === 'melee'
+          });
+          I.cd = 1 / W.rate;
+          recoil(6);
+          sfx('thump', px, py);
+          break;
+        case 'sticky':
+          B.shots.push({
+            own: v.idx,
+            kind: 'sticky',
+            x: mx,
+            y: my,
+            vx: Math.cos(aimA) * W.spd,
+            vy: Math.sin(aimA) * W.spd,
+            life: W.rng / W.spd,
+            dmg: W.dmg,
+            dt: 'expl',
+            splash: W.splash
+          });
+          I.cd = 1 / W.rate;
+          sfx('thump', px, py);
+          break;
+        case 'homing': {
+          const tgt = jam ? null : autoTarget(v, v.aimX, v.aimY, 320);
+          for (let i = 0; i < 2; i++) {
+            const a = aimA + (i ? 0.25 : -0.25);
+            B.shots.push({
+              own: v.idx,
+              kind: 'homing',
+              x: mx,
+              y: my,
+              vx: Math.cos(a) * W.spd,
+              vy: Math.sin(a) * W.spd,
+              life: (W.rng / W.spd) * 1.5,
+              dmg: W.dmg,
+              dt: W.dt,
+              splash: W.splash,
+              tgt
+            });
+          }
+          I.cd = 1 / W.rate;
+          sfx('rocket', px, py);
+          break;
+        }
+        case 'rocket':
+          I.burst = W.burst;
+          I.bt = 0;
+          break;
+        case 'lob': {
+          const d = Math.hypot(v.aimX - px, v.aimY - py),
+            dd = clamp(d, W.min, W.rng);
+          const tx = px + ((v.aimX - px) / (d || 1)) * dd,
+            ty = py + ((v.aimY - py) / (d || 1)) * dd;
+          B.lobs.push({
+            own: v.idx,
+            sx: mx,
+            sy: my,
+            tx,
+            ty,
+            t: 0,
+            T: (dd / 360 + 0.35) * (W.slow ? 1.4 : 1),
+            dmg: W.dmg,
+            splash: W.splash,
+            dt: W.dt,
+            cluster: W.cluster,
+            napalm: W.napalm,
+            col: I.m.art.c
+          });
+          I.cd = 1 / W.rate;
+          fx({ k: 'flash', x: mx, y: my, life: 0.08, max: 0.08, r: 10 });
+          sfx('mortar', px, py);
+          break;
+        }
+        case 'arc': {
+          let first = null;
+          for (const e of foes) {
+            const nb = nearestBlock(e, px, py);
+            if (
+              nb &&
+              nb.d < W.rng &&
+              Math.abs(wrap(Math.atan2(nb.p[1] - py, nb.p[0] - px) - fa)) < 0.7 &&
+              !inSmoke(e.x, e.y)
+            ) {
+              first = { x: nb.p[0], y: nb.p[1], car: e, b: nb.b };
+              break;
             }
           }
+          if (!first) {
+            let bd = W.rng;
+            for (const o of B.objs) {
+              const d = Math.hypot(o.x - px, o.y - py) - o.r;
+              if (d < bd && Math.abs(wrap(Math.atan2(o.y - py, o.x - px) - fa)) < 0.7) {
+                bd = d;
+                first = { x: o.x, y: o.y, o };
+              }
+            }
+          }
+          if (!first) break;
+          const pts = [[mx, my]],
+            hit = [];
+          let cur = first;
+          for (let i = 0; i <= W.chain && cur; i++) {
+            damageTarget(cur, W.dmg * (i ? 0.75 : 1), W.dt, mx, my, v.idx);
+            pts.push([cur.x, cur.y]);
+            hit.push(cur.car || cur.o);
+            const o = nearestObj(cur.x, cur.y, 130, hit);
+            cur = o ? { x: o.x, y: o.y, o } : null;
+          }
+          fx({ k: 'arc', pts, life: 0.18, max: 0.18 });
+          sfx('zap', px, py);
+          I.cd = W.cd;
+          break;
         }
-        if (!first) break;
-        const pts = [[mx, my]],
-          hit = [];
-        let cur = first;
-        for (let i = 0; i <= W.chain && cur; i++) {
-          damageTarget(cur, W.dmg * (i ? 0.75 : 1), W.dt, mx, my, v.idx);
-          pts.push([cur.x, cur.y]);
-          hit.push(cur.car || cur.o);
-          const o = nearestObj(cur.x, cur.y, 130, hit);
-          cur = o ? { x: o.x, y: o.y, o } : null;
-        }
-        fx({ k: 'arc', pts, life: 0.18, max: 0.18 });
-        sfx('zap', px, py);
-        I.cd = W.cd;
-        break;
+        case 'harpoon':
+          if (v.tether && v.tether.inst === I) break;
+          B.shots.push({
+            own: v.idx,
+            kind: 'harpoon',
+            x: mx,
+            y: my,
+            vx: Math.cos(aimA) * W.spd,
+            vy: Math.sin(aimA) * W.spd,
+            life: W.rng / W.spd,
+            dmg: W.dmg,
+            dt: 'kin',
+            inst: I.n
+          });
+          I.cd = W.cd;
+          sfx('thump', px, py);
+          break;
       }
-      case 'harpoon':
-        if (v.tether && v.tether.inst === I) break;
-        B.shots.push({
-          own: v.idx,
-          kind: 'harpoon',
-          x: mx,
-          y: my,
-          vx: Math.cos(aimA) * W.spd,
-          vy: Math.sin(aimA) * W.spd,
-          life: W.rng / W.spd,
-          dmg: W.dmg,
-          dt: 'kin',
-          inst: I.n
-        });
-        I.cd = W.cd;
-        sfx('thump', px, py);
-        break;
+    } finally {
+      v.fire = _fire;
     }
   }
   for (const d of v.drones) {
@@ -22317,6 +22409,7 @@ function drawHUD(c) {
       'Shift',
       `boost${abilityCooldown(v, 'bcd') > 0 ? ' ' + abilityCooldown(v, 'bcd').toFixed(1) + 's' : ''}`
     ]);
+  for (const [g, names] of groupHints(v)) ctl.push([g, names]);
   if (h.jump) ctl.push(['J', `jump${v.jumpCd > 0 ? ' ' + v.jumpCd.toFixed(1) : ''}`]);
   if (h.omni) ctl.push(['Q/E', 'strafe']);
   if (h.oil || h.glue || h.banana || h.mines || PLAN_DROP.some(id => h[id]))
@@ -22561,6 +22654,7 @@ addEventListener('keydown', e => {
     if (e.code === 'KeyR') turnBrush(e.shiftKey ? -1 : 1);
     else if (e.code === 'KeyB') setTool('place');
     else if (e.code === 'KeyT') setTool('rotate');
+    else if (e.code === 'KeyG') setTool('keys');
     else if (e.code === 'KeyX' || e.code === 'Delete') setTool('remove');
     else if (e.code === 'Equal') setZoom(G.zoom * 1.2);
     else if (e.code === 'Minus') setZoom(G.zoom / 1.2);
@@ -22619,6 +22713,7 @@ const ZERO_IN = {
   fire: false,
   rmb: false,
   drop: false,
+  gr: 0,
   edges: new Set()
 };
 function readLocal() {
@@ -22633,6 +22728,7 @@ function readLocal() {
       fire: mouse.down || keys.has('Space'),
       rmb: mouse.right,
       drop: keys.has('KeyZ'),
+      gr: heldGroups(),
       edges: new Set(edges)
     };
   edges.clear();
@@ -22661,6 +22757,7 @@ function applyInput(v, i) {
     v.fire = false;
     v.boostKey = false;
     v.rmb = false;
+    v.groups = 0;
     return;
   }
   v.throttle = i.th;
@@ -22671,6 +22768,7 @@ function applyInput(v, i) {
   v.aimY = i.aimY;
   v.fire = i.fire;
   v.rmb = i.rmb;
+  v.groups = i.gr | 0;
   const E = i.edges;
   if (i.fire && !v.planHeldFire) planActivate(v, 'Space');
   v.planHeldFire = !!i.fire;
@@ -22891,7 +22989,8 @@ function botThink(v, dt) {
   if (v.has.catapult && v.hopper.length && dist < 520 && Math.random() < dt * 1.5) inp.edges.add('RMB');
   if (v.has.tractor && dist < 380 && P.melee) inp.rmb = true;
   // moving parts: swing/lunge when close, rest otherwise (rotators spin on their own)
-  if (v.joints && v.joints.some(J => J.id === 'hinge' || J.id === 'hydraulic') && dist < 240) inp.rmb = (B.time * 1.6) % 2 < 1.1;
+  if (v.joints && v.joints.some(J => J.id === 'hinge' || J.id === 'hydraulic') && dist < 240)
+    inp.rmb = (B.time * 1.6) % 2 < 1.1;
   if (v.has.harpoon && v.tether) inp.rmb = P.melee;
   if (PLAN_ACTION.some(id => v.has[id]) && dist < 450 && Math.random() < dt * 0.8) inp.edges.add('RMB');
   if (PLAN_DROP.some(id => v.has[id]) && dist < 280 && Math.random() < dt) inp.edges.add('KeyZ');
@@ -23904,7 +24003,7 @@ function loadPeer() {
   });
 }
 const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const NET_PROTOCOL = 9,
+const NET_PROTOCOL = 10,
   RECONNECT_MS = 30000;
 const connectionToken = () =>
   crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
@@ -24321,6 +24420,7 @@ const Net = {
         fire: i.fire,
         rmb: i.rmb,
         drop: i.drop,
+        gr: i.gr | 0,
         edges: [...this.inAcc]
       }
     });
@@ -25555,9 +25655,15 @@ function setupField(kind, f) {
 
 /* ---------- designs and car configs ---------- */
 const myDesign = () => ({ base: G.base, top: G.top });
+// extra per-part settings (key group, later paint/logic) travel with the design
+const packEntry = e => {
+  const o = { id: e.id, rot: e.rot, x: e.x, y: e.y };
+  if (e.g) o.g = e.g;
+  return o;
+};
 const packDesign = d => ({
-  base: [...d.base].map(([k, e]) => [k, { id: e.id, rot: e.rot, x: e.x, y: e.y }]),
-  top: [...d.top].map(([k, e]) => [k, { id: e.id, rot: e.rot, x: e.x, y: e.y }])
+  base: [...d.base].map(([k, e]) => [k, packEntry(e)]),
+  top: [...d.top].map(([k, e]) => [k, packEntry(e)])
 });
 const unpackDesign = p => ({ base: new Map(p.base), top: new Map(p.top) });
 const MATCH_FORMATS = {
@@ -27696,6 +27802,10 @@ requestAnimationFrame(loop);
 if (window.__SD_TEST__)
   window.__SD = {
     prepareBot,
+    groupOn,
+    partFiring,
+    actionHeld,
+    designJSON,
     stepJoints,
     jointSnap,
     applyJointSnap,

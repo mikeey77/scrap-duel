@@ -38,6 +38,7 @@
   "js/garage/autoplace.js",
   "js/garage/style.js",
   "js/game/arena.js",
+  "js/game/groups.js",
   "js/game/joints.js",
   "js/game/arena-gimmicks.js",
   "js/game/physics.js",

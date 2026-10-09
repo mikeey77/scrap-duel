@@ -474,6 +474,7 @@ function makeCar(design, idx, sx, sy, ang, opt) {
     const [gcx, gcy] = instCenter(e),
       I = mk(e.id, e.rot, gcx, gcy, 'b');
     I.k = k;
+    I.g = e.g | 0;
     for (const [x, y] of footprint(e.id, e.rot, e.x, e.y)) {
       const b = { inst: I, gx: x, gy: y };
       I.cells.push(b);
@@ -494,6 +495,7 @@ function makeCar(design, idx, sx, sy, ang, opt) {
       continue;
     const [cx, cy] = instCenter(e),
       I = mk(e.id, e.rot, cx, cy, 't');
+    I.g = e.g | 0;
     I.anchorX = e.x;
     I.anchorY = e.y;
     I.k = k;

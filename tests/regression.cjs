@@ -1431,6 +1431,43 @@ test('ram extends two cells, rotator spins, spring settles and a joint never mov
   const rigid = a.makeCar({ base, top: new Map() }, 0, 500, 500, 0, { tune: [] });
   assert.equal(rigid.joints.length, 0);
 });
+test('action groups: keys 1-9 drive bound weapons and joints, and travel in car codes', async () => {
+  const r = runtime(),
+    a = r.api;
+  a.startMatch('sandbox');
+  a.openBuild();
+  a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
+  const v = jointCar(a, 'hinge', 1, [{ id: 'mg', x: 3, y: 0, rot: 0, g: 2 }]);
+  const J = v.joints[0],
+    mg = v.insts.find(I => I.id === 'mg');
+  assert.equal(mg.g, 2);
+  assert.equal(J.g, 0);
+  assert.equal(a.partFiring(v, mg, true), false, 'bound gun ignores the fire button');
+  v.groups = 1 << 2;
+  assert.equal(a.partFiring(v, mg, false), true, 'and fires on its key');
+  v.rmb = true;
+  assert(a.actionHeld(v, J));
+  J.g = 4;
+  assert(!a.actionHeld(v, J));
+  v.logicGroups = 1 << 4;
+  assert(a.actionHeld(v, J));
+  const base = new Map([
+    ['0,0', { id: 'cockpit', rot: 0, x: 0, y: 0 }],
+    ['1,0', { id: 'hinge', rot: 1, x: 1, y: 0, g: 3 }]
+  ]);
+  const top = new Map([['1,0', { id: 'mg', rot: 0, x: 1, y: 0, g: 9 }]]);
+  const code = await a.blueprintCode(base, top),
+    back = await a.parseBlueprintCode(code);
+  assert.equal(back.base.get('1,0').g, 3);
+  assert.equal(back.top.get('1,0').g, 9);
+  assert.equal(back.base.get('0,0').g, undefined);
+  const old = JSON.stringify({ b: [['cockpit', 0, 0, 0]], t: [] });
+  assert.equal(
+    a.designJSON(new Map([['0,0', { id: 'cockpit', rot: 0, x: 0, y: 0 }]]), new Map()),
+    old,
+    'cars without keys keep the old format'
+  );
+});
 test('car codes round-trip and report missing parts and bay size', () => {
   process.on('unhandledRejection', e => {
     console.error('FAIL async: ' + e.message);

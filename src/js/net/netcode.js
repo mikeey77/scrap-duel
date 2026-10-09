@@ -25,7 +25,7 @@ function loadPeer() {
   });
 }
 const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const NET_PROTOCOL = 9,
+const NET_PROTOCOL = 10,
   RECONNECT_MS = 30000;
 const connectionToken = () =>
   crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
@@ -442,6 +442,7 @@ const Net = {
         fire: i.fire,
         rmb: i.rmb,
         drop: i.drop,
+        gr: i.gr | 0,
         edges: [...this.inAcc]
       }
     });

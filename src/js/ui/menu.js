@@ -403,6 +403,10 @@ requestAnimationFrame(loop);
 if (window.__SD_TEST__)
   window.__SD = {
     prepareBot,
+    groupOn,
+    partFiring,
+    actionHeld,
+    designJSON,
     stepJoints,
     jointSnap,
     applyJointSnap,
