@@ -599,6 +599,7 @@ function makeCar(design, idx, sx, sy, ang, opt) {
         v.drones.push({ bay: I, a: i * 2.4, x: sx, y: sy, hp: tune.has('hive') ? 12 : 24, cd: rnd(0, 0.5) });
   }
   setupJoints(v);
+  setupLogic(v, design);
   const bI = insts.find(I => I.m.ball);
   if (bI) {
     const [wx, wy] = ipos(v, bI);

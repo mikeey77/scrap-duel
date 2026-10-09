@@ -403,6 +403,7 @@ requestAnimationFrame(loop);
 if (window.__SD_TEST__)
   window.__SD = {
     prepareBot,
+    stepLogic,
     groupOn,
     partFiring,
     actionHeld,

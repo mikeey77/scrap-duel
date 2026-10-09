@@ -999,7 +999,9 @@ function drawBP() {
     c.restore();
   }
   drawSockets(c, occ);
+  drawLogicWires(c);
   drawGroupBadges(c);
+  drawLogicBadges(c);
   drawBuilderDiagnostics(c, occ);
   planGarageReport(c);
   for (const [k, e] of [...G.base, ...G.top]) {
@@ -1239,6 +1241,11 @@ $('#btnArcs').onclick = () => {
   $('#btnArcs').setAttribute('aria-pressed', G.showArcs);
   drawBP();
 };
+$('#btnLogic').onclick = () => {
+  G.showLogic = !G.showLogic;
+  $('#btnLogic').setAttribute('aria-pressed', G.showLogic);
+  drawBP();
+};
 $('#btnLinks').onclick = () => {
   G.showLinks = !G.showLinks;
   $('#btnLinks').setAttribute('aria-pressed', G.showLinks);
@@ -1316,11 +1323,13 @@ function hintFor() {
               : `${m.name} needs a ${SOCKET[m.mnt]} ${MOUNTNAME[m.mnt]}. None free: place a ${m.mnt > 1 ? 'Steel Girder' : 'Scrap Frame'} first.`;
           })()
         : `${m.name}: ${left(G.sel)} available. Dots mark where it can attach.`
-      : G.tool === 'keys'
-        ? 'Click a weapon or moving part to put it on key 1–9 (right-click counts down). In battle, hold that number key.'
-        : G.tool === 'rotate'
-          ? 'Click a part to turn it 90°. Top modules turn first.'
-          : 'Click a part to put it back in the bin. Top modules come off first.';
+      : G.tool === 'wire'
+        ? 'Wire logic chips: click a chip, then the chip it should feed. Click a wire again to cut it.'
+        : G.tool === 'keys'
+          ? 'Click a weapon, moving part or chip to put it on key 1–9 (right-click counts down). Shift+click a chip to set its input key.'
+          : G.tool === 'rotate'
+            ? 'Click a part to turn it 90°. Top modules turn first.'
+            : 'Click a part to put it back in the bin. Top modules come off first.';
   const [x, y] = hover,
     k = key(x, y);
   if (!G.ws.has(k)) return 'Outside the bay. Buy or draft an expansion to build here.';
@@ -1425,6 +1434,17 @@ function actCore(x, y, mode, quiet) {
     }
     G.base.set(k, { id, rot: G.rot, x, y });
     fxPlace(x, y, 'b', k);
+  } else if (mode === 'keysIn') {
+    const t = topAt(k);
+    if (!t || !isLogic(t.id)) return toast('Shift+click sets the input key of a logic chip.');
+    t.i = ((t.i || 0) + 1) % 10;
+    if (!t.i) delete t.i;
+    sfx('beep');
+    refreshUI();
+    return;
+  } else if (mode === 'wire') {
+    wireClick(k);
+    return;
   } else if (mode === 'keys' || mode === 'keysBack') {
     const t = G.layerView === 'base' ? null : topAt(k),
       e = t && groupable(MOD[t.id]) ? t : own && groupable(MOD[G.base.get(own).id]) ? G.base.get(own) : null;
@@ -1641,7 +1661,21 @@ async function pipeBytes(bytes, stream) {
   return new Uint8Array(await out.arrayBuffer());
 }
 function designJSON(base, top) {
-  const pack = m => [...m.values()].map(e => (e.g ? [e.id, e.rot, e.x, e.y, e.g] : [e.id, e.rot, e.x, e.y]));
+  const live = new Set([...top.keys()]);
+  const extra = e => {
+    const w = (e.w || []).filter(k => live.has(k)),
+      o = {};
+    if (e.g) o.g = e.g;
+    if (e.i) o.i = e.i;
+    if (w.length) o.w = w;
+    const n = Object.keys(o).length;
+    return !n ? null : n === 1 && o.g ? o.g : o; // a bare group number keeps old-style codes short
+  };
+  const pack = m =>
+    [...m.values()].map(e => {
+      const x = extra(e);
+      return x === null ? [e.id, e.rot, e.x, e.y] : [e.id, e.rot, e.x, e.y, x];
+    });
   return JSON.stringify({ b: pack(base), t: pack(top) });
 }
 async function blueprintCode(base = G.base, top = G.top) {
@@ -1653,6 +1687,14 @@ async function blueprintCode(base = G.base, top = G.top) {
   }
   return 'SD1j.' + b64u(raw);
 }
+const okDigit = n => n === undefined || (Number.isInteger(n) && n >= 0 && n <= 9);
+const okExtra = x =>
+  okDigit(x) ||
+  (x &&
+    typeof x === 'object' &&
+    okDigit(x.g) &&
+    okDigit(x.i) &&
+    (x.w === undefined || (Array.isArray(x.w) && x.w.length <= 4 && x.w.every(k => /^-?\d+,-?\d+$/.test(k)))));
 async function parseBlueprintCode(code) {
   code = String(code || '')
     .trim()
@@ -1671,7 +1713,7 @@ async function parseBlueprintCode(code) {
     [0, 1, 2, 3].includes(e[1]) &&
     Number.isInteger(e[2]) &&
     Number.isInteger(e[3]) &&
-    (e[4] === undefined || (Number.isInteger(e[4]) && e[4] >= 0 && e[4] <= 9));
+    (e[4] === undefined || okExtra(e[4]));
   if (
     !d ||
     !Array.isArray(d.b) ||
@@ -1683,7 +1725,16 @@ async function parseBlueprintCode(code) {
     throw new Error('That code is damaged. Ask for it again.');
   if (!d.b.some(e => e[0] === 'cockpit')) throw new Error('That car has no cockpit.');
   const mk = list =>
-    new Map(list.map(([id, rot, x, y, g]) => [key(x, y), g ? { id, rot, x, y, g } : { id, rot, x, y }]));
+    new Map(
+      list.map(([id, rot, x, y, x5]) => {
+        const e = { id, rot, x, y },
+          o = typeof x5 === 'number' ? { g: x5 } : x5 || {};
+        if (o.g) e.g = o.g;
+        if (o.i) e.i = o.i;
+        if (o.w && o.w.length) e.w = [...o.w];
+        return [key(x, y), e];
+      })
+    );
   return { base: mk(d.b), top: mk(d.t) };
 }
 /** What you still need to build a design: missing parts, their cost, and whether the bay is big enough. */
@@ -1826,7 +1877,14 @@ bp.addEventListener('pointerdown', ev => {
   if (!c) return;
   ev.preventDefault();
   bp.setPointerCapture(ev.pointerId);
-  dragMode = ev.button === 2 ? (G.tool === 'keys' ? 'keysBack' : 'remove') : G.tool;
+  dragMode =
+    ev.button === 2
+      ? G.tool === 'keys'
+        ? 'keysBack'
+        : 'remove'
+      : G.tool === 'keys' && ev.shiftKey
+        ? 'keysIn'
+        : G.tool;
   lastK = key(...c);
   act(c[0], c[1], dragMode);
 });
@@ -1838,7 +1896,7 @@ bp.addEventListener('pointermove', ev => {
     $('#bayHint').textContent = hintFor();
     drawBP();
   }
-  if (dragMode && c && k !== lastK && !['rotate', 'keys', 'keysBack'].includes(dragMode)) {
+  if (dragMode && c && k !== lastK && !['rotate', 'keys', 'keysBack', 'keysIn', 'wire'].includes(dragMode)) {
     lastK = k;
     act(c[0], c[1], dragMode);
   }

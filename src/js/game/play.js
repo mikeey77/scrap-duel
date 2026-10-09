@@ -55,6 +55,7 @@ addEventListener('keydown', e => {
     else if (e.code === 'KeyB') setTool('place');
     else if (e.code === 'KeyT') setTool('rotate');
     else if (e.code === 'KeyG') setTool('keys');
+    else if (e.code === 'KeyL') setTool('wire');
     else if (e.code === 'KeyX' || e.code === 'Delete') setTool('remove');
     else if (e.code === 'Equal') setZoom(G.zoom * 1.2);
     else if (e.code === 'Minus') setZoom(G.zoom / 1.2);
@@ -652,6 +653,7 @@ function simulate(dt) {
       }
     }
     planTick(v, dt);
+    stepLogic(v, dt);
     stepJoints(v, dt);
     drive(v, dt);
     tickBoost(v, dt);

@@ -81,7 +81,8 @@
                 ><button data-layer="base" aria-pressed="false" title="Show only the chassis blocks">▦ Chassis</button
                 ><button data-layer="top" aria-pressed="false" title="Show equipment and every free socket">⬢ Sockets</button></span
               ><button id="btnArcs" aria-pressed="false" title="Show where each weapon can shoot">⌔ Arcs</button
-              ><button id="btnLinks" aria-pressed="false" title="Show blocks that would drop parts off if destroyed">⚠ Weak links</button>
+              ><button id="btnLinks" aria-pressed="false" title="Show blocks that would drop parts off if destroyed">⚠ Weak links</button
+              ><button id="btnLogic" aria-pressed="false" title="Show logic wires">⚡ Logic</button>
             </div>
             <div class="toolbar" role="toolbar" aria-label="Builder tools">
               <button data-tool="place" aria-pressed="true" title="Place (B)">
@@ -103,6 +104,11 @@
                 <svg viewBox="0 0 16 16">
                   <rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.6" fill="none" /><path d="M7 6.5l1.5-1V11" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
                 >Keys
+              </button>
+              <button data-tool="wire" aria-pressed="false" title="Wire logic chips together (L)">
+                <svg viewBox="0 0 16 16">
+                  <circle cx="3.5" cy="12" r="2" fill="currentColor" /><circle cx="12.5" cy="4" r="2" fill="currentColor" /><path d="M3.5 12C3.5 6 12.5 10 12.5 4" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
+                >Wire
               </button>
               <button data-tool="remove" aria-pressed="false" title="Remove (X or right-click)">
                 <svg viewBox="0 0 16 16">

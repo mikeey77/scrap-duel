@@ -93,6 +93,8 @@ const myDesign = () => ({ base: G.base, top: G.top });
 const packEntry = e => {
   const o = { id: e.id, rot: e.rot, x: e.x, y: e.y };
   if (e.g) o.g = e.g;
+  if (e.i) o.i = e.i;
+  if (e.w && e.w.length) o.w = [...e.w];
   return o;
 };
 const packDesign = d => ({

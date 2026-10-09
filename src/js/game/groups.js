@@ -3,7 +3,8 @@
 // Logic modules (js/game/logic.js) can switch groups on as well, as if the key were held.
 
 /** Parts that can be bound to a key: weapons (incl. fire-button gadgets) and moving parts. */
-const groupable = m => !!m && !!(m.joint || m.wpn || (typeof PLAN_FIRE !== 'undefined' && PLAN_FIRE.includes(m.id)));
+const groupable = m =>
+  !!m && !!(m.joint || m.wpn || isLogic(m.id) || (typeof PLAN_FIRE !== 'undefined' && PLAN_FIRE.includes(m.id)));
 /** Is group g (1–9) active for this car: held key or a logic signal. */
 const groupOn = (v, g) => !!((v.groups | 0 | (v.logicGroups | 0)) & (1 << g));
 /** Moving part: its group if it has one, otherwise right click. */
