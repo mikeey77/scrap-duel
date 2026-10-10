@@ -124,7 +124,6 @@ function drawModule(c, id, s, ang, team, st) {
   c.lineCap = 'round';
   if (m.layer === 't' && A.k !== 'screen') topMount(c, h, s);
   if (A.k === 'joint') return drawJointArt(c, id, s, ang, st);
-  if (A.k === 'logic') return drawLogicArt(c, id, s, ang, st);
   if (A.k === 'shape') return drawShapeArt(c, m, s, ang, st);
   switch (A.k) {
     case 'cockpit': {

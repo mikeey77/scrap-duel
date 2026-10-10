@@ -73,7 +73,7 @@ Drive with WASD or arrows. Aim with the mouse; fire with left-click or Space. Ju
 
 New gadgets: right-click activates/reels cables; Z drops beads or foam, V releases a decoy duck, H rings the pickup bell, and C toggles grip studs or activates the rescue jack. The scrap conveyor switches between repairs and ammunition when firing begins. Their buttons appear only when equipped.
 
-In the garage: click/drag to place, right-click to remove, R changes the next part's facing, T rotates placed parts, X removes, M mirrors. Ctrl+Z undoes and Ctrl+Y redoes. G binds parts to keys 1–9, L wires logic chips, [ and ] change a beam's length.
+In the garage: click/drag to place, right-click to remove, R changes the next part's facing, T rotates placed parts, X removes, M mirrors. Ctrl+Z undoes and Ctrl+Y redoes. G puts hinges, rotators and rams on keys 1–9, [ and ] change a beam's length.
 
 ## Code layout
 

@@ -55,7 +55,6 @@ addEventListener('keydown', e => {
     else if (e.code === 'KeyB') setTool('place');
     else if (e.code === 'KeyT') setTool('rotate');
     else if (e.code === 'KeyG') setTool('keys');
-    else if (e.code === 'KeyL') setTool('wire');
     else if ((e.code === 'BracketLeft' || e.code === 'BracketRight') && MOD[G.sel] && MOD[G.sel].beam) {
       const L = clamp(MOD[G.sel].beam + (e.code === 'BracketRight' ? 1 : -1), 1, 4);
       G.sel = 'beam' + L;
@@ -668,7 +667,6 @@ function simulate(dt) {
       }
     }
     planTick(v, dt);
-    stepLogic(v, dt);
     stepJoints(v, dt);
     drive(v, dt);
     tickBoost(v, dt);

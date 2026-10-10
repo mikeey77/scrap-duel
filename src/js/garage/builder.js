@@ -998,9 +998,7 @@ function drawBP() {
     c.restore();
   }
   drawSockets(c, occ);
-  drawLogicWires(c);
   drawGroupBadges(c);
-  drawLogicBadges(c);
   drawBuilderDiagnostics(c, occ);
   planGarageReport(c);
   for (const [k, e] of [...G.base, ...G.top]) {
@@ -1240,11 +1238,6 @@ $('#btnArcs').onclick = () => {
   $('#btnArcs').setAttribute('aria-pressed', G.showArcs);
   drawBP();
 };
-$('#btnLogic').onclick = () => {
-  G.showLogic = !G.showLogic;
-  $('#btnLogic').setAttribute('aria-pressed', G.showLogic);
-  drawBP();
-};
 $('#btnLinks').onclick = () => {
   G.showLinks = !G.showLinks;
   $('#btnLinks').setAttribute('aria-pressed', G.showLinks);
@@ -1322,10 +1315,8 @@ function hintFor() {
               : `${m.name} needs a ${SOCKET[m.mnt]} ${MOUNTNAME[m.mnt]}. None free: place a ${m.mnt > 1 ? 'Steel Girder' : 'Scrap Frame'} first.`;
           })()
         : `${m.name}: ${left(G.sel)} available. Dots mark where it can attach.`
-      : G.tool === 'wire'
-        ? 'Wire logic chips: click a chip, then the chip it should feed. Click a wire again to cut it.'
-        : G.tool === 'keys'
-          ? 'Click a weapon, moving part or chip to put it on key 1–9 (right-click counts down). Shift+click a chip to set its input key.'
+      : G.tool === 'keys'
+          ? 'Click a hinge, rotator or ram to put it on key 1–9 (right-click counts down). Without a key it follows right click.'
           : G.tool === 'rotate'
             ? 'Click a part to turn it 90°. Top modules turn first.'
             : 'Click a part to put it back in the bin. Top modules come off first.';
@@ -1433,22 +1424,11 @@ function actCore(x, y, mode, quiet) {
     }
     G.base.set(k, { id, rot: G.rot, x, y });
     fxPlace(x, y, 'b', k);
-  } else if (mode === 'keysIn') {
-    const t = topAt(k);
-    if (!t || !isLogic(t.id)) return toast('Shift+click sets the input key of a logic chip.');
-    t.i = ((t.i || 0) + 1) % 10;
-    if (!t.i) delete t.i;
-    sfx('beep');
-    refreshUI();
-    return;
-  } else if (mode === 'wire') {
-    wireClick(k);
-    return;
   } else if (mode === 'keys' || mode === 'keysBack') {
     const t = G.layerView === 'base' ? null : topAt(k),
       e = t && groupable(MOD[t.id]) ? t : own && groupable(MOD[G.base.get(own).id]) ? G.base.get(own) : null;
     if (!e) {
-      if (t || own) toast('Only weapons and moving parts can go on a key.');
+      if (t || own) toast('Only hinges, rotators and rams go on a key. Weapons always fire with left click.');
       return;
     }
     e.g = ((e.g || 0) + (mode === 'keysBack' ? 9 : 1)) % 10;
@@ -1881,9 +1861,7 @@ bp.addEventListener('pointerdown', ev => {
       ? G.tool === 'keys'
         ? 'keysBack'
         : 'remove'
-      : G.tool === 'keys' && ev.shiftKey
-        ? 'keysIn'
-        : G.tool;
+      : G.tool;
   lastK = key(...c);
   act(c[0], c[1], dragMode);
 });
@@ -1895,7 +1873,7 @@ bp.addEventListener('pointermove', ev => {
     $('#bayHint').textContent = hintFor();
     drawBP();
   }
-  if (dragMode && c && k !== lastK && !['rotate', 'keys', 'keysBack', 'keysIn', 'wire'].includes(dragMode)) {
+  if (dragMode && c && k !== lastK && !['rotate', 'keys', 'keysBack'].includes(dragMode)) {
     lastK = k;
     act(c[0], c[1], dragMode);
   }

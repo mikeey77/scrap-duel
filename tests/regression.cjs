@@ -198,7 +198,7 @@ test('catalog loads and every starter is connected, usable and owned', () => {
     signatures.add(G.starterGuns.join(','));
   }
   assert(signatures.size > 10);
-  assert.equal(a.MODS.length, 224);
+  assert.equal(a.MODS.length, 217);
 });
 test('all heavy drafted modules include enough free support', () => {
   for (const m of a.MODS.filter(m => m.layer === 't' && m.mnt === 2)) {
@@ -642,7 +642,7 @@ test('open overlays release held input and prevent background fire', () => {
 test('all fifty designs have unique names, intended shapes, tags and executable mechanics', () => {
   const added = a.MODS.filter(m => m.plan && !m.odd);
   assert.equal(added.length, 50);
-  assert.equal(new Set(a.MODS.map(m => m.name)).size, 224);
+  assert.equal(new Set(a.MODS.map(m => m.name)).size, a.MODS.length);
   const counts = {};
   for (const m of added) {
     const b = a.shapeBounds(m);
@@ -1431,7 +1431,7 @@ test('ram extends two cells, rotator spins, spring settles and a joint never mov
   const rigid = a.makeCar({ base, top: new Map() }, 0, 500, 500, 0, { tune: [] });
   assert.equal(rigid.joints.length, 0);
 });
-test('action groups: keys 1-9 drive bound weapons and joints, and travel in car codes', async () => {
+test('action keys: only moving parts take keys 1-9, weapons always fire, keys travel in car codes', async () => {
   const r = runtime(),
     a = r.api;
   a.startMatch('sandbox');
@@ -1440,26 +1440,21 @@ test('action groups: keys 1-9 drive bound weapons and joints, and travel in car 
   const v = jointCar(a, 'hinge', 1, [{ id: 'mg', x: 3, y: 0, rot: 0, g: 2 }]);
   const J = v.joints[0],
     mg = v.insts.find(I => I.id === 'mg');
-  assert.equal(mg.g, 2);
-  assert.equal(J.g, 0);
-  assert.equal(a.partFiring(v, mg, true), false, 'bound gun ignores the fire button');
-  v.groups = 1 << 2;
-  assert.equal(a.partFiring(v, mg, false), true, 'and fires on its key');
+  assert.equal(a.partFiring(v, mg, true), true, 'a key on a weapon (old codes) is ignored');
+  assert(!a.groupable(a.MOD.mg) && a.groupable(a.MOD.hinge));
   v.rmb = true;
   assert(a.actionHeld(v, J));
   J.g = 4;
   assert(!a.actionHeld(v, J));
-  v.logicGroups = 1 << 4;
+  v.groups = 1 << 4;
   assert(a.actionHeld(v, J));
   const base = new Map([
     ['0,0', { id: 'cockpit', rot: 0, x: 0, y: 0 }],
     ['1,0', { id: 'hinge', rot: 1, x: 1, y: 0, g: 3 }]
   ]);
-  const top = new Map([['1,0', { id: 'mg', rot: 0, x: 1, y: 0, g: 9 }]]);
-  const code = await a.blueprintCode(base, top),
+  const code = await a.blueprintCode(base, new Map()),
     back = await a.parseBlueprintCode(code);
   assert.equal(back.base.get('1,0').g, 3);
-  assert.equal(back.top.get('1,0').g, 9);
   assert.equal(back.base.get('0,0').g, undefined);
   const old = JSON.stringify({ b: [['cockpit', 0, 0, 0]], t: [] });
   assert.equal(
@@ -1467,74 +1462,6 @@ test('action groups: keys 1-9 drive bound weapons and joints, and travel in car 
     old,
     'cars without keys keep the old format'
   );
-});
-test('logic chips: timer, toggle, delay, gates and the snoop sensor drive action groups', async () => {
-  const r = runtime(),
-    a = r.api;
-  a.startMatch('sandbox');
-  a.openBuild();
-  a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
-  const b = a.getB();
-  b.time = 10;
-  const base = new Map(),
-    top = new Map();
-  base.set('0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 });
-  for (let x = 1; x <= 6; x++) base.set(x + ',0', { id: 'girder', x, y: 0, rot: 0 });
-  top.set('1,0', { id: 'timer', x: 1, y: 0, rot: 0, g: 1 });
-  top.set('2,0', { id: 'toggle', x: 2, y: 0, rot: 0, g: 2, i: 5 });
-  top.set('3,0', { id: 'delay', x: 3, y: 0, rot: 0, g: 3, i: 6 });
-  top.set('4,0', { id: 'and', x: 4, y: 0, rot: 0, g: 4, w: ['1,0', '2,0'] });
-  top.set('5,0', { id: 'or', x: 5, y: 0, rot: 0, g: 7, w: ['3,0'] });
-  top.set('6,0', { id: 'snoop', x: 6, y: 0, rot: 0, g: 8 });
-  const v = a.makeCar({ base, top }, 0, 1000, 600, 0, { tune: [] });
-  b.cars = [v, b.cars[1]];
-  b.cars[1].x = 3000;
-  b.cars[1].y = 3000;
-  const on = g => !!(v.logicGroups & (1 << g)),
-    tick = (n, dt = 0.05) => {
-      for (let i = 0; i < n; i++) {
-        b.time += dt;
-        a.stepLogic(v, dt);
-      }
-    };
-  tick(4);
-  assert(on(1), 'timer starts on');
-  tick(20);
-  assert(!on(1), 'then off after a second');
-  v.groups = 1 << 5;
-  tick(1);
-  v.groups = 0;
-  tick(1);
-  assert(on(2), 'toggle flips on');
-  v.groups = 1 << 5;
-  tick(1);
-  v.groups = 0;
-  tick(1);
-  assert(!on(2), 'and off');
-  v.groups = 1 << 6;
-  tick(2);
-  assert(!on(3), 'delay waits');
-  tick(12);
-  assert(on(3), 'then follows');
-  tick(1);
-  assert(on(7), 'OR passes its wired input');
-  v.groups = 1 << 5;
-  tick(1);
-  v.groups = 0;
-  tick(1);
-  for (let i = 0; i < 40 && !on(1); i++) tick(1);
-  tick(1);
-  assert(on(4), 'AND fires when timer and toggle are both on');
-  assert(!on(8));
-  b.cars[1].x = v.x;
-  b.cars[1].y = v.y - 160;
-  tick(1);
-  assert(on(8), 'snoop sees the car in front');
-  const code = await a.blueprintCode(base, top),
-    back = await a.parseBlueprintCode(code);
-  assert.equal(JSON.stringify(back.top.get('4,0').w), '["1,0","2,0"]');
-  assert.equal(back.top.get('2,0').i, 5);
-  assert.equal(back.top.get('2,0').g, 2);
 });
 test('shapes: wedge, half plate, corner fillet, round bumper and beams 1-4', async () => {
   const r = runtime(),

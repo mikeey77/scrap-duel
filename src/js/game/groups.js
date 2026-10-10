@@ -1,19 +1,17 @@
-// Action groups: any weapon or moving part can be put on key 1–9 in the garage (Keys tool).
-// Group 0 means "default": weapons fire with left click/Space and moving parts follow right click.
-// Logic modules (js/game/logic.js) can switch groups on as well, as if the key were held.
+// Action keys: only parts that need activating (hinges, rotators, rams) can go on a key 1–9 (Keys tool).
+// Without a key they follow right click. Weapons always fire with left click/Space.
 
-/** Parts that can be bound to a key: weapons (incl. fire-button gadgets) and moving parts. */
-const groupable = m =>
-  !!m && !!(m.joint || m.wpn || isLogic(m.id) || (typeof PLAN_FIRE !== 'undefined' && PLAN_FIRE.includes(m.id)));
-/** Is group g (1–9) active for this car: held key or a logic signal. */
-const groupOn = (v, g) => !!((v.groups | 0 | (v.logicGroups | 0)) & (1 << g));
+/** Parts that can be bound to a key: the moving parts. */
+const groupable = m => !!m && !!m.joint;
+/** Is key g (1–9) held for this car. */
+const groupOn = (v, g) => !!((v.groups | 0) & (1 << g));
 /** Moving part: its group if it has one, otherwise right click. */
 function actionHeld(v, J) {
   return J.g ? groupOn(v, J.g) : !!v.rmb;
 }
-/** Weapon: its group if it has one, otherwise the normal fire button. */
+/** Weapons always use the fire button (old car codes may still carry a key on a weapon; it is ignored). */
 function partFiring(v, I, fireAll) {
-  return I.g ? groupOn(v, I.g) : fireAll;
+  return fireAll;
 }
 /** Bitmask of number keys 1–9 held right now. */
 function heldGroups() {

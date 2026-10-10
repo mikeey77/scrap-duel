@@ -42,7 +42,6 @@
     "js/garage/workbench.js",
     "js/game/arena.js",
     "js/game/groups.js",
-    "js/game/logic.js",
     "js/game/joints.js",
     "js/game/arena-gimmicks.js",
     "js/game/physics.js",

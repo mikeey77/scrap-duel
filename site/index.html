@@ -5162,7 +5162,7 @@ button.stslot:hover {
               ><button id="btnArcs" aria-pressed="false" title="Show where each weapon can shoot">⌔ Arcs</button
               ><button id="btnLinks" aria-pressed="false" title="Show blocks that would drop parts off if destroyed">
                 ⚠ Weak links</button
-              ><button id="btnLogic" aria-pressed="false" title="Show logic wires">⚡ Logic</button>
+              >
             </div>
             <div class="toolbar" role="toolbar" aria-label="Builder tools">
               <button data-tool="place" aria-pressed="true" title="Place (B)">
@@ -5175,7 +5175,7 @@ button.stslot:hover {
                   <path d="M13 8a5 5 0 1 1-1.5-3.5M13 2v3h-3" stroke="currentColor" stroke-width="2" fill="none" /></svg
                 >Rotate
               </button>
-              <button data-tool="keys" aria-pressed="false" title="Put weapons and moving parts on keys 1–9 (G)">
+              <button data-tool="keys" aria-pressed="false" title="Put hinges, rotators and rams on keys 1–9 (G)">
                 <svg viewBox="0 0 16 16">
                   <rect
                     x="2"
@@ -5189,13 +5189,6 @@ button.stslot:hover {
                   />
                   <path d="M7 6.5l1.5-1V11" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
                 >Keys
-              </button>
-              <button data-tool="wire" aria-pressed="false" title="Wire logic chips together (L)">
-                <svg viewBox="0 0 16 16">
-                  <circle cx="3.5" cy="12" r="2" fill="currentColor" />
-                  <circle cx="12.5" cy="4" r="2" fill="currentColor" />
-                  <path d="M3.5 12C3.5 6 12.5 10 12.5 4" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
-                >Wire
               </button>
               <button data-tool="remove" aria-pressed="false" title="Remove (X or right-click)">
                 <svg viewBox="0 0 16 16">
@@ -8798,113 +8791,6 @@ D(
   { dir: 1, joint: 1 }
 );
 
-/* Logic chips (top layer): they hold action groups on by themselves. See js/game/logic.js. */
-D(
-  'timer',
-  'Tick Timer',
-  'utility',
-  0,
-  't',
-  1,
-  25,
-  0.3,
-  'Holds its key for 1 s, releases it for 1 s, forever. Wire or key it to pause.',
-  'Ticks like a cheap kitchen timer, and breaks like one.',
-  ['logic'],
-  { k: 'logic' },
-  {}
-);
-D(
-  'toggle',
-  'Flip Switch',
-  'utility',
-  0,
-  't',
-  1,
-  25,
-  0.3,
-  'Each press of its input flips its key on or off. One press, hinge stays up.',
-  'Fragile little switch.',
-  ['logic'],
-  { k: 'logic' },
-  {}
-);
-D(
-  'delay',
-  'Lag Relay',
-  'utility',
-  1,
-  't',
-  1,
-  25,
-  0.3,
-  'Repeats its input 0.6 s later. Great for one-two combos.',
-  'Always fashionably late.',
-  ['logic'],
-  { k: 'logic' },
-  {}
-);
-D(
-  'snoop',
-  'Snoop Sensor',
-  'utility',
-  1,
-  't',
-  1,
-  30,
-  0.4,
-  'Holds its key while an enemy is in front of it, within about 8 cells.',
-  'Smoke and decoys fool it every time.',
-  ['logic'],
-  { k: 'logic' },
-  { dir: 1 }
-);
-D(
-  'speedo',
-  'Speed Snitch',
-  'utility',
-  0,
-  't',
-  1,
-  25,
-  0.3,
-  'Holds its key while the car is going fast. Ram-o-matic.',
-  'Only counts forward speed it can feel. Wobbly.',
-  ['logic'],
-  { k: 'logic' },
-  {}
-);
-D(
-  'and',
-  'AND Gate',
-  'utility',
-  0,
-  't',
-  1,
-  20,
-  0.2,
-  'On only when all its inputs are on.',
-  'Pedantic. Does exactly what you wired.',
-  ['logic'],
-  { k: 'logic' },
-  {}
-);
-D(
-  'or',
-  'OR Gate',
-  'utility',
-  0,
-  't',
-  1,
-  20,
-  0.2,
-  'On when any input is on.',
-  'Easily pleased.',
-  ['logic'],
-  { k: 'logic' },
-  {}
-);
-
 /* Shapes: sloped, thin, rounded and long chassis pieces. Same grid cells, different look and armour. */
 D(
   'slopeplate',
@@ -10418,7 +10304,6 @@ function drawModule(c, id, s, ang, team, st) {
   c.lineCap = 'round';
   if (m.layer === 't' && A.k !== 'screen') topMount(c, h, s);
   if (A.k === 'joint') return drawJointArt(c, id, s, ang, st);
-  if (A.k === 'logic') return drawLogicArt(c, id, s, ang, st);
   if (A.k === 'shape') return drawShapeArt(c, m, s, ang, st);
   switch (A.k) {
     case 'cockpit': {
@@ -13306,9 +13191,7 @@ function drawBP() {
     c.restore();
   }
   drawSockets(c, occ);
-  drawLogicWires(c);
   drawGroupBadges(c);
-  drawLogicBadges(c);
   drawBuilderDiagnostics(c, occ);
   planGarageReport(c);
   for (const [k, e] of [...G.base, ...G.top]) {
@@ -13548,11 +13431,6 @@ $('#btnArcs').onclick = () => {
   $('#btnArcs').setAttribute('aria-pressed', G.showArcs);
   drawBP();
 };
-$('#btnLogic').onclick = () => {
-  G.showLogic = !G.showLogic;
-  $('#btnLogic').setAttribute('aria-pressed', G.showLogic);
-  drawBP();
-};
 $('#btnLinks').onclick = () => {
   G.showLinks = !G.showLinks;
   $('#btnLinks').setAttribute('aria-pressed', G.showLinks);
@@ -13630,10 +13508,8 @@ function hintFor() {
               : `${m.name} needs a ${SOCKET[m.mnt]} ${MOUNTNAME[m.mnt]}. None free: place a ${m.mnt > 1 ? 'Steel Girder' : 'Scrap Frame'} first.`;
           })()
         : `${m.name}: ${left(G.sel)} available. Dots mark where it can attach.`
-      : G.tool === 'wire'
-        ? 'Wire logic chips: click a chip, then the chip it should feed. Click a wire again to cut it.'
-        : G.tool === 'keys'
-          ? 'Click a weapon, moving part or chip to put it on key 1–9 (right-click counts down). Shift+click a chip to set its input key.'
+      : G.tool === 'keys'
+          ? 'Click a hinge, rotator or ram to put it on key 1–9 (right-click counts down). Without a key it follows right click.'
           : G.tool === 'rotate'
             ? 'Click a part to turn it 90°. Top modules turn first.'
             : 'Click a part to put it back in the bin. Top modules come off first.';
@@ -13741,22 +13617,11 @@ function actCore(x, y, mode, quiet) {
     }
     G.base.set(k, { id, rot: G.rot, x, y });
     fxPlace(x, y, 'b', k);
-  } else if (mode === 'keysIn') {
-    const t = topAt(k);
-    if (!t || !isLogic(t.id)) return toast('Shift+click sets the input key of a logic chip.');
-    t.i = ((t.i || 0) + 1) % 10;
-    if (!t.i) delete t.i;
-    sfx('beep');
-    refreshUI();
-    return;
-  } else if (mode === 'wire') {
-    wireClick(k);
-    return;
   } else if (mode === 'keys' || mode === 'keysBack') {
     const t = G.layerView === 'base' ? null : topAt(k),
       e = t && groupable(MOD[t.id]) ? t : own && groupable(MOD[G.base.get(own).id]) ? G.base.get(own) : null;
     if (!e) {
-      if (t || own) toast('Only weapons and moving parts can go on a key.');
+      if (t || own) toast('Only hinges, rotators and rams go on a key. Weapons always fire with left click.');
       return;
     }
     e.g = ((e.g || 0) + (mode === 'keysBack' ? 9 : 1)) % 10;
@@ -14189,9 +14054,7 @@ bp.addEventListener('pointerdown', ev => {
       ? G.tool === 'keys'
         ? 'keysBack'
         : 'remove'
-      : G.tool === 'keys' && ev.shiftKey
-        ? 'keysIn'
-        : G.tool;
+      : G.tool;
   lastK = key(...c);
   act(c[0], c[1], dragMode);
 });
@@ -14203,7 +14066,7 @@ bp.addEventListener('pointermove', ev => {
     $('#bayHint').textContent = hintFor();
     drawBP();
   }
-  if (dragMode && c && k !== lastK && !['rotate', 'keys', 'keysBack', 'keysIn', 'wire'].includes(dragMode)) {
+  if (dragMode && c && k !== lastK && !['rotate', 'keys', 'keysBack'].includes(dragMode)) {
     lastK = k;
     act(c[0], c[1], dragMode);
   }
@@ -17619,7 +17482,6 @@ function makeCar(design, idx, sx, sy, ang, opt) {
         v.drones.push({ bay: I, a: i * 2.4, x: sx, y: sy, hp: tune.has('hive') ? 12 : 24, cd: rnd(0, 0.5) });
   }
   setupJoints(v);
-  setupLogic(v, design);
   const bI = insts.find(I => I.m.ball);
   if (bI) {
     const [wx, wy] = ipos(v, bI);
@@ -18185,22 +18047,20 @@ function flipCar(v) {
   txt(v.x, v.y - 40, 'FLIPPED', '#f2b705', 1.2);
 }
 /* ===== js/game/groups.js ===== */
-// Action groups: any weapon or moving part can be put on key 1–9 in the garage (Keys tool).
-// Group 0 means "default": weapons fire with left click/Space and moving parts follow right click.
-// Logic modules (js/game/logic.js) can switch groups on as well, as if the key were held.
+// Action keys: only parts that need activating (hinges, rotators, rams) can go on a key 1–9 (Keys tool).
+// Without a key they follow right click. Weapons always fire with left click/Space.
 
-/** Parts that can be bound to a key: weapons (incl. fire-button gadgets) and moving parts. */
-const groupable = m =>
-  !!m && !!(m.joint || m.wpn || isLogic(m.id) || (typeof PLAN_FIRE !== 'undefined' && PLAN_FIRE.includes(m.id)));
-/** Is group g (1–9) active for this car: held key or a logic signal. */
-const groupOn = (v, g) => !!((v.groups | 0 | (v.logicGroups | 0)) & (1 << g));
+/** Parts that can be bound to a key: the moving parts. */
+const groupable = m => !!m && !!m.joint;
+/** Is key g (1–9) held for this car. */
+const groupOn = (v, g) => !!((v.groups | 0) & (1 << g));
 /** Moving part: its group if it has one, otherwise right click. */
 function actionHeld(v, J) {
   return J.g ? groupOn(v, J.g) : !!v.rmb;
 }
-/** Weapon: its group if it has one, otherwise the normal fire button. */
+/** Weapons always use the fire button (old car codes may still carry a key on a weapon; it is ignored). */
 function partFiring(v, I, fireAll) {
-  return I.g ? groupOn(v, I.g) : fireAll;
+  return fireAll;
 }
 /** Bitmask of number keys 1–9 held right now. */
 function heldGroups() {
@@ -18241,219 +18101,6 @@ function drawGroupBadges(c) {
     c.fillText(String(e.g), x, y + 1);
   }
   c.restore();
-}
-/* ===== js/game/logic.js ===== */
-// Logic modules: tiny chips on the top layer that switch action groups on by themselves.
-// Each chip has an OUTPUT key (amber badge, set with the Keys tool) and inputs: an optional INPUT key
-// (cyan badge, Shift+click with the Keys tool) and wires from other chips (Wire tool, the "logic" layer).
-// Chips read their inputs from the previous tick, so loops are allowed and always stable.
-
-const LOGIC = {
-  timer: { glyph: '⏱', period: 2 }, // on for half of every period while enabled
-  toggle: { glyph: '⇄' }, // flips on each rising edge of its input
-  delay: { glyph: '⧗', wait: 0.6 }, // copies its input 0.6 s later
-  snoop: { glyph: '◉', range: 320, cone: 0.6 }, // enemy within range and ±cone (rad) of its facing
-  speedo: { glyph: '⚡', speed: 170 }, // car faster than this (px/s)
-  and: { glyph: '&' },
-  or: { glyph: '≥1' }
-};
-const isLogic = id => !!LOGIC[id];
-
-/** Built once per car (from makeCar via setupLogic). */
-function setupLogic(v, design) {
-  v.chips = v.insts.filter(I => isLogic(I.id));
-  if (!v.chips.length) return;
-  const at = new Map(v.chips.map(I => [key(I.anchorX, I.anchorY), I]));
-  for (const I of v.chips) {
-    const e = design.top.get(key(I.anchorX, I.anchorY)) || {};
-    I.ig = e.i | 0;
-    I.srcs = (e.w || []).map(k => at.get(k)).filter(Boolean);
-    I.out = false;
-    I.st = 0; // toggle state / timer clock
-    I.hist = []; // delay buffer [time, value]
-  }
-}
-/** Host tick: evaluates every chip and publishes the groups they hold. */
-function stepLogic(v, dt) {
-  if (!v.chips || !v.chips.length) return;
-  const prev = new Map(v.chips.map(I => [I, I.alive && I.out]));
-  let mask = 0;
-  for (const I of v.chips) {
-    if (!I.alive) {
-      I.out = false;
-      continue;
-    }
-    const wires = I.srcs.map(s => prev.get(s)),
-      keyIn = I.ig ? !!((v.groups | 0) & (1 << I.ig)) : null,
-      ins = keyIn === null ? wires : [...wires, keyIn],
-      any = ins.some(Boolean),
-      none = !ins.length;
-    switch (I.id) {
-      case 'timer': {
-        const on = none || any;
-        I.st = on ? I.st + dt : 0;
-        I.out = on && I.st % LOGIC.timer.period < LOGIC.timer.period / 2;
-        break;
-      }
-      case 'toggle':
-        if (any && !I.last) I.out = !I.out;
-        I.last = any;
-        break;
-      case 'delay': {
-        I.hist.push([B.time, any]);
-        while (I.hist.length > 1 && I.hist[1][0] <= B.time - LOGIC.delay.wait) I.hist.shift();
-        I.out = I.hist[0][0] <= B.time - LOGIC.delay.wait ? I.hist[0][1] : false;
-        break;
-      }
-      case 'snoop': {
-        const [x, y] = ipos(v, I),
-          fa = faceAng(v, I),
-          P = LOGIC.snoop;
-        I.out =
-          (none || any) &&
-          others(v).some(
-            e =>
-              !e.dead &&
-              !inSmoke(e.x, e.y) &&
-              Math.hypot(e.x - x, e.y - y) < P.range + e.rad &&
-              Math.abs(wrap(Math.atan2(e.y - y, e.x - x) - fa)) < P.cone
-          );
-        break;
-      }
-      case 'speedo':
-        I.out = (none || any) && Math.hypot(v.vx, v.vy) > LOGIC.speedo.speed;
-        break;
-      case 'and':
-        I.out = !none && ins.every(Boolean);
-        break;
-      case 'or':
-        I.out = any;
-        break;
-    }
-    I.active = I.out;
-    if (I.out && I.g) mask |= 1 << I.g;
-  }
-  v.logicGroups = mask;
-}
-
-/** Garage: wires between chips, drawn as glowing cables when the logic layer is visible. */
-function drawLogicWires(c) {
-  if (!(G.showLogic || G.tool === 'wire')) return;
-  const chips = [...G.top.values()].filter(e => isLogic(e.id));
-  c.save();
-  c.lineWidth = Math.max(2, cell * 0.08);
-  c.lineCap = 'round';
-  for (const e of chips)
-    for (const k of e.w || []) {
-      const s = G.top.get(k);
-      if (!s) continue;
-      const x0 = cpx(s.x) + cell / 2,
-        y0 = cpy(s.y) + cell / 2,
-        x1 = cpx(e.x) + cell / 2,
-        y1 = cpy(e.y) + cell / 2,
-        mx = (x0 + x1) / 2,
-        my = Math.min(y0, y1) - cell * 0.8;
-      c.strokeStyle = 'rgba(91,231,255,.35)';
-      c.lineWidth = Math.max(5, cell * 0.2);
-      c.beginPath();
-      c.moveTo(x0, y0);
-      c.quadraticCurveTo(mx, my, x1, y1);
-      c.stroke();
-      c.strokeStyle = '#a8f3ff';
-      c.lineWidth = Math.max(2, cell * 0.07);
-      c.stroke();
-      // arrow head shows the signal direction
-      const t = 0.85,
-        ax = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * mx + t * t * x1,
-        ay = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * my + t * t * y1,
-        a = Math.atan2(y1 - ay, x1 - ax);
-      c.fillStyle = '#a8f3ff';
-      c.beginPath();
-      c.moveTo(ax + Math.cos(a) * 7, ay + Math.sin(a) * 7);
-      c.lineTo(ax + Math.cos(a + 2.4) * 6, ay + Math.sin(a + 2.4) * 6);
-      c.lineTo(ax + Math.cos(a - 2.4) * 6, ay + Math.sin(a - 2.4) * 6);
-      c.fill();
-    }
-  if (G.wireFrom) {
-    const s = G.top.get(G.wireFrom);
-    if (s) {
-      c.strokeStyle = '#ffb423';
-      c.setLineDash([5, 4]);
-      c.strokeRect(cpx(s.x) + 2, cpy(s.y) + 2, cell - 4, cell - 4);
-      c.setLineDash([]);
-    }
-  }
-  c.restore();
-}
-/** Wire tool: click a chip, then another chip to connect (or disconnect) them. */
-function wireClick(k) {
-  const e = G.top.get(k);
-  if (!e || !isLogic(e.id)) {
-    G.wireFrom = null;
-    toast('Wires connect logic chips. Click a chip, then the chip it should feed.');
-    drawBP();
-    return;
-  }
-  if (!G.wireFrom || G.wireFrom === k) {
-    G.wireFrom = G.wireFrom === k ? null : k;
-    sfx('ui');
-    drawBP();
-    return;
-  }
-  const from = G.wireFrom;
-  e.w = e.w || [];
-  const i = e.w.indexOf(from);
-  if (i >= 0) e.w.splice(i, 1);
-  else if (e.w.length >= 4) return toast('A chip takes at most four wires.');
-  else e.w.push(from);
-  if (!e.w.length) delete e.w;
-  G.wireFrom = null;
-  sfx(i >= 0 ? 'remove' : 'beep');
-  refreshUI();
-}
-/** Input-key badges (cyan) for chips. */
-function drawLogicBadges(c) {
-  c.save();
-  c.font = `700 ${Math.max(9, cell * 0.3)}px "Chakra Petch", sans-serif`;
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  for (const e of G.top.values()) {
-    if (!isLogic(e.id) || !e.i) continue;
-    const x = cpx(e.x) + cell * 0.82,
-      y = cpy(e.y) + cell * 0.18,
-      r = cell * 0.16;
-    c.fillStyle = '#5be7ff';
-    c.fillRect(x - r, y - r, r * 2, r * 2);
-    c.fillStyle = '#0a1020';
-    c.fillText(String(e.i), x, y + 1);
-  }
-  c.restore();
-}
-/** Art: a little circuit board with the chip's symbol and a status LED. */
-function drawLogicArt(c, id, s, ang, st) {
-  const h = s / 2,
-    on = st && st.active;
-  rr(c, -h * 0.82, -h * 0.82, h * 1.64, h * 1.64, h * 0.18);
-  c.fillStyle = '#123a2e';
-  c.fill();
-  c.strokeStyle = '#3fe0a0';
-  c.lineWidth = s * 0.04;
-  c.stroke();
-  c.strokeStyle = 'rgba(63,224,160,.45)';
-  c.lineWidth = s * 0.025;
-  for (const k of [-0.5, 0.5]) line(c, [-h * 0.82, k * h, -h * 0.5, k * h], 'rgba(63,224,160,.6)', s * 0.03);
-  c.fillStyle = '#e6fff5';
-  c.font = `700 ${s * 0.42}px "Chakra Petch", sans-serif`;
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  c.fillText(LOGIC[id].glyph, 0, h * 0.05);
-  circ(c, h * 0.55, -h * 0.55, h * 0.14, on ? '#ffe27a' : '#2b4a40');
-  if (id === 'snoop') {
-    c.save();
-    c.rotate(ang);
-    line(c, [0, -h * 0.3, 0, -h * 0.95], '#3fe0a0', s * 0.06);
-    c.restore();
-  }
 }
 /* ===== js/game/joints.js ===== */
 // Moving parts: Hinge, Rotator, Hydraulic Ram (piston) and Suspension Spring.
@@ -24375,7 +24022,6 @@ addEventListener('keydown', e => {
     else if (e.code === 'KeyB') setTool('place');
     else if (e.code === 'KeyT') setTool('rotate');
     else if (e.code === 'KeyG') setTool('keys');
-    else if (e.code === 'KeyL') setTool('wire');
     else if ((e.code === 'BracketLeft' || e.code === 'BracketRight') && MOD[G.sel] && MOD[G.sel].beam) {
       const L = clamp(MOD[G.sel].beam + (e.code === 'BracketRight' ? 1 : -1), 1, 4);
       G.sel = 'beam' + L;
@@ -24988,7 +24634,6 @@ function simulate(dt) {
       }
     }
     planTick(v, dt);
-    stepLogic(v, dt);
     stepJoints(v, dt);
     drive(v, dt);
     tickBoost(v, dt);
@@ -32893,9 +32538,9 @@ if (window.__SD_TEST__)
     openStyle,
     draftOptions,
     prepareBot,
-    stepLogic,
     groupOn,
     partFiring,
+    groupable,
     actionHeld,
     designJSON,
     stepJoints,

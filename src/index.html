@@ -89,7 +89,7 @@
               ><button id="btnArcs" aria-pressed="false" title="Show where each weapon can shoot">⌔ Arcs</button
               ><button id="btnLinks" aria-pressed="false" title="Show blocks that would drop parts off if destroyed">
                 ⚠ Weak links</button
-              ><button id="btnLogic" aria-pressed="false" title="Show logic wires">⚡ Logic</button>
+              >
             </div>
             <div class="toolbar" role="toolbar" aria-label="Builder tools">
               <button data-tool="place" aria-pressed="true" title="Place (B)">
@@ -102,7 +102,7 @@
                   <path d="M13 8a5 5 0 1 1-1.5-3.5M13 2v3h-3" stroke="currentColor" stroke-width="2" fill="none" /></svg
                 >Rotate
               </button>
-              <button data-tool="keys" aria-pressed="false" title="Put weapons and moving parts on keys 1–9 (G)">
+              <button data-tool="keys" aria-pressed="false" title="Put hinges, rotators and rams on keys 1–9 (G)">
                 <svg viewBox="0 0 16 16">
                   <rect
                     x="2"
@@ -116,13 +116,6 @@
                   />
                   <path d="M7 6.5l1.5-1V11" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
                 >Keys
-              </button>
-              <button data-tool="wire" aria-pressed="false" title="Wire logic chips together (L)">
-                <svg viewBox="0 0 16 16">
-                  <circle cx="3.5" cy="12" r="2" fill="currentColor" />
-                  <circle cx="12.5" cy="4" r="2" fill="currentColor" />
-                  <path d="M3.5 12C3.5 6 12.5 10 12.5 4" stroke="currentColor" stroke-width="1.6" fill="none" /></svg
-                >Wire
               </button>
               <button data-tool="remove" aria-pressed="false" title="Remove (X or right-click)">
                 <svg viewBox="0 0 16 16">
@@ -260,8 +253,7 @@
           </dd>
           <dt>Moving parts</dt>
           <dd>
-            Hinges, rotators, rams and springs move everything bolted beyond them. Bind any of them, or a weapon, to
-            keys 1–9 with the Keys tool (G). Logic chips flip keys by themselves; connect them with the Wire tool (L).
+            Hinges, rotators, rams and springs move everything bolted beyond them. Without a key they follow right click; put them on keys 1–9 with the Keys tool (G).
           </dd>
           <dt>Your stuff</dt>
           <dd>
