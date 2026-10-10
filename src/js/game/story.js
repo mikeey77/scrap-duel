@@ -623,7 +623,7 @@ function loadStory() {
         seen: s.seen || {},
         pos: Array.isArray(s.pos) ? s.pos : null,
         fog: typeof s.fog === 'string' ? s.fog : null,
-        caches: Array.isArray(s.caches) ? s.caches.filter(id => OW_CACHES.some(c => c.id === id)) : []
+        caches: []
       };
   } catch (e) {}
 }

@@ -309,6 +309,7 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
   B = null;
   G.mode = mode;
   resetProfile();
+  if (mode === 'solo') applyLoadout();
   if (G.story) storySetup();
   else if (mode === 'solo') {
     G.bot = makeBot(G.diff);

@@ -3,7 +3,12 @@ let PROG = { xp: 0, ach: [] };
 function loadStyle() {
   try {
     const p = JSON.parse(load('sd.prog') || 'null');
-    if (p && typeof p.xp === 'number') PROG = { xp: p.xp, ach: Array.isArray(p.ach) ? p.ach : [] };
+    if (p && typeof p.xp === 'number')
+      PROG = {
+        xp: p.xp,
+        ach: Array.isArray(p.ach) ? p.ach : [],
+        presets: Array.isArray(p.presets) ? p.presets.slice(0, 3).map(x => (x && x.style ? x : null)) : []
+      };
   } catch (e) {}
   let s = {};
   try {
@@ -94,21 +99,7 @@ function progressHtml(p) {
     ${(p.stickers || []).map(x => `<div class="unl">Unlocked sticker: <b>${esc(x.name)}</b> · ${esc(x.perk)}</div>`).join('')}</div>`;
 }
 
-/* ---------- the Locker screen ---------- */
-let styleTab = 'livery',
-  styleBack = null;
-const LOCKER_TABS = [
-  ['livery', 'Skins'],
-  ['stickers', 'Stickers'],
-  ['trail', 'Trails'],
-  ['wreck', 'Wreck effects'],
-  ['title', 'Titles']
-];
-function openStyle(back) {
-  styleBack = back || null;
-  renderStyle();
-  $('#ovStyle').hidden = false;
-}
+/* ---------- look helpers for the Garage HQ ---------- */
 function stylePreviewDesign() {
   if (G.base && G.base.size > 1) return myDesign();
   const save = { base: G.base, top: G.top };
@@ -171,107 +162,4 @@ function stickerSlotsHtml() {
       ? `<button class="stslot on" data-rm="${st[i]}" title="Remove ${esc(STICKER[st[i]].name)}"><img alt="" src="${stickerURL(st[i], 72)}"><span>${esc(STICKER[st[i]].name)}</span></button>`
       : `<div class="stslot"><span>Empty slot</span></div>`
   ).join('')}</div>`;
-}
-function renderStyle() {
-  const L = levelInfo(),
-    isSt = styleTab === 'stickers',
-    items = isSt ? STICKERS : COSMETICS[styleTab];
-  let img = '';
-  try {
-    img = designURL(stylePreviewDesign(), 260, G.paint, G.style.livery);
-  } catch (e) {}
-  const grid = items
-    .map(it => {
-      if (isSt) {
-        const un = stickerUnlocked(it),
-          on = (G.style.stickers || []).includes(it.id),
-          match = it.set === liverySet(G.style.livery);
-        return `<button class="stitem sticker${on ? ' on' : ''}${un ? '' : ' locked'}${match ? ' match' : ''}" data-id="${it.id}" ${un ? '' : 'aria-disabled="true"'}><img class="st-stk" alt="" src="${stickerURL(it.id, 64)}"><b>${esc(it.name)}</b>${setTag(it.set)}<span>${esc(un ? it.perk : unlockText(it.unlock))}</span>${on ? '<i>On your car</i>' : un ? '' : '<i>Locked</i>'}</button>`;
-      }
-      const un = isUnlocked(it),
-        on = G.style[styleTab] === it.id;
-      return `<button class="stitem${on ? ' on' : ''}${un ? '' : ' locked'}" data-id="${it.id}" ${un ? '' : 'aria-disabled="true"'}>${stylePreview(styleTab, it.id)}<b>${esc(it.name)}</b>${styleTab === 'livery' ? setTag(liverySet(it.id)) : ''}<span>${esc(un ? it.desc : unlockText(it.unlock))}</span>${on ? '<i>Equipped</i>' : un ? '' : '<i>Locked</i>'}</button>`;
-    })
-    .join('');
-  $('#ovStyle').innerHTML = `<div class="style">
-    <header><div><span class="label">Locker</span><h2>${esc(G.name)} <span class="ttl">${esc(titleName(G.style.title))}</span></h2></div>
-      <div class="lvl"><span class="lv">${L.lvl}</span><div><b>Scrap Cred level ${L.lvl}</b><div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">${L.into} / ${L.need} XP · ${unlockedCount()} of ${totalCosmetics()} items</span></div></div>
-      <button class="btn ghost" id="stBack">Done</button></header>
-    <div class="stbody"><div class="stprev"><img src="${img}" alt="Your car with the ${esc(G.style.livery)} skin">
-      ${stickerSlotsHtml()}${setPanelHtml()}
-      <span class="small">Skins, trails and titles are looks only. Sticker perks and set bonuses work in Duel, Scrap Road and Gauntlet; online only the picture travels.</span>
-      ${badgeEditorHTML()}
-      <span class="label">Achievements · ${PROG.ach.length}/${Object.keys(ACHIEVEMENTS).length}</span><div class="achlist">${Object.entries(
-        ACHIEVEMENTS
-      )
-        .map(
-          ([id, a]) => `<span class="${PROG.ach.includes(id) ? 'on' : ''}" title="${esc(a.desc)}">${esc(a.name)}</span>`
-        )
-        .join('')}</div></div>
-      <div class="stright"><div class="tabs">${LOCKER_TABS.map(([s, n]) => `<button data-tab="${s}" aria-pressed="${s === styleTab}">${n}</button>`).join('')}</div>
-      ${isSt ? `<p class="small sthint">Three slots. Click a sticker to put it on or take it off. Stickers glowing with your skin's colour count towards its set.</p>` : ''}
-      <div class="stgrid">${grid}</div></div></div></div>`;
-  $$('#ovStyle [data-bk]').forEach(b =>
-    b.addEventListener('click', () => {
-      const p = parseBadge(G.style.badge),
-        k = b.dataset.bk,
-        v = b.dataset.bv;
-      if (k === 'sh') p.sh = v;
-      else if (k === 'sy') p.sy = v;
-      else p.ci = +v;
-      G.style.badge = `${p.sh}.${p.sy}.${p.ci}`;
-      saveStyle();
-      sfx('place');
-      renderStyle();
-    })
-  );
-  $$('#ovStyle [data-tab]').forEach(b =>
-    b.addEventListener('click', () => {
-      styleTab = b.dataset.tab;
-      sfx('ui');
-      renderStyle();
-    })
-  );
-  $$('#ovStyle [data-rm]').forEach(b =>
-    b.addEventListener('click', () => {
-      G.style.stickers = G.style.stickers.filter(x => x !== b.dataset.rm);
-      saveStyle();
-      sfx('remove');
-      renderStyle();
-    })
-  );
-  $$('#ovStyle .stitem').forEach(b =>
-    b.addEventListener('click', () => {
-      if (isSt) {
-        const st = STICKER[b.dataset.id];
-        if (!stickerUnlocked(st)) return sfx('remove');
-        const cur = G.style.stickers || [];
-        if (cur.includes(st.id)) G.style.stickers = cur.filter(x => x !== st.id);
-        else if (cur.length >= STICKER_SLOTS) {
-          toast('All three slots are full. Click a sticker on your car to peel it off first.');
-          return sfx('remove');
-        } else G.style.stickers = [...cur, st.id];
-        saveStyle();
-        sfx('place');
-        if (activeSet() && cur.length < G.style.stickers.length)
-          toast(`Set bonus on: ${STICKER_SETS[activeSet()].bonus}`, true);
-        renderStyle();
-        return;
-      }
-      const it = items.find(i => i.id === b.dataset.id);
-      if (!isUnlocked(it)) {
-        sfx('remove');
-        return;
-      }
-      G.style[styleTab] = it.id;
-      saveStyle();
-      sfx('place');
-      renderStyle();
-    })
-  );
-  $('#stBack').addEventListener('click', () => {
-    $('#ovStyle').hidden = true;
-    sfx('ui');
-    if (styleBack) styleBack();
-  });
 }

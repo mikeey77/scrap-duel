@@ -678,39 +678,302 @@ button.stslot:hover {
   height: 100%;
   display: block;
 }
-#owmini {
-  position: absolute;
-  left: 16px;
-  top: 16px;
-  width: 240px;
-  height: 160px;
-  cursor: pointer;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+.ow-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 14px;
+  padding: 14px;
 }
-#owCard {
-  position: absolute;
-  right: 16px;
-  top: 16px;
-  width: 340px;
-  max-height: calc(100% - 32px);
+.ow-body .ow-stage {
+  border: 1px solid var(--line-2);
+  clip-path: var(--chamfer);
+}
+.ow-body .sr-card {
+  position: static;
   overflow: auto;
-  background: rgba(17, 28, 51, 0.94);
-  backdrop-filter: blur(4px);
 }
-#owCard.idle {
-  border-color: var(--line-2);
+
+/* ---------- Garage HQ (gear + looks in one screen) ---------- */
+.hq {
+  width: min(1480px, 100%);
+  height: min(900px, 100%);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--brackets), linear-gradient(180deg, rgba(23, 38, 66, 0.96), rgba(14, 24, 44, 0.98));
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer);
 }
-.ow-name {
+.hq header {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.hq header h2 {
+  margin: 0;
+  font-size: 26px;
+}
+.hq header > div:first-child {
+  margin-right: auto;
+}
+.hq .lvl {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 230px;
+}
+.hq .lv {
+  font-family: var(--f-display);
+  font-size: 24px;
+  color: var(--hazard);
+  border: 2px solid var(--hazard);
+  min-width: 44px;
+  text-align: center;
+}
+.hq-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+}
+.hq-car {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-right: 1px solid var(--line);
+  overflow: auto;
+  background: rgba(7, 12, 24, 0.4);
+}
+.hq-carimg {
+  position: relative;
+  background:
+    linear-gradient(var(--bp-line) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(90deg, var(--bp-line) 1px, transparent 1px) 0 0 / 20px 20px,
+    var(--blueprint);
+  border: 1px solid var(--line-2);
+  clip-path: var(--chamfer-s);
+}
+.hq-carimg > img {
+  display: block;
+  width: 100%;
+}
+.hq-stk {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  gap: 2px;
+}
+.hq-stk img {
+  width: 34px;
+  height: 34px;
+}
+.hq-paint {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.hq-paint button {
+  width: 28px;
+  height: 28px;
+  border: 2px solid transparent;
+  outline: 1px solid var(--line-2);
+  cursor: pointer;
+}
+.hq-paint button[aria-pressed='true'] {
+  border-color: var(--fg);
+}
+.hq-lo {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.ow-name input {
-  height: 44px;
-  padding: 0 12px;
-  background: var(--bg);
-  border: 1px solid var(--line-2);
+.hq-lo p {
+  margin: 0;
+}
+.lo-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 6px 8px;
+  border: 1px dashed var(--line-2);
+  background: var(--bg-2);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: left;
+}
+.lo-slot.on {
+  border: 1px solid var(--ok);
   color: var(--fg);
+  cursor: pointer;
+}
+.lo-slot.on b {
+  display: block;
   font-family: var(--f-display);
-  font-size: 16px;
+  font-size: 14px;
+}
+.lo-slot img {
+  width: 36px;
+  height: 36px;
+  background: var(--blueprint);
+}
+.lo-slot.locked {
+  opacity: 0.5;
+}
+.hq-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hq-presets .pre {
+  display: flex;
+  gap: 6px;
+}
+.hq-presets .pre button:first-child {
+  flex: 1;
+}
+.hq-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.hq-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 10px 16px 0;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.hq-tabs button {
+  padding: 9px 14px;
+  font-family: var(--f-display);
+  font-size: 15px;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+.hq-tabs button[aria-pressed='true'] {
+  color: var(--fg);
+  border-bottom-color: var(--hazard);
+}
+.hq-pane {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+}
+.hq-gear {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 250px;
+  gap: 14px;
+  align-items: start;
+}
+.hq-gear .wb-rows {
+  max-height: 600px;
+}
+.locktag {
+  font-style: normal;
+  font-family: var(--f-display);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: var(--line-2);
+}
+.wb-row2 {
+  display: flex;
+  gap: 6px;
+}
+.wb-row2 .warn {
+  flex: 1;
+}
+.hq-fab > p {
+  margin: 0 0 14px;
+  color: var(--muted);
+}
+.fab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.fab-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+}
+.fab-cost {
+  font-family: var(--f-display);
+  font-size: 26px;
+  color: var(--hazard);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fab-card p {
+  margin: 0;
+  flex: 1;
+}
+.fab-odds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 12px;
+}
+.fab-out {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--coin);
+  background: rgba(255, 210, 87, 0.06);
+}
+.fab-out img {
+  width: 80px;
+  height: 80px;
+  background: var(--blueprint);
+}
+.fab-out h3 {
+  margin: 2px 0 8px;
+}
+.hq-prof {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 20px;
+}
+.achlist2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.achlist2 div {
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  opacity: 0.55;
+}
+.achlist2 div.on {
+  opacity: 1;
+  border-color: var(--coin);
+}
+.achlist2 b {
+  display: block;
+  font-family: var(--f-display);
+}
+.achlist2 span {
+  font-size: 12px;
+  color: var(--muted);
 }

@@ -1,7 +1,6 @@
-// Workbench: upgrade your personal gear with bolts, pick quirks, fuse duplicates, scrap what you do not need.
+// Gear spec sheet and work order, shown in the Gear tab of the Garage HQ (js/garage/hq.js).
 let wbSel = null,
   wbFilter = 'all',
-  wbBack = null,
   wbArmed = null;
 const WB_FILTERS = [
   ['all', 'All'],
@@ -17,13 +16,6 @@ function wbMatch(g) {
   if (wbFilter === 'armour') return c === 'struct' || c === 'defense';
   if (wbFilter === 'other') return c === 'utility' || c === 'chaos';
   return c === wbFilter;
-}
-function openWorkbench(back) {
-  wbBack = back || null;
-  wbArmed = null;
-  if (!wbSel || !gearById(wbSel)) wbSel = GEAR.items[0] ? GEAR.items[0].u : null;
-  renderWorkbench();
-  $('#ovWork').hidden = false;
 }
 const lvPips = g =>
   `<span class="lvpips" aria-label="Level ${g.lvl} of ${GEAR_MAX}">${Array.from({ length: GEAR_MAX }, (_, i) => `<i class="${i < g.lvl ? 'on' : ''}${i === GEAR_MAX - 1 ? ' mw' : ''}"></i>`).join('')}</span>`;
@@ -127,109 +119,11 @@ function wbOrder(g) {
   return `<h3>Work order</h3>
     <dl class="wb-bill"><dt>Bolts in stock</dt><dd>${GEAR.bolts}</dd>
       ${g.lvl < GEAR_MAX ? `<dt>Upgrade to Lv ${g.lvl + 1}</dt><dd class="neg">−${cost}</dd><dt>Left after</dt><dd class="${after < 0 ? 'bad' : ''}">${after}</dd>` : '<dt>Status</dt><dd>Max level</dd>'}</dl>
+    <button class="btn ${gearEquipped(g) ? 'ghost' : 'ok'}" id="wbEquip">${gearEquipped(g) ? 'Take out of loadout' : `Put in loadout (${GEAR.loadout.length}/${loadoutSlots()})`}</button>
     ${g.lvl < GEAR_MAX ? `<button class="btn" id="wbUp" ${after < 0 ? 'disabled' : ''}>${after < 0 ? `Need ${-after} more bolts` : `Upgrade to level ${g.lvl + 1}`}</button>` : ''}
     ${dup ? `<button class="btn ghost" id="wbFuse">Fuse with your other ${esc(m.name)} (Lv ${dup.lvl})</button>` : ''}
-    <button class="btn ghost warn" id="wbScrap">${wbArmed === g.u ? 'Click again to scrap' : `Scrap for ${gearScrapValue(g)} bolts`}</button>
+    <div class="wb-row2"><button class="btn ghost sm" id="wbLock" aria-pressed="${gearLocked(g)}">${gearLocked(g) ? 'Locked' : 'Lock'}</button>
+    <button class="btn ghost warn sm" id="wbScrap" ${gearLocked(g) ? 'disabled' : ''}>${wbArmed === g.u ? 'Click again to scrap' : `Scrap for ${gearScrapValue(g)} bolts`}</button></div>
     <div class="wb-help"><b>How gear works</b>
-      <p>Gear drops after Duel matches, Gauntlet runs, missions, bosses and road caches. Level 3 opens the quirk slot, level 5 makes a Masterwork. In Duel, Story and Gauntlet your gear shows up as a draft card. Online 1v1 never uses gear.</p></div>`;
-}
-function renderWorkbench() {
-  const list = GEAR.items.filter(wbMatch).sort((a, b) => b.lvl - a.lvl || MOD[b.id].rar - MOD[a.id].rar);
-  const g = gearById(wbSel);
-  if (g && g.isNew) {
-    delete g.isNew;
-    saveGear();
-  }
-  const counts = {};
-  for (const x of GEAR.items) counts[x.id] = (counts[x.id] || 0) + 1;
-  $('#ovWork').innerHTML = `<div class="wb">
-    <header><div><span class="label">Workbench</span><h2>Your gear</h2></div>
-      <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b><span>bolts</span></div>
-      <span class="small">${GEAR.items.length} / ${GEAR_CAP} in the locker</span>
-      <button class="btn ghost" id="wbDone">Done</button></header>
-    <div class="wb-body">
-      <section class="wb-list" aria-label="Gear list">
-        <div class="tabs">${WB_FILTERS.map(([id, n]) => `<button data-f="${id}" aria-pressed="${id === wbFilter}">${n}</button>`).join('')}</div>
-        <div class="wb-rows">${
-          list.length
-            ? list
-                .map(
-                  x =>
-                    `<button class="wb-row${x.u === wbSel ? ' on' : ''}" data-u="${x.u}"><img alt="" src="${iconURL(x.id, 48)}"><span class="nm"><b>${esc(gearName(x))}</b><span>${x.q ? esc(QUIRKS[x.q].name) : x.qo ? 'Quirk ready' : esc(RAR[MOD[x.id].rar].name)}</span></span>${lvPips(x)}${x.isNew ? '<em class="newtag">New</em>' : counts[x.id] > 1 ? '<em class="fusetag">Fuse</em>' : ''}</button>`
-                )
-                .join('')
-            : '<p class="small" style="padding:12px">Nothing in this category.</p>'
-        }</div>
-      </section>
-      <section class="wb-detail" aria-label="Selected gear">${wbDetail(g)}</section>
-      <aside class="wb-order" aria-label="Work order">${wbOrder(g)}</aside>
-    </div></div>`;
-  $$('#ovWork [data-f]').forEach(b =>
-    b.addEventListener('click', () => {
-      wbFilter = b.dataset.f;
-      sfx('ui');
-      renderWorkbench();
-    })
-  );
-  $$('#ovWork .wb-row').forEach(b =>
-    b.addEventListener('click', () => {
-      wbSel = +b.dataset.u;
-      wbArmed = null;
-      sfx('ui');
-      renderWorkbench();
-    })
-  );
-  $$('#ovWork .qopt').forEach(b =>
-    b.addEventListener('click', () => {
-      if (gearPickQuirk(g, b.dataset.q)) {
-        sfx('legend');
-        toast(`${QUIRKS[g.q].name} welded onto ${MOD[g.id].name}`, true);
-      }
-      renderWorkbench();
-    })
-  );
-  const on = (id, f) => {
-    const el = $('#' + id);
-    if (el) el.addEventListener('click', f);
-  };
-  on('wbUp', () => {
-    if (gearUpgrade(g)) {
-      sfx(g.lvl >= GEAR_MAX ? 'jackpot' : 'repair');
-      toast(`${gearName(g)}${g.lvl >= GEAR_MAX ? ' is now a Masterwork!' : ' upgraded'}`, true);
-    }
-    renderWorkbench();
-  });
-  on('wbReroll', () => {
-    if (gearRerollQuirk(g)) sfx('reveal');
-    renderWorkbench();
-  });
-  on('wbFuse', () => {
-    const other = GEAR.items.filter(x => x !== g && x.id === g.id).sort((a, b) => b.lvl - a.lvl)[0];
-    const keep = gearFuse(g, other);
-    if (keep) {
-      wbSel = keep.u;
-      sfx('clank');
-      toast(`Fused into ${gearName(keep)}`, true);
-    }
-    renderWorkbench();
-  });
-  on('wbScrap', () => {
-    if (wbArmed !== g.u) {
-      wbArmed = g.u;
-      renderWorkbench();
-      return;
-    }
-    const v = gearScrapValue(g);
-    gearScrap(g);
-    wbArmed = null;
-    wbSel = GEAR.items[0] ? GEAR.items[0].u : null;
-    sfx('remove');
-    toast(`Scrapped for ${v} bolts`);
-    renderWorkbench();
-  });
-  on('wbDone', () => {
-    $('#ovWork').hidden = true;
-    sfx('ui');
-    if (wbBack) wbBack();
-  });
+      <p>Loadout gear is in your bin from round 1 of Duel, Scrap Road and Gauntlet matches; other gear can turn up as a draft card. Level 3 opens the quirk slot, level 5 makes a Masterwork. Locked gear cannot be scrapped. Online never uses gear.</p></div>`;
 }

@@ -5050,41 +5050,304 @@ button.stslot:hover {
   height: 100%;
   display: block;
 }
-#owmini {
-  position: absolute;
-  left: 16px;
-  top: 16px;
-  width: 240px;
-  height: 160px;
-  cursor: pointer;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+.ow-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 14px;
+  padding: 14px;
 }
-#owCard {
-  position: absolute;
-  right: 16px;
-  top: 16px;
-  width: 340px;
-  max-height: calc(100% - 32px);
+.ow-body .ow-stage {
+  border: 1px solid var(--line-2);
+  clip-path: var(--chamfer);
+}
+.ow-body .sr-card {
+  position: static;
   overflow: auto;
-  background: rgba(17, 28, 51, 0.94);
-  backdrop-filter: blur(4px);
 }
-#owCard.idle {
-  border-color: var(--line-2);
+
+/* ---------- Garage HQ (gear + looks in one screen) ---------- */
+.hq {
+  width: min(1480px, 100%);
+  height: min(900px, 100%);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--brackets), linear-gradient(180deg, rgba(23, 38, 66, 0.96), rgba(14, 24, 44, 0.98));
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer);
 }
-.ow-name {
+.hq header {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.hq header h2 {
+  margin: 0;
+  font-size: 26px;
+}
+.hq header > div:first-child {
+  margin-right: auto;
+}
+.hq .lvl {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 230px;
+}
+.hq .lv {
+  font-family: var(--f-display);
+  font-size: 24px;
+  color: var(--hazard);
+  border: 2px solid var(--hazard);
+  min-width: 44px;
+  text-align: center;
+}
+.hq-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+}
+.hq-car {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-right: 1px solid var(--line);
+  overflow: auto;
+  background: rgba(7, 12, 24, 0.4);
+}
+.hq-carimg {
+  position: relative;
+  background:
+    linear-gradient(var(--bp-line) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(90deg, var(--bp-line) 1px, transparent 1px) 0 0 / 20px 20px,
+    var(--blueprint);
+  border: 1px solid var(--line-2);
+  clip-path: var(--chamfer-s);
+}
+.hq-carimg > img {
+  display: block;
+  width: 100%;
+}
+.hq-stk {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  gap: 2px;
+}
+.hq-stk img {
+  width: 34px;
+  height: 34px;
+}
+.hq-paint {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.hq-paint button {
+  width: 28px;
+  height: 28px;
+  border: 2px solid transparent;
+  outline: 1px solid var(--line-2);
+  cursor: pointer;
+}
+.hq-paint button[aria-pressed='true'] {
+  border-color: var(--fg);
+}
+.hq-lo {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.ow-name input {
-  height: 44px;
-  padding: 0 12px;
-  background: var(--bg);
-  border: 1px solid var(--line-2);
+.hq-lo p {
+  margin: 0;
+}
+.lo-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 6px 8px;
+  border: 1px dashed var(--line-2);
+  background: var(--bg-2);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: left;
+}
+.lo-slot.on {
+  border: 1px solid var(--ok);
   color: var(--fg);
+  cursor: pointer;
+}
+.lo-slot.on b {
+  display: block;
   font-family: var(--f-display);
-  font-size: 16px;
+  font-size: 14px;
+}
+.lo-slot img {
+  width: 36px;
+  height: 36px;
+  background: var(--blueprint);
+}
+.lo-slot.locked {
+  opacity: 0.5;
+}
+.hq-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hq-presets .pre {
+  display: flex;
+  gap: 6px;
+}
+.hq-presets .pre button:first-child {
+  flex: 1;
+}
+.hq-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.hq-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 10px 16px 0;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.hq-tabs button {
+  padding: 9px 14px;
+  font-family: var(--f-display);
+  font-size: 15px;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+.hq-tabs button[aria-pressed='true'] {
+  color: var(--fg);
+  border-bottom-color: var(--hazard);
+}
+.hq-pane {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+}
+.hq-gear {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 250px;
+  gap: 14px;
+  align-items: start;
+}
+.hq-gear .wb-rows {
+  max-height: 600px;
+}
+.locktag {
+  font-style: normal;
+  font-family: var(--f-display);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: var(--line-2);
+}
+.wb-row2 {
+  display: flex;
+  gap: 6px;
+}
+.wb-row2 .warn {
+  flex: 1;
+}
+.hq-fab > p {
+  margin: 0 0 14px;
+  color: var(--muted);
+}
+.fab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.fab-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+}
+.fab-cost {
+  font-family: var(--f-display);
+  font-size: 26px;
+  color: var(--hazard);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fab-card p {
+  margin: 0;
+  flex: 1;
+}
+.fab-odds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 12px;
+}
+.fab-out {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--coin);
+  background: rgba(255, 210, 87, 0.06);
+}
+.fab-out img {
+  width: 80px;
+  height: 80px;
+  background: var(--blueprint);
+}
+.fab-out h3 {
+  margin: 2px 0 8px;
+}
+.hq-prof {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 20px;
+}
+.achlist2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.achlist2 div {
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  opacity: 0.55;
+}
+.achlist2 div.on {
+  opacity: 1;
+  border-color: var(--coin);
+}
+.achlist2 b {
+  display: block;
+  font-family: var(--f-display);
+}
+.achlist2 span {
+  font-size: 12px;
+  color: var(--muted);
 }
     </style>
   </head>
@@ -5326,8 +5589,7 @@ button.stslot:hover {
           </dd>
           <dt>Moving parts</dt>
           <dd>
-            Hinges, rotators, rams and springs move everything bolted beyond them. Bind any of them, or a weapon, to
-            keys 1–9 with the Keys tool (G). Logic chips flip keys by themselves; connect them with the Wire tool (L).
+            Hinges, rotators, rams and springs move everything bolted beyond them. Without a key they follow right click; put them on keys 1–9 with the Keys tool (G).
           </dd>
           <dt>Your stuff</dt>
           <dd>
@@ -9916,13 +10178,7 @@ const COSMETICS = {
     { id: 'yardboss', name: 'Yard Boss', desc: 'Took out the garbage. Literally.', unlock: { ach: 'road1' } },
     { id: 'canyon', name: 'Canyon Runner', desc: 'Outlasted the Twin Drill.', unlock: { ach: 'road2' } },
     { id: 'baron', name: 'Unstuck', desc: 'Escaped the Magnet Baron.', unlock: { ach: 'road3' } },
-    { id: 'junkking', name: 'The New Junk King', desc: 'Sits on a throne of scrap.', unlock: { ach: 'kingslayer' } },
-    {
-      id: 'roadtripper',
-      name: 'Road Tripper',
-      desc: 'Has seen every corner of the Scrap Road.',
-      unlock: { ach: 'explorer' }
-    }
+    { id: 'junkking', name: 'The New Junk King', desc: 'Sits on a throne of scrap.', unlock: { ach: 'kingslayer' } }
   ]
 };
 const ACHIEVEMENTS = {
@@ -9948,8 +10204,7 @@ const ACHIEVEMENTS = {
   road1: { name: 'Bin Day', desc: 'Beat Mother Crusher on the Scrap Road.' },
   road2: { name: 'Drill Sergeant', desc: 'Beat the Twin Drill on the Scrap Road.' },
   road3: { name: 'Demagnetised', desc: 'Beat the Magnet Baron on the Scrap Road.' },
-  kingslayer: { name: 'Kingslayer', desc: 'Beat the Junk King at the end of the Scrap Road.' },
-  explorer: { name: 'Road Tripper', desc: 'Find every hidden cache on the Scrap Road.' }
+  kingslayer: { name: 'Kingslayer', desc: 'Beat the Junk King at the end of the Scrap Road.' }
 };
 const XP = { round: 25, roundWin: 25, specialWin: 15, match: 50, matchWin: 100 };
 const xpForLevel = lvl => 100 + 50 * (lvl - 1); // XP needed to go from lvl to lvl + 1
@@ -16372,7 +16627,12 @@ let PROG = { xp: 0, ach: [] };
 function loadStyle() {
   try {
     const p = JSON.parse(load('sd.prog') || 'null');
-    if (p && typeof p.xp === 'number') PROG = { xp: p.xp, ach: Array.isArray(p.ach) ? p.ach : [] };
+    if (p && typeof p.xp === 'number')
+      PROG = {
+        xp: p.xp,
+        ach: Array.isArray(p.ach) ? p.ach : [],
+        presets: Array.isArray(p.presets) ? p.presets.slice(0, 3).map(x => (x && x.style ? x : null)) : []
+      };
   } catch (e) {}
   let s = {};
   try {
@@ -16463,21 +16723,7 @@ function progressHtml(p) {
     ${(p.stickers || []).map(x => `<div class="unl">Unlocked sticker: <b>${esc(x.name)}</b> · ${esc(x.perk)}</div>`).join('')}</div>`;
 }
 
-/* ---------- the Locker screen ---------- */
-let styleTab = 'livery',
-  styleBack = null;
-const LOCKER_TABS = [
-  ['livery', 'Skins'],
-  ['stickers', 'Stickers'],
-  ['trail', 'Trails'],
-  ['wreck', 'Wreck effects'],
-  ['title', 'Titles']
-];
-function openStyle(back) {
-  styleBack = back || null;
-  renderStyle();
-  $('#ovStyle').hidden = false;
-}
+/* ---------- look helpers for the Garage HQ ---------- */
 function stylePreviewDesign() {
   if (G.base && G.base.size > 1) return myDesign();
   const save = { base: G.base, top: G.top };
@@ -16541,114 +16787,10 @@ function stickerSlotsHtml() {
       : `<div class="stslot"><span>Empty slot</span></div>`
   ).join('')}</div>`;
 }
-function renderStyle() {
-  const L = levelInfo(),
-    isSt = styleTab === 'stickers',
-    items = isSt ? STICKERS : COSMETICS[styleTab];
-  let img = '';
-  try {
-    img = designURL(stylePreviewDesign(), 260, G.paint, G.style.livery);
-  } catch (e) {}
-  const grid = items
-    .map(it => {
-      if (isSt) {
-        const un = stickerUnlocked(it),
-          on = (G.style.stickers || []).includes(it.id),
-          match = it.set === liverySet(G.style.livery);
-        return `<button class="stitem sticker${on ? ' on' : ''}${un ? '' : ' locked'}${match ? ' match' : ''}" data-id="${it.id}" ${un ? '' : 'aria-disabled="true"'}><img class="st-stk" alt="" src="${stickerURL(it.id, 64)}"><b>${esc(it.name)}</b>${setTag(it.set)}<span>${esc(un ? it.perk : unlockText(it.unlock))}</span>${on ? '<i>On your car</i>' : un ? '' : '<i>Locked</i>'}</button>`;
-      }
-      const un = isUnlocked(it),
-        on = G.style[styleTab] === it.id;
-      return `<button class="stitem${on ? ' on' : ''}${un ? '' : ' locked'}" data-id="${it.id}" ${un ? '' : 'aria-disabled="true"'}>${stylePreview(styleTab, it.id)}<b>${esc(it.name)}</b>${styleTab === 'livery' ? setTag(liverySet(it.id)) : ''}<span>${esc(un ? it.desc : unlockText(it.unlock))}</span>${on ? '<i>Equipped</i>' : un ? '' : '<i>Locked</i>'}</button>`;
-    })
-    .join('');
-  $('#ovStyle').innerHTML = `<div class="style">
-    <header><div><span class="label">Locker</span><h2>${esc(G.name)} <span class="ttl">${esc(titleName(G.style.title))}</span></h2></div>
-      <div class="lvl"><span class="lv">${L.lvl}</span><div><b>Scrap Cred level ${L.lvl}</b><div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">${L.into} / ${L.need} XP · ${unlockedCount()} of ${totalCosmetics()} items</span></div></div>
-      <button class="btn ghost" id="stBack">Done</button></header>
-    <div class="stbody"><div class="stprev"><img src="${img}" alt="Your car with the ${esc(G.style.livery)} skin">
-      ${stickerSlotsHtml()}${setPanelHtml()}
-      <span class="small">Skins, trails and titles are looks only. Sticker perks and set bonuses work in Duel, Scrap Road and Gauntlet; online only the picture travels.</span>
-      ${badgeEditorHTML()}
-      <span class="label">Achievements · ${PROG.ach.length}/${Object.keys(ACHIEVEMENTS).length}</span><div class="achlist">${Object.entries(
-        ACHIEVEMENTS
-      )
-        .map(
-          ([id, a]) => `<span class="${PROG.ach.includes(id) ? 'on' : ''}" title="${esc(a.desc)}">${esc(a.name)}</span>`
-        )
-        .join('')}</div></div>
-      <div class="stright"><div class="tabs">${LOCKER_TABS.map(([s, n]) => `<button data-tab="${s}" aria-pressed="${s === styleTab}">${n}</button>`).join('')}</div>
-      ${isSt ? `<p class="small sthint">Three slots. Click a sticker to put it on or take it off. Stickers glowing with your skin's colour count towards its set.</p>` : ''}
-      <div class="stgrid">${grid}</div></div></div></div>`;
-  $$('#ovStyle [data-bk]').forEach(b =>
-    b.addEventListener('click', () => {
-      const p = parseBadge(G.style.badge),
-        k = b.dataset.bk,
-        v = b.dataset.bv;
-      if (k === 'sh') p.sh = v;
-      else if (k === 'sy') p.sy = v;
-      else p.ci = +v;
-      G.style.badge = `${p.sh}.${p.sy}.${p.ci}`;
-      saveStyle();
-      sfx('place');
-      renderStyle();
-    })
-  );
-  $$('#ovStyle [data-tab]').forEach(b =>
-    b.addEventListener('click', () => {
-      styleTab = b.dataset.tab;
-      sfx('ui');
-      renderStyle();
-    })
-  );
-  $$('#ovStyle [data-rm]').forEach(b =>
-    b.addEventListener('click', () => {
-      G.style.stickers = G.style.stickers.filter(x => x !== b.dataset.rm);
-      saveStyle();
-      sfx('remove');
-      renderStyle();
-    })
-  );
-  $$('#ovStyle .stitem').forEach(b =>
-    b.addEventListener('click', () => {
-      if (isSt) {
-        const st = STICKER[b.dataset.id];
-        if (!stickerUnlocked(st)) return sfx('remove');
-        const cur = G.style.stickers || [];
-        if (cur.includes(st.id)) G.style.stickers = cur.filter(x => x !== st.id);
-        else if (cur.length >= STICKER_SLOTS) {
-          toast('All three slots are full. Click a sticker on your car to peel it off first.');
-          return sfx('remove');
-        } else G.style.stickers = [...cur, st.id];
-        saveStyle();
-        sfx('place');
-        if (activeSet() && cur.length < G.style.stickers.length)
-          toast(`Set bonus on: ${STICKER_SETS[activeSet()].bonus}`, true);
-        renderStyle();
-        return;
-      }
-      const it = items.find(i => i.id === b.dataset.id);
-      if (!isUnlocked(it)) {
-        sfx('remove');
-        return;
-      }
-      G.style[styleTab] = it.id;
-      saveStyle();
-      sfx('place');
-      renderStyle();
-    })
-  );
-  $('#stBack').addEventListener('click', () => {
-    $('#ovStyle').hidden = true;
-    sfx('ui');
-    if (styleBack) styleBack();
-  });
-}
 /* ===== js/garage/workbench.js ===== */
-// Workbench: upgrade your personal gear with bolts, pick quirks, fuse duplicates, scrap what you do not need.
+// Gear spec sheet and work order, shown in the Gear tab of the Garage HQ (js/garage/hq.js).
 let wbSel = null,
   wbFilter = 'all',
-  wbBack = null,
   wbArmed = null;
 const WB_FILTERS = [
   ['all', 'All'],
@@ -16664,13 +16806,6 @@ function wbMatch(g) {
   if (wbFilter === 'armour') return c === 'struct' || c === 'defense';
   if (wbFilter === 'other') return c === 'utility' || c === 'chaos';
   return c === wbFilter;
-}
-function openWorkbench(back) {
-  wbBack = back || null;
-  wbArmed = null;
-  if (!wbSel || !gearById(wbSel)) wbSel = GEAR.items[0] ? GEAR.items[0].u : null;
-  renderWorkbench();
-  $('#ovWork').hidden = false;
 }
 const lvPips = g =>
   `<span class="lvpips" aria-label="Level ${g.lvl} of ${GEAR_MAX}">${Array.from({ length: GEAR_MAX }, (_, i) => `<i class="${i < g.lvl ? 'on' : ''}${i === GEAR_MAX - 1 ? ' mw' : ''}"></i>`).join('')}</span>`;
@@ -16774,14 +16909,82 @@ function wbOrder(g) {
   return `<h3>Work order</h3>
     <dl class="wb-bill"><dt>Bolts in stock</dt><dd>${GEAR.bolts}</dd>
       ${g.lvl < GEAR_MAX ? `<dt>Upgrade to Lv ${g.lvl + 1}</dt><dd class="neg">−${cost}</dd><dt>Left after</dt><dd class="${after < 0 ? 'bad' : ''}">${after}</dd>` : '<dt>Status</dt><dd>Max level</dd>'}</dl>
+    <button class="btn ${gearEquipped(g) ? 'ghost' : 'ok'}" id="wbEquip">${gearEquipped(g) ? 'Take out of loadout' : `Put in loadout (${GEAR.loadout.length}/${loadoutSlots()})`}</button>
     ${g.lvl < GEAR_MAX ? `<button class="btn" id="wbUp" ${after < 0 ? 'disabled' : ''}>${after < 0 ? `Need ${-after} more bolts` : `Upgrade to level ${g.lvl + 1}`}</button>` : ''}
     ${dup ? `<button class="btn ghost" id="wbFuse">Fuse with your other ${esc(m.name)} (Lv ${dup.lvl})</button>` : ''}
-    <button class="btn ghost warn" id="wbScrap">${wbArmed === g.u ? 'Click again to scrap' : `Scrap for ${gearScrapValue(g)} bolts`}</button>
+    <div class="wb-row2"><button class="btn ghost sm" id="wbLock" aria-pressed="${gearLocked(g)}">${gearLocked(g) ? 'Locked' : 'Lock'}</button>
+    <button class="btn ghost warn sm" id="wbScrap" ${gearLocked(g) ? 'disabled' : ''}>${wbArmed === g.u ? 'Click again to scrap' : `Scrap for ${gearScrapValue(g)} bolts`}</button></div>
     <div class="wb-help"><b>How gear works</b>
-      <p>Gear drops after Duel matches, Gauntlet runs, missions, bosses and road caches. Level 3 opens the quirk slot, level 5 makes a Masterwork. In Duel, Story and Gauntlet your gear shows up as a draft card. Online 1v1 never uses gear.</p></div>`;
+      <p>Loadout gear is in your bin from round 1 of Duel, Scrap Road and Gauntlet matches; other gear can turn up as a draft card. Level 3 opens the quirk slot, level 5 makes a Masterwork. Locked gear cannot be scrapped. Online never uses gear.</p></div>`;
 }
-function renderWorkbench() {
-  const list = GEAR.items.filter(wbMatch).sort((a, b) => b.lvl - a.lvl || MOD[b.id].rar - MOD[a.id].rar);
+/* ===== js/garage/hq.js ===== */
+// Garage HQ: one screen for everything you own. Left: your car, its paint, stickers, set bonus and gear loadout.
+// Right: tabs for gear (spec sheet and upgrades), the fabricator, skins, stickers, trails, wreck effects, titles
+// and your profile (badge and achievements). Replaces the separate Workbench and Locker screens.
+
+let hqTab = 'gear',
+  hqBack = null,
+  hqFabLast = null;
+const HQ_TABS = [
+  ['gear', 'Gear'],
+  ['fab', 'Fabricator'],
+  ['livery', 'Skins'],
+  ['stickers', 'Stickers'],
+  ['trail', 'Trails'],
+  ['wreck', 'Wreck effects'],
+  ['title', 'Titles'],
+  ['profile', 'Profile']
+];
+function openGarageHQ(back, tab) {
+  hqBack = back || null;
+  if (tab) hqTab = tab;
+  wbArmed = null;
+  if (!wbSel || !gearById(wbSel)) wbSel = GEAR.items[0] ? GEAR.items[0].u : null;
+  hideOverlays();
+  renderHQ();
+  $('#ovWork').hidden = false;
+}
+// the old entry points open the matching tab
+const openWorkbench = back => openGarageHQ(back, 'gear');
+const openStyle = back => openGarageHQ(back, 'livery');
+
+/* ---------- left column: the car ---------- */
+function hqCarHtml() {
+  let img = '';
+  try {
+    img = designURL(stylePreviewDesign(), 260, G.paint, G.style.livery);
+  } catch (e) {}
+  const slots = loadoutSlots(),
+    lo = Array.from({ length: 4 }, (_, i) => {
+      if (i >= slots) return `<div class="lo-slot locked"><span>Unlocks at level 10</span></div>`;
+      const g = gearById(GEAR.loadout[i]);
+      return g
+        ? `<button class="lo-slot on" data-lo="${g.u}" title="Show ${esc(gearName(g))}"><img alt="" src="${iconURL(g.id, 48)}"><span><b>${esc(gearName(g))}</b>${lvPips(g)}</span></button>`
+        : `<div class="lo-slot"><span>Empty: equip gear from the Gear tab</span></div>`;
+    }).join('');
+  return `<div class="hq-carimg"><img src="${img}" alt="Your car"><div class="hq-stk">${(G.style.stickers || [])
+    .map(id => `<img alt="${esc(STICKER[id].name)}" src="${stickerURL(id, 48)}">`)
+    .join('')}</div></div>
+    <div class="hq-paint" role="group" aria-label="Paint colour">${PAINTS.map(p => `<button style="background:${p}" data-paint="${p}" aria-pressed="${G.paint === p}" title="Paint"></button>`).join('')}</div>
+    ${setPanelHtml()}
+    <div class="hq-lo"><span class="label">Loadout · ${GEAR.loadout.length}/${slots}</span>
+      <p class="small">Loadout gear is in your parts bin from round 1 of every Duel, Scrap Road and Gauntlet match.</p>${lo}</div>
+    <div class="hq-presets"><span class="label">Looks</span>${[0, 1, 2]
+      .map(i => {
+        const P = (PROG.presets || [])[i];
+        return `<div class="pre"><button class="btn ghost sm" data-wear="${i}" ${P ? '' : 'disabled'}>${P ? esc(P.name) : 'Empty'}</button><button class="btn ghost sm" data-save="${i}" title="Save the current look here">Save</button></div>`;
+      })
+      .join('')}</div>`;
+}
+
+/* ---------- tabs ---------- */
+function hqGearHtml() {
+  const list = GEAR.items
+    .filter(wbMatch)
+    .sort(
+      (a, b) =>
+        gearEquipped(b) - gearEquipped(a) || b.lvl - a.lvl || MOD[b.id].rar - MOD[a.id].rar || a.id.localeCompare(b.id)
+    );
   const g = gearById(wbSel);
   if (g && g.isNew) {
     delete g.isNew;
@@ -16789,95 +16992,253 @@ function renderWorkbench() {
   }
   const counts = {};
   for (const x of GEAR.items) counts[x.id] = (counts[x.id] || 0) + 1;
-  $('#ovWork').innerHTML = `<div class="wb">
-    <header><div><span class="label">Workbench</span><h2>Your gear</h2></div>
-      <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b><span>bolts</span></div>
-      <span class="small">${GEAR.items.length} / ${GEAR_CAP} in the locker</span>
-      <button class="btn ghost" id="wbDone">Done</button></header>
-    <div class="wb-body">
-      <section class="wb-list" aria-label="Gear list">
-        <div class="tabs">${WB_FILTERS.map(([id, n]) => `<button data-f="${id}" aria-pressed="${id === wbFilter}">${n}</button>`).join('')}</div>
-        <div class="wb-rows">${
-          list.length
-            ? list
-                .map(
-                  x =>
-                    `<button class="wb-row${x.u === wbSel ? ' on' : ''}" data-u="${x.u}"><img alt="" src="${iconURL(x.id, 48)}"><span class="nm"><b>${esc(gearName(x))}</b><span>${x.q ? esc(QUIRKS[x.q].name) : x.qo ? 'Quirk ready' : esc(RAR[MOD[x.id].rar].name)}</span></span>${lvPips(x)}${x.isNew ? '<em class="newtag">New</em>' : counts[x.id] > 1 ? '<em class="fusetag">Fuse</em>' : ''}</button>`
-                )
-                .join('')
-            : '<p class="small" style="padding:12px">Nothing in this category.</p>'
-        }</div>
-      </section>
-      <section class="wb-detail" aria-label="Selected gear">${wbDetail(g)}</section>
-      <aside class="wb-order" aria-label="Work order">${wbOrder(g)}</aside>
-    </div></div>`;
-  $$('#ovWork [data-f]').forEach(b =>
-    b.addEventListener('click', () => {
-      wbFilter = b.dataset.f;
-      sfx('ui');
-      renderWorkbench();
-    })
-  );
-  $$('#ovWork .wb-row').forEach(b =>
-    b.addEventListener('click', () => {
-      wbSel = +b.dataset.u;
-      wbArmed = null;
-      sfx('ui');
-      renderWorkbench();
-    })
-  );
-  $$('#ovWork .qopt').forEach(b =>
-    b.addEventListener('click', () => {
-      if (gearPickQuirk(g, b.dataset.q)) {
-        sfx('legend');
-        toast(`${QUIRKS[g.q].name} welded onto ${MOD[g.id].name}`, true);
+  return `<div class="hq-gear">
+    <section class="wb-list" aria-label="Gear list">
+      <div class="tabs">${WB_FILTERS.map(([id, n]) => `<button data-f="${id}" aria-pressed="${id === wbFilter}">${n}</button>`).join('')}</div>
+      <span class="small">${GEAR.items.length} / ${GEAR_CAP} pieces</span>
+      <div class="wb-rows">${
+        list.length
+          ? list
+              .map(
+                x =>
+                  `<button class="wb-row${x.u === wbSel ? ' on' : ''}" data-u="${x.u}"><img alt="" src="${iconURL(x.id, 48)}"><span class="nm"><b>${esc(gearName(x))}</b><span>${gearEquipped(x) ? 'In loadout' : x.q ? esc(QUIRKS[x.q].name) : x.qo ? 'Quirk ready' : esc(RAR[MOD[x.id].rar].name)}</span></span>${lvPips(x)}${gearLocked(x) ? '<em class="locktag" title="Locked">L</em>' : ''}${x.isNew ? '<em class="newtag">New</em>' : counts[x.id] > 1 ? '<em class="fusetag">Fuse</em>' : ''}</button>`
+              )
+              .join('')
+          : '<p class="small" style="padding:12px">Nothing in this category. Try the Fabricator.</p>'
+      }</div>
+    </section>
+    <section class="wb-detail" aria-label="Selected gear">${wbDetail(g)}</section>
+    <aside class="wb-order" aria-label="Work order">${wbOrder(g)}</aside></div>`;
+}
+function hqFabHtml() {
+  const full = GEAR.items.length >= GEAR_CAP;
+  return `<div class="hq-fab"><p>Turn bolts into new gear. Every crate makes one level-1 part of its kind: mostly common, sometimes rare, now and then epic.</p>
+    <div class="fab-grid">${FAB.map(
+      F => `<div class="fab-card"><span class="label">${esc(F.name)}</span><b class="fab-cost"><i class="boltico" aria-hidden="true"></i>${F.cost}</b><p class="small">${esc(F.desc)}</p>
+        <div class="fab-odds">${['Common', 'Uncommon', 'Rare', 'Epic'].map((n, i) => `<span style="color:${RAR[i].col}">${n} ${FAB_RAR[i]}%</span>`).join('')}</div>
+        <button class="btn" data-fab="${F.id}" ${GEAR.bolts < F.cost || full ? 'disabled' : ''}>${full ? 'Locker full' : GEAR.bolts < F.cost ? `Need ${F.cost - GEAR.bolts} more bolts` : 'Fabricate'}</button></div>`
+    ).join('')}</div>
+    ${
+      hqFabLast
+        ? `<div class="fab-out"><img alt="" src="${iconURL(hqFabLast.id, 96)}"><div><span class="label" style="color:${RAR[MOD[hqFabLast.id].rar].col}">${RAR[MOD[hqFabLast.id].rar].name} · fresh off the line</span><h3>${esc(MOD[hqFabLast.id].name)}</h3><button class="btn ghost sm" id="fabShow">Open in Gear</button></div></div>`
+        : ''
+    }</div>`;
+}
+function hqLookHtml(tab) {
+  const isSt = tab === 'stickers',
+    items = isSt ? STICKERS : COSMETICS[tab];
+  const grid = items
+    .map(it => {
+      if (isSt) {
+        const un = stickerUnlocked(it),
+          on = (G.style.stickers || []).includes(it.id),
+          match = it.set === liverySet(G.style.livery);
+        return `<button class="stitem sticker${on ? ' on' : ''}${un ? '' : ' locked'}${match ? ' match' : ''}" data-id="${it.id}" ${un ? '' : 'aria-disabled="true"'}><img class="st-stk" alt="" src="${stickerURL(it.id, 64)}"><b>${esc(it.name)}</b>${setTag(it.set)}<span>${esc(un ? it.perk : unlockText(it.unlock))}</span>${on ? '<i>On your car</i>' : un ? '' : '<i>Locked</i>'}</button>`;
       }
-      renderWorkbench();
+      const un = isUnlocked(it),
+        on = G.style[tab] === it.id;
+      return `<button class="stitem${on ? ' on' : ''}${un ? '' : ' locked'}" data-id="${it.id}" ${un ? '' : 'aria-disabled="true"'}>${stylePreview(tab, it.id)}<b>${esc(it.name)}</b>${tab === 'livery' ? setTag(liverySet(it.id)) : ''}<span>${esc(un ? it.desc : unlockText(it.unlock))}</span>${on ? '<i>Equipped</i>' : un ? '' : '<i>Locked</i>'}</button>`;
     })
-  );
-  const on = (id, f) => {
-    const el = $('#' + id);
-    if (el) el.addEventListener('click', f);
+    .join('');
+  const hint = isSt
+    ? `${stickerSlotsHtml()}<p class="small sthint">Three slots. Stickers give small perks offline. Two stickers from your skin's set turn on its set bonus.</p>`
+    : tab === 'livery'
+      ? '<p class="small sthint">Skins with a set tag work with that set\'s stickers.</p>'
+      : '';
+  return `${hint}<div class="stgrid">${grid}</div>`;
+}
+function hqProfileHtml() {
+  return `<div class="hq-prof">${badgeEditorHTML()}
+    <div><span class="label">Achievements · ${PROG.ach.length}/${Object.keys(ACHIEVEMENTS).length}</span><div class="achlist2">${Object.entries(
+      ACHIEVEMENTS
+    )
+      .map(
+        ([id, a]) =>
+          `<div class="${PROG.ach.includes(id) ? 'on' : ''}"><b>${esc(a.name)}</b><span>${esc(a.desc)}</span></div>`
+      )
+      .join('')}</div></div></div>`;
+}
+
+/* ---------- render and wiring ---------- */
+function renderHQ() {
+  const L = levelInfo(),
+    tab = hqTab,
+    main =
+      tab === 'gear'
+        ? hqGearHtml()
+        : tab === 'fab'
+          ? hqFabHtml()
+          : tab === 'profile'
+            ? hqProfileHtml()
+            : hqLookHtml(tab);
+  $('#ovWork').innerHTML = `<div class="hq">
+    <header><div><span class="label">Garage</span><h2>${esc(G.name)} <span class="ttl">${esc(titleName(G.style.title))}</span></h2></div>
+      <div class="lvl"><span class="lv">${L.lvl}</span><div><b>Scrap Cred level ${L.lvl}</b><div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">${L.into} / ${L.need} XP</span></div></div>
+      <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b><span>bolts</span></div>
+      <button class="btn ghost" id="hqDone">Done</button></header>
+    <div class="hq-body"><aside class="hq-car" aria-label="Your car">${hqCarHtml()}</aside>
+      <div class="hq-main"><nav class="hq-tabs" aria-label="Garage sections">${HQ_TABS.map(([id, n]) => `<button data-hq="${id}" aria-pressed="${id === tab}">${n}</button>`).join('')}</nav>
+        <div class="hq-pane">${main}</div></div></div></div>`;
+  hqWire();
+}
+function hqWire() {
+  const on = (sel, f) => $$('#ovWork ' + sel).forEach(b => b.addEventListener('click', e => f(b, e)));
+  const rerender = s => {
+    if (s) sfx(s);
+    renderHQ();
   };
-  on('wbUp', () => {
-    if (gearUpgrade(g)) {
-      sfx(g.lvl >= GEAR_MAX ? 'jackpot' : 'repair');
-      toast(`${gearName(g)}${g.lvl >= GEAR_MAX ? ' is now a Masterwork!' : ' upgraded'}`, true);
+  on('[data-hq]', b => {
+    hqTab = b.dataset.hq;
+    rerender('ui');
+  });
+  on('#hqDone', () => {
+    $('#ovWork').hidden = true;
+    sfx('ui');
+    if (hqBack) hqBack();
+    else showMenu();
+  });
+  on('[data-paint]', b => {
+    G.paint = b.dataset.paint;
+    store('sd.paint', G.paint);
+    if (typeof renderPaints === 'function' && $('#paints')) renderPaints();
+    rerender('place');
+  });
+  on('[data-lo]', b => {
+    wbSel = +b.dataset.lo;
+    hqTab = 'gear';
+    rerender('ui');
+  });
+  on('[data-save]', b => {
+    const i = +b.dataset.save;
+    PROG.presets = PROG.presets || [];
+    PROG.presets[i] = {
+      name: `${COSMETICS.livery.find(x => x.id === G.style.livery).name}`,
+      style: { ...G.style, stickers: [...(G.style.stickers || [])] },
+      paint: G.paint
+    };
+    saveProg();
+    toast('Look saved', true);
+    rerender('place');
+  });
+  on('[data-wear]', b => {
+    const P = (PROG.presets || [])[+b.dataset.wear];
+    if (!P) return;
+    for (const [slot] of STYLE_SLOTS) {
+      const it = COSMETICS[slot].find(x => x.id === P.style[slot]);
+      if (it && isUnlocked(it)) G.style[slot] = it.id;
     }
-    renderWorkbench();
+    G.style.stickers = (P.style.stickers || []).filter(id => STICKER[id] && stickerUnlocked(STICKER[id]));
+    if (P.paint) G.paint = P.paint;
+    saveStyle();
+    store('sd.paint', G.paint);
+    rerender('place');
   });
-  on('wbReroll', () => {
-    if (gearRerollQuirk(g)) sfx('reveal');
-    renderWorkbench();
+  // gear tab
+  on('[data-f]', b => {
+    wbFilter = b.dataset.f;
+    rerender('ui');
   });
-  on('wbFuse', () => {
+  on('.wb-row', b => {
+    wbSel = +b.dataset.u;
+    wbArmed = null;
+    rerender('ui');
+  });
+  const g = gearById(wbSel);
+  on('.qopt', b => {
+    if (gearPickQuirk(g, b.dataset.q)) toast(`${QUIRKS[g.q].name} welded onto ${MOD[g.id].name}`, true);
+    rerender('legend');
+  });
+  on('#wbUp', () => {
+    if (gearUpgrade(g)) toast(`${gearName(g)}${g.lvl >= GEAR_MAX ? ' is now a Masterwork!' : ' upgraded'}`, true);
+    rerender(g.lvl >= GEAR_MAX ? 'jackpot' : 'repair');
+  });
+  on('#wbReroll', () => {
+    gearRerollQuirk(g);
+    rerender('reveal');
+  });
+  on('#wbEquip', () => {
+    const r = gearEquip(g);
+    if (r === 'full') toast(`All ${loadoutSlots()} loadout slots are full. Take something out first.`);
+    rerender(r === 'full' ? 'remove' : 'place');
+  });
+  on('#wbLock', () => {
+    gearLock(g);
+    rerender('ui');
+  });
+  on('#wbFuse', () => {
     const other = GEAR.items.filter(x => x !== g && x.id === g.id).sort((a, b) => b.lvl - a.lvl)[0];
     const keep = gearFuse(g, other);
     if (keep) {
       wbSel = keep.u;
-      sfx('clank');
       toast(`Fused into ${gearName(keep)}`, true);
     }
-    renderWorkbench();
+    rerender('clank');
   });
-  on('wbScrap', () => {
+  on('#wbScrap', () => {
+    if (gearLocked(g)) return toast('Unlock it first.');
     if (wbArmed !== g.u) {
       wbArmed = g.u;
-      renderWorkbench();
-      return;
+      return rerender();
     }
     const v = gearScrapValue(g);
     gearScrap(g);
     wbArmed = null;
     wbSel = GEAR.items[0] ? GEAR.items[0].u : null;
-    sfx('remove');
     toast(`Scrapped for ${v} bolts`);
-    renderWorkbench();
+    rerender('remove');
   });
-  on('wbDone', () => {
-    $('#ovWork').hidden = true;
-    sfx('ui');
-    if (wbBack) wbBack();
+  // fabricator
+  on('[data-fab]', b => {
+    const made = fabricate(b.dataset.fab);
+    if (made) {
+      hqFabLast = made;
+      wbSel = made.u;
+      sfx('reveal');
+      setTimeout(() => sfx(MOD[made.id].rar >= 2 ? 'jackpot' : 'coin'), 300);
+    }
+    rerender();
+  });
+  on('#fabShow', () => {
+    hqTab = 'gear';
+    rerender('ui');
+  });
+  // looks
+  on('.stitem', b => {
+    const tab = hqTab;
+    if (tab === 'stickers') {
+      const st = STICKER[b.dataset.id];
+      if (!stickerUnlocked(st)) return sfx('remove');
+      const cur = G.style.stickers || [];
+      if (cur.includes(st.id)) G.style.stickers = cur.filter(x => x !== st.id);
+      else if (cur.length >= STICKER_SLOTS) {
+        toast('All three slots are full. Click a sticker in a slot to peel it off first.');
+        return sfx('remove');
+      } else G.style.stickers = [...cur, st.id];
+      saveStyle();
+      if (activeSet() && cur.length < G.style.stickers.length) toast(`Set bonus on: ${STICKER_SETS[activeSet()].bonus}`, true);
+      return rerender('place');
+    }
+    const it = COSMETICS[tab].find(i => i.id === b.dataset.id);
+    if (!it || !isUnlocked(it)) return sfx('remove');
+    G.style[tab] = it.id;
+    saveStyle();
+    rerender('place');
+  });
+  on('[data-rm]', b => {
+    G.style.stickers = G.style.stickers.filter(x => x !== b.dataset.rm);
+    saveStyle();
+    rerender('remove');
+  });
+  on('[data-bk]', b => {
+    const p = parseBadge(G.style.badge),
+      k = b.dataset.bk,
+      v = b.dataset.bv;
+    if (k === 'sh') p.sh = v;
+    else if (k === 'sy') p.sy = v;
+    else p.ci = +v;
+    G.style.badge = `${p.sh}.${p.sy}.${p.ci}`;
+    saveStyle();
+    rerender('place');
   });
 }
 /* ===== js/game/arena.js ===== */
@@ -28107,6 +28468,7 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
   B = null;
   G.mode = mode;
   resetProfile();
+  if (mode === 'solo') applyLoadout();
   if (G.story) storySetup();
   else if (mode === 'solo') {
     G.bot = makeBot(G.diff);
@@ -29259,7 +29621,7 @@ function showRunOver() {
 // Personal gear and sticker flair: your own upgraded parts (found again in matches) and sticker perks.
 // Only single-player cars carry gear or flair; online configs never include them.
 
-let GEAR = { bolts: 0, items: [], next: 1 };
+let GEAR = { bolts: 0, items: [], next: 1, loadout: [], locked: [] };
 function loadGear() {
   try {
     const g = JSON.parse(load('sd.gear') || 'null');
@@ -29267,15 +29629,21 @@ function loadGear() {
       GEAR = {
         bolts: Math.max(0, g.bolts | 0),
         items: g.items.filter(x => x && MOD[x.id] && x.lvl >= 1).map(sanitizeGear),
-        next: Math.max(1, g.next | 0)
+        next: Math.max(1, g.next | 0),
+        loadout: [],
+        locked: []
       };
       for (const x of GEAR.items) GEAR.next = Math.max(GEAR.next, x.u + 1);
+      const has = u => GEAR.items.some(x => x.u === u);
+      GEAR.loadout = (Array.isArray(g.loadout) ? g.loadout : []).filter(has).slice(0, 4);
+      GEAR.locked = (Array.isArray(g.locked) ? g.locked : []).filter(has);
       return;
     }
   } catch (e) {}
   // first time: three starter pieces so the Workbench is never empty
-  GEAR = { bolts: 60, items: [], next: 1 };
+  GEAR = { bolts: 60, items: [], next: 1, loadout: [], locked: [] };
   for (const id of ['wheel', 'frame', 'mg']) if (MOD[id]) addGear(id, 1, true);
+  GEAR.loadout = GEAR.items.filter(g => g.id === 'mg').map(g => g.u);
   saveGear();
 }
 const saveGear = () => store('sd.gear', GEAR);
@@ -29352,6 +29720,9 @@ function gearFuse(a, b) {
   const keep = a.lvl >= b.lvl ? a : b,
     lose = keep === a ? b : a;
   GEAR.items = GEAR.items.filter(x => x !== lose);
+  if (GEAR.loadout.includes(lose.u)) GEAR.loadout = GEAR.loadout.map(u => (u === lose.u ? keep.u : u));
+  GEAR.loadout = [...new Set(GEAR.loadout)];
+  GEAR.locked = GEAR.locked.filter(u => u !== lose.u);
   if (keep.lvl < GEAR_MAX) {
     keep.lvl++;
     if (keep.lvl === 3 && !keep.q) keep.qo = quirkOffers(keep);
@@ -29361,10 +29732,63 @@ function gearFuse(a, b) {
   return keep;
 }
 function gearScrap(g) {
+  if (gearLocked(g)) return false;
   GEAR.items = GEAR.items.filter(x => x !== g);
+  GEAR.loadout = GEAR.loadout.filter(u => u !== g.u);
   GEAR.bolts += gearScrapValue(g);
   for (const k in G.gearFound || {}) if (G.gearFound[k] === g.u) delete G.gearFound[k];
   saveGear();
+}
+
+/* ---------- loadout, locks and fabrication ---------- */
+/** Loadout slots: 3, a fourth at Scrap Cred level 10. Loadout gear is in your bin from round 1. */
+const loadoutSlots = () => (levelInfo().lvl >= 10 ? 4 : 3);
+const gearEquipped = g => GEAR.loadout.includes(g.u);
+const gearLocked = g => GEAR.locked.includes(g.u);
+function gearEquip(g) {
+  if (gearEquipped(g)) {
+    GEAR.loadout = GEAR.loadout.filter(u => u !== g.u);
+    saveGear();
+    return 'off';
+  }
+  if (GEAR.loadout.length >= loadoutSlots()) return 'full';
+  GEAR.loadout.push(g.u);
+  saveGear();
+  return 'on';
+}
+function gearLock(g) {
+  GEAR.locked = gearLocked(g) ? GEAR.locked.filter(u => u !== g.u) : [...GEAR.locked, g.u];
+  saveGear();
+}
+/** Fabricator: bolts in, a random level-1 part of the chosen kind out. */
+const FAB = [
+  { id: 'weapon', name: 'Gun crate', cost: 140, cats: ['weapon'], desc: 'A random gun, launcher or beam.' },
+  { id: 'melee', name: 'Melee crate', cost: 120, cats: ['melee'], desc: 'Saws, rams, flippers and other close friends.' },
+  { id: 'armour', name: 'Armour crate', cost: 90, cats: ['struct', 'defense'], desc: 'Plates, frames and shields.' },
+  { id: 'move', name: 'Engine crate', cost: 90, cats: ['move'], desc: 'Wheels, tracks, boosters and legs.' },
+  { id: 'gadget', name: 'Gadget crate', cost: 110, cats: ['utility', 'chaos'], desc: 'Odd tools and dirty tricks.' }
+];
+const FAB_RAR = [55, 30, 12, 3, 0];
+function fabricate(kind) {
+  const F = FAB.find(f => f.id === kind);
+  if (!F || GEAR.bolts < F.cost || GEAR.items.length >= GEAR_CAP) return null;
+  const pool = MODS.filter(m => F.cats.includes(m.cat) && m.id !== 'cockpit' && m.rar <= 3);
+  if (!pool.length) return null;
+  let roll = Math.random() * FAB_RAR.reduce((a, b) => a + b, 0),
+    rar = 0;
+  while (rar < 3 && (roll -= FAB_RAR[rar]) > 0) rar++;
+  const of = pool.filter(m => m.rar === rar),
+    m = pick(of.length ? of : pool);
+  GEAR.bolts -= F.cost;
+  return addGear(m.id, 1, true, 'Fabricator');
+}
+/** At the start of a single-player match: every loadout piece goes straight into your bin. */
+function applyLoadout() {
+  if (!gearActive()) return;
+  for (const u of GEAR.loadout) {
+    const g = gearById(u);
+    if (g) findGear(g);
+  }
 }
 
 /* ---------- gear in a match ---------- */
@@ -30165,7 +30589,7 @@ function loadStory() {
         seen: s.seen || {},
         pos: Array.isArray(s.pos) ? s.pos : null,
         fog: typeof s.fog === 'string' ? s.fog : null,
-        caches: Array.isArray(s.caches) ? s.caches.filter(id => OW_CACHES.some(c => c.id === id)) : []
+        caches: []
       };
   } catch (e) {}
 }
@@ -30429,10 +30853,9 @@ function drawBossBar(c) {
   c.restore();
 }
 /* ===== js/game/overworld.js ===== */
-// The Scrap Road world: a top-down map you drive around in your own car between missions.
-// Four regions (Scrapyard → Rust Canyon → Neon Docks → Junk King's Keep) are walled off by gates that open when the
-// region's boss is beaten. Roads link the mission sites; hidden caches with bolts and gear sit off the road, and fog
-// lifts where you have driven. The terrain is generated once from a fixed seed, so the world is the same every time.
+// The Scrap Road map: one illustrated top-down map of the four regions (Scrapyard → Rust Canyon → Neon Docks →
+// Junk King's Keep) with the road through every mission. Click a mission to see it, start it from the card.
+// The terrain is generated once from a fixed seed, so the map looks the same every time.
 
 const OW_W = 3600,
   OW_H = 2400,
@@ -30511,22 +30934,6 @@ const OW_ROAD = [
   OW_SITES.r4c,
   OW_SITES.r4x
 ];
-// hidden caches, off the road. Rewards are rolled when found.
-const OW_CACHES = [
-  { id: 'c1', x: 120, y: 1700, r: 'r1', hint: 'Behind the tyre mountain' },
-  { id: 'c2', x: 1360, y: 2330, r: 'r1', hint: 'In the scrap corner' },
-  { id: 'c3', x: 900, y: 1300, r: 'r1', hint: 'Under the crane' },
-  { id: 'c4', x: 2080, y: 1420, r: 'r2', hint: 'Canyon nook' },
-  { id: 'c5', x: 3480, y: 2320, r: 'r2', hint: 'On the beach' },
-  { id: 'c6', x: 2540, y: 2330, r: 'r2', hint: 'Between the lava pools' },
-  { id: 'c7', x: 3500, y: 1160, r: 'r3', hint: 'End of the pier' },
-  { id: 'c8', x: 2050, y: 160, r: 'r3', hint: 'Container maze' },
-  { id: 'c9', x: 2900, y: 640, r: 'r3', hint: 'Under the big crane' },
-  { id: 'c10', x: 1760, y: 1080, r: 'r4', hint: 'Below the gate tower' },
-  { id: 'c11', x: 120, y: 980, r: 'r4', hint: 'The moat' },
-  { id: 'c12', x: 1100, y: 140, r: 'r4', hint: 'Behind the throne room' }
-];
-
 /* ---------- seeded world generation ---------- */
 function owRand(seed) {
   let a = seed >>> 0;
@@ -30569,7 +30976,6 @@ function owWorld() {
   const free = (x, y, r) =>
     owRoadDist(x, y) > r + 70 &&
     Object.values(OW_SITES).every(([sx, sy]) => Math.hypot(sx - x, sy - y) > r + 120) &&
-    OW_CACHES.every(c => Math.hypot(c.x - x, c.y - y) > r + 130) &&
     Math.hypot(OW_START[0] - x, OW_START[1] - y) > r + 120 &&
     OW_WALLS.every(w => circRectDist(x, y, w) > r + 30) &&
     solids.every(s => Math.hypot(s.x - x, s.y - y) > s.r + r + 12);
@@ -30844,246 +31250,21 @@ function owDrawProp(c, o, rr) {
   c.restore();
 }
 
-/* ---------- state ---------- */
-let OWS = null; // live driving state while the map is open
-function owFogLoad() {
-  const n = Math.ceil(OW_W / OW_FOG) * Math.ceil(OW_H / OW_FOG),
-    f = new Uint8Array(n);
-  const s = STORYP.fog;
-  if (typeof s === 'string')
-    try {
-      const bin = atob(s);
-      for (let i = 0; i < n; i++) f[i] = (bin.charCodeAt(i >> 3) >> (i & 7)) & 1;
-    } catch (e) {}
-  return f;
-}
-function owFogSave(f) {
-  const bytes = new Uint8Array(Math.ceil(f.length / 8));
-  for (let i = 0; i < f.length; i++) if (f[i]) bytes[i >> 3] |= 1 << (i & 7);
-  let s = '';
-  for (const b of bytes) s += String.fromCharCode(b);
-  STORYP.fog = btoa(s);
-}
+/* ---------- the map screen ---------- */
 const owGateOpen = w => !w.gate || storyStars(w.gate.boss) > 0;
-/** Wall rectangles that currently block the car (a wall split around its gate, plus the closed gate). */
-function owBlockers() {
-  const out = [];
-  for (const w of OW_WALLS) {
-    if (!w.gate) {
-      out.push(w);
-      continue;
-    }
-    const g = w.gate,
-      vert = w.h > w.w;
-    if (vert) {
-      out.push({ x: w.x, y: w.y, w: w.w, h: g.y0 - w.y }, { x: w.x, y: g.y1, w: w.w, h: w.y + w.h - g.y1 });
-      if (!owGateOpen(w)) out.push({ x: w.x, y: g.y0, w: w.w, h: g.y1 - g.y0, gate: w });
-    } else {
-      out.push({ x: w.x, y: w.y, w: g.x0 - w.x, h: w.h }, { x: g.x1, y: w.y, w: w.x + w.w - g.x1, h: w.h });
-      if (!owGateOpen(w)) out.push({ x: g.x0, y: w.y, w: g.x1 - g.x0, h: w.h, gate: w });
-    }
-  }
-  return out;
+const owRegionOpen = id => storyOpen(STORY.find(m => m.region === id).id);
+let OWM = null; // { hover, view: {x, y, z} }
+function owView(W, H) {
+  const pad = 16,
+    z = Math.min((W - pad * 2) / OW_W, (H - pad * 2) / OW_H);
+  return { z, x: (W - OW_W * z) / 2, y: (H - OW_H * z) / 2 };
 }
-function owCarImage() {
-  const k = G.paint + G.style.livery + (G.style.stickers || []).join();
-  if (OWS && OWS.carKey === k && OWS.carImg) return OWS.carImg;
-  const img = new Image();
-  try {
-    img.src = designURL(stylePreviewDesign(), 80, G.paint, G.style.livery);
-  } catch (e) {}
-  if (OWS) {
-    OWS.carImg = img;
-    OWS.carKey = k;
-  }
-  return img;
-}
-function owStart() {
-  owWorld();
-  const pos = STORYP.pos && Number.isFinite(STORYP.pos[0]) ? STORYP.pos : [...OW_START, -Math.PI / 2];
-  OWS = {
-    x: pos[0],
-    y: pos[1],
-    a: pos[2] ?? -Math.PI / 2,
-    v: 0,
-    keys: new Set(),
-    fog: owFogLoad(),
-    fogDirty: true,
-    fogC: null,
-    tracks: [],
-    dust: [],
-    near: null,
-    cam: { x: pos[0], y: pos[1] },
-    bump: 0,
-    saveT: 0,
-    msg: null
-  };
-  owReveal(true);
-}
-/** Lifts the fog around the car; returns true if anything new was seen. */
-function owReveal(force) {
-  const S = OWS,
-    cols = Math.ceil(OW_W / OW_FOG),
-    R = 6,
-    cx = Math.floor(S.x / OW_FOG),
-    cy = Math.floor(S.y / OW_FOG);
-  let n = 0;
-  for (let dy = -R; dy <= R; dy++)
-    for (let dx = -R; dx <= R; dx++) {
-      if (dx * dx + dy * dy > R * R) continue;
-      const x = cx + dx,
-        y = cy + dy;
-      if (x < 0 || y < 0 || x >= cols || y >= Math.ceil(OW_H / OW_FOG)) continue;
-      const i = y * cols + x;
-      if (!S.fog[i]) {
-        S.fog[i] = 1;
-        n++;
-      }
-    }
-  if (n || force) S.fogDirty = true;
-  return n > 0;
-}
-const owSeen = (x, y) => {
-  const cols = Math.ceil(OW_W / OW_FOG);
-  return !!OWS.fog[Math.floor(y / OW_FOG) * cols + Math.floor(x / OW_FOG)];
-};
-
-/* ---------- driving ---------- */
-const OW_KEYS = {
-  up: ['KeyW', 'ArrowUp'],
-  down: ['KeyS', 'ArrowDown'],
-  left: ['KeyA', 'ArrowLeft'],
-  right: ['KeyD', 'ArrowRight'],
-  boost: ['ShiftLeft', 'ShiftRight']
-};
-const owHeld = (S, k) => OW_KEYS[k].some(c => S.keys.has(c));
-function owStep(dt) {
-  const S = OWS;
-  if (!S) return;
-  const onRoad = owRoadDist(S.x, S.y) < 50,
-    top = (onRoad ? 520 : 340) * (owHeld(S, 'boost') ? 1.35 : 1),
-    th = (owHeld(S, 'up') ? 1 : 0) - (owHeld(S, 'down') ? 1 : 0),
-    st = (owHeld(S, 'right') ? 1 : 0) - (owHeld(S, 'left') ? 1 : 0);
-  if (th > 0) S.v = Math.min(top, S.v + 620 * dt);
-  else if (th < 0) S.v = Math.max(-180, S.v - (S.v > 0 ? 900 : 380) * dt);
-  else S.v -= Math.sign(S.v) * Math.min(Math.abs(S.v), 300 * dt);
-  if (S.v > top) S.v = Math.max(top, S.v - 600 * dt);
-  const turn = st * 2.8 * clamp(Math.abs(S.v) / 200, 0, 1) * Math.sign(S.v || 1);
-  S.a += turn * dt;
-  let nx = S.x + Math.cos(S.a) * S.v * dt,
-    ny = S.y + Math.sin(S.a) * S.v * dt;
-  // collisions: props (circles), walls and closed gates (rects), world edge
-  const R = 22;
-  let hit = false;
-  for (const o of OW.solids) {
-    const d = Math.hypot(nx - o.x, ny - o.y),
-      m = o.r * (o.kind === 'container' ? 0.95 : 0.8) + R;
-    if (d < m) {
-      nx = o.x + ((nx - o.x) / (d || 1)) * m;
-      ny = o.y + ((ny - o.y) / (d || 1)) * m;
-      hit = true;
-    }
-  }
-  for (const w of owBlockers()) {
-    const px = clamp(nx, w.x, w.x + w.w),
-      py = clamp(ny, w.y, w.y + w.h),
-      d = Math.hypot(nx - px, ny - py);
-    if (d < R) {
-      const k = (R - d) / (d || 1);
-      nx += (nx - px) * k || (nx < w.x + w.w / 2 ? -R : R) * (w.h > w.w ? 1 : 0);
-      ny += (ny - py) * k || (ny < w.y + w.h / 2 ? -R : R) * (w.w >= w.h ? 1 : 0);
-      hit = true;
-      if (w.gate && !S.msg) S.msg = { t: 3, text: `Gate locked: beat ${STORY_BY[w.gate.gate.boss].name} to open it` };
-    }
-  }
-  nx = clamp(nx, R, OW_W - R);
-  ny = clamp(ny, R, OW_H - R);
-  if (hit) {
-    if (Math.abs(S.v) > 160 && S.bump <= 0) {
-      sfx('thump');
-      S.bump = 0.4;
-    }
-    S.v *= 0.55;
-  }
-  S.bump -= dt;
-  S.x = nx;
-  S.y = ny;
-  // tracks and dust off-road
-  if (Math.abs(S.v) > 60) {
-    S.tracks.push([S.x - Math.cos(S.a) * 18, S.y - Math.sin(S.a) * 18, S.a, 1]);
-    if (S.tracks.length > 260) S.tracks.shift();
-    if (!onRoad && Math.random() < 0.5)
-      S.dust.push({ x: S.x - Math.cos(S.a) * 24, y: S.y - Math.sin(S.a) * 24, t: 0.8, r: 6 + Math.random() * 8 });
-  }
-  for (const d of S.dust) d.t -= dt;
-  S.dust = S.dust.filter(d => d.t > 0);
-  for (const t of S.tracks) t[3] -= dt * 0.12;
-  owReveal();
-  // caches
-  for (const c of OW_CACHES)
-    if (!(STORYP.caches || []).includes(c.id) && Math.hypot(c.x - S.x, c.y - S.y) < 46) owOpenCache(c);
-  // nearest open site
-  let near = null,
-    nd = 150;
-  for (const m of STORY) {
-    const p = OW_SITES[m.id],
-      d = Math.hypot(p[0] - S.x, p[1] - S.y);
-    if (d < nd) ((nd = d), (near = m.id));
-  }
-  if (near !== S.near) {
-    S.near = near;
-    if (near) {
-      storySel = near;
-      sfx('beep');
-    }
-    owCard();
-  }
-  if (S.msg && (S.msg.t -= dt) <= 0) S.msg = null;
-  S.saveT += dt;
-  if (S.saveT > 3) owPersist();
-  // camera eases after the car, looking a little ahead
-  S.cam.x += (S.x + Math.cos(S.a) * S.v * 0.35 - S.cam.x) * Math.min(1, dt * 4);
-  S.cam.y += (S.y + Math.sin(S.a) * S.v * 0.35 - S.cam.y) * Math.min(1, dt * 4);
-}
-function owPersist() {
-  if (!OWS) return;
-  OWS.saveT = 0;
-  STORYP.pos = [Math.round(OWS.x), Math.round(OWS.y), +OWS.a.toFixed(2)];
-  owFogSave(OWS.fog);
-  saveStory();
-}
-function owOpenCache(c) {
-  STORYP.caches = [...(STORYP.caches || []), c.id];
-  const reg = STORY_REGIONS.findIndex(r => r.id === c.r),
-    rr = owRand(c.id.length * 97 + reg * 13 + (STORYP.caches.length || 0));
-  let text;
-  if (rr() < 0.45) {
-    const pool = MODS.filter(m => m.id !== 'cockpit' && m.rar <= Math.min(4, reg + 1) && m.rar >= Math.min(2, reg));
-    const id = pool[Math.floor(rr() * pool.length)].id,
-      g = addGear(id, 1 + Math.min(2, reg >> 1), true, 'Scrap Road cache');
-    text = g ? `Gear found: ${gearName(g)}` : 'Gear found, but your locker is full';
-  } else {
-    const b = 40 + reg * 30 + Math.floor(rr() * 30);
-    addBolts(b);
-    text = `+${b} bolts`;
-  }
-  sfx('jackpot');
-  OWS.msg = { t: 3.5, text: `Cache: ${c.hint}. ${text}`, good: true };
-  if (STORYP.caches.length >= OW_CACHES.length) {
-    const p = grant(0, ['explorer']);
-    if (p.newAch.length) OWS.msg = { t: 5, text: 'All caches found! Title unlocked: Road Tripper', good: true };
-  }
-  owPersist();
-  owHeader();
-}
-
-/* ---------- drawing ---------- */
 function owDraw() {
-  const S = OWS,
-    cv = $('#owc');
-  if (!S || !cv) return;
+  const cv = $('#owc');
+  if (!cv || !OWM) return;
   const d = dprOf(),
     r = cv.getBoundingClientRect();
+  if (!r.width) return;
   if (cv.width !== Math.round(r.width * d) || cv.height !== Math.round(r.height * d)) {
     cv.width = Math.round(r.width * d);
     cv.height = Math.round(r.height * d);
@@ -31091,38 +31272,17 @@ function owDraw() {
   const c = cv.getContext('2d'),
     W = r.width,
     H = r.height,
-    z = clamp(Math.min(W / 1500, H / 900), 0.55, 1.1);
+    V = (OWM.view = owView(W, H)),
+    t = ANIM;
   c.setTransform(d, 0, 0, d, 0, 0);
-  c.fillStyle = '#05080f';
+  c.fillStyle = '#070c18';
   c.fillRect(0, 0, W, H);
-  const cx = clamp(S.cam.x, W / (2 * z), OW_W - W / (2 * z)),
-    cy = clamp(S.cam.y, H / (2 * z), OW_H - H / (2 * z));
   c.save();
-  c.translate(W / 2, H / 2);
-  c.scale(z, z);
-  c.translate(-cx, -cy);
-  const img = owTerrain(),
-    k = OW.scale,
-    vx0 = cx - W / (2 * z),
-    vy0 = cy - H / (2 * z);
-  c.drawImage(img, vx0 * k, vy0 * k, (W / z) * k, (H / z) * k, vx0, vy0, W / z, H / z);
-  const t = ANIM;
-  // tyre tracks
-  c.fillStyle = 'rgba(0,0,0,.18)';
-  for (const [x, y, a, f] of S.tracks) {
-    if (f <= 0) continue;
-    c.globalAlpha = Math.min(1, f);
-    c.save();
-    c.translate(x, y);
-    c.rotate(a);
-    c.fillRect(-3, -14, 6, 5);
-    c.fillRect(-3, 9, 6, 5);
-    c.restore();
-  }
-  c.globalAlpha = 1;
+  c.translate(V.x, V.y);
+  c.scale(V.z, V.z);
+  c.drawImage(owTerrain(), 0, 0, OW_W, OW_H);
   // animated landmarks
   for (const o of OW.anim) {
-    if (o.x < vx0 - 300 || o.x > vx0 + W / z + 300 || o.y < vy0 - 300 || o.y > vy0 + H / z + 300) continue;
     if (o.kind === 'lavaglow') {
       c.globalAlpha = 0.25 + Math.sin(t * 2 + o.x) * 0.12;
       c.fillStyle = '#ff7a1f';
@@ -31134,7 +31294,7 @@ function owDraw() {
       for (let i = 0; i < 3; i++) {
         c.fillStyle = ['#ff5a1f', '#ffb423', '#ffe27a'][i];
         c.beginPath();
-        c.arc(o.x + Math.sin(t * 9 + i) * 3, o.y - i * 4 + Math.sin(t * 13 + i * 2) * 2, 9 - i * 2.5, 0, Math.PI * 2);
+        c.arc(o.x + Math.sin(t * 9 + i) * 3, o.y - i * 4, 10 - i * 3, 0, Math.PI * 2);
         c.fill();
       }
     } else if (o.kind === 'crane') {
@@ -31142,176 +31302,102 @@ function owDraw() {
       c.translate(o.x, o.y);
       c.fillStyle = '#c9a227';
       c.fillRect(-22, -22, 44, 44);
-      c.rotate(t * 0.25 + o.x);
+      c.rotate(Math.sin(t * 0.3 + o.x) * 0.8);
       c.fillStyle = '#ffb423';
       c.fillRect(-30, -9, 260, 18);
       c.fillStyle = '#1a1100';
       for (let x = -20; x < 220; x += 24) c.fillRect(x, -9, 3, 18);
-      c.strokeStyle = '#8b939c';
-      c.lineWidth = 2;
-      c.beginPath();
-      c.moveTo(200, 0);
-      c.lineTo(200, 34);
-      c.stroke();
       c.fillStyle = '#6c747d';
-      c.fillRect(188, 34, 24, 16);
+      c.fillRect(188, 18, 24, 16);
       c.restore();
     }
   }
-  // neon blink on the docks
-  c.globalAlpha = 0.5 + Math.max(0, Math.sin(t * 3)) * 0.5;
-  c.fillStyle = '#5be7ff';
-  c.font = '700 34px "Chakra Petch", sans-serif';
-  c.fillText('NEON DOCKS', 2380, 1200);
-  c.fillStyle = '#ff5c7a';
-  c.fillText('OPEN 24/7', 3030, 1215);
-  c.globalAlpha = 1;
+  // the travelled road glows: from the start through every beaten mission
+  const done = STORY.filter(m => storyStars(m.id)).length,
+    pts = [];
+  let seen = 0;
+  for (const p of OW_ROAD) {
+    if (!p) continue;
+    pts.push(p);
+    const id = Object.keys(OW_SITES).find(k => OW_SITES[k] === p);
+    if (id && STORY.findIndex(m => m.id === id) >= done) break;
+    if (id) seen++;
+  }
+  c.strokeStyle = 'rgba(255,180,35,.85)';
+  c.lineWidth = 14;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  c.setLineDash([2, 26]);
+  c.lineDashOffset = -t * 40;
+  c.beginPath();
+  pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])));
+  c.stroke();
+  c.setLineDash([]);
+  // locked regions sit under a dark veil with a hazard pattern
+  for (const id in OW_REG) {
+    if (owRegionOpen(id)) continue;
+    const R = OW_REG[id];
+    c.fillStyle = 'rgba(5,8,18,.62)';
+    c.fillRect(R.x0, R.y0, R.x1 - R.x0, R.y1 - R.y0);
+    c.save();
+    c.beginPath();
+    c.rect(R.x0, R.y0, R.x1 - R.x0, R.y1 - R.y0);
+    c.clip();
+    c.strokeStyle = 'rgba(255,180,35,.06)';
+    c.lineWidth = 30;
+    for (let k = -OW_H; k < OW_W; k += 120) {
+      c.beginPath();
+      c.moveTo(k, 0);
+      c.lineTo(k + OW_H, OW_H);
+      c.stroke();
+    }
+    c.restore();
+  }
   // gates
   for (const w of OW_WALLS)
     if (w.gate) {
       const g = w.gate,
-        open = owGateOpen(w),
         vert = w.h > w.w,
-        gx = vert ? w.x : g.x0,
-        gy = vert ? g.y0 : w.y,
-        gw = vert ? w.w : g.x1 - g.x0,
-        gh = vert ? g.y1 - g.y0 : w.h;
+        gx = vert ? w.x + w.w / 2 : (g.x0 + g.x1) / 2,
+        gy = vert ? (g.y0 + g.y1) / 2 : w.y + w.h / 2,
+        open = owGateOpen(w);
+      c.save();
+      c.translate(gx, gy);
+      c.fillStyle = open ? '#1f5a44' : '#4a1c26';
+      c.strokeStyle = open ? '#3fe0a0' : '#ff5c7a';
+      c.lineWidth = 6;
+      c.beginPath();
+      c.arc(0, 0, 44, 0, Math.PI * 2);
+      c.fill();
+      c.stroke();
+      c.fillStyle = open ? '#3fe0a0' : '#ff5c7a';
       if (open) {
-        c.fillStyle = 'rgba(63,224,160,.18)';
-        c.fillRect(gx - 10, gy - 10, gw + 20, gh + 20);
+        c.fillRect(-16, -4, 32, 8);
+        c.fillRect(-4, -16, 8, 32);
       } else {
-        c.fillStyle = '#2b1b22';
-        c.fillRect(gx, gy, gw, gh);
-        c.strokeStyle = `rgba(255,92,122,${0.6 + Math.sin(t * 4) * 0.3})`;
-        c.lineWidth = 3;
-        for (let k2 = 0; k2 < (vert ? gh : gw); k2 += 14) {
-          c.beginPath();
-          vert
-            ? (c.moveTo(gx, gy + k2), c.lineTo(gx + gw, gy + k2 + 7))
-            : (c.moveTo(gx + k2, gy), c.lineTo(gx + k2 + 7, gy + gh));
-          c.stroke();
-        }
+        c.fillRect(-16, -6, 32, 24);
+        c.strokeStyle = c.fillStyle;
+        c.beginPath();
+        c.arc(0, -8, 11, Math.PI, 0);
+        c.stroke();
       }
+      c.restore();
     }
-  // caches: a glint you only notice when close (and revealed)
-  for (const ch of OW_CACHES) {
-    if ((STORYP.caches || []).includes(ch.id) || !owSeen(ch.x, ch.y)) continue;
-    const pulse = 0.5 + Math.sin(t * 4 + ch.x) * 0.5;
-    c.fillStyle = '#8a5a2b';
-    c.fillRect(ch.x - 13, ch.y - 13, 26, 26);
-    c.strokeStyle = '#5b3a1a';
-    c.lineWidth = 3;
-    c.strokeRect(ch.x - 13, ch.y - 13, 26, 26);
-    c.globalAlpha = pulse;
-    c.fillStyle = '#ffe27a';
-    c.beginPath();
-    c.moveTo(ch.x + 10, ch.y - 22);
-    c.lineTo(ch.x + 13, ch.y - 15);
-    c.lineTo(ch.x + 20, ch.y - 12);
-    c.lineTo(ch.x + 13, ch.y - 9);
-    c.lineTo(ch.x + 10, ch.y - 2);
-    c.lineTo(ch.x + 7, ch.y - 9);
-    c.lineTo(ch.x, ch.y - 12);
-    c.lineTo(ch.x + 7, ch.y - 15);
-    c.fill();
-    c.globalAlpha = 1;
+  // region names
+  const LBL = { r1: [60, 1320], r2: [1560, 2370], r3: [1960, 1250], r4: [100, 1150] };
+  for (const reg of STORY_REGIONS) {
+    const [x, y] = LBL[reg.id],
+      open = owRegionOpen(reg.id);
+    c.font = '700 96px "Chakra Petch", sans-serif';
+    c.textBaseline = 'alphabetic';
+    c.textAlign = 'left';
+    c.fillStyle = 'rgba(5,8,18,.7)';
+    c.fillText(reg.name.toUpperCase(), x + 4, y + 4);
+    c.fillStyle = open ? reg.col : 'rgba(141,163,194,.55)';
+    c.fillText(reg.name.toUpperCase(), x, y);
   }
   // mission sites
   for (const m of STORY) owDrawSite(c, m, t);
-  // dust
-  for (const d2 of S.dust) {
-    c.globalAlpha = d2.t * 0.5;
-    c.fillStyle = owRegionAt(d2.x, d2.y) === 'r2' ? '#d29a5c' : '#9c8c78';
-    c.beginPath();
-    c.arc(d2.x, d2.y, d2.r * (1.6 - d2.t), 0, Math.PI * 2);
-    c.fill();
-  }
-  c.globalAlpha = 1;
-  // the car, with headlights in the Keep and on the docks
-  const dark = ['r3', 'r4'].includes(owRegionAt(S.x, S.y));
-  if (dark) {
-    c.save();
-    c.translate(S.x, S.y);
-    c.rotate(S.a);
-    const g = c.createRadialGradient(80, 0, 10, 80, 0, 170);
-    g.addColorStop(0, 'rgba(255,240,190,.28)');
-    g.addColorStop(1, 'rgba(255,240,190,0)');
-    c.fillStyle = g;
-    c.beginPath();
-    c.moveTo(20, -10);
-    c.lineTo(230, -90);
-    c.lineTo(230, 90);
-    c.lineTo(20, 10);
-    c.fill();
-    c.restore();
-  }
-  const ci = owCarImage();
-  c.save();
-  c.translate(S.x, S.y);
-  c.rotate(S.a + Math.PI / 2);
-  c.fillStyle = 'rgba(0,0,0,.35)';
-  c.fillRect(-24, -22, 52, 52);
-  if (ci.complete && ci.naturalWidth) c.drawImage(ci, -30, -30, 60, 60);
-  else {
-    c.fillStyle = G.paint;
-    c.fillRect(-18, -24, 36, 48);
-  }
-  c.restore();
-  // fog of war (low-res, smoothed)
-  owDrawFog(c);
-  // region ambience tint (night in the Keep)
-  c.restore();
-  c.setTransform(d, 0, 0, d, 0, 0);
-  const reg = owRegionAt(S.x, S.y);
-  if (reg === 'r4' || reg === 'r3') {
-    const g = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.7);
-    g.addColorStop(0, 'rgba(5,6,20,0)');
-    g.addColorStop(1, reg === 'r4' ? 'rgba(20,6,40,.55)' : 'rgba(4,12,30,.45)');
-    c.fillStyle = g;
-    c.fillRect(0, 0, W, H);
-  }
-  owDrawGuide(c, W, H, z, cx, cy);
-  owDrawHUD(c, W, H, z, cx, cy);
-}
-/** An arrow at the screen edge pointing to the next mission when it is off screen. */
-function owDrawGuide(c, W, H, z, cx, cy) {
-  const n = nextMission();
-  if (!n || OWS.near === n.id) return;
-  const [tx, ty] = OW_SITES[n.id],
-    sx = (tx - cx) * z + W / 2,
-    sy = (ty - cy) * z + H / 2,
-    m = 70;
-  if (sx > m && sx < W - m && sy > m && sy < H - m) return;
-  const a = Math.atan2(sy - H / 2, sx - W / 2),
-    k = Math.min((W / 2 - m) / Math.abs(Math.cos(a) || 1e-6), (H / 2 - m) / Math.abs(Math.sin(a) || 1e-6)),
-    x = W / 2 + Math.cos(a) * k,
-    y = H / 2 + Math.sin(a) * k,
-    dist = Math.round(Math.hypot(tx - OWS.x, ty - OWS.y) / 10);
-  c.save();
-  c.translate(x, y);
-  c.globalAlpha = 0.75 + Math.sin(ANIM * 4) * 0.25;
-  c.save();
-  c.rotate(a);
-  c.fillStyle = '#ffb423';
-  c.beginPath();
-  c.moveTo(22, 0);
-  c.lineTo(-8, -14);
-  c.lineTo(-2, 0);
-  c.lineTo(-8, 14);
-  c.closePath();
-  c.fill();
-  c.restore();
-  c.globalAlpha = 1;
-  c.font = '700 12px "Chakra Petch", sans-serif';
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  const lab = `${n.name} · ${dist} m`,
-    w = c.measureText(lab).width + 14,
-    ly = Math.sin(a) > 0.5 ? -30 : 30;
-  c.fillStyle = 'rgba(10,16,32,.85)';
-  c.fillRect(-w / 2, ly - 10, w, 20);
-  c.fillStyle = '#ffd257';
-  c.fillText(lab, 0, ly);
   c.restore();
 }
 function owDrawSite(c, m, t) {
@@ -31320,60 +31406,50 @@ function owDrawSite(c, m, t) {
     stars = storyStars(m.id),
     boss = m.kind === 'boss',
     col = STORY_REGIONS.find(r => r.id === m.region).col,
-    seen = owSeen(x, y);
-  if (!seen && !open) return;
-  const near = OWS.near === m.id,
-    R = boss ? 64 : 46;
+    sel = storySel === m.id,
+    hov = OWM.hover === m.id,
+    next = nextMission() === m,
+    R = boss ? 92 : 68;
   c.save();
   c.translate(x, y);
-  // the arena pad: a chamfered octagon of concrete with hazard edges
-  c.fillStyle = 'rgba(0,0,0,.35)';
-  owOct(c, 8, 10, R);
-  c.fill();
-  c.fillStyle = open ? '#4a4f57' : '#2a2d33';
-  owOct(c, 0, 0, R);
-  c.fill();
-  c.lineWidth = 6;
-  c.strokeStyle = open ? col : '#3a3f48';
-  c.setLineDash([12, 8]);
-  c.stroke();
-  c.setLineDash([]);
-  // holo pillar over open, unbeaten missions
-  if (open && !stars) {
-    c.globalAlpha = 0.25 + Math.sin(t * 3) * 0.1;
-    const g = c.createLinearGradient(0, -R * 2.4, 0, 0);
-    g.addColorStop(0, 'rgba(91,231,255,0)');
-    g.addColorStop(1, col);
-    c.fillStyle = g;
-    c.fillRect(-R * 0.45, -R * 2.4, R * 0.9, R * 2.4);
+  if (next) {
+    // beacon on the next mission
+    c.globalAlpha = 0.35 + Math.sin(t * 3) * 0.15;
+    c.fillStyle = col;
+    c.beginPath();
+    c.arc(0, 0, R + 30 + Math.sin(t * 3) * 8, 0, Math.PI * 2);
+    c.fill();
     c.globalAlpha = 1;
   }
-  if (near) {
-    c.strokeStyle = '#e6f1ff';
-    c.lineWidth = 2;
-    c.beginPath();
-    c.arc(0, 0, R + 16 + Math.sin(t * 5) * 3, 0, Math.PI * 2);
-    c.stroke();
-  }
+  c.fillStyle = 'rgba(0,0,0,.4)';
+  owOct(c, 10, 12, R);
+  c.fill();
+  c.fillStyle = open ? (stars ? '#1c2a44' : '#2a3a58') : '#1a1f2a';
+  owOct(c, 0, 0, R);
+  c.fill();
+  c.lineWidth = sel || hov ? 10 : 6;
+  c.strokeStyle = sel ? '#e6f1ff' : open ? col : '#3a3f48';
+  c.stroke();
   c.fillStyle = open ? '#e6f1ff' : '#5d6670';
-  c.font = `700 ${boss ? 30 : 22}px "Chakra Petch", sans-serif`;
+  c.font = `700 ${boss ? 60 : 46}px "Chakra Petch", sans-serif`;
   c.textAlign = 'center';
   c.textBaseline = 'middle';
-  c.fillText(boss ? '☠' : String(STORY.indexOf(m) + 1), 0, 2);
-  // name plate
-  c.font = '700 15px "Chakra Petch", sans-serif';
-  const label = m.name,
-    w = c.measureText(label).width + 20;
-  c.fillStyle = 'rgba(10,16,32,.85)';
-  c.fillRect(-w / 2, R + 10, w, 24);
-  c.fillStyle = open ? col : '#5d6670';
-  c.fillRect(-w / 2, R + 10, 3, 24);
-  c.fillStyle = open ? '#e6f1ff' : '#8da3c2';
-  c.fillText(label, 0, R + 23);
+  c.fillText(boss ? '☠' : String(STORY.indexOf(m) + 1), 0, 3);
   if (stars) {
+    c.font = '44px sans-serif';
     c.fillStyle = '#ffd257';
-    c.font = '14px sans-serif';
-    c.fillText('★'.repeat(stars) + '☆'.repeat(3 - stars), 0, R + 46);
+    c.fillText('★'.repeat(stars) + '☆'.repeat(3 - stars), 0, R + 40);
+  }
+  if (sel || hov || boss || next) {
+    c.font = '700 48px "Chakra Petch", sans-serif';
+    const w = c.measureText(m.name).width + 40,
+      ly = -R - 50;
+    c.fillStyle = 'rgba(10,16,32,.92)';
+    c.fillRect(-w / 2, ly - 34, w, 68);
+    c.fillStyle = open ? col : '#5d6670';
+    c.fillRect(-w / 2, ly - 34, 8, 68);
+    c.fillStyle = '#e6f1ff';
+    c.fillText(m.name, 0, ly + 1);
   }
   c.restore();
 }
@@ -31385,240 +31461,86 @@ function owOct(c, x, y, r) {
   }
   c.closePath();
 }
-function owDrawFog(c) {
-  const S = OWS,
-    cols = Math.ceil(OW_W / OW_FOG),
-    rows = Math.ceil(OW_H / OW_FOG);
-  if (!S.fogC) {
-    S.fogC = document.createElement('canvas');
-    S.fogC.width = cols;
-    S.fogC.height = rows;
-  }
-  if (S.fogDirty) {
-    S.fogDirty = false;
-    const fc = S.fogC.getContext('2d'),
-      im = fc.createImageData(cols, rows);
-    for (let i = 0; i < cols * rows; i++) {
-      im.data[i * 4] = 5;
-      im.data[i * 4 + 1] = 8;
-      im.data[i * 4 + 2] = 15;
-      im.data[i * 4 + 3] = S.fog[i] ? 0 : 235;
-    }
-    fc.putImageData(im, 0, 0);
-  }
-  c.imageSmoothingEnabled = true;
-  c.drawImage(S.fogC, 0, 0, OW_W, OW_H);
-}
-function owDrawHUD(c, W, H, z, cx, cy) {
-  const S = OWS;
-  // telemetry strip, bottom left
-  c.save();
-  const kmh = Math.round(Math.abs(S.v) * 0.18),
-    reg = STORY_REGIONS.find(r => r.id === owRegionAt(S.x, S.y));
-  c.fillStyle = 'rgba(10,16,32,.85)';
-  c.fillRect(16, H - 64, 330, 48);
-  c.fillStyle = reg.col;
-  c.fillRect(16, H - 64, 3, 48);
-  c.font = '700 12px "Chakra Petch", sans-serif';
-  c.fillStyle = '#7fb8d6';
-  c.textBaseline = 'top';
-  c.textAlign = 'left';
-  c.fillText(reg.name.toUpperCase(), 30, H - 58);
-  c.fillText(`X ${Math.round(S.x)}  Y ${Math.round(S.y)}`, 30, H - 38);
-  c.font = '700 26px "Chakra Petch", sans-serif';
-  c.fillStyle = '#e6f1ff';
-  c.textAlign = 'right';
-  c.fillText(String(kmh), 300, H - 58);
-  c.font = '700 11px "Chakra Petch", sans-serif';
-  c.fillStyle = '#8da3c2';
-  c.fillText('KM/H', 338, H - 46);
-  c.textAlign = 'left';
-  // message toast
-  if (S.msg) {
-    c.font = '700 16px "Chakra Petch", sans-serif';
-    const w = c.measureText(S.msg.text).width + 40;
-    c.globalAlpha = Math.min(1, S.msg.t * 2);
-    c.fillStyle = 'rgba(10,16,32,.92)';
-    c.fillRect(W / 2 - w / 2, 18, w, 40);
-    c.fillStyle = S.msg.good ? '#ffd257' : '#ff8a9c';
-    c.fillRect(W / 2 - w / 2, 18, 3, 40);
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.fillText(S.msg.text, W / 2, 38);
-    c.globalAlpha = 1;
-  }
-  // nearby prompt
-  if (S.near && storyOpen(S.near)) {
-    c.font = '700 15px "Chakra Petch", sans-serif';
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    const s = `Enter · start ${STORY_BY[S.near].name}`,
-      w = c.measureText(s).width + 30;
-    c.fillStyle = '#ffb423';
-    c.fillRect(W / 2 - w / 2, H - 70, w, 34);
-    c.fillStyle = '#1a1100';
-    c.fillText(s, W / 2, H - 53);
-  }
-  c.restore();
-  owDrawMini();
-}
-/** Minimap: regions, explored area, sites and caches. Click a site you have seen to drive there instantly. */
-function owDrawMini() {
-  const cv = $('#owmini');
-  if (!cv) return;
-  const d = dprOf(),
-    w = 240,
-    h = 160;
-  if (cv.width !== w * d) {
-    cv.width = w * d;
-    cv.height = h * d;
-  }
-  const c = cv.getContext('2d'),
-    k = w / OW_W;
-  c.setTransform(d, 0, 0, d, 0, 0);
-  c.drawImage(owTerrain(), 0, 0, w, h);
-  c.drawImage(OWS.fogC || owTerrain(), 0, 0, w, h);
+/** Which mission is under a point on the canvas (CSS px). */
+function owHit(px, py) {
+  const V = OWM && OWM.view;
+  if (!V) return null;
+  const x = (px - V.x) / V.z,
+    y = (py - V.y) / V.z;
+  let best = null,
+    bd = 95;
   for (const m of STORY) {
-    const [x, y] = OW_SITES[m.id];
-    if (!owSeen(x, y) && !storyOpen(m.id)) continue;
-    c.fillStyle = storyStars(m.id) ? '#ffd257' : storyOpen(m.id) ? '#5be7ff' : '#5d6670';
-    c.fillRect(x * k - 3, y * k - 3, m.kind === 'boss' ? 8 : 6, m.kind === 'boss' ? 8 : 6);
+    const [sx, sy] = OW_SITES[m.id],
+      d = Math.hypot(sx - x, sy - y);
+    if (d < bd) (bd = d), (best = m.id);
   }
-  c.save();
-  c.translate(OWS.x * k, OWS.y * k);
-  c.rotate(OWS.a);
-  c.fillStyle = '#ffb423';
-  c.beginPath();
-  c.moveTo(6, 0);
-  c.lineTo(-4, -4);
-  c.lineTo(-4, 4);
-  c.fill();
-  c.restore();
-  c.strokeStyle = '#34507e';
-  c.strokeRect(0.5, 0.5, w - 1, h - 1);
+  return best;
 }
-
-/* ---------- screen ---------- */
 function owHeader() {
   const el = $('#owHead');
   if (!el) return;
-  el.innerHTML = `<div class="sr-sum"><b>${totalStars()}</b><span>/ ${STORY.length * 3} stars</span></div>
-    <div class="sr-sum"><b>${(STORYP.caches || []).length}</b><span>/ ${OW_CACHES.length} caches</span></div>
+  const done = STORY.filter(m => storyStars(m.id)).length;
+  el.innerHTML = `<div class="sr-sum"><b>${done}</b><span>/ ${STORY.length} missions</span></div>
+    <div class="sr-sum"><b>${totalStars()}</b><span>/ ${STORY.length * 3} stars</span></div>
     <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b><span>bolts</span></div>`;
 }
-/** The side card: the mission you are parked at, or what to do next. */
 function owCard() {
   const el = $('#owCard');
   if (!el) return;
-  const id = OWS && OWS.near;
-  if (!id) {
-    const n = nextMission();
-    el.className = 'sr-card idle';
-    el.innerHTML = `<span class="label">Scrap Road</span><h3>${n ? 'Drive to the next mission' : 'The road is yours'}</h3>
-      <p>${n ? `Next up: <b>${esc(n.name)}</b>, the glowing pad on your minimap.` : 'Every boss is beaten. Hunt for three stars and the last caches.'}</p>
-      <p class="small">WASD or arrows to drive, Shift to boost. Roads are faster than the dirt. Hidden caches glint off the road. Click a mission on the minimap to drive there instantly.</p>
-      ${load('sd.name') ? '' : `<label class="ow-name"><span class="label">Your driver name</span><input id="owName" maxlength="16" placeholder="Player" value="${esc(G.name === 'Player' ? '' : G.name)}"></label><p class="small">The commentators will use it.</p>`}`;
-    const nm = $('#owName');
-    if (nm)
-      nm.addEventListener('change', () => {
-        G.name = nm.value.trim().slice(0, 16) || 'Player';
-        store('sd.name', G.name);
-        sfx('ui');
-      });
-    return;
-  }
-  el.className = 'sr-card';
-  el.innerHTML = storyCardHtml(STORY_BY[id]);
+  el.innerHTML = storyCardHtml(STORY_BY[storySel]);
   const go = $('#srGo');
-  if (go) go.addEventListener('click', () => owLaunch(id));
+  if (go) go.addEventListener('click', () => owLaunch(storySel));
 }
 function owLaunch(id) {
   if (!storyOpen(id)) return;
-  owPersist();
   sfx('go');
-  owClose();
+  OWM = null;
   $('#ovStory').hidden = true;
   startStory(id);
 }
 function owOpen() {
-  owStart();
+  OWM = { hover: null, view: null };
+  owWorld();
   $('#ovStory').innerHTML = `<div class="story ow">
     <header><div><span class="label">Story mode</span><h2>Scrap Road</h2></div>
       <div class="ow-head" id="owHead"></div>
-      <button class="btn ghost" id="srWork">Workbench</button><button class="btn ghost" id="srBack">Main menu</button></header>
-    <div class="ow-stage"><canvas id="owc" aria-label="Scrap Road map. Drive with WASD or the arrow keys."></canvas>
-      <canvas id="owmini" width="240" height="160" aria-label="Minimap: click a mission you have seen to drive there"></canvas>
+      <button class="btn ghost" id="srWork">Garage</button><button class="btn ghost" id="srBack">Main menu</button></header>
+    <div class="ow-body"><div class="ow-stage"><canvas id="owc" aria-label="Scrap Road map: click a mission"></canvas></div>
       <aside class="sr-card" id="owCard"></aside></div></div>`;
   owHeader();
   owCard();
+  const cv = $('#owc');
+  cv.addEventListener('pointermove', e => {
+    const r = cv.getBoundingClientRect(),
+      h = owHit(e.clientX - r.left, e.clientY - r.top);
+    OWM && (OWM.hover = h);
+    cv.style.cursor = h ? 'pointer' : 'default';
+  });
+  cv.addEventListener('click', e => {
+    const r = cv.getBoundingClientRect(),
+      h = owHit(e.clientX - r.left, e.clientY - r.top);
+    if (!h) return;
+    if (h === storySel && storyOpen(h)) return owLaunch(h);
+    storySel = h;
+    sfx('ui');
+    owCard();
+  });
   $('#srWork').addEventListener('click', () => {
-    owPersist();
-    owClose();
+    OWM = null;
     $('#ovStory').hidden = true;
-    openWorkbench(() => openStory());
+    openGarageHQ(() => openStory());
   });
   $('#srBack').addEventListener('click', () => {
-    owPersist();
-    owClose();
+    OWM = null;
     $('#ovStory').hidden = true;
     sfx('ui');
     showMenu();
   });
-  $('#owmini').addEventListener('click', e => {
-    const r = e.currentTarget.getBoundingClientRect(),
-      x = ((e.clientX - r.left) / r.width) * OW_W,
-      y = ((e.clientY - r.top) / r.height) * OW_H;
-    let best = null,
-      bd = 160;
-    for (const m of STORY) {
-      const [sx, sy] = OW_SITES[m.id];
-      const dd = Math.hypot(sx - x, sy - y);
-      if (dd < bd && storyOpen(m.id)) ((bd = dd), (best = m.id));
-    }
-    if (!best) return;
-    const [sx, sy] = OW_SITES[best];
-    OWS.x = sx;
-    OWS.y = sy + 100;
-    OWS.v = 0;
-    OWS.a = -Math.PI / 2;
-    OWS.cam = { x: OWS.x, y: OWS.y };
-    owReveal();
-    sfx('tele');
-  });
-  addEventListener('keydown', owKeyDown);
-  addEventListener('keyup', owKeyUp);
-  addEventListener('blur', owBlur);
-}
-function owClose() {
-  removeEventListener('keydown', owKeyDown);
-  removeEventListener('keyup', owKeyUp);
-  removeEventListener('blur', owBlur);
-  if (OWS) OWS.keys.clear();
-}
-const owBlur = () => OWS && OWS.keys.clear();
-function owKeyDown(e) {
-  if (!OWS || $('#ovStory').hidden) return;
-  if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
-  const all = Object.values(OW_KEYS).flat();
-  if (all.includes(e.code)) {
-    e.preventDefault();
-    OWS.keys.add(e.code);
-  } else if (e.code === 'Enter' && OWS.near) {
-    e.preventDefault();
-    owLaunch(OWS.near);
-  } else if (e.code === 'Escape') {
-    e.preventDefault();
-    $('#srBack').click();
-  }
-}
-function owKeyUp(e) {
-  if (OWS) OWS.keys.delete(e.code);
 }
 /** Called from the main loop while the map is open. */
 function owFrame(dt) {
-  if (!OWS || $('#ovStory').hidden) return false;
+  if (!OWM || $('#ovStory').hidden) return false;
   ANIM += dt;
-  owStep(dt);
   owDraw();
   return true;
 }
@@ -31739,7 +31661,7 @@ const CONTROLS = [
   ['Mouse', 'Aim'],
   ['Left click / Space', 'Fire (hold)'],
   ['Right click', 'Action: piston, flipper, catapult, tractor, hinges and rams'],
-  ['1 – 9', 'Action groups (bind parts with Keys in the garage)'],
+  ['1 – 9', 'Moving parts you put on a key in the garage'],
   ['Shift', 'Boosters and nitro'],
   ['J', 'Jump jets'],
   ['Q / E', 'Strafe (omni wheels)'],
@@ -31751,7 +31673,7 @@ const CONTROLS = [
   ['X', 'Release couplers'],
   ['Esc / P', 'Pause'],
   ['Garage', 'R turn part · T rotate · X remove · M mirror · Ctrl+Z undo'],
-  ['Garage tools', 'G keys · L wire logic chips · [ ] beam length'],
+  ['Garage tools', 'G keys for moving parts · [ ] beam length'],
   ['Draft', '1 / 2 / 3 take a card · R reroll']
 ];
 const controlsHtml = () =>
@@ -32473,20 +32395,19 @@ requestAnimationFrame(loop);
 if (window.__SD_TEST__)
   window.__SD = {
     STORY,
+    gearEquip,
+    gearLock,
+    fabricate,
+    loadoutSlots,
+    openGarageHQ,
     dpsOf,
     OW_SITES,
-    OW_CACHES,
     OW_W,
     OW_H,
     owWorld,
+    owHit,
+    owOpen,
     owRegionAt,
-    owBlockers,
-    owStart,
-    owStep,
-    OWS: () => OWS,
-    owFogSave,
-    owFogLoad,
-    owOpenCache,
     makeBot,
     botDraft,
     botShop,
@@ -32511,7 +32432,7 @@ if (window.__SD_TEST__)
     openStory,
     STORYP: () => STORYP,
     GEAR: () => GEAR,
-    setGear: g => (GEAR = g),
+    setGear: g => (GEAR = { loadout: [], locked: [], ...g }),
     addGear,
     addBolts,
     gearUpgrade,

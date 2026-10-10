@@ -1,7 +1,7 @@
 // Personal gear and sticker flair: your own upgraded parts (found again in matches) and sticker perks.
 // Only single-player cars carry gear or flair; online configs never include them.
 
-let GEAR = { bolts: 0, items: [], next: 1 };
+let GEAR = { bolts: 0, items: [], next: 1, loadout: [], locked: [] };
 function loadGear() {
   try {
     const g = JSON.parse(load('sd.gear') || 'null');
@@ -9,15 +9,21 @@ function loadGear() {
       GEAR = {
         bolts: Math.max(0, g.bolts | 0),
         items: g.items.filter(x => x && MOD[x.id] && x.lvl >= 1).map(sanitizeGear),
-        next: Math.max(1, g.next | 0)
+        next: Math.max(1, g.next | 0),
+        loadout: [],
+        locked: []
       };
       for (const x of GEAR.items) GEAR.next = Math.max(GEAR.next, x.u + 1);
+      const has = u => GEAR.items.some(x => x.u === u);
+      GEAR.loadout = (Array.isArray(g.loadout) ? g.loadout : []).filter(has).slice(0, 4);
+      GEAR.locked = (Array.isArray(g.locked) ? g.locked : []).filter(has);
       return;
     }
   } catch (e) {}
   // first time: three starter pieces so the Workbench is never empty
-  GEAR = { bolts: 60, items: [], next: 1 };
+  GEAR = { bolts: 60, items: [], next: 1, loadout: [], locked: [] };
   for (const id of ['wheel', 'frame', 'mg']) if (MOD[id]) addGear(id, 1, true);
+  GEAR.loadout = GEAR.items.filter(g => g.id === 'mg').map(g => g.u);
   saveGear();
 }
 const saveGear = () => store('sd.gear', GEAR);
@@ -94,6 +100,9 @@ function gearFuse(a, b) {
   const keep = a.lvl >= b.lvl ? a : b,
     lose = keep === a ? b : a;
   GEAR.items = GEAR.items.filter(x => x !== lose);
+  if (GEAR.loadout.includes(lose.u)) GEAR.loadout = GEAR.loadout.map(u => (u === lose.u ? keep.u : u));
+  GEAR.loadout = [...new Set(GEAR.loadout)];
+  GEAR.locked = GEAR.locked.filter(u => u !== lose.u);
   if (keep.lvl < GEAR_MAX) {
     keep.lvl++;
     if (keep.lvl === 3 && !keep.q) keep.qo = quirkOffers(keep);
@@ -103,10 +112,63 @@ function gearFuse(a, b) {
   return keep;
 }
 function gearScrap(g) {
+  if (gearLocked(g)) return false;
   GEAR.items = GEAR.items.filter(x => x !== g);
+  GEAR.loadout = GEAR.loadout.filter(u => u !== g.u);
   GEAR.bolts += gearScrapValue(g);
   for (const k in G.gearFound || {}) if (G.gearFound[k] === g.u) delete G.gearFound[k];
   saveGear();
+}
+
+/* ---------- loadout, locks and fabrication ---------- */
+/** Loadout slots: 3, a fourth at Scrap Cred level 10. Loadout gear is in your bin from round 1. */
+const loadoutSlots = () => (levelInfo().lvl >= 10 ? 4 : 3);
+const gearEquipped = g => GEAR.loadout.includes(g.u);
+const gearLocked = g => GEAR.locked.includes(g.u);
+function gearEquip(g) {
+  if (gearEquipped(g)) {
+    GEAR.loadout = GEAR.loadout.filter(u => u !== g.u);
+    saveGear();
+    return 'off';
+  }
+  if (GEAR.loadout.length >= loadoutSlots()) return 'full';
+  GEAR.loadout.push(g.u);
+  saveGear();
+  return 'on';
+}
+function gearLock(g) {
+  GEAR.locked = gearLocked(g) ? GEAR.locked.filter(u => u !== g.u) : [...GEAR.locked, g.u];
+  saveGear();
+}
+/** Fabricator: bolts in, a random level-1 part of the chosen kind out. */
+const FAB = [
+  { id: 'weapon', name: 'Gun crate', cost: 140, cats: ['weapon'], desc: 'A random gun, launcher or beam.' },
+  { id: 'melee', name: 'Melee crate', cost: 120, cats: ['melee'], desc: 'Saws, rams, flippers and other close friends.' },
+  { id: 'armour', name: 'Armour crate', cost: 90, cats: ['struct', 'defense'], desc: 'Plates, frames and shields.' },
+  { id: 'move', name: 'Engine crate', cost: 90, cats: ['move'], desc: 'Wheels, tracks, boosters and legs.' },
+  { id: 'gadget', name: 'Gadget crate', cost: 110, cats: ['utility', 'chaos'], desc: 'Odd tools and dirty tricks.' }
+];
+const FAB_RAR = [55, 30, 12, 3, 0];
+function fabricate(kind) {
+  const F = FAB.find(f => f.id === kind);
+  if (!F || GEAR.bolts < F.cost || GEAR.items.length >= GEAR_CAP) return null;
+  const pool = MODS.filter(m => F.cats.includes(m.cat) && m.id !== 'cockpit' && m.rar <= 3);
+  if (!pool.length) return null;
+  let roll = Math.random() * FAB_RAR.reduce((a, b) => a + b, 0),
+    rar = 0;
+  while (rar < 3 && (roll -= FAB_RAR[rar]) > 0) rar++;
+  const of = pool.filter(m => m.rar === rar),
+    m = pick(of.length ? of : pool);
+  GEAR.bolts -= F.cost;
+  return addGear(m.id, 1, true, 'Fabricator');
+}
+/** At the start of a single-player match: every loadout piece goes straight into your bin. */
+function applyLoadout() {
+  if (!gearActive()) return;
+  for (const u of GEAR.loadout) {
+    const g = gearById(u);
+    if (g) findGear(g);
+  }
 }
 
 /* ---------- gear in a match ---------- */
