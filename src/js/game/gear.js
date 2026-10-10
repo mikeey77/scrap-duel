@@ -143,7 +143,13 @@ function gearLock(g) {
 /** Fabricator: bolts in, a random level-1 part of the chosen kind out. */
 const FAB = [
   { id: 'weapon', name: 'Gun crate', cost: 140, cats: ['weapon'], desc: 'A random gun, launcher or beam.' },
-  { id: 'melee', name: 'Melee crate', cost: 120, cats: ['melee'], desc: 'Saws, rams, flippers and other close friends.' },
+  {
+    id: 'melee',
+    name: 'Melee crate',
+    cost: 120,
+    cats: ['melee'],
+    desc: 'Saws, rams, flippers and other close friends.'
+  },
   { id: 'armour', name: 'Armour crate', cost: 90, cats: ['struct', 'defense'], desc: 'Plates, frames and shields.' },
   { id: 'move', name: 'Engine crate', cost: 90, cats: ['move'], desc: 'Wheels, tracks, boosters and legs.' },
   { id: 'gadget', name: 'Gadget crate', cost: 110, cats: ['utility', 'chaos'], desc: 'Odd tools and dirty tricks.' }
@@ -172,7 +178,7 @@ function applyLoadout() {
 }
 
 /* ---------- gear in a match ---------- */
-const gearActive = () => G.mode === 'solo';
+const gearActive = () => G.mode === 'solo' && G.format !== 'brawl';
 /** Gear you have that is not yet found in this match. */
 const gearMissing = () =>
   GEAR.items.filter(g => !Object.values(G.gearFound || {}).includes(g.u) && !(G.gearFound || {})[g.id]);

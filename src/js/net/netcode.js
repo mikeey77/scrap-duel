@@ -25,7 +25,7 @@ function loadPeer() {
   });
 }
 const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const NET_PROTOCOL = 10,
+const NET_PROTOCOL = 11,
   RECONNECT_MS = 30000;
 const connectionToken = () =>
   crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
@@ -305,7 +305,7 @@ const Net = {
         if (this.role === 'client') {
           G.score = [d.score[1], d.score[0]];
           G.sched = d.sched;
-          G.format = d.format || 'balanced';
+          G.format = MATCH_FORMATS[d.format] ? d.format : 'balanced';
           G.lives = d.lives ? [d.lives[1], d.lives[0]] : [20, 20];
           G.bountyStreak = d.bounty || 0;
           G.bountyWinner = d.bountyWinner == null ? null : 1 - d.bountyWinner;
@@ -352,6 +352,9 @@ const Net = {
         G.oppName = String(d.name || 'Rival').slice(0, 16);
         G.oppPaint = d.paint === G.paint ? PAINTS.find(p => p !== G.paint) : d.paint;
         if (!$('#ovLobby').hidden) lobbyUI();
+        break;
+      case 'chat':
+        chatFromPeer(d.i | 0);
         break;
       case 'full':
         this.fail('That room already has two players.');

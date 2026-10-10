@@ -102,19 +102,18 @@ const packDesign = d => ({
   top: [...d.top].map(([k, e]) => [k, packEntry(e)])
 });
 const unpackDesign = p => ({ base: new Map(p.base), top: new Map(p.top) });
+const BRAWL_BUDGET = 700; // Blueprint Brawl: most a car may cost (js/game/brawl.js)
 const MATCH_FORMATS = {
-  balanced: { name: 'Balanced rounds', short: 'Classic', desc: 'One point per round; double-point finale.' },
-  lives: {
-    name: 'Scrap Lives',
-    short: 'Lives',
-    desc: '20 lives each. A loss costs 2 + round number. Zero lives ends the match.'
+  balanced: {
+    name: 'Draft duel',
+    short: 'Draft',
+    desc: 'Draft a part every round and build up. One point per round; double-point finale.'
   },
-  bounty: {
-    name: 'Bounty',
-    short: 'Bounty',
-    desc: 'Beating the leader pays up to 2 bonus points (never more than the gap) and 45 bonus coins.'
-  },
-  finalehill: { name: 'Hill finale', short: 'Hill', desc: 'Balanced scoring with a King of the Hill final round.' }
+  brawl: {
+    name: 'Blueprint Brawl',
+    short: 'Brawl',
+    desc: `Bring one car worth up to ${BRAWL_BUDGET} coins. No drafting, no shop: just driving.`
+  }
 };
 let chosenFormat = 'balanced';
 const roundPoints = r => (G.format === 'lives' || G.format === 'bounty' ? 1 : r === ROUNDS ? 2 : 1);
@@ -300,6 +299,7 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
   setRounds(mode === 'mp' ? rounds || 10 : mode === 'solo' ? G.rounds || 10 : 10);
   if (G.story) ROUNDS = G.story.rounds; // missions are short and not limited to the menu choices
   G.format = MATCH_FORMATS[format] ? format : 'balanced';
+  G.brawlBotReady = false;
   G.lives = [20, 20];
   G.bountyStreak = 0;
   G.bountyWinner = null;
@@ -339,7 +339,8 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
   if (mode === 'sandbox') {
     openBuild();
     window.__toast('Sandbox: every module, 99 of each. Ready drops you in the test arena.', true);
-  } else {
+  } else if (G.format === 'brawl') openBrawlPick();
+  else {
     openDraft();
     showTip('draft');
   }
@@ -572,6 +573,11 @@ function botBuildFor(P, diff) {
 function prepareBot() {
   if (G.botRound === G.round) return;
   G.botRound = G.round;
+  if (G.format === 'brawl') {
+    brawlBot();
+    G.botReadyAt = performance.now() + rnd(700, 1800);
+    return;
+  }
   botDraft(G.bot);
   if (DIFF[G.diff].build >= 0.8 || Math.random() < 0.5) botShop(G.bot);
   G.botDesign = botBuildFor(G.bot, G.diff);
@@ -913,7 +919,7 @@ function finishBattle() {
     found = st[me].coins,
     mult = (1 + 0.25 * lucky) * econ * ((S && S.coins) || 1) * (G.run && G.run.relics.includes('dice') ? 1.3 : 1),
     total = Math.round((base + bonus + found) * mult);
-  addCoins(total);
+  if (G.format !== 'brawl') addCoins(total); // Brawl: no shop, so no purse
   if (!iWon && !draw) G.freeRerolls++;
   if (G.mode === 'solo') {
     const bw = win === op;
@@ -1039,7 +1045,8 @@ function finishBattle() {
     else {
       G.round++;
       updateHUD();
-      openDraft();
+      if (G.format === 'brawl') openBuild();
+      else openDraft();
     }
   });
 }
@@ -1058,6 +1065,7 @@ function showFinal() {
         : s[0] > s[1] || (s[0] === s[1] && tot.d > tot.t),
     tie = G.format === 'lives' ? G.lives[0] === G.lives[1] : s[0] === s[1];
   const prog = progressMatch({ won });
+  if (G.mode === 'mp') h2hRecord(G.oppName, won, tie);
   const spoils = G.story ? storyFinish(won, tot) : matchSpoils(won, tot.w);
   const br =
     Object.entries(G.aff)
@@ -1079,15 +1087,14 @@ function showFinal() {
         : '';
     })()}
     ${progressHtml(prog)}${G.story ? storyResultHtml(spoils) : spoilsHtml(spoils)}
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.story ? '<button class="btn" id="btnRoad">Back to the Scrap Road</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : ''}${gearActive() ? '<button class="btn ghost" id="btnWork2">Workbench</button>' : ''}<button class="btn ghost" id="btnStyle2">Locker</button><button class="btn ghost" id="btnHome">Main menu</button></div>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.story ? '<button class="btn" id="btnRoad">Back to the Scrap Road</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
+    ${G.mode === 'mp' && h2hLine(G.oppName) ? `<p class="small">${h2hLine(G.oppName)}</p>` : ''}`;
   $('#ovResult').hidden = false;
   sfx(won ? 'win' : 'lose');
   const a = $('#btnAgain');
   if (a) a.addEventListener('click', () => startMatch('solo', null, G.format));
   const rd = $('#btnRoad');
   if (rd) rd.addEventListener('click', () => openStory());
-  const wk = $('#btnWork2');
-  if (wk) wk.addEventListener('click', () => openWorkbench(() => ($('#ovResult').hidden = false)));
   const bm = $('#btnBest');
   if (bm) bm.addEventListener('click', () => startReplay('kill', G.bestReplay));
   if (won && SETTINGS.motion !== false)
@@ -1099,7 +1106,9 @@ function showFinal() {
       }
     }, 200);
   Announcer.say(won ? 'Victory' : 'Defeat');
-  $('#btnStyle2').addEventListener('click', () => openStyle(() => ($('#ovResult').hidden = false)));
+  $('#btnStyle2').addEventListener('click', () => openGarageHQ(() => ($('#ovResult').hidden = false), 'gear'));
+  const ma = $('#btnMpAgain');
+  if (ma) ma.addEventListener('click', mpRematch);
   $('#btnHome').addEventListener('click', () => {
     if (G.mode === 'mp') Net.close();
     showMenu();

@@ -889,25 +889,30 @@ test('Scrap Run timeout uses delivered scrap rather than health or undelivered c
   b.obj.score = [7, 7];
   assert.equal(aa.specialTimeout(), null);
 });
-test('format choices alter rules and awards while preserving the balanced default', () => {
+test('formats: Draft duel stays the default, Blueprint Brawl picks a car within budget and skips the draft', () => {
   const rr = runtime(),
     aa = rr.api;
   aa.startMatch('solo', null, 'lives');
-  assert.deepEqual([...aa.G.lives], [20, 20]);
-  assert.equal(aa.roundPoints(10), 1);
-  aa.startMatch('solo', null, 'bounty');
-  aa.G.score = [1, 4];
-  aa.G.bountyStreak = 3;
-  assert.deepEqual([...aa.formatAwards()], [2, 1]);
-  aa.G.bountyStreak = 6;
-  assert.deepEqual([...aa.formatAwards()], [3, 1]);
-  aa.G.score = [3, 4];
-  assert.deepEqual([...aa.formatAwards()], [1, 1]);
-  aa.startMatch('solo', null, 'finalehill');
-  assert.equal(aa.G.sched[9], 'hill');
+  assert.equal(aa.G.format, 'balanced', 'removed formats fall back to the draft duel');
   assert.equal(aa.roundPoints(10), 2);
-  aa.startMatch('solo', null, 'balanced');
-  assert.equal(aa.roundPoints(10), 2);
+  aa.startMatch('solo', null, 'brawl');
+  assert.equal(aa.G.format, 'brawl');
+  const ch = aa.brawlChoices();
+  assert(ch.length >= 6, 'six archetypes to pick from');
+  for (const c of ch.filter(c => !c.saved)) {
+    assert(aa.designCost(c.d) <= 700, c.name + ' fits the budget');
+    assert(aa.designConnected(c.d.base), c.name + ' is connected');
+  }
+  aa.brawlApply(ch[0].d);
+  assert.equal(aa.G.coins, 0);
+  assert.equal(
+    Object.values(aa.G.inv).reduce((x, y) => x + y, 0),
+    aa.G.base.size + aa.G.top.size,
+    'the bin is exactly the car'
+  );
+  aa.prepareBot();
+  assert(aa.designCost(aa.G.botDesign) <= 700, 'the bot brings a legal car too');
+  assert(!aa.gearActive(), 'no gear in a Brawl');
   assert.equal(Object.keys(aa.POWERUPS).length, 6);
 });
 test('new report tracks the actual damaged layer and first broken connection', () => {
@@ -975,27 +980,6 @@ test('rescue jack rights a stopped car and ice press requires a wind-up', () => 
   assert(p.aa.planWeapon(p.v, p.I, 0.7));
   assert(p.I.planCd > p.b.time);
 });
-test('finishing a lives round removes the announced lives and bounty grants its actual points', () => {
-  for (const format of ['lives', 'bounty']) {
-    const { rr, aa, b } = planScene('tinder');
-    aa.G.mode = 'mp';
-    aa.G.format = format;
-    aa.G.round = 4;
-    aa.G.lives = [20, 20];
-    aa.G.score = [0, 0];
-    b.cfg = { round: 4, awards: [4, 1] };
-    b.tape = [];
-    aa.endRound(0, 'Test duel');
-    aa.finishBattle();
-    assert.equal(aa.G.phase, 'result');
-    assert.equal(aa.G.score[0], 4);
-    if (format === 'lives') {
-      assert.equal(aa.G.lives[1], 14);
-      assert(rr.elements.get('resultCard').innerHTML.includes('20–14 lives'));
-    } else assert(rr.elements.get('resultCard').innerHTML.includes('Defeat the leader'));
-  }
-});
-
 test('garage damage map returns to the same report without changing the blueprint', () => {
   const { rr, aa, v } = planScene('pouch');
   const before = JSON.stringify([...aa.G.base]);
@@ -1007,7 +991,7 @@ test('garage damage map returns to the same report without changing the blueprin
   assert.equal(rr.elements.get('ovResult').hidden, false);
   assert.equal(JSON.stringify([...aa.G.base]), before);
 });
-test('completed Bounty recovery preserves awarded points and winning streak exactly once', () => {
+test('completed round recovery preserves awarded points exactly once', () => {
   const { rr, aa, b } = planScene('tinder');
   aa.G.mode = 'mp';
   aa.G.round = 1;
@@ -1023,7 +1007,7 @@ test('completed Bounty recovery preserves awarded points and winning streak exac
     round: 1,
     score: [4, 0],
     lives: [20, 20],
-    format: 'bounty',
+    format: 'balanced',
     bounty: 3,
     bountyWinner: 0,
     sched: aa.G.sched,
@@ -1033,8 +1017,6 @@ test('completed Bounty recovery preserves awarded points and winning streak exac
   });
   aa.finishBattle();
   assert.deepEqual([...aa.G.score], [0, 4]);
-  assert.equal(aa.G.bountyStreak, 3);
-  assert.equal(aa.G.bountyWinner, 1);
 });
 
 test('parts show a single available quantity and an On car state', () => {
@@ -1706,7 +1688,15 @@ test('garage: loadout gear is in the bin from round 1, the fabricator turns bolt
   assert.equal(a.gearEquip(a.addGear('saw', 1, true)), 'full', 'slots are limited');
   a.startMatch('solo');
   assert((a.G.inv.laser || 0) >= 1, 'loadout laser in the bin');
-  assert.equal(JSON.stringify(a.myCarCfg().gear.map(x => x.id).sort()), '["laser","mg"]');
+  assert.equal(
+    JSON.stringify(
+      a
+        .myCarCfg()
+        .gear.map(x => x.id)
+        .sort()
+    ),
+    '["laser","mg"]'
+  );
   const b0 = a.GEAR().bolts,
     made = a.fabricate('weapon');
   assert(made && a.MOD[made.id].cat === 'weapon');

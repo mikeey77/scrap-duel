@@ -617,7 +617,7 @@ function owHit(px, py) {
   for (const m of STORY) {
     const [sx, sy] = OW_SITES[m.id],
       d = Math.hypot(sx - x, sy - y);
-    if (d < bd) (bd = d), (best = m.id);
+    if (d < bd) ((bd = d), (best = m.id));
   }
   return best;
 }

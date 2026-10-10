@@ -261,10 +261,24 @@ function lobbyUI() {
     <div class="lstat"><span><span class="dot on"></span>${esc(G.name)}</span><span><span class="dot${n.connected ? ' on' : ''}"></span>${n.connected ? esc(G.oppName) : 'Friend'}</span></div>
     ${
       host
-        ? `<div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div>`
+        ? `<div class="seg rseg" id="lFormat" aria-label="Mode">${Object.entries(MATCH_FORMATS)
+            .map(
+              ([k, f]) =>
+                `<button data-f="${k}" aria-pressed="${k === (G.mpFormat || 'balanced')}" title="${esc(f.desc)}">${esc(f.name)}</button>`
+            )
+            .join('')}</div>
+          <div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div>`
         : ''
     }
+    ${n.connected && h2hLine(G.oppName) ? `<p class="small">${h2hLine(G.oppName)}</p>` : ''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>Start match</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Cancel</button></div>`;
+  $$('#lFormat button').forEach(b =>
+    b.addEventListener('click', () => {
+      G.mpFormat = b.dataset.f;
+      $$('#lFormat button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      sfx('ui');
+    })
+  );
   $$('#lRounds button').forEach(b =>
     b.addEventListener('click', () => {
       G.mpRounds = +b.dataset.n;
@@ -276,7 +290,7 @@ function lobbyUI() {
   if (s)
     s.addEventListener('click', () => {
       if (!n.connected) return;
-      const format = 'balanced'; // only the balanced format is offered
+      const format = G.mpFormat || 'balanced';
       const rounds = setRounds(G.mpRounds || 10);
       const sched = makeSchedule(rounds);
       Net.send({ t: 'begin', sched, format, rounds });
@@ -442,6 +456,15 @@ requestAnimationFrame(loop);
 if (window.__SD_TEST__)
   window.__SD = {
     STORY,
+    gearActive,
+    designCost,
+    brawlDesign,
+    brawlApply,
+    BRAWL_TYPES,
+    brawlChoices: () => brawlChoices,
+    quickChat,
+    h2hRecord,
+    h2hLine,
     gearEquip,
     gearLock,
     fabricate,

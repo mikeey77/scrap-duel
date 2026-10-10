@@ -1316,10 +1316,10 @@ function hintFor() {
           })()
         : `${m.name}: ${left(G.sel)} available. Dots mark where it can attach.`
       : G.tool === 'keys'
-          ? 'Click a hinge, rotator or ram to put it on key 1–9 (right-click counts down). Without a key it follows right click.'
-          : G.tool === 'rotate'
-            ? 'Click a part to turn it 90°. Top modules turn first.'
-            : 'Click a part to put it back in the bin. Top modules come off first.';
+        ? 'Click a hinge, rotator or ram to put it on key 1–9 (right-click counts down). Without a key it follows right click.'
+        : G.tool === 'rotate'
+          ? 'Click a part to turn it 90°. Top modules turn first.'
+          : 'Click a part to put it back in the bin. Top modules come off first.';
   const [x, y] = hover,
     k = key(x, y);
   if (!G.ws.has(k)) return 'Outside the bay. Buy or draft an expansion to build here.';
@@ -1856,12 +1856,7 @@ bp.addEventListener('pointerdown', ev => {
   if (!c) return;
   ev.preventDefault();
   bp.setPointerCapture(ev.pointerId);
-  dragMode =
-    ev.button === 2
-      ? G.tool === 'keys'
-        ? 'keysBack'
-        : 'remove'
-      : G.tool;
+  dragMode = ev.button === 2 ? (G.tool === 'keys' ? 'keysBack' : 'remove') : G.tool;
   lastK = key(...c);
   act(c[0], c[1], dragMode);
 });

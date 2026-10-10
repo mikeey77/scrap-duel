@@ -1168,6 +1168,7 @@ function drawHUD(c) {
   drawBossBar(c);
   drawCommentary(c);
   drawTelemetry(c, v, W, H);
+  drawChatWheel(c, 1 / 60);
   c.textAlign = 'center';
   c.textBaseline = 'top';
   if (G.phase === 'battle' || B.replay) {

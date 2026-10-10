@@ -295,7 +295,8 @@ function hqWire() {
         return sfx('remove');
       } else G.style.stickers = [...cur, st.id];
       saveStyle();
-      if (activeSet() && cur.length < G.style.stickers.length) toast(`Set bonus on: ${STICKER_SETS[activeSet()].bonus}`, true);
+      if (activeSet() && cur.length < G.style.stickers.length)
+        toast(`Set bonus on: ${STICKER_SETS[activeSet()].bonus}`, true);
       return rerender('place');
     }
     const it = COSMETICS[tab].find(i => i.id === b.dataset.id);
