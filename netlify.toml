@@ -1,0 +1,6 @@
+# Netlify publishes only the download page in web/ (no npm install needed there).
+# The game itself is a Windows app; installers are attached to GitHub Releases by .github/workflows/release.yml.
+[build]
+  base = "web"
+  command = "node build.mjs"
+  publish = "dist"

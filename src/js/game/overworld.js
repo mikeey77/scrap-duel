@@ -528,8 +528,8 @@ function owDraw() {
       }
       c.restore();
     }
-  // region names
-  const LBL = { r1: [60, 1320], r2: [1560, 2370], r3: [1960, 1250], r4: [100, 1150] };
+  // region names, placed along an edge where no mission label can cover them
+  const LBL = { r1: [60, 2360], r2: [1560, 2370], r3: [1960, 1250], r4: [100, 1150] };
   for (const reg of STORY_REGIONS) {
     const [x, y] = LBL[reg.id],
       open = owRegionOpen(reg.id);

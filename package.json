@@ -2,15 +2,16 @@
   "name": "scrap-duel",
   "private": true,
   "type": "module",
-  "description": "Scrap Duel: build a battle car from scrap and duel a bot or a friend.",
+  "description": "Scrap Duel: build a battle car from scrap, then fight a bot, a boss or a friend.",
   "scripts": {
     "build": "node build.mjs",
     "test": "node build.mjs && node tests/regression.cjs",
-    "format": "prettier --write \"src/js/**/*.js\" \"src/css/*.css\" tests desktop",
     "start": "node build.mjs && electron .",
-    "dist:win": "node build.mjs && electron-builder --win",
-    "dist:linux": "node build.mjs && electron-builder --linux",
-    "dist:win-zip": "node build.mjs && electron-builder --win zip --x64 -c.win.signAndEditExecutable=false"
+    "web": "node web/build.mjs",
+    "format": "prettier --write \"src/js/**/*.js\" \"src/css/*.css\" tests desktop web/*.mjs",
+    "dist:win": "node build.mjs && electron-builder --win nsis zip --x64",
+    "dist:win-local": "node build.mjs && electron-builder --win nsis zip --x64 -c.win.signAndEditExecutable=false",
+    "dist:linux": "node build.mjs && electron-builder --linux"
   },
   "devDependencies": {
     "@fontsource/barlow-semi-condensed": "^5.3.0",
@@ -21,7 +22,7 @@
     "peerjs": "^1.5.5",
     "prettier": "^3.9.9"
   },
-  "version": "1.2.0",
+  "version": "1.2.1",
   "main": "desktop/main.cjs",
   "build": {
     "appId": "nl.scrapduel.game",
@@ -43,22 +44,21 @@
           ]
         },
         {
-          "target": "portable",
+          "target": "zip",
           "arch": [
             "x64"
           ]
         }
       ],
-      "icon": "site/icons/icon-512.png"
+      "icon": "site/icons/icon-512.png",
+      "artifactName": "ScrapDuel-Windows.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "Scrap Duel"
-    },
-    "portable": {
-      "artifactName": "ScrapDuel--portable.exe"
+      "shortcutName": "Scrap Duel",
+      "artifactName": "ScrapDuel-Setup.${ext}"
     },
     "linux": {
       "target": [
