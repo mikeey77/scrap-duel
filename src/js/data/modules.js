@@ -3438,6 +3438,319 @@ for (const L of [1, 2, 3, 4])
     { size: L, beam: L, dir: 1 }
   );
 
+/* ---------- Scrapyard Expansion (Oct 2026): 18 new parts built on the existing mechanics ---------- */
+D(
+  'nailstorm',
+  'Nail Storm',
+  'weapon',
+  0,
+  't',
+  1,
+  35,
+  1,
+  'Sprays five nails at a time. Shreds whatever is right in front of it.',
+  'Nails do not fly far.',
+  ['gun'],
+  { k: 'gun', b: 2, l: 0.9, w: 0.2, c: '#6b5a3a' },
+  {
+    dir: 1,
+    front: 1,
+    ...W({ kind: 'bullet', n: 5, dmg: 4, rate: 2.2, spd: 620, rng: 260, spr: 0.35, dt: 'kin', cls: 'ballistic' })
+  }
+);
+D(
+  'bottlerocket',
+  'Bottle Rocket Rack',
+  'weapon',
+  1,
+  't',
+  1,
+  40,
+  1.5,
+  'Six cheap rockets in a wobbly fan.',
+  'They go roughly where you point.',
+  ['expl'],
+  { k: 'pod', n: 6, c: '#c0392b' },
+  {
+    dir: 1,
+    front: 1,
+    ...W({
+      kind: 'rocket',
+      dmg: 15,
+      burst: 6,
+      reload: 3.6,
+      spd: 300,
+      rng: 700,
+      spr: 0.26,
+      splash: 30,
+      dt: 'expl',
+      cls: 'expl'
+    })
+  }
+);
+D(
+  'boltthrower',
+  'Bolt Thrower',
+  'weapon',
+  2,
+  't',
+  2,
+  70,
+  3,
+  'A giant crossbow for steel bolts. Every hit lands like a door slamming.',
+  'Slow to reload and needs a heavy mount.',
+  ['gun', 'def'],
+  { k: 'gun', b: 1, l: 1.5, w: 0.3, c: '#4a4f57', h: 'box' },
+  {
+    dir: 1,
+    front: 1,
+    ...W({
+      kind: 'bullet',
+      dmg: 48,
+      rate: 0.6,
+      spd: 1100,
+      rng: 760,
+      spr: 0.01,
+      dt: 'kin',
+      recoil: 22,
+      cls: 'ballistic'
+    })
+  }
+);
+D(
+  'pinballcannon',
+  'Pinball Cannon',
+  'weapon',
+  1,
+  't',
+  1,
+  45,
+  1.5,
+  'Steel balls that ricochet off walls and back into trouble.',
+  'Bounces can come back for you.',
+  ['pinball', 'gun'],
+  { k: 'gun', b: 1, l: 1.1, w: 0.3, c: '#c58bff', v: 'flare' },
+  { dir: 1, front: 1, ...W({ kind: 'bounce', dmg: 24, rate: 0.85, spd: 560, rng: 1500, dt: 'kin', cls: 'ballistic' }) }
+);
+D(
+  'twinlaser',
+  'Twin Laser',
+  'weapon',
+  2,
+  't',
+  1,
+  45,
+  1.5,
+  'Two beams side by side. Burns through light armour.',
+  'Hungry for a clear line of sight.',
+  ['energy'],
+  { k: 'gun', b: 2, l: 1.05, w: 0.12, c: '#2b5b7a', h: 'lens', tip: '#9ff' },
+  {
+    dir: 1,
+    front: 1,
+    glow: '#7fe0ff',
+    ...W({ kind: 'beam', dps: 28, beams: 2, rng: 480, dt: 'energy', cls: 'energy' })
+  }
+);
+D(
+  'sparkplug',
+  'Spark Plug',
+  'weapon',
+  0,
+  't',
+  1,
+  30,
+  0.8,
+  'A tiny tesla coil that zaps anything close by itself.',
+  'Very short reach, jumps to one more target at most.',
+  ['energy'],
+  { k: 'tesla' },
+  { glow: '#bfe9ff', ...W({ kind: 'tesla', dmg: 11, cd: 0.9, rng: 150, chain: 1, dt: 'energy', cls: 'energy' }) }
+);
+D(
+  'seekerdarts',
+  'Seeker Darts',
+  'weapon',
+  1,
+  't',
+  1,
+  40,
+  1,
+  'Little darts that steer towards the nearest car.',
+  'Light hits; flares and smoke fool them.',
+  ['expl', 'gun'],
+  { k: 'pod', n: 3, c: '#3f6a3a' },
+  {
+    dir: 1,
+    front: 1,
+    ...W({ kind: 'homing', dmg: 16, rate: 1.3, spd: 380, rng: 820, splash: 18, dt: 'expl', cls: 'expl' })
+  }
+);
+D(
+  'hedgetrimmer',
+  'Hedge Trimmer',
+  'melee',
+  0,
+  'b',
+  0,
+  60,
+  1.5,
+  'Long buzzing blades with a little extra reach.',
+  'Thin blades, easy to snap.',
+  ['melee'],
+  { k: 'saw' },
+  { dir: 1, front: 1, mel: { dps: 52, reach: 1.3 } }
+);
+D(
+  'pilefist',
+  'Pile Fist',
+  'melee',
+  1,
+  'b',
+  0,
+  90,
+  2.5,
+  'A pneumatic punch: 70 damage, faster than a hammer.',
+  'Misses if the target slips away.',
+  ['melee', 'flip'],
+  { k: 'hammer' },
+  { dir: 1, front: 1, mel: { hit: 70, cd: 0.8 } }
+);
+D(
+  'twinsaw',
+  'Twin Saw',
+  'melee',
+  2,
+  'b',
+  0,
+  95,
+  3,
+  'Two saws on one hub. Very bad news for bumpers.',
+  'Heavy, and loud enough that everyone knows you are coming.',
+  ['melee'],
+  { k: 'saw' },
+  { dir: 1, front: 1, mel: { dps: 105 } }
+);
+D(
+  'fender',
+  'Rubber Fender',
+  'defense',
+  0,
+  'b',
+  1,
+  120,
+  1.5,
+  'Soaks up rams: 45% less ram damage. Holds a light module.',
+  'Bullets go straight through rubber.',
+  ['def', 'pinball'],
+  { k: 'plate', c: '#2b2b2b', p: 'bolts' },
+  { res: { ram: 0.45 } }
+);
+D(
+  'ablative',
+  'Ablative Tiles',
+  'defense',
+  1,
+  'b',
+  1,
+  130,
+  2.2,
+  'Ceramic tiles that flake off instead of melting: 35% less explosive and 25% less fire damage.',
+  'Heavy, and no help against bullets.',
+  ['def', 'fire'],
+  { k: 'plate', c: '#7a6a5a', p: 'bolts' },
+  { res: { expl: 0.35, fire: 0.25 } }
+);
+D(
+  'chromeplate',
+  'Chrome Shield Plate',
+  'defense',
+  2,
+  'b',
+  1,
+  110,
+  2,
+  'Polished chrome: half damage from lasers, arcs and tesla.',
+  'Scratches easily under bullets.',
+  ['def', 'energy'],
+  { k: 'plate', c: '#cfe8ff', p: 'bolts' },
+  { res: { energy: 0.5 } }
+);
+D(
+  'mudtyre',
+  'Mud Tyre',
+  'move',
+  0,
+  'b',
+  0,
+  50,
+  1.3,
+  'Chunky tread: grips on oil, soap and ice.',
+  'Slower on a clean floor.',
+  ['slip'],
+  { k: 'wheel', v: 'road' },
+  { drive: { p: 6, g: 1.45, top: 225 }, price: 14 }
+);
+D(
+  'dragwheel',
+  'Drag Wheel',
+  'move',
+  1,
+  'b',
+  0,
+  40,
+  0.9,
+  'Bald and light: the fastest wheel in the yard.',
+  'Slides around corners.',
+  ['air'],
+  { k: 'wheel', v: 'slick' },
+  { drive: { p: 8, g: 0.8, top: 305 } }
+);
+D(
+  'snaphinge',
+  'Snap Hinge',
+  'struct',
+  1,
+  'b',
+  1,
+  55,
+  1.4,
+  'A fast hinge: flips its arm 60° in a blink. Right click or its key.',
+  'Short swing.',
+  ['joint', 'flip'],
+  { k: 'joint' },
+  { dir: 1, joint: 1 }
+);
+D(
+  'longram',
+  'Long Ram',
+  'struct',
+  2,
+  'b',
+  1,
+  70,
+  2.2,
+  'A three-cell hydraulic lunge. Right click or its key.',
+  'Slow to extend; the long rod snaps easily.',
+  ['joint', 'melee'],
+  { k: 'joint' },
+  { dir: 1, joint: 1 }
+);
+D(
+  'quickspin',
+  'Spin Plate',
+  'struct',
+  1,
+  'b',
+  1,
+  60,
+  1.6,
+  'A rotator that spins twice as fast. Hold its button to reverse.',
+  'Dizzying for whatever sits on it.',
+  ['joint', 'melee'],
+  { k: 'joint' },
+  { dir: 1, joint: 1 }
+);
 const MOD = Object.fromEntries(MODS.map(m => [m.id, m]));
 const STARTER_GUNS = ['mg', 'smg', 'nailgun', 'pulse', 'rivet'];
 function starterKit(guns = [pick(STARTER_GUNS), pick(STARTER_GUNS)]) {

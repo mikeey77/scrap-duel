@@ -199,7 +199,7 @@ test('catalog loads and every starter is connected, usable and owned', () => {
     signatures.add(G.starterGuns.join(','));
   }
   assert(signatures.size > 10);
-  assert.equal(a.MODS.length, 217);
+  assert.equal(a.MODS.length, 235);
 });
 test('all heavy drafted modules include enough free support', () => {
   for (const m of a.MODS.filter(m => m.layer === 't' && m.mnt === 2)) {
@@ -296,11 +296,12 @@ test('crate charges once, grants once and skip cannot duplicate rewards', () => 
   const count = () => Object.values(G.inv).reduce((x, y) => x + y, 0),
     before = count();
   a.openCrate();
-  assert.equal(G.coins, 40);
+  const coins = G.coins; // 40, or 190 on the 1-in-100 jackpot
+  assert(coins === 40 || coins === 190, 'charged once: ' + coins);
   const gained = count();
   assert(gained > before);
   a.openCrate();
-  assert.equal(G.coins, 40);
+  assert.equal(G.coins, coins);
   assert.equal(count(), gained);
   r.elements.get('cSkip').click();
   r.elements.get('cSkip').click();
@@ -1250,10 +1251,10 @@ test('badges sanitize, rivals give hints and the match ends with fun awards', ()
   );
   for (const k of ['plain', 'frost', 'fire', 'magnet']) assert(a.CRATE_THEMES[k].name);
 });
-test('all seventeen arenas generate, run their gimmicks and stay finite', () => {
+test('all twenty arenas generate, run their gimmicks and stay finite', () => {
   const r = runtime(),
     a = r.api;
-  assert.equal(a.THEMES.length, 17);
+  assert.equal(a.THEMES.length, 20);
   a.startMatch('solo');
   a.openBuild();
   for (let ti = 0; ti < a.THEMES.length; ti++) {
@@ -1708,6 +1709,41 @@ test('garage: loadout gear is in the bin from round 1, the fabricator turns bolt
   assert(!a.GEAR().items.includes(made));
   a.gearScrap(g);
   assert(!a.GEAR().loadout.includes(g.u), 'scrapped gear leaves the loadout');
+});
+
+test('expansion parts: every new weapon and melee part deals damage, joints move, armour resists, arenas load', () => {
+  const r = runtime(),
+    a = r.api;
+  const ids = [
+    'nailstorm',
+    'bottlerocket',
+    'boltthrower',
+    'pinballcannon',
+    'twinlaser',
+    'sparkplug',
+    'seekerdarts',
+    'hedgetrimmer',
+    'pilefist',
+    'twinsaw'
+  ];
+  for (const id of ids) assert(a.dpsOf(id, {}) > 0, id + ' has damage');
+  for (const id of ['fender', 'ablative', 'chromeplate']) assert(Object.keys(a.MOD[id].res).length, id + ' resists');
+  for (const id of ['snaphinge', 'longram', 'quickspin']) {
+    a.startMatch('sandbox');
+    a.openBuild();
+    a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
+    const v = jointCar(a, id, 1, []);
+    assert(v.joints.length, id + ' is a joint');
+    v.rmb = true;
+    for (let i = 0; i < 30; i++) a.stepJoints(v, 0.05);
+    assert(Math.abs(v.joints[0].s) > 0.5, id + ' moves');
+  }
+  for (const id of ['icerink', 'scrapfactory', 'stormroof'])
+    assert(
+      a.THEMES.some(t => t.id === id),
+      id
+    );
+  for (const id of ['nut', 'cog', 'bomb', 'snow']) assert(a.STICKER[id], id);
 });
 
 console.log(`\n${passed} regression tests passed.`);

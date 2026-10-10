@@ -9437,6 +9437,319 @@ for (const L of [1, 2, 3, 4])
     { size: L, beam: L, dir: 1 }
   );
 
+/* ---------- Scrapyard Expansion (Oct 2026): 18 new parts built on the existing mechanics ---------- */
+D(
+  'nailstorm',
+  'Nail Storm',
+  'weapon',
+  0,
+  't',
+  1,
+  35,
+  1,
+  'Sprays five nails at a time. Shreds whatever is right in front of it.',
+  'Nails do not fly far.',
+  ['gun'],
+  { k: 'gun', b: 2, l: 0.9, w: 0.2, c: '#6b5a3a' },
+  {
+    dir: 1,
+    front: 1,
+    ...W({ kind: 'bullet', n: 5, dmg: 4, rate: 2.2, spd: 620, rng: 260, spr: 0.35, dt: 'kin', cls: 'ballistic' })
+  }
+);
+D(
+  'bottlerocket',
+  'Bottle Rocket Rack',
+  'weapon',
+  1,
+  't',
+  1,
+  40,
+  1.5,
+  'Six cheap rockets in a wobbly fan.',
+  'They go roughly where you point.',
+  ['expl'],
+  { k: 'pod', n: 6, c: '#c0392b' },
+  {
+    dir: 1,
+    front: 1,
+    ...W({
+      kind: 'rocket',
+      dmg: 15,
+      burst: 6,
+      reload: 3.6,
+      spd: 300,
+      rng: 700,
+      spr: 0.26,
+      splash: 30,
+      dt: 'expl',
+      cls: 'expl'
+    })
+  }
+);
+D(
+  'boltthrower',
+  'Bolt Thrower',
+  'weapon',
+  2,
+  't',
+  2,
+  70,
+  3,
+  'A giant crossbow for steel bolts. Every hit lands like a door slamming.',
+  'Slow to reload and needs a heavy mount.',
+  ['gun', 'def'],
+  { k: 'gun', b: 1, l: 1.5, w: 0.3, c: '#4a4f57', h: 'box' },
+  {
+    dir: 1,
+    front: 1,
+    ...W({
+      kind: 'bullet',
+      dmg: 48,
+      rate: 0.6,
+      spd: 1100,
+      rng: 760,
+      spr: 0.01,
+      dt: 'kin',
+      recoil: 22,
+      cls: 'ballistic'
+    })
+  }
+);
+D(
+  'pinballcannon',
+  'Pinball Cannon',
+  'weapon',
+  1,
+  't',
+  1,
+  45,
+  1.5,
+  'Steel balls that ricochet off walls and back into trouble.',
+  'Bounces can come back for you.',
+  ['pinball', 'gun'],
+  { k: 'gun', b: 1, l: 1.1, w: 0.3, c: '#c58bff', v: 'flare' },
+  { dir: 1, front: 1, ...W({ kind: 'bounce', dmg: 24, rate: 0.85, spd: 560, rng: 1500, dt: 'kin', cls: 'ballistic' }) }
+);
+D(
+  'twinlaser',
+  'Twin Laser',
+  'weapon',
+  2,
+  't',
+  1,
+  45,
+  1.5,
+  'Two beams side by side. Burns through light armour.',
+  'Hungry for a clear line of sight.',
+  ['energy'],
+  { k: 'gun', b: 2, l: 1.05, w: 0.12, c: '#2b5b7a', h: 'lens', tip: '#9ff' },
+  {
+    dir: 1,
+    front: 1,
+    glow: '#7fe0ff',
+    ...W({ kind: 'beam', dps: 28, beams: 2, rng: 480, dt: 'energy', cls: 'energy' })
+  }
+);
+D(
+  'sparkplug',
+  'Spark Plug',
+  'weapon',
+  0,
+  't',
+  1,
+  30,
+  0.8,
+  'A tiny tesla coil that zaps anything close by itself.',
+  'Very short reach, jumps to one more target at most.',
+  ['energy'],
+  { k: 'tesla' },
+  { glow: '#bfe9ff', ...W({ kind: 'tesla', dmg: 11, cd: 0.9, rng: 150, chain: 1, dt: 'energy', cls: 'energy' }) }
+);
+D(
+  'seekerdarts',
+  'Seeker Darts',
+  'weapon',
+  1,
+  't',
+  1,
+  40,
+  1,
+  'Little darts that steer towards the nearest car.',
+  'Light hits; flares and smoke fool them.',
+  ['expl', 'gun'],
+  { k: 'pod', n: 3, c: '#3f6a3a' },
+  {
+    dir: 1,
+    front: 1,
+    ...W({ kind: 'homing', dmg: 16, rate: 1.3, spd: 380, rng: 820, splash: 18, dt: 'expl', cls: 'expl' })
+  }
+);
+D(
+  'hedgetrimmer',
+  'Hedge Trimmer',
+  'melee',
+  0,
+  'b',
+  0,
+  60,
+  1.5,
+  'Long buzzing blades with a little extra reach.',
+  'Thin blades, easy to snap.',
+  ['melee'],
+  { k: 'saw' },
+  { dir: 1, front: 1, mel: { dps: 52, reach: 1.3 } }
+);
+D(
+  'pilefist',
+  'Pile Fist',
+  'melee',
+  1,
+  'b',
+  0,
+  90,
+  2.5,
+  'A pneumatic punch: 70 damage, faster than a hammer.',
+  'Misses if the target slips away.',
+  ['melee', 'flip'],
+  { k: 'hammer' },
+  { dir: 1, front: 1, mel: { hit: 70, cd: 0.8 } }
+);
+D(
+  'twinsaw',
+  'Twin Saw',
+  'melee',
+  2,
+  'b',
+  0,
+  95,
+  3,
+  'Two saws on one hub. Very bad news for bumpers.',
+  'Heavy, and loud enough that everyone knows you are coming.',
+  ['melee'],
+  { k: 'saw' },
+  { dir: 1, front: 1, mel: { dps: 105 } }
+);
+D(
+  'fender',
+  'Rubber Fender',
+  'defense',
+  0,
+  'b',
+  1,
+  120,
+  1.5,
+  'Soaks up rams: 45% less ram damage. Holds a light module.',
+  'Bullets go straight through rubber.',
+  ['def', 'pinball'],
+  { k: 'plate', c: '#2b2b2b', p: 'bolts' },
+  { res: { ram: 0.45 } }
+);
+D(
+  'ablative',
+  'Ablative Tiles',
+  'defense',
+  1,
+  'b',
+  1,
+  130,
+  2.2,
+  'Ceramic tiles that flake off instead of melting: 35% less explosive and 25% less fire damage.',
+  'Heavy, and no help against bullets.',
+  ['def', 'fire'],
+  { k: 'plate', c: '#7a6a5a', p: 'bolts' },
+  { res: { expl: 0.35, fire: 0.25 } }
+);
+D(
+  'chromeplate',
+  'Chrome Shield Plate',
+  'defense',
+  2,
+  'b',
+  1,
+  110,
+  2,
+  'Polished chrome: half damage from lasers, arcs and tesla.',
+  'Scratches easily under bullets.',
+  ['def', 'energy'],
+  { k: 'plate', c: '#cfe8ff', p: 'bolts' },
+  { res: { energy: 0.5 } }
+);
+D(
+  'mudtyre',
+  'Mud Tyre',
+  'move',
+  0,
+  'b',
+  0,
+  50,
+  1.3,
+  'Chunky tread: grips on oil, soap and ice.',
+  'Slower on a clean floor.',
+  ['slip'],
+  { k: 'wheel', v: 'road' },
+  { drive: { p: 6, g: 1.45, top: 225 }, price: 14 }
+);
+D(
+  'dragwheel',
+  'Drag Wheel',
+  'move',
+  1,
+  'b',
+  0,
+  40,
+  0.9,
+  'Bald and light: the fastest wheel in the yard.',
+  'Slides around corners.',
+  ['air'],
+  { k: 'wheel', v: 'slick' },
+  { drive: { p: 8, g: 0.8, top: 305 } }
+);
+D(
+  'snaphinge',
+  'Snap Hinge',
+  'struct',
+  1,
+  'b',
+  1,
+  55,
+  1.4,
+  'A fast hinge: flips its arm 60° in a blink. Right click or its key.',
+  'Short swing.',
+  ['joint', 'flip'],
+  { k: 'joint' },
+  { dir: 1, joint: 1 }
+);
+D(
+  'longram',
+  'Long Ram',
+  'struct',
+  2,
+  'b',
+  1,
+  70,
+  2.2,
+  'A three-cell hydraulic lunge. Right click or its key.',
+  'Slow to extend; the long rod snaps easily.',
+  ['joint', 'melee'],
+  { k: 'joint' },
+  { dir: 1, joint: 1 }
+);
+D(
+  'quickspin',
+  'Spin Plate',
+  'struct',
+  1,
+  'b',
+  1,
+  60,
+  1.6,
+  'A rotator that spins twice as fast. Hold its button to reverse.',
+  'Dizzying for whatever sits on it.',
+  ['joint', 'melee'],
+  { k: 'joint' },
+  { dir: 1, joint: 1 }
+);
 const MOD = Object.fromEntries(MODS.map(m => [m.id, m]));
 const STARTER_GUNS = ['mg', 'smg', 'nailgun', 'pulse', 'rivet'];
 function starterKit(guns = [pick(STARTER_GUNS), pick(STARTER_GUNS)]) {
@@ -10006,6 +10319,49 @@ Object.assign(JUNK, {
 JUNKNAMES.push('rock', 'block', 'teddy', 'grave', 'toaster', 'satellite');
 
 THEMES.push(
+  {
+    id: 'icerink',
+    name: 'Ice Rink',
+    ground: ['#bcd6e6', '160,190,210', '230,245,255'],
+    wall: 'boards',
+    grip: 0.55,
+    junk: ['snowman', 'snowman', 'cone', 'barrel', 'crate', 'chair', 'trophy', 'tires'],
+    ramps: 1,
+    oil: 0,
+    spikes: 0,
+    tramp: 1,
+    pads: 2,
+    extra: { bumper: 2 }
+  },
+  {
+    id: 'scrapfactory',
+    name: 'Scrap Press Plant',
+    ground: ['#2f3338', '18,20,24', '110,118,128'],
+    wall: 'metal',
+    grip: 1,
+    junk: ['barrel', 'barrel', 'crate', 'tires', 'washer', 'vending', 'barrier', 'cart'],
+    ramps: 1,
+    oil: 2,
+    spikes: 1,
+    tramp: 0,
+    pads: 1,
+    extra: { belt: 2, stove: 1 }
+  },
+  {
+    id: 'stormroof',
+    name: 'Stormy Rooftop',
+    ground: ['#3a3f4a', '24,26,32', '130,138,150'],
+    wall: 'fence',
+    grip: 0.9,
+    wind: 1,
+    junk: ['hydrant', 'mailbox', 'chair', 'cone', 'barrel', 'tv', 'flamingo', 'crate'],
+    ramps: 2,
+    oil: 1,
+    spikes: 0,
+    tramp: 1,
+    pads: 1,
+    extra: { vent: 2 }
+  },
   {
     id: 'volcano',
     name: 'Volcano Forge',
@@ -10729,6 +11085,26 @@ const STICKERS = [
     unlock: { story: 'r3d' }
   }
 ];
+STICKERS.push(
+  { id: 'nut', set: 'junk', name: 'Hex Nut', perk: 'Part HP +3%', fx: { hpK: 0.03 }, unlock: { lvl: 12 } },
+  { id: 'cog', set: 'tech', name: 'Big Cog', perk: 'Fire rate +3%', fx: { rateK: 0.03 }, unlock: { lvl: 14 } },
+  {
+    id: 'bomb',
+    set: 'wild',
+    name: 'Cartoon Bomb',
+    perk: 'Explosive damage taken −8%',
+    fx: { res: { expl: 0.08 } },
+    unlock: { ach: 'road2' }
+  },
+  {
+    id: 'snow',
+    set: 'speed',
+    name: 'Snowflake',
+    perk: 'Top speed +2%, fire damage taken −8%',
+    fx: { speedK: 0.02, res: { fire: 0.08 } },
+    unlock: { ach: 'kingslayer' }
+  }
+);
 const STICKER = Object.fromEntries(STICKERS.map(s => [s.id, s]));
 const STICKER_SLOTS = 3;
 const SET_FX = {
@@ -18777,9 +19153,14 @@ const JOINT = {
   hinge: { swing: Math.PI / 2, speed: 3.2 },
   rotator: { speed: 2.4 },
   hydraulic: { reach: 2, speed: 5 }, // cells
-  suspension: { travel: 0.45, k: 160, damp: 9 } // cells, spring, damping
+  suspension: { travel: 0.45, k: 160, damp: 9 }, // cells, spring, damping
+  snaphinge: { type: 'hinge', swing: Math.PI / 3, speed: 7 },
+  longram: { type: 'hydraulic', reach: 3, speed: 4 },
+  quickspin: { type: 'rotator', speed: 4.8 }
 };
 const isJoint = id => !!JOINT[id];
+/** The mechanism a joint uses (variants share the hinge, rotator or ram code). */
+const jtype = J => (JOINT[J.id] && JOINT[J.id].type) || J.id;
 
 /** Cells beyond a joint (rest grid). Returns null when the far side reaches the cockpit (joint stays rigid). */
 function jointChildCells(J, grid) {
@@ -18848,7 +19229,7 @@ function setupJoints(v) {
 function jointApply(chain, x, y) {
   let a = 0;
   for (const J of chain) {
-    if (J.id === 'hinge' || J.id === 'rotator') {
+    if (jtype(J) === 'hinge' || jtype(J) === 'rotator') {
       const c = Math.cos(J.s),
         s = Math.sin(J.s),
         dx = x - J.px,
@@ -18891,19 +19272,20 @@ function stepJoints(v, dt) {
   if (!v.joints || !v.joints.length) return;
   for (const J of v.joints) {
     if (!J.alive) continue;
-    const P = JOINT[J.id];
-    if (J.id === 'hinge') {
+    const P = JOINT[J.id],
+      T = jtype(J);
+    if (T === 'hinge') {
       const t = jointOn(v, J) ? P.swing * (J.flip ? -1 : 1) : 0,
         d = t - J.s;
       J.s += clamp(d, -P.speed * dt, P.speed * dt);
-    } else if (J.id === 'rotator') {
+    } else if (T === 'rotator') {
       // spins by default; holding its action reverses it
       J.s = (J.s + (jointOn(v, J) ? -1 : 1) * P.speed * dt) % (Math.PI * 2);
-    } else if (J.id === 'hydraulic') {
+    } else if (T === 'hydraulic') {
       const t = jointOn(v, J) ? P.reach * S : 0,
         d = t - J.s;
       J.s += clamp(d, -P.speed * S * dt, P.speed * S * dt);
-    } else if (J.id === 'suspension') {
+    } else if (T === 'suspension') {
       J.vs += (-P.k * J.s - P.damp * J.vs) * dt;
       J.s = clamp(J.s + J.vs * dt, -P.travel * S, P.travel * S);
     }
@@ -18932,8 +19314,9 @@ function applyJointSnap(v, d) {
 }
 
 /** Art: a steel plate with the joint mechanism, pointing at its child side. */
-function drawJointArt(c, id, s, ang, st) {
-  const h = s / 2;
+function drawJointArt(c, id0, s, ang, st) {
+  const id = (JOINT[id0] && JOINT[id0].type) || id0,
+    h = s / 2;
   bevel(c, h * 0.92, '#4a5563', s * 0.06);
   c.save();
   c.rotate(ang);
@@ -18978,7 +19361,7 @@ function drawJointArt(c, id, s, ang, st) {
 function drawJointRods(c, v) {
   if (!v.joints) return;
   for (const J of v.joints) {
-    if (!J.alive || (J.id !== 'hydraulic' && J.id !== 'suspension') || Math.abs(J.s) < 0.5) continue;
+    if (!J.alive || (jtype(J) !== 'hydraulic' && jtype(J) !== 'suspension') || Math.abs(J.s) < 0.5) continue;
     const [x0, y0] = lpos(v, J.px, J.py),
       [x1, y1] = lpos(v, J.px + J.dx * (S * 0.5 + J.s), J.py + J.dy * (S * 0.5 + J.s));
     line(c, [x0, y0, x1, y1], '#5d6670', S * 0.42);
@@ -23184,7 +23567,7 @@ function drawVehicle(c, v, alpha) {
           down: I.m.shield && I.sh <= 0,
           pa: I.pa,
           active: I.active,
-          spin: I.id === 'rotator' ? I.s : 0
+          spin: isJoint(I.id) && jtype(I) === 'rotator' ? I.s : 0
         });
         if (layer === 'b' && look.livery !== 'factory' && liveryPart(I.id))
           drawLivery(c, look.livery, v.paint, I.gcx, I.gcy, S, liveryCtx(v.grid, I.gcx, I.gcy, v.minGy));
@@ -24322,7 +24705,9 @@ function drawHUD(c) {
     ctl.push([
       'RMB',
       [
-        ...new Set(rmbJoints.map(J => (J.id === 'rotator' ? 'reverse spin' : J.id === 'hinge' ? 'swing' : 'extend')))
+        ...new Set(
+          rmbJoints.map(J => (jtype(J) === 'rotator' ? 'reverse spin' : jtype(J) === 'hinge' ? 'swing' : 'extend'))
+        )
       ].join(' / ')
     ]);
   for (const [g, names] of groupHints(v)) ctl.push([g, names]);
@@ -25026,7 +25411,7 @@ function botThink(v, dt) {
   if (v.has.catapult && v.hopper.length && dist < 520 && Math.random() < dt * 1.5) inp.edges.add('RMB');
   if (v.has.tractor && dist < 380 && P.melee) inp.rmb = true;
   // moving parts: swing/lunge when close, rest otherwise (rotators spin on their own)
-  if (v.joints && v.joints.some(J => J.id === 'hinge' || J.id === 'hydraulic') && dist < 240)
+  if (v.joints && v.joints.some(J => jtype(J) === 'hinge' || jtype(J) === 'hydraulic') && dist < 240)
     inp.rmb = (B.time * 1.6) % 2 < 1.1;
   if (v.has.harpoon && v.tether) inp.rmb = P.melee;
   if (PLAN_ACTION.some(id => v.has[id]) && dist < 450 && Math.random() < dt * 0.8) inp.edges.add('RMB');
@@ -28434,6 +28819,51 @@ function drawSticker(c, id, r) {
       }
       c.fillRect(-0.32 * k, -0.32 * k, 0.64 * k, 0.64 * k);
       break;
+    case 'nut': {
+      const h6 = [];
+      for (let i = 0; i < 6; i++) h6.push([Math.cos((i * Math.PI) / 3) * 0.55, Math.sin((i * Math.PI) / 3) * 0.55]);
+      P(h6);
+      c.fillStyle = col;
+      circle(0, 0, 0.22);
+      break;
+    }
+    case 'cog':
+      for (let i = 0; i < 8; i++) {
+        c.save();
+        c.rotate((i * Math.PI) / 4);
+        c.fillRect(-0.09 * k, -0.62 * k, 0.18 * k, 0.24 * k);
+        c.restore();
+      }
+      circle(0, 0, 0.42);
+      c.fillStyle = col;
+      circle(0, 0, 0.15);
+      break;
+    case 'bomb':
+      circle(-0.05, 0.1, 0.42);
+      c.fillRect(0.12 * k, -0.42 * k, 0.16 * k, 0.16 * k);
+      c.beginPath();
+      c.moveTo(0.2 * k, -0.42 * k);
+      c.quadraticCurveTo(0.3 * k, -0.62 * k, 0.5 * k, -0.55 * k);
+      c.stroke();
+      break;
+    case 'snow':
+      c.lineWidth = k * 0.1;
+      for (let i = 0; i < 3; i++) {
+        c.save();
+        c.rotate((i * Math.PI) / 3);
+        c.beginPath();
+        c.moveTo(0, -0.6 * k);
+        c.lineTo(0, 0.6 * k);
+        c.moveTo(-0.15 * k, -0.45 * k);
+        c.lineTo(0, -0.3 * k);
+        c.lineTo(0.15 * k, -0.45 * k);
+        c.moveTo(-0.15 * k, 0.45 * k);
+        c.lineTo(0, 0.3 * k);
+        c.lineTo(0.15 * k, 0.45 * k);
+        c.stroke();
+        c.restore();
+      }
+      break;
     case 'eye':
       c.beginPath();
       c.moveTo(-0.6 * k, 0);
@@ -28575,6 +29005,9 @@ function endReplay() {
 /* ===== js/game/match.js ===== */
 // Match flow: profile setup, waiting arena, battle start, round end, results and the final screen.
 const THEME_BLURB = {
+  icerink: 'Everything slides. Bumpers in the corners, nothing to stop you but the boards.',
+  scrapfactory: 'Conveyor belts, hot plates and a lot of barrels. Mind the oil.',
+  stormroof: 'Gusts push you around the roof. Vents throw you higher.',
   carpark: 'Painted bays, shopping trolleys and ramps between the levels.',
   beach: 'Soft sand, deck chairs and trampolines on the boardwalk.',
   junkyard: 'Heavy junk everywhere. Watch the oil slicks.',
@@ -32515,14 +32948,19 @@ function demoTick(dt) {
 const inMatch = () => !['intro', 'menu', 'final'].includes(G.phase) && G.mode !== undefined && G.started;
 const MENU_MODES = [
   { id: 'solo', name: 'Duel vs bot', col: '#3fe0a0', line: 'Draft a part every round and outbuild a bot.' },
-  { id: 'brawl', name: 'Blueprint Brawl', col: '#ff8a3a', line: `Bring one car worth ${BRAWL_BUDGET} coins. No drafting.` },
+  {
+    id: 'brawl',
+    name: 'Blueprint Brawl',
+    col: '#ff8a3a',
+    line: `Bring one car worth ${BRAWL_BUDGET} coins. No drafting.`
+  },
   { id: 'run', name: 'Scrap Gauntlet', col: '#ff5c7a', line: 'Endless waves, three hearts, a boss every fifth wave.' },
   { id: 'online', name: 'Online', col: '#5be7ff', line: 'Duel or brawl a friend with a 4-letter room code.' },
   { id: 'sand', name: 'Sandbox', col: '#c58bff', line: 'Every part, 99 of each. Build anything, test it.' }
 ];
 const TAGLINES = [
   'Tip: loadout gear in the Garage is in your parts bin from round 1.',
-  'Tip: two stickers from your skin\'s set turn on a set bonus.',
+  "Tip: two stickers from your skin's set turn on a set bonus.",
   'Tip: hinges and rams follow right click, or a key you give them with the Keys tool (G).',
   'Tip: in a Brawl you can rearrange your car between rounds.',
   'Tip: press T in battle for quick chat.',
@@ -32687,8 +33125,18 @@ function menuOpts() {
   const m = MENU_MODES.find(x => x.id === menuMode),
     seg = (id, items, cur, attr) =>
       `<div class="seg" id="${id}">${items.map(([v, n]) => `<button data-${attr}="${v}" aria-pressed="${v === cur}">${n}</button>`).join('')}</div>`;
-  const diff = seg('diffSeg', DIFF.map((d, i) => [i, d.name]), G.diff, 'i'),
-    rounds = seg('roundSeg', ROUND_CHOICES.map(n => [n, n + ' rounds']), G.rounds || 10, 'n');
+  const diff = seg(
+      'diffSeg',
+      DIFF.map((d, i) => [i, d.name]),
+      G.diff,
+      'i'
+    ),
+    rounds = seg(
+      'roundSeg',
+      ROUND_CHOICES.map(n => [n, n + ' rounds']),
+      G.rounds || 10,
+      'n'
+    );
   const body = {
     solo: `<div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><button class="btn hg-go2" id="mPlay">Play vs bot</button>`,
     brawl: `<div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><p class="small">Pick one of your saved blueprints or a ready-made archetype. You keep the same parts all match.</p><button class="btn hg-go2" id="mPlay">Start a Brawl</button>`,

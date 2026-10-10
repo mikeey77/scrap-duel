@@ -104,7 +104,7 @@ function drawVehicle(c, v, alpha) {
           down: I.m.shield && I.sh <= 0,
           pa: I.pa,
           active: I.active,
-          spin: I.id === 'rotator' ? I.s : 0
+          spin: isJoint(I.id) && jtype(I) === 'rotator' ? I.s : 0
         });
         if (layer === 'b' && look.livery !== 'factory' && liveryPart(I.id))
           drawLivery(c, look.livery, v.paint, I.gcx, I.gcy, S, liveryCtx(v.grid, I.gcx, I.gcy, v.minGy));
@@ -1242,7 +1242,9 @@ function drawHUD(c) {
     ctl.push([
       'RMB',
       [
-        ...new Set(rmbJoints.map(J => (J.id === 'rotator' ? 'reverse spin' : J.id === 'hinge' ? 'swing' : 'extend')))
+        ...new Set(
+          rmbJoints.map(J => (jtype(J) === 'rotator' ? 'reverse spin' : jtype(J) === 'hinge' ? 'swing' : 'extend'))
+        )
       ].join(' / ')
     ]);
   for (const [g, names] of groupHints(v)) ctl.push([g, names]);

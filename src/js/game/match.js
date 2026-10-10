@@ -1,5 +1,8 @@
 // Match flow: profile setup, waiting arena, battle start, round end, results and the final screen.
 const THEME_BLURB = {
+  icerink: 'Everything slides. Bumpers in the corners, nothing to stop you but the boards.',
+  scrapfactory: 'Conveyor belts, hot plates and a lot of barrels. Mind the oil.',
+  stormroof: 'Gusts push you around the roof. Vents throw you higher.',
   carpark: 'Painted bays, shopping trolleys and ramps between the levels.',
   beach: 'Soft sand, deck chairs and trampolines on the boardwalk.',
   junkyard: 'Heavy junk everywhere. Watch the oil slicks.',

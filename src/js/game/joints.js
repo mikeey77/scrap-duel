@@ -9,9 +9,14 @@ const JOINT = {
   hinge: { swing: Math.PI / 2, speed: 3.2 },
   rotator: { speed: 2.4 },
   hydraulic: { reach: 2, speed: 5 }, // cells
-  suspension: { travel: 0.45, k: 160, damp: 9 } // cells, spring, damping
+  suspension: { travel: 0.45, k: 160, damp: 9 }, // cells, spring, damping
+  snaphinge: { type: 'hinge', swing: Math.PI / 3, speed: 7 },
+  longram: { type: 'hydraulic', reach: 3, speed: 4 },
+  quickspin: { type: 'rotator', speed: 4.8 }
 };
 const isJoint = id => !!JOINT[id];
+/** The mechanism a joint uses (variants share the hinge, rotator or ram code). */
+const jtype = J => (JOINT[J.id] && JOINT[J.id].type) || J.id;
 
 /** Cells beyond a joint (rest grid). Returns null when the far side reaches the cockpit (joint stays rigid). */
 function jointChildCells(J, grid) {
@@ -80,7 +85,7 @@ function setupJoints(v) {
 function jointApply(chain, x, y) {
   let a = 0;
   for (const J of chain) {
-    if (J.id === 'hinge' || J.id === 'rotator') {
+    if (jtype(J) === 'hinge' || jtype(J) === 'rotator') {
       const c = Math.cos(J.s),
         s = Math.sin(J.s),
         dx = x - J.px,
@@ -123,19 +128,20 @@ function stepJoints(v, dt) {
   if (!v.joints || !v.joints.length) return;
   for (const J of v.joints) {
     if (!J.alive) continue;
-    const P = JOINT[J.id];
-    if (J.id === 'hinge') {
+    const P = JOINT[J.id],
+      T = jtype(J);
+    if (T === 'hinge') {
       const t = jointOn(v, J) ? P.swing * (J.flip ? -1 : 1) : 0,
         d = t - J.s;
       J.s += clamp(d, -P.speed * dt, P.speed * dt);
-    } else if (J.id === 'rotator') {
+    } else if (T === 'rotator') {
       // spins by default; holding its action reverses it
       J.s = (J.s + (jointOn(v, J) ? -1 : 1) * P.speed * dt) % (Math.PI * 2);
-    } else if (J.id === 'hydraulic') {
+    } else if (T === 'hydraulic') {
       const t = jointOn(v, J) ? P.reach * S : 0,
         d = t - J.s;
       J.s += clamp(d, -P.speed * S * dt, P.speed * S * dt);
-    } else if (J.id === 'suspension') {
+    } else if (T === 'suspension') {
       J.vs += (-P.k * J.s - P.damp * J.vs) * dt;
       J.s = clamp(J.s + J.vs * dt, -P.travel * S, P.travel * S);
     }
@@ -164,8 +170,9 @@ function applyJointSnap(v, d) {
 }
 
 /** Art: a steel plate with the joint mechanism, pointing at its child side. */
-function drawJointArt(c, id, s, ang, st) {
-  const h = s / 2;
+function drawJointArt(c, id0, s, ang, st) {
+  const id = (JOINT[id0] && JOINT[id0].type) || id0,
+    h = s / 2;
   bevel(c, h * 0.92, '#4a5563', s * 0.06);
   c.save();
   c.rotate(ang);
@@ -210,7 +217,7 @@ function drawJointArt(c, id, s, ang, st) {
 function drawJointRods(c, v) {
   if (!v.joints) return;
   for (const J of v.joints) {
-    if (!J.alive || (J.id !== 'hydraulic' && J.id !== 'suspension') || Math.abs(J.s) < 0.5) continue;
+    if (!J.alive || (jtype(J) !== 'hydraulic' && jtype(J) !== 'suspension') || Math.abs(J.s) < 0.5) continue;
     const [x0, y0] = lpos(v, J.px, J.py),
       [x1, y1] = lpos(v, J.px + J.dx * (S * 0.5 + J.s), J.py + J.dy * (S * 0.5 + J.s));
     line(c, [x0, y0, x1, y1], '#5d6670', S * 0.42);

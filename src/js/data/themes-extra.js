@@ -13,6 +13,49 @@ JUNKNAMES.push('rock', 'block', 'teddy', 'grave', 'toaster', 'satellite');
 
 THEMES.push(
   {
+    id: 'icerink',
+    name: 'Ice Rink',
+    ground: ['#bcd6e6', '160,190,210', '230,245,255'],
+    wall: 'boards',
+    grip: 0.55,
+    junk: ['snowman', 'snowman', 'cone', 'barrel', 'crate', 'chair', 'trophy', 'tires'],
+    ramps: 1,
+    oil: 0,
+    spikes: 0,
+    tramp: 1,
+    pads: 2,
+    extra: { bumper: 2 }
+  },
+  {
+    id: 'scrapfactory',
+    name: 'Scrap Press Plant',
+    ground: ['#2f3338', '18,20,24', '110,118,128'],
+    wall: 'metal',
+    grip: 1,
+    junk: ['barrel', 'barrel', 'crate', 'tires', 'washer', 'vending', 'barrier', 'cart'],
+    ramps: 1,
+    oil: 2,
+    spikes: 1,
+    tramp: 0,
+    pads: 1,
+    extra: { belt: 2, stove: 1 }
+  },
+  {
+    id: 'stormroof',
+    name: 'Stormy Rooftop',
+    ground: ['#3a3f4a', '24,26,32', '130,138,150'],
+    wall: 'fence',
+    grip: 0.9,
+    wind: 1,
+    junk: ['hydrant', 'mailbox', 'chair', 'cone', 'barrel', 'tv', 'flamingo', 'crate'],
+    ramps: 2,
+    oil: 1,
+    spikes: 0,
+    tramp: 1,
+    pads: 1,
+    extra: { vent: 2 }
+  },
+  {
     id: 'volcano',
     name: 'Volcano Forge',
     ground: ['#2b2224', '12,8,8', '90,60,50'],

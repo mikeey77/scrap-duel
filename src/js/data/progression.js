@@ -204,6 +204,26 @@ const STICKERS = [
     unlock: { story: 'r3d' }
   }
 ];
+STICKERS.push(
+  { id: 'nut', set: 'junk', name: 'Hex Nut', perk: 'Part HP +3%', fx: { hpK: 0.03 }, unlock: { lvl: 12 } },
+  { id: 'cog', set: 'tech', name: 'Big Cog', perk: 'Fire rate +3%', fx: { rateK: 0.03 }, unlock: { lvl: 14 } },
+  {
+    id: 'bomb',
+    set: 'wild',
+    name: 'Cartoon Bomb',
+    perk: 'Explosive damage taken −8%',
+    fx: { res: { expl: 0.08 } },
+    unlock: { ach: 'road2' }
+  },
+  {
+    id: 'snow',
+    set: 'speed',
+    name: 'Snowflake',
+    perk: 'Top speed +2%, fire damage taken −8%',
+    fx: { speedK: 0.02, res: { fire: 0.08 } },
+    unlock: { ach: 'kingslayer' }
+  }
+);
 const STICKER = Object.fromEntries(STICKERS.map(s => [s.id, s]));
 const STICKER_SLOTS = 3;
 const SET_FX = {

@@ -695,6 +695,51 @@ function drawSticker(c, id, r) {
       }
       c.fillRect(-0.32 * k, -0.32 * k, 0.64 * k, 0.64 * k);
       break;
+    case 'nut': {
+      const h6 = [];
+      for (let i = 0; i < 6; i++) h6.push([Math.cos((i * Math.PI) / 3) * 0.55, Math.sin((i * Math.PI) / 3) * 0.55]);
+      P(h6);
+      c.fillStyle = col;
+      circle(0, 0, 0.22);
+      break;
+    }
+    case 'cog':
+      for (let i = 0; i < 8; i++) {
+        c.save();
+        c.rotate((i * Math.PI) / 4);
+        c.fillRect(-0.09 * k, -0.62 * k, 0.18 * k, 0.24 * k);
+        c.restore();
+      }
+      circle(0, 0, 0.42);
+      c.fillStyle = col;
+      circle(0, 0, 0.15);
+      break;
+    case 'bomb':
+      circle(-0.05, 0.1, 0.42);
+      c.fillRect(0.12 * k, -0.42 * k, 0.16 * k, 0.16 * k);
+      c.beginPath();
+      c.moveTo(0.2 * k, -0.42 * k);
+      c.quadraticCurveTo(0.3 * k, -0.62 * k, 0.5 * k, -0.55 * k);
+      c.stroke();
+      break;
+    case 'snow':
+      c.lineWidth = k * 0.1;
+      for (let i = 0; i < 3; i++) {
+        c.save();
+        c.rotate((i * Math.PI) / 3);
+        c.beginPath();
+        c.moveTo(0, -0.6 * k);
+        c.lineTo(0, 0.6 * k);
+        c.moveTo(-0.15 * k, -0.45 * k);
+        c.lineTo(0, -0.3 * k);
+        c.lineTo(0.15 * k, -0.45 * k);
+        c.moveTo(-0.15 * k, 0.45 * k);
+        c.lineTo(0, 0.3 * k);
+        c.lineTo(0.15 * k, 0.45 * k);
+        c.stroke();
+        c.restore();
+      }
+      break;
     case 'eye':
       c.beginPath();
       c.moveTo(-0.6 * k, 0);
