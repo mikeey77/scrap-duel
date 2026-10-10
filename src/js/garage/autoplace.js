@@ -56,15 +56,23 @@ function autoPlace(quiet) {
       }
       if (!done) break;
     }
-  const ids = looseIds().sort((a, b) => {
-    const order = m => (m.layer === 't' ? 3 : m.front ? 2 : m.drive ? 1 : 0);
-    return order(MOD[a]) - order(MOD[b]) || MOD[b].mnt - MOD[a].mnt || MOD[b].hp - MOD[a].hp;
-  });
+  // moving parts and beams only make sense where you decide; they stay in the bin
+  const handOnly = id => isJoint(id) || !!MOD[id].beam;
+  const skipped = looseIds().filter(handOnly);
+  const ids = looseIds()
+    .filter(id => !handOnly(id))
+    .sort((a, b) => {
+      const order = m => (m.layer === 't' ? 4 : m.front ? 3 : m.drive ? 2 : m.cat === 'defense' ? 1 : 0);
+      return order(MOD[a]) - order(MOD[b]) || MOD[b].mnt - MOD[a].mnt || MOD[b].hp - MOD[a].hp;
+    });
   for (const id of ids) {
     const m = MOD[id],
       top = m.layer === 't';
     while (left(id) > 0) {
       const occ = occupancy(G.base);
+      // wheels go in left/right pairs so the car drives straight
+      const drives = [...G.base.values()].filter(e => MOD[e.id].drive),
+        leftHeavy = drives.filter(e => e.x < 0).length - drives.filter(e => e.x > 0).length;
       let best = null,
         bs = -Infinity;
       for (const k of top ? occ.keys() : G.ws) {
@@ -74,15 +82,16 @@ function autoPlace(quiet) {
           if (top ? canPlaceTop(id, x, y, occ, rot) : canPlaceBase(id, rot, x, y, occ)) continue;
           const e = { id, rot, x, y };
           if (!safe(top ? G.top : G.base, k, e)) continue;
-          const neighbours = DIRS.filter(([dx, dy]) => occ.has(key(x + dx, y + dy))).length;
-          let sc = m.drive
-            ? Math.abs(x) * 3 - Math.abs(y) * 0.6
-            : m.front
-              ? -y * 3 - Math.abs(x) * 0.8
-              : -(Math.abs(x) + Math.abs(y) * 1.2) + neighbours * 1.6;
-          if (top) sc = m.wpn ? -y * 2 - Math.abs(x) * 0.7 : y - Math.abs(x) * 0.3;
-          if (rot !== 0) sc -= 0.5;
-          if (m.front) sc += (x * FX[rot] + y * FY[rot]) * 0.25;
+          const neighbours = DIRS.filter(([dx, dy]) => occ.has(key(x + dx, y + dy))).length,
+            facing = x * FX[rot] + y * FY[rot]; // > 0: points away from the cockpit
+          let sc;
+          if (top) sc = m.wpn ? -y * 2 - Math.abs(x) * 0.6 + (m.dir && rot === 0 ? 3 : 0) : y * 1.2 - Math.abs(x) * 0.3;
+          else if (m.booster) sc = y * 2 + (rot === 2 ? 4 : -2);
+          else if (m.front) sc = -y * 3 - Math.abs(x) * 0.8 + (rot === 0 ? 3 : facing > 0 ? 0 : -12);
+          else if (m.drive) sc = Math.abs(x) * 3 - Math.abs(y) * 0.6 + (leftHeavy > 0 ? x : leftHeavy < 0 ? -x : 0) * 2;
+          else if (m.cat === 'defense') sc = -y * 1.6 + (Math.abs(x) + Math.abs(y)) * 0.6 + neighbours * 1.4;
+          else sc = -(Math.abs(x) + Math.abs(y) * 1.2) + neighbours * 1.6;
+          if (rot !== 0 && !m.booster) sc -= 0.5;
           if (sc > bs) {
             bs = sc;
             best = e;
@@ -105,8 +114,10 @@ function autoPlace(quiet) {
   if (!quiet)
     window.__toast(
       placed
-        ? `Placed ${placed} working part${placed > 1 ? 's' : ''}. ${looseCount()} remain in the bin. Ctrl+Z undoes it.`
-        : 'No safe placement. Add compatible supports or expand the bay.',
+        ? `Bolted on ${placed} part${placed > 1 ? 's' : ''}: guns up front, wheels in pairs, armour where hits come in.${skipped.length ? ' Moving parts and beams stay in the bin for you to place.' : ''} Ctrl+Z undoes it.`
+        : skipped.length
+          ? 'Only moving parts and beams are left: place those by hand where you want them to move.'
+          : 'No safe spot left. Add supports (frames, girders) or expand the bay.',
       !!placed
     );
   return placed;

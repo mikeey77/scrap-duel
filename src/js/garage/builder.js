@@ -2194,6 +2194,17 @@ function designItems() {
   return items;
 }
 function refreshUI() {
+  // garage buttons say what they will do right now
+  const nLoose = looseIds()
+      .filter(id => !isJoint(id) && !MOD[id].beam)
+      .reduce((a, id) => a + left(id), 0),
+    au = $('#btnAuto');
+  if (au) {
+    au.textContent = nLoose ? `Add ${nLoose} bin part${nLoose > 1 ? 's' : ''} to my car` : 'Bin is empty';
+    au.disabled = !nLoose;
+  }
+  const kb = $('[data-tool="keys"]');
+  if (kb) kb.hidden = ![...G.base.values()].some(e => isJoint(e.id)) && G.tool !== 'keys';
   const items = designItems(),
     C = calc(items),
     aura = auraOf(items.map(i => i.m.id));

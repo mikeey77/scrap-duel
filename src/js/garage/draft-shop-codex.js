@@ -164,7 +164,7 @@ function optView(o) {
       kind: g && g.lvl >= GEAR_MAX ? 'Masterwork gear' : 'Personal gear',
       img: `<img alt="" src="${iconURL(m.id, 184)}"><span class="x gearlv">+${g ? g.lvl - 1 : 0}</span>`,
       title: g ? gearName(g) : m.name,
-      body: `<p class="pro">+ ${Math.round(gearBonus(g || { id: o.id, lvl: 1 }) * 100)}% ${GEAR_KIND_TEXT[gearKind(o.id)]}</p>${q ? `<p class="pro">+ ${esc(q.name)}: ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p>` : ''}<p class="small">One copy. Upgrade it further at the Workbench.</p>`
+      body: `<p class="pro">+ ${Math.round(gearBonus(g || { id: o.id, lvl: 1 }) * 100)}% ${GEAR_KIND_TEXT[gearKind(o.id)]}</p>${q ? `<p class="pro">+ ${esc(q.name)}: ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p>` : ''}<p class="small">One copy. Upgrade it in the Garage.</p>`
     };
   }
   if (o.type === 'ws') {

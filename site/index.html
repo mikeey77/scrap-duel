@@ -5654,6 +5654,73 @@ button.stslot:hover {
 .hg-go2:hover {
   background: color-mix(in srgb, var(--rc) 16%, transparent);
 }
+
+/* ---------- Blueprint Brawl: pick your car ---------- */
+.brawlpick {
+  width: min(1100px, 100%);
+  max-height: calc(100% - 16px);
+  overflow: auto;
+}
+.bp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.bp-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+  color: var(--fg);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+  cursor: pointer;
+}
+.bp-card:hover:not(:disabled) {
+  border-color: var(--hazard);
+  background: var(--panel-3);
+}
+.bp-card img {
+  align-self: center;
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  background: var(--blueprint);
+}
+.bp-card b {
+  font-family: var(--f-display);
+  font-size: 17px;
+}
+.bp-card .small {
+  flex: 1;
+}
+.bp-cost {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  background: var(--bg);
+}
+.bp-cost i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(255, 180, 35, 0.35);
+}
+.bp-cost em {
+  position: relative;
+  font-style: normal;
+  font-family: var(--f-display);
+  font-size: 12px;
+  padding-left: 6px;
+  line-height: 18px;
+}
+.bp-card.over {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
     </style>
   </head>
   <body>
@@ -5840,19 +5907,21 @@ button.stslot:hover {
             </div>
             <div class="pfoot">
               <div class="autorow">
-                <button class="btn ghost" id="btnAuto" title="Bolt every loose part onto your car">
-                  Auto-place loose parts
+                <button class="btn ghost" id="btnAuto" title="Keeps your car and bolts the parts from your bin onto it">
+                  Add bin parts to my car
                 </button>
                 <button
                   class="btn ghost"
                   id="btnAutoBuild"
-                  title="Rebuild the whole car from everything you own (undo with Ctrl+Z)"
+                  title="Replaces your car with a fresh build from everything you own. Ctrl+Z brings yours back."
                 >
-                  Auto-build
+                  Build a car for me
                 </button>
               </div>
-              <button class="btn ghost" id="btnClear">Return all parts to the bin</button>
-              <button class="btn" id="btnReady">Ready · enter waiting arena</button>
+              <button class="btn ghost" id="btnClear" title="Takes every part off the car and back into the bin">
+                Empty the car
+              </button>
+              <button class="btn" id="btnReady">Ready · to the arena</button>
             </div>
           </aside>
         </section>
@@ -5899,9 +5968,9 @@ button.stslot:hover {
           </dd>
           <dt>Your stuff</dt>
           <dd>
-            Gear you find stays yours: upgrade it at the Workbench and it turns up as a draft card. The Locker holds
-            skins and stickers; stickers matching your skin's set give a bonus. Scrap Road is the story: missions,
-            bosses and loot on the way to the Junk King.
+            Everything you own lives in the Garage: gear you upgrade and put in your loadout (it is in your parts bin
+            from round 1), skins, stickers and titles. Scrap Road is the story; Blueprint Brawl lets you bring one
+            finished car. In battle, T opens quick chat.
           </dd>
         </dl>
         <p class="small">
@@ -15324,6 +15393,17 @@ function designItems() {
   return items;
 }
 function refreshUI() {
+  // garage buttons say what they will do right now
+  const nLoose = looseIds()
+      .filter(id => !isJoint(id) && !MOD[id].beam)
+      .reduce((a, id) => a + left(id), 0),
+    au = $('#btnAuto');
+  if (au) {
+    au.textContent = nLoose ? `Add ${nLoose} bin part${nLoose > 1 ? 's' : ''} to my car` : 'Bin is empty';
+    au.disabled = !nLoose;
+  }
+  const kb = $('[data-tool="keys"]');
+  if (kb) kb.hidden = ![...G.base.values()].some(e => isJoint(e.id)) && G.tool !== 'keys';
   const items = designItems(),
     C = calc(items),
     aura = auraOf(items.map(i => i.m.id));
@@ -15824,7 +15904,7 @@ function optView(o) {
       kind: g && g.lvl >= GEAR_MAX ? 'Masterwork gear' : 'Personal gear',
       img: `<img alt="" src="${iconURL(m.id, 184)}"><span class="x gearlv">+${g ? g.lvl - 1 : 0}</span>`,
       title: g ? gearName(g) : m.name,
-      body: `<p class="pro">+ ${Math.round(gearBonus(g || { id: o.id, lvl: 1 }) * 100)}% ${GEAR_KIND_TEXT[gearKind(o.id)]}</p>${q ? `<p class="pro">+ ${esc(q.name)}: ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p>` : ''}<p class="small">One copy. Upgrade it further at the Workbench.</p>`
+      body: `<p class="pro">+ ${Math.round(gearBonus(g || { id: o.id, lvl: 1 }) * 100)}% ${GEAR_KIND_TEXT[gearKind(o.id)]}</p>${q ? `<p class="pro">+ ${esc(q.name)}: ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p>` : ''}<p class="small">One copy. Upgrade it in the Garage.</p>`
     };
   }
   if (o.type === 'ws') {
@@ -16765,6 +16845,8 @@ function botShop(P) {
   }
 }
 const BOT_FRONT = [
+  'twinsaw',
+  'pilefist',
   'tusk',
   'lance',
   'blender',
@@ -16782,10 +16864,14 @@ const BOT_FRONT = [
   'piston',
   'pusher',
   'bumper',
-  'sloped'
+  'sloped',
+  'hedgetrimmer',
+  'fender'
 ];
 const BOT_MOB = [
   'track',
+  'mudtyre',
+  'dragwheel',
   'monster',
   'offroad',
   'racing',
@@ -16827,6 +16913,9 @@ const BOT_IN = [
 ];
 const BOT_PERIM = [
   'composite',
+  'chromeplate',
+  'ablative',
+  'fender',
   'heavyplate',
   'mirror',
   'foam',
@@ -16887,6 +16976,13 @@ function botBuild(P) {
       const per = Math.abs(x) === bw || Math.abs(y) === bh;
       putB(per ? BOT_PERIM : BOT_IN, 0, x, y);
     }
+  // the best armour faces forward: hits come from the front far more often than from behind
+  const perim = [...base.values()].filter(
+    e => e.id !== 'cockpit' && (Math.abs(e.x) === bw || Math.abs(e.y) === bh) && BOT_PERIM.includes(e.id)
+  );
+  const ids = perim.map(e => e.id).sort((a, b) => BOT_PERIM.indexOf(a) - BOT_PERIM.indexOf(b));
+  perim.sort((a, b) => a.y - b.y || Math.abs(a.x) - Math.abs(b.x));
+  perim.forEach((e, i) => (e.id = ids[i]));
   // mobility on the flanks
   const rows = [];
   for (let y = -bh; y <= bh; y++) rows.push(y);
@@ -17118,15 +17214,23 @@ function autoPlace(quiet) {
       }
       if (!done) break;
     }
-  const ids = looseIds().sort((a, b) => {
-    const order = m => (m.layer === 't' ? 3 : m.front ? 2 : m.drive ? 1 : 0);
-    return order(MOD[a]) - order(MOD[b]) || MOD[b].mnt - MOD[a].mnt || MOD[b].hp - MOD[a].hp;
-  });
+  // moving parts and beams only make sense where you decide; they stay in the bin
+  const handOnly = id => isJoint(id) || !!MOD[id].beam;
+  const skipped = looseIds().filter(handOnly);
+  const ids = looseIds()
+    .filter(id => !handOnly(id))
+    .sort((a, b) => {
+      const order = m => (m.layer === 't' ? 4 : m.front ? 3 : m.drive ? 2 : m.cat === 'defense' ? 1 : 0);
+      return order(MOD[a]) - order(MOD[b]) || MOD[b].mnt - MOD[a].mnt || MOD[b].hp - MOD[a].hp;
+    });
   for (const id of ids) {
     const m = MOD[id],
       top = m.layer === 't';
     while (left(id) > 0) {
       const occ = occupancy(G.base);
+      // wheels go in left/right pairs so the car drives straight
+      const drives = [...G.base.values()].filter(e => MOD[e.id].drive),
+        leftHeavy = drives.filter(e => e.x < 0).length - drives.filter(e => e.x > 0).length;
       let best = null,
         bs = -Infinity;
       for (const k of top ? occ.keys() : G.ws) {
@@ -17136,15 +17240,16 @@ function autoPlace(quiet) {
           if (top ? canPlaceTop(id, x, y, occ, rot) : canPlaceBase(id, rot, x, y, occ)) continue;
           const e = { id, rot, x, y };
           if (!safe(top ? G.top : G.base, k, e)) continue;
-          const neighbours = DIRS.filter(([dx, dy]) => occ.has(key(x + dx, y + dy))).length;
-          let sc = m.drive
-            ? Math.abs(x) * 3 - Math.abs(y) * 0.6
-            : m.front
-              ? -y * 3 - Math.abs(x) * 0.8
-              : -(Math.abs(x) + Math.abs(y) * 1.2) + neighbours * 1.6;
-          if (top) sc = m.wpn ? -y * 2 - Math.abs(x) * 0.7 : y - Math.abs(x) * 0.3;
-          if (rot !== 0) sc -= 0.5;
-          if (m.front) sc += (x * FX[rot] + y * FY[rot]) * 0.25;
+          const neighbours = DIRS.filter(([dx, dy]) => occ.has(key(x + dx, y + dy))).length,
+            facing = x * FX[rot] + y * FY[rot]; // > 0: points away from the cockpit
+          let sc;
+          if (top) sc = m.wpn ? -y * 2 - Math.abs(x) * 0.6 + (m.dir && rot === 0 ? 3 : 0) : y * 1.2 - Math.abs(x) * 0.3;
+          else if (m.booster) sc = y * 2 + (rot === 2 ? 4 : -2);
+          else if (m.front) sc = -y * 3 - Math.abs(x) * 0.8 + (rot === 0 ? 3 : facing > 0 ? 0 : -12);
+          else if (m.drive) sc = Math.abs(x) * 3 - Math.abs(y) * 0.6 + (leftHeavy > 0 ? x : leftHeavy < 0 ? -x : 0) * 2;
+          else if (m.cat === 'defense') sc = -y * 1.6 + (Math.abs(x) + Math.abs(y)) * 0.6 + neighbours * 1.4;
+          else sc = -(Math.abs(x) + Math.abs(y) * 1.2) + neighbours * 1.6;
+          if (rot !== 0 && !m.booster) sc -= 0.5;
           if (sc > bs) {
             bs = sc;
             best = e;
@@ -17167,8 +17272,10 @@ function autoPlace(quiet) {
   if (!quiet)
     window.__toast(
       placed
-        ? `Placed ${placed} working part${placed > 1 ? 's' : ''}. ${looseCount()} remain in the bin. Ctrl+Z undoes it.`
-        : 'No safe placement. Add compatible supports or expand the bay.',
+        ? `Bolted on ${placed} part${placed > 1 ? 's' : ''}: guns up front, wheels in pairs, armour where hits come in.${skipped.length ? ' Moving parts and beams stay in the bin for you to place.' : ''} Ctrl+Z undoes it.`
+        : skipped.length
+          ? 'Only moving parts and beams are left: place those by hand where you want them to move.'
+          : 'No safe spot left. Add supports (frames, girders) or expand the bay.',
       !!placed
     );
   return placed;
@@ -30523,7 +30630,7 @@ function addGear(id, lvl = 1, quiet, from) {
     const b = gearScrapValue({ id, lvl });
     GEAR.bolts += b;
     saveGear();
-    if (!quiet) toast(`Locker full: ${MOD[id].name} scrapped for ${b} bolts`);
+    if (!quiet) toast(`Gear storage full: ${MOD[id].name} scrapped for ${b} bolts`);
     return null;
   }
   const g = { u: GEAR.next++, id, lvl: clamp(lvl, 1, GEAR_MAX), isNew: 1 };
@@ -30820,7 +30927,7 @@ function matchSpoils(won, roundsWon, extra = {}) {
 }
 function spoilsHtml(s) {
   if (!s) return '';
-  return `<div class="spoils"><div class="sp-b"><i class="boltico" aria-hidden="true"></i><b>+${s.bolts} bolts</b><span>${GEAR.bolts} in the Workbench</span></div>${s.drops
+  return `<div class="spoils"><div class="sp-b"><i class="boltico" aria-hidden="true"></i><b>+${s.bolts} bolts</b><span>${GEAR.bolts} in the Garage</span></div>${s.drops
     .map(
       g =>
         `<div class="sp-g"><img alt="" src="${iconURL(g.id, 64)}"><span>New gear · <b>${esc(gearName(g))}</b></span></div>`
@@ -32664,6 +32771,7 @@ const CONTROLS = [
   ['H', 'Horn'],
   ['C', 'Anchor'],
   ['X', 'Release couplers'],
+  ['T, then 1–4', 'Quick chat'],
   ['Esc / P', 'Pause'],
   ['Garage', 'R turn part · T rotate · X remove · M mirror · Ctrl+Z undo'],
   ['Garage tools', 'G keys for moving parts · [ ] beam length'],
@@ -32691,7 +32799,7 @@ function openSettings(back) {
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
     ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
     ${toggle('setFps', 'Show frame rate (FPS)', SETTINGS.fps)}
-    <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset Locker progress</button></div>
+    <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset level and unlocks</button></div>
     <button class="btn" id="setDone">Done</button>`;
   $('#ovSettings').hidden = false;
   $('#setVol').addEventListener('input', e => {

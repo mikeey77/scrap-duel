@@ -45,7 +45,7 @@ function addGear(id, lvl = 1, quiet, from) {
     const b = gearScrapValue({ id, lvl });
     GEAR.bolts += b;
     saveGear();
-    if (!quiet) toast(`Locker full: ${MOD[id].name} scrapped for ${b} bolts`);
+    if (!quiet) toast(`Gear storage full: ${MOD[id].name} scrapped for ${b} bolts`);
     return null;
   }
   const g = { u: GEAR.next++, id, lvl: clamp(lvl, 1, GEAR_MAX), isNew: 1 };
@@ -342,7 +342,7 @@ function matchSpoils(won, roundsWon, extra = {}) {
 }
 function spoilsHtml(s) {
   if (!s) return '';
-  return `<div class="spoils"><div class="sp-b"><i class="boltico" aria-hidden="true"></i><b>+${s.bolts} bolts</b><span>${GEAR.bolts} in the Workbench</span></div>${s.drops
+  return `<div class="spoils"><div class="sp-b"><i class="boltico" aria-hidden="true"></i><b>+${s.bolts} bolts</b><span>${GEAR.bolts} in the Garage</span></div>${s.drops
     .map(
       g =>
         `<div class="sp-g"><img alt="" src="${iconURL(g.id, 64)}"><span>New gear · <b>${esc(gearName(g))}</b></span></div>`

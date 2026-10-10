@@ -18,6 +18,18 @@ npm run dist:win-zip # unsigned zip of the app, buildable from Linux/macOS
 - Fonts and PeerJS are bundled by `build.mjs` (no CDN needed)
 - Settings → _Show frame rate_ shows FPS; slow high-DPI screens switch to performance mode automatically
 
+## Garage HQ update
+
+- **Main menu**: a hangar with your own car in the spotlight, one Continue button for the Scrap Road, and every other mode as a tile with its options right below.
+- **Garage HQ** replaces the Workbench and the Locker: one screen with your car, paint, stickers, set bonus and **gear loadout** on the left (loadout gear is in your parts bin from round 1 of every Duel, Scrap Road and Gauntlet match; a fourth slot opens at level 10), and tabs for gear (spec sheet, upgrades, quirks, fusing, locking), the **Fabricator** (bolts into new gear), skins, stickers, trails, wreck effects, titles and your profile. Save up to three complete looks.
+- **Blueprint Brawl**: bring one car worth up to 700 coins (a saved blueprint or a ready-made archetype), no drafting and no shop; rearrange it between rounds. Against a bot or online.
+- **Online**: the host picks Draft duel or Blueprint Brawl, quick chat (T, then 1–4), a head-to-head record per friend, and a rematch button. Protocol 11.
+- **Scrap Road** is an illustrated map: click a mission to see it, click again or press Start.
+- **18 new parts**, 3 new arenas (Ice Rink, Scrap Press Plant, Stormy Rooftop) and 4 new stickers.
+- **Simpler controls**: logic chips and the Wire tool are gone. Only moving parts (hinges, rotators, rams) take a key; weapons always fire with left click.
+- **Smarter building**: bots put their best armour at the front; "Add bin parts to my car" puts wheels in pairs, melee facing forward and armour where hits come in, and leaves moving parts for you.
+- Removed: the Lives, Bounty and Hill formats, the drivable map with caches and fog.
+
 ## Scrap Road update
 
 - **Scrap Road** (story mode): a top-down world you drive around in your own car (WASD, Shift to boost). 4 regions with their own terrain, roads, gates that open after each boss, 12 hidden caches with bolts and gear, fog of war, a minimap with fast travel. 19 missions on the way. Missions have hand-made arena layouts, special rounds, salvage crates to grab before the rival steals them, and three stars each. Every region ends with a boss (best of 3): Mother Crusher, the Twin Drill, the Magnet Baron and the Junk King, hand-built cars that get angrier at ⅔ and ⅓ health. Boss and mission difficulty were tuned with simulated playthroughs.
@@ -73,7 +85,7 @@ Drive with WASD or arrows. Aim with the mouse; fire with left-click or Space. Ju
 
 New gadgets: right-click activates/reels cables; Z drops beads or foam, V releases a decoy duck, H rings the pickup bell, and C toggles grip studs or activates the rescue jack. The scrap conveyor switches between repairs and ammunition when firing begins. Their buttons appear only when equipped.
 
-In the garage: click/drag to place, right-click to remove, R changes the next part's facing, T rotates placed parts, X removes, M mirrors. Ctrl+Z undoes and Ctrl+Y redoes. G puts hinges, rotators and rams on keys 1–9, [ and ] change a beam's length.
+In the garage: click/drag to place, right-click to remove, R changes the next part's facing, T rotates placed parts, X removes, M mirrors. Ctrl+Z undoes and Ctrl+Y redoes. G puts hinges, rotators and rams on keys 1–9 (the button only shows when your car has one), [ and ] change a beam's length.
 
 ## Code layout
 

@@ -112,6 +112,8 @@ function botShop(P) {
   }
 }
 const BOT_FRONT = [
+  'twinsaw',
+  'pilefist',
   'tusk',
   'lance',
   'blender',
@@ -129,10 +131,14 @@ const BOT_FRONT = [
   'piston',
   'pusher',
   'bumper',
-  'sloped'
+  'sloped',
+  'hedgetrimmer',
+  'fender'
 ];
 const BOT_MOB = [
   'track',
+  'mudtyre',
+  'dragwheel',
   'monster',
   'offroad',
   'racing',
@@ -174,6 +180,9 @@ const BOT_IN = [
 ];
 const BOT_PERIM = [
   'composite',
+  'chromeplate',
+  'ablative',
+  'fender',
   'heavyplate',
   'mirror',
   'foam',
@@ -234,6 +243,13 @@ function botBuild(P) {
       const per = Math.abs(x) === bw || Math.abs(y) === bh;
       putB(per ? BOT_PERIM : BOT_IN, 0, x, y);
     }
+  // the best armour faces forward: hits come from the front far more often than from behind
+  const perim = [...base.values()].filter(
+    e => e.id !== 'cockpit' && (Math.abs(e.x) === bw || Math.abs(e.y) === bh) && BOT_PERIM.includes(e.id)
+  );
+  const ids = perim.map(e => e.id).sort((a, b) => BOT_PERIM.indexOf(a) - BOT_PERIM.indexOf(b));
+  perim.sort((a, b) => a.y - b.y || Math.abs(a.x) - Math.abs(b.x));
+  perim.forEach((e, i) => (e.id = ids[i]));
   // mobility on the flanks
   const rows = [];
   for (let y = -bh; y <= bh; y++) rows.push(y);

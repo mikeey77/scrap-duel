@@ -303,3 +303,70 @@
 .hg-go2:hover {
   background: color-mix(in srgb, var(--rc) 16%, transparent);
 }
+
+/* ---------- Blueprint Brawl: pick your car ---------- */
+.brawlpick {
+  width: min(1100px, 100%);
+  max-height: calc(100% - 16px);
+  overflow: auto;
+}
+.bp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.bp-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+  color: var(--fg);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+  cursor: pointer;
+}
+.bp-card:hover:not(:disabled) {
+  border-color: var(--hazard);
+  background: var(--panel-3);
+}
+.bp-card img {
+  align-self: center;
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  background: var(--blueprint);
+}
+.bp-card b {
+  font-family: var(--f-display);
+  font-size: 17px;
+}
+.bp-card .small {
+  flex: 1;
+}
+.bp-cost {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  background: var(--bg);
+}
+.bp-cost i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(255, 180, 35, 0.35);
+}
+.bp-cost em {
+  position: relative;
+  font-style: normal;
+  font-family: var(--f-display);
+  font-size: 12px;
+  padding-left: 6px;
+  line-height: 18px;
+}
+.bp-card.over {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

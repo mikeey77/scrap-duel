@@ -1746,4 +1746,24 @@ test('expansion parts: every new weapon and melee part deals damage, joints move
   for (const id of ['nut', 'cog', 'bomb', 'snow']) assert(a.STICKER[id], id);
 });
 
+test('auto-place: wheels in left/right pairs, melee facing forward, moving parts left for the player', () => {
+  const r = runtime(),
+    a = r.api,
+    G = a.G;
+  a.setGear({ bolts: 0, items: [], next: 1 });
+  a.startMatch('solo');
+  a.openBuild();
+  G.base.clear();
+  G.top.clear();
+  G.base.set('0,0', { id: 'cockpit', rot: 0, x: 0, y: 0 });
+  G.inv = { cockpit: 1, frame: 8, wheel: 4, saw: 1, hinge: 1 };
+  a.autoPlace(true);
+  const wheels = [...G.base.values()].filter(e => e.id === 'wheel');
+  assert.equal(wheels.length, 4);
+  assert.equal(wheels.filter(e => e.x < 0).length, wheels.filter(e => e.x > 0).length, 'balanced');
+  const saw = [...G.base.values()].find(e => e.id === 'saw');
+  assert(saw && saw.rot === 0 && saw.y < 0, 'saw at the front, facing forward');
+  assert(![...G.base.values()].some(e => e.id === 'hinge'), 'hinge stays in the bin');
+});
+
 console.log(`\n${passed} regression tests passed.`);
