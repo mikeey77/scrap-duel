@@ -636,7 +636,6 @@ function storyOpen(id) {
   return i === 0 || storyStars(STORY[i - 1].id) > 0;
 }
 const nextMission = () => STORY.find(m => !storyStars(m.id) && storyOpen(m.id)) || null;
-const storyBadge = () => `${totalStars()}★`;
 const storyMission = () => (G.story ? STORY_BY[G.story.mid] : null);
 const stickerUnlocked = st =>
   !st.unlock ||

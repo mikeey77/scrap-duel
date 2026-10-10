@@ -19,7 +19,8 @@
     "18-gambling.css",
     "19-extras.css",
     "20-menu-v3.css",
-    "21-progression.css"
+    "21-progression.css",
+    "22-hangar.css"
   ],
   "js": [
     "js/core/utils.js",

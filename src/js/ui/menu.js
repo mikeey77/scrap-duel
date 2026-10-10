@@ -1,26 +1,29 @@
 // Main menu (over a live bot battle), multiplayer lobby, the main loop and start-up.
 const inMatch = () => !['intro', 'menu', 'final'].includes(G.phase) && G.mode !== undefined && G.started;
-const MENU_TABS = [
-  { id: 'story', name: 'Scrap Road', ico: 'SR', col: '#ffb423', badge: () => storyBadge() },
-  { id: 'solo', name: 'Duel vs bot', ico: '1P', col: '#3fe0a0' },
-  { id: 'run', name: 'Scrap Gauntlet', ico: '☠', col: '#ff5c7a' },
-  { id: 'online', name: 'Online 1v1', ico: '2P', col: '#5be7ff' },
-  { id: 'sand', name: 'Sandbox', ico: 'LAB', col: '#c58bff' },
-  { id: 'work', name: 'Workbench', ico: 'WB', col: '#ffb423', badge: () => GEAR.bolts + ' bolts' },
-  { id: 'style', name: 'Locker', ico: '★', col: '#ffd257', badge: () => 'Lv ' + levelInfo().lvl },
-  { id: 'codex', name: 'Module codex', ico: 'K', col: '#8da3c2' }
+const MENU_MODES = [
+  { id: 'solo', name: 'Duel vs bot', col: '#3fe0a0', line: 'Draft a part every round and outbuild a bot.' },
+  {
+    id: 'brawl',
+    name: 'Blueprint Brawl',
+    col: '#ff8a3a',
+    line: `Bring one car worth ${BRAWL_BUDGET} coins. No drafting.`
+  },
+  { id: 'run', name: 'Scrap Gauntlet', col: '#ff5c7a', line: 'Endless waves, three hearts, a boss every fifth wave.' },
+  { id: 'online', name: 'Online', col: '#5be7ff', line: 'Duel or brawl a friend with a 4-letter room code.' },
+  { id: 'sand', name: 'Sandbox', col: '#c58bff', line: 'Every part, 99 of each. Build anything, test it.' }
 ];
 const TAGLINES = [
-  'Weld a car from scrap, draft a new part every round, smash your rival.',
+  'Tip: loadout gear in the Garage is in your parts bin from round 1.',
+  "Tip: two stickers from your skin's set turn on a set bonus.",
+  'Tip: hinges and rams follow right click, or a key you give them with the Keys tool (G).',
+  'Tip: in a Brawl you can rearrange your car between rounds.',
+  'Tip: press T in battle for quick chat.',
+  'Tip: bosses get angrier at two thirds and one third health.',
   'Now with 40% more duct tape.',
-  'Every bolt counts. Most of them are loose.',
   'Build it. Break it. Blame the bot.',
-  'The only racing game where you are the race track.',
-  'Certified road-illegal since forever.',
-  'Warning: may contain traces of flying fridges.',
-  'Your mechanic called. He is crying.',
-  'Pick parts. Hit things. Repeat until victorious or on fire.'
+  'Warning: may contain traces of flying fridges.'
 ];
+let menuMode = null;
 function showMenu() {
   hideOverlays();
   if (G.phase === 'review') closeGarageReport();
@@ -28,99 +31,76 @@ function showMenu() {
   if (!resume) {
     G.phase = 'menu';
     updateHUD();
-    demoStart();
+    demoStop(); // the hangar has its own backdrop
   } else if (B && !B.demo && G.mode !== 'mp' && (G.phase === 'battle' || G.phase === 'wait') && !B.paused) {
     // solo: the bot must not keep shooting while you browse the menu
     B.paused = true;
     B.menuPaused = true;
     clearArenaInput && clearArenaInput();
   }
-  const L = levelInfo();
-  $('#ovMenu').classList.toggle('live', !resume);
-  const tab = MENU_TABS.some(t => t.id === load('sd.menuTab')) ? load('sd.menuTab') : 'story';
-  const item = t =>
-    `<button class="mrail-i" data-tab="${t.id}" style="--rc:${t.col}" aria-pressed="${t.id === tab}"><span class="mi-ico">${t.ico}</span><span class="mi-t">${t.name}</span>${t.badge ? `<span class="mi-b">${t.badge()}</span>` : ''}</button>`;
-  const group = (label, ids) =>
-    `<div class="mrail-g"><span class="mrail-h">${label}</span>${MENU_TABS.filter(t => ids.includes(t.id))
-      .map(item)
-      .join('')}</div>`;
-  const panel = (id, col, title, body) =>
-    `<section class="mpanel" data-panel="${id}" style="--rc:${col}" ${id === tab ? '' : 'hidden'}><h2>${title}</h2>${body}</section>`;
-  $('#ovMenu').innerHTML = `<div class="menu3">
-        <div class="mbrand"><h1>SCRAP <span>DUEL</span></h1><p id="tagline">Weld a car from scrap, draft a new part every round, smash your rival.</p></div>
-    ${resume ? '<button class="btn ok mresume" id="mResume">▶ Resume match</button>' : ''}
-    <div class="mbody">
-      <nav class="mrail" aria-label="Game modes">
-        ${group('Play', ['story', 'solo', 'run', 'online'])}
-        ${group('Build', ['sand'])}
-        ${group('Garage', ['work', 'style', 'codex'])}
-      </nav>
-      <div class="mpanels">
-        ${panel('story', '#ffb423', 'Scrap Road', storyPanelHtml())}
-        ${panel(
-          'solo',
-          '#3fe0a0',
-          'Duel vs bot',
-          `<p>A bot rival who drafts, shops and builds with the same rules as you.</p>
-          <span class="mlab">Difficulty</span><div class="seg" id="diffSeg">${DIFF.map((d, i) => `<button data-i="${i}" aria-pressed="${i === G.diff}">${d.name}</button>`).join('')}</div>
-          <span class="mlab">Rounds</span><div class="seg" id="roundSeg" aria-label="Match length">${ROUND_CHOICES.map(n => `<button data-n="${n}" aria-pressed="${n === (G.rounds || 10)}">${n}</button>`).join('')}</div>
-          <span class="mlab">Format</span><div class="seg" id="fmtSeg" aria-label="Match format">${Object.entries(
-            MATCH_FORMATS
-          )
-            .map(
-              ([k, f]) =>
-                `<button data-f="${k}" title="${esc(f.desc)}" aria-pressed="${k === chosenFormat}">${esc(f.short)}</button>`
-            )
-            .join('')}</div><p class="small" id="fmtDesc">${esc(MATCH_FORMATS[chosenFormat].desc)}</p>
-          <button class="btn mgo" id="mSolo">Play vs bot</button>`
-        )}
-        ${panel(
-          'online',
-          '#5be7ff',
-          'Online 1v1',
-          `<p>Host a room and share the 4-letter code with a friend, or join theirs.</p>
-          <span class="mlab">Your name</span><input id="mName" class="mname" maxlength="16" value="${esc(G.name)}" aria-label="Your name" placeholder="Your name">
-          <div class="mrow"><button class="btn" id="mHost">Host room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>`
-        )}
-        ${panel(
-          'run',
-          '#ff5c7a',
-          'Scrap Gauntlet',
-          `<p>Survive wave after wave with three hearts. Every fifth wave a boss drops a relic.</p>
-          <div class="mstat"><b>${runBest() ? 'Wave ' + runBest() : '—'}</b><span>best run</span></div>
-          <button class="btn mgo" id="mRun">Start a run</button>`
-        )}
-        ${panel(
-          'sand',
-          '#c58bff',
-          'Sandbox',
-          `<p>Every module, 99 of each, no drafting. Build anything and test it on dummies.</p>
-          <button class="btn mgo" id="mSand">Open sandbox</button>`
-        )}
-        ${panel(
-          'work',
-          '#ffb423',
-          'Workbench',
-          `<p>Your own parts. Upgrade them with bolts, weld on quirks and find them again as draft cards in Duel, Story and Gauntlet.</p>
-          <div class="mstat"><b>${GEAR.bolts}</b><span>bolts</span></div><div class="mstat"><b>${GEAR.items.length}</b><span>gear pieces</span></div>
-          <button class="btn mgo" id="mWork">Open the Workbench</button>`
-        )}
-        ${panel(
-          'style',
-          '#ffd257',
-          'Locker',
-          `<p>${esc(titleName(G.style.title))} · ${unlockedCount()} of ${totalCosmetics()} unlocked</p>
-          <div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">Scrap Cred level ${L.lvl} · ${L.into}/${L.need} XP</span>
-          <p class="small">Skins, stickers, trails and titles. Stickers give small perks, and two stickers that match your skin unlock a set bonus.</p>
-          <button class="btn mgo" id="mStyle">Open the Locker</button>`
-        )}
-      </div>
-    </div>
-    <div class="mfoot3"><button class="mlink" id="mHow">How to play</button><button class="mlink" id="mSettings">Settings</button><button class="mlink" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button>${window.desktop ? '<button class="mlink" id="mQuit">Quit game</button>' : ''}</div>
+  menuMode = MENU_MODES.some(m => m.id === load('sd.menuTab')) ? load('sd.menuTab') : 'solo';
+  const L = levelInfo(),
+    next = nextMission(),
+    done = STORY.filter(m => storyStars(m.id)).length,
+    reg = next ? STORY_REGIONS.find(r => r.id === next.region) : null;
+  let car = '';
+  try {
+    car = designURL(stylePreviewDesign(), 420, G.paint, G.style.livery);
+  } catch (e) {}
+  const set = activeSet(),
+    lo = GEAR.loadout.map(gearById).filter(Boolean);
+  const stat = id =>
+    id === 'run'
+      ? runBest()
+        ? `Best: wave ${runBest()}`
+        : 'No run yet'
+      : id === 'solo'
+        ? `${DIFF[G.diff].name} · ${G.rounds || 10} rounds`
+        : id === 'brawl'
+          ? `Budget ${BRAWL_BUDGET}`
+          : id === 'online'
+            ? 'Peer to peer'
+            : `${MODS.length} parts`;
+  $('#ovMenu').classList.toggle('live', false);
+  $('#ovMenu').innerHTML = `<div class="hangar${resume ? ' resume' : ''}">
+    <header class="hg-top">
+      <div class="hg-brand" aria-label="Scrap Duel">SCRAP<b>DUEL</b></div>
+      <div class="hg-prof">${badgeHTML(G.style.badge, 40)}
+        <div><input id="mName" class="hg-name" maxlength="16" value="${esc(G.name)}" aria-label="Your name"><span class="small">${esc(titleName(G.style.title))}</span></div>
+        <div class="hg-lvl" title="Scrap Cred level ${L.lvl}"><b>${L.lvl}</b><span><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></span></div>
+        <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b></div></div>
+      <nav class="hg-sys" aria-label="System"><button class="mlink" id="mHow">How to play</button><button class="mlink" id="mCodex">Codex</button><button class="mlink" id="mSettings">Settings</button><button class="mlink" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button>${window.desktop ? '<button class="mlink" id="mQuit">Quit</button>' : ''}</nav>
+    </header>
+    <main class="hg-main">
+      <section class="hg-car" aria-label="Your car">
+        <div class="hg-pad"><img src="${car}" alt="Your car"><div class="hq-stk">${(G.style.stickers || []).map(id => `<img alt="" src="${stickerURL(id, 48)}">`).join('')}</div></div>
+        <div class="hg-carinfo">
+          <div class="hg-chips">${set ? `<span class="settag" style="--sc:${STICKER_SETS[set].col}">${esc(STICKER_SETS[set].name)} set on</span>` : ''}${lo.map(g => `<span class="hg-chip"><img alt="" src="${iconURL(g.id, 32)}">${esc(gearName(g))}</span>`).join('')}${lo.length ? '' : '<span class="small">No gear in your loadout yet.</span>'}</div>
+          <button class="btn ghost" id="mGarage">Garage · gear, skins, stickers</button>
+        </div>
+      </section>
+      <section class="hg-play">
+        ${
+          resume
+            ? `<div class="hg-cont" style="--rc:#3fe0a0"><span class="label">Match in progress</span><h2>${esc(G.story ? storyMission().name : MATCH_FORMATS[G.format].name)}</h2><button class="btn hg-go" id="mResume">Resume match</button></div>`
+            : `<div class="hg-cont" style="--rc:${reg ? reg.col : '#ffd257'}"><span class="label">Scrap Road · ${done}/${STORY.length} missions · ${totalStars()}★</span>
+          <h2>${next ? esc(next.name) : 'Every boss beaten'}</h2><p class="small">${next ? `${esc(reg.name)} · ${esc({ duel: 'Duel', salvage: 'Salvage hunt', special: 'Special rules', boss: 'Boss fight' }[next.kind])}` : 'Go back for three stars everywhere.'}</p>
+          <div class="hg-prog"><i style="width:${Math.round((done / STORY.length) * 100)}%"></i></div>
+          <div class="hg-row"><button class="btn hg-go" id="mStory">${next ? (done ? 'Continue' : 'Start the story') : 'Open the map'}</button><button class="btn ghost" id="mMap">Map</button></div></div>`
+        }
+        <div class="hg-modes" role="tablist" aria-label="Other modes">${MENU_MODES.map(m => `<button class="hg-mode" role="tab" data-mode="${m.id}" aria-selected="${m.id === menuMode}" style="--rc:${m.col}"><b>${m.name}</b><span>${esc(m.line)}</span><em>${stat(m.id)}</em></button>`).join('')}</div>
+        <div class="hg-opts" id="hgOpts" role="tabpanel"></div>
+      </section>
+    </main>
+    <footer class="hg-foot"><span id="tagline">${esc(pick(TAGLINES))}</span></footer>
   </div>`;
   $('#ovMenu').hidden = false;
-  const q = $('#mQuit');
-  if (q) q.onclick = () => window.desktop.quit();
+  menuOpts();
+  const on = (id, f) => {
+    const el = $('#' + id);
+    if (el) el.addEventListener('click', f);
+  };
+  on('mQuit', () => window.desktop.quit());
   clearInterval(showMenu.tag);
   showMenu.tag = setInterval(() => {
     const t = $('#tagline');
@@ -130,7 +110,96 @@ function showMenu() {
       t.textContent = pick(TAGLINES);
       t.classList.remove('swap');
     }, 350);
-  }, 7000);
+  }, 8000);
+  const nameIn = $('#mName');
+  nameIn.addEventListener('input', () => {
+    G.name = nameIn.value.trim().slice(0, 16) || 'Player';
+    store('sd.name', G.name);
+  });
+  $$('.hg-mode').forEach(b =>
+    b.addEventListener('click', () => {
+      menuMode = b.dataset.mode;
+      store('sd.menuTab', menuMode);
+      $$('.hg-mode').forEach(x => x.setAttribute('aria-selected', x === b));
+      sfx('ui');
+      menuOpts();
+    })
+  );
+  on('mStory', () => {
+    sfx('ui');
+    menuLeave();
+    const n = nextMission();
+    if (n) {
+      storySel = n.id;
+      G.started = true;
+      startStory(n.id);
+    } else openStory();
+  });
+  on('mMap', () => {
+    sfx('ui');
+    menuLeave();
+    openStory();
+  });
+  on('mGarage', () => {
+    sfx('ui');
+    $('#ovMenu').hidden = true;
+    openGarageHQ(showMenu, 'gear');
+  });
+  on('mCodex', () => {
+    sfx('ui');
+    $('#ovMenu').hidden = true;
+    openCodex();
+  });
+  on('mSound', e => {
+    MUTE = !MUTE;
+    store('sd.mute', MUTE ? 1 : 0);
+    e.currentTarget.textContent = MUTE ? 'Sound off' : 'Sound on';
+    sfx('ui');
+  });
+  on('mHow', () => {
+    $('#ovMenu').hidden = true;
+    $('#ovIntro').hidden = false;
+  });
+  on('mSettings', () => {
+    $('#ovMenu').hidden = true;
+    openSettings(showMenu);
+  });
+  on('mResume', () => {
+    sfx('ui');
+    $('#ovMenu').hidden = true;
+  });
+}
+const menuLeave = () => {
+  if (G.mode === 'mp') Net.close();
+};
+/** The options and Play button for the selected mode tile. */
+function menuOpts() {
+  const el = $('#hgOpts');
+  if (!el) return;
+  const m = MENU_MODES.find(x => x.id === menuMode),
+    seg = (id, items, cur, attr) =>
+      `<div class="seg" id="${id}">${items.map(([v, n]) => `<button data-${attr}="${v}" aria-pressed="${v === cur}">${n}</button>`).join('')}</div>`;
+  const diff = seg(
+      'diffSeg',
+      DIFF.map((d, i) => [i, d.name]),
+      G.diff,
+      'i'
+    ),
+    rounds = seg(
+      'roundSeg',
+      ROUND_CHOICES.map(n => [n, n + ' rounds']),
+      G.rounds || 10,
+      'n'
+    );
+  const body = {
+    solo: `<div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><button class="btn hg-go2" id="mPlay">Play vs bot</button>`,
+    brawl: `<div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><p class="small">Pick one of your saved blueprints or a ready-made archetype. You keep the same parts all match.</p><button class="btn hg-go2" id="mPlay">Start a Brawl</button>`,
+    run: `<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
+    online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>`,
+    sand: `<p class="small">No rounds and no rival: build with everything and try it on test dummies.</p><button class="btn hg-go2" id="mPlay">Open the sandbox</button>`
+  }[m.id];
+  el.style.setProperty('--rc', m.col);
+  el.innerHTML = body;
   $$('#diffSeg button').forEach(b =>
     b.addEventListener('click', () => {
       G.diff = +b.dataset.i;
@@ -139,25 +208,6 @@ function showMenu() {
       sfx('ui');
     })
   );
-  $$('#fmtSeg button').forEach(b =>
-    b.addEventListener('click', () => {
-      chosenFormat = b.dataset.f;
-      $$('#fmtSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
-      $('#fmtDesc').textContent = MATCH_FORMATS[chosenFormat].desc;
-      store('sd.format', chosenFormat);
-      sfx('ui');
-    })
-  );
-  $('#mWork').addEventListener('click', () => {
-    $('#ovMenu').hidden = true;
-    sfx('ui');
-    openWorkbench(showMenu);
-  });
-  $('#mStory').addEventListener('click', () => {
-    sfx('ui');
-    leave();
-    openStory();
-  });
   $$('#roundSeg button').forEach(b =>
     b.addEventListener('click', () => {
       G.rounds = +b.dataset.n;
@@ -166,80 +216,36 @@ function showMenu() {
       sfx('ui');
     })
   );
-  const nameIn = $('#mName');
-  nameIn.addEventListener('input', () => {
-    G.name = nameIn.value.trim().slice(0, 16) || 'Player';
-    store('sd.name', G.name);
-  });
-  const leave = () => {
-    if (G.mode === 'mp') Net.close();
-  };
-  const go = mode => () => {
-    sfx('ui');
-    leave();
-    G.started = true;
-    startMatch(mode);
-  };
-  $('#mSolo').addEventListener('click', go('solo'));
-  $('#mSand').addEventListener('click', go('sandbox'));
-  $('#mRun').addEventListener('click', () => {
-    sfx('ui');
-    leave();
-    G.started = true;
-    startRun();
-  });
-  $('#mHost').addEventListener('click', () => {
-    sfx('ui');
-    leave();
-    Net.host();
-  });
-  const code = $('#mCode');
-  code.addEventListener('input', () => (code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, '')));
-  const join = () => {
-    const c = code.value.trim();
-    if (c.length !== 4) return code.focus();
-    sfx('ui');
-    leave();
-    Net.join(c);
-  };
-  $('#mJoin').addEventListener('click', join);
-  code.addEventListener('keydown', e => e.key === 'Enter' && join());
-  $('#mSound').addEventListener('click', e => {
-    MUTE = !MUTE;
-    store('sd.mute', MUTE ? 1 : 0);
-    e.currentTarget.textContent = MUTE ? 'Sound off' : 'Sound on';
-    sfx('ui');
-  });
-  $$('.mrail-i').forEach(b =>
-    b.addEventListener('click', () => {
+  const play = $('#mPlay');
+  if (play)
+    play.addEventListener('click', () => {
       sfx('ui');
-      if (b.dataset.tab === 'codex') {
-        $('#ovMenu').hidden = true;
-        return openCodex();
-      }
-      store('sd.menuTab', b.dataset.tab);
-      $$('.mrail-i').forEach(x => x.setAttribute('aria-pressed', x === b));
-      $$('.mpanel').forEach(p => (p.hidden = p.dataset.panel !== b.dataset.tab));
-    })
-  );
-  $('#mHow').addEventListener('click', () => {
-    $('#ovMenu').hidden = true;
-    $('#ovIntro').hidden = false;
-  });
-  $('#mSettings').addEventListener('click', () => {
-    $('#ovMenu').hidden = true;
-    openSettings(showMenu);
-  });
-  $('#mStyle').addEventListener('click', () => {
-    $('#ovMenu').hidden = true;
-    openStyle(showMenu);
-  });
-  const r = $('#mResume');
-  if (r)
-    r.addEventListener('click', () => {
-      sfx('ui');
-      $('#ovMenu').hidden = true;
+      menuLeave();
+      G.started = true;
+      if (m.id === 'run') startRun();
+      else if (m.id === 'sand') startMatch('sandbox');
+      else startMatch('solo', null, m.id === 'brawl' ? 'brawl' : 'balanced');
     });
+  const host = $('#mHost');
+  if (host)
+    host.addEventListener('click', () => {
+      sfx('ui');
+      menuLeave();
+      Net.host();
+    });
+  const code = $('#mCode');
+  if (code) {
+    code.addEventListener('input', () => (code.value = code.value.toUpperCase().replace(/[^A-Z0-9]/g, '')));
+    const join = () => {
+      const c = code.value.trim();
+      if (c.length !== 4) return code.focus();
+      sfx('ui');
+      menuLeave();
+      Net.join(c);
+    };
+    $('#mJoin').addEventListener('click', join);
+    code.addEventListener('keydown', e => e.key === 'Enter' && join());
+  }
 }
 function lobbyUI() {
   const n = Net,
@@ -432,8 +438,6 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   MUTE = load('sd.mute') == 1;
   const pt = load('sd.paint');
   if (pt && /^#[0-9a-f]{6}$/i.test(pt)) G.paint = pt;
-  const fm = load('sd.format');
-  if (fm && MATCH_FORMATS[fm]) chosenFormat = fm;
   loadStory();
   loadStyle();
   loadGear();
