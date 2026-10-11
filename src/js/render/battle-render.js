@@ -52,6 +52,25 @@ function drawVehicle(c, v, alpha) {
   const flipS = v.flip > 0 ? Math.cos(Math.min(1, v.flipAnim) * Math.PI) : 1,
     under = v.flip > 0 && flipS < 0;
   if (!under) drawJointRods(c, v);
+  // one hull: a soft shadow under the whole car and a dark outline around its chassis
+  if (!under && !SETTINGS.perf) {
+    for (const [dx, dy, col, k] of [
+      [5, 7, 'rgba(0,0,0,.26)', 1.02],
+      [0, 0, '#0a0d12', 1.14]
+    ]) {
+      c.fillStyle = col;
+      for (const I of alive) {
+        if (I.layer !== 'b') continue;
+        const [x, y] = ipos(v, I);
+        c.save();
+        c.translate(x + dx, y + dy);
+        c.rotate(v.a + (I.la || 0) + (I.rot * Math.PI) / 2);
+        c.scale(k, k);
+        planShapeFill(c, I.m, S);
+        c.restore();
+      }
+    }
+  }
   for (const layer of ['b', 't'])
     for (const I of alive) {
       if (I.layer !== layer) continue;

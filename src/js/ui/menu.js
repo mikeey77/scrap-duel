@@ -718,6 +718,8 @@ if (window.__SD_TEST__)
     sizeArena,
     updateCam,
     enterWait,
+    drawModule,
+    designURL,
     beginMP,
     myTeam,
     teamOf,

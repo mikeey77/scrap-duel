@@ -29,16 +29,43 @@ function rr(c, x, y, w, h, r) {
   c.arcTo(x, y, x + w, y, r);
   c.closePath();
 }
+/** A metal plate: shaded body, a rim light on the top-left edges, shade on the bottom-right and an inset panel seam. */
 function bevel(c, h, col, r) {
   const g = c.createLinearGradient(-h, -h, h, h);
-  g.addColorStop(0, mix(col, 0.24));
-  g.addColorStop(0.5, col);
-  g.addColorStop(1, mix(col, -0.32));
+  g.addColorStop(0, mix(col, 0.3));
+  g.addColorStop(0.45, col);
+  g.addColorStop(1, mix(col, -0.38));
   rr(c, -h, -h, h * 2, h * 2, r);
   c.fillStyle = g;
   c.fill();
-  c.lineWidth = Math.max(1, h * 0.07);
+  c.lineWidth = Math.max(1, h * 0.08);
+  c.strokeStyle = mix(col, -0.62);
+  c.stroke();
+  if (h < 5) return;
+  const e = h * 0.84,
+    lw = Math.max(1, h * 0.07);
+  c.lineCap = 'round';
+  // rim light along the top and left edge
+  c.beginPath();
+  c.moveTo(-e, e * 0.6);
+  c.lineTo(-e, -e + r * 0.4);
+  c.lineTo(e * 0.6, -e);
+  c.strokeStyle = mix(col, 0.5);
+  c.lineWidth = lw;
+  c.globalAlpha *= 0.75;
+  c.stroke();
+  // shade along the bottom and right edge
+  c.beginPath();
+  c.moveTo(e, -e * 0.6);
+  c.lineTo(e, e);
+  c.lineTo(-e * 0.6, e);
   c.strokeStyle = mix(col, -0.55);
+  c.stroke();
+  c.globalAlpha /= 0.75;
+  // inset panel seam
+  rr(c, -h * 0.74, -h * 0.74, h * 1.48, h * 1.48, Math.max(1, r * 0.6));
+  c.strokeStyle = 'rgba(0,0,0,.16)';
+  c.lineWidth = Math.max(0.6, h * 0.035);
   c.stroke();
 }
 function bolts(c, h, s, col) {
@@ -77,9 +104,17 @@ function line(c, p, col, lw) {
 }
 function gradCirc(c, r, col, x = 0, y = 0) {
   const g = c.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r);
-  g.addColorStop(0, mix(col, 0.3));
-  g.addColorStop(1, mix(col, -0.35));
+  g.addColorStop(0, mix(col, 0.38));
+  g.addColorStop(0.6, col);
+  g.addColorStop(1, mix(col, -0.42));
   circ(c, x, y, r, g, mix(col, -0.6), Math.max(1, r * 0.12));
+  if (r > 4) {
+    // a small specular glint
+    c.fillStyle = 'rgba(255,255,255,.28)';
+    c.beginPath();
+    c.ellipse(x - r * 0.32, y - r * 0.38, r * 0.3, r * 0.16, -0.7, 0, 7);
+    c.fill();
+  }
 }
 function glowDisc(c, r, col) {
   const g = c.createRadialGradient(0, 0, 0, 0, 0, r);
@@ -90,9 +125,26 @@ function glowDisc(c, r, col) {
   c.globalAlpha /= 0.55;
 }
 let ANIM = 0;
+/** The turret ring under top-mounted equipment: a soft shadow, a steel ring and six bolts. */
 function topMount(c, h, s) {
-  circ(c, 0, 0, h * 0.78, '#2b3036', '#15181b', s * 0.05);
-  circ(c, 0, 0, h * 0.62, null, 'rgba(255,255,255,.08)', s * 0.03);
+  c.fillStyle = 'rgba(0,0,0,.32)';
+  c.beginPath();
+  c.arc(h * 0.08, h * 0.12, h * 0.84, 0, 7);
+  c.fill();
+  const g = c.createRadialGradient(-h * 0.3, -h * 0.3, h * 0.1, 0, 0, h * 0.8);
+  g.addColorStop(0, '#4a525c');
+  g.addColorStop(1, '#22272d');
+  circ(c, 0, 0, h * 0.78, g, '#121518', s * 0.05);
+  circ(c, 0, 0, h * 0.62, null, 'rgba(255,255,255,.1)', s * 0.03);
+  if (s > 20) {
+    c.fillStyle = '#7d8792';
+    for (let i = 0; i < 6; i++) {
+      const a = (i * Math.PI) / 3 + 0.3;
+      c.beginPath();
+      c.arc(Math.cos(a) * h * 0.7, Math.sin(a) * h * 0.7, s * 0.025, 0, 7);
+      c.fill();
+    }
+  }
 }
 /** Mood + gaze for a car's cockpit eyes. */
 function cockpitFace(v) {
@@ -110,7 +162,31 @@ function cockpitFace(v) {
   const la = Math.atan2((v.aimY ?? v.y - 1) - v.y, (v.aimX ?? v.x) - v.x) - v.a;
   return { mood, lookA: la, seed: v.idx * 1.7, badge: (v.look && v.look.badge) || null };
 }
+/** Every module: its own artwork, plus a small rarity notch on chassis blocks. */
 function drawModule(c, id, s, ang, team, st) {
+  drawModuleArt(c, id, s, ang, team, st);
+  const m = MOD[id];
+  if (
+    m &&
+    m.layer !== 't' &&
+    m.rar >= 1 &&
+    (m.cat === 'struct' || m.cat === 'defense') &&
+    cellCount(m) === 1 &&
+    !m.wpn &&
+    s > 18 &&
+    !m.plan
+  ) {
+    const h = s / 2;
+    c.fillStyle = RAR[m.rar].col;
+    c.beginPath();
+    c.moveTo(-h * 0.92, -h * 0.92);
+    c.lineTo(-h * 0.92 + s * 0.2, -h * 0.92);
+    c.lineTo(-h * 0.92, -h * 0.92 + s * 0.2);
+    c.closePath();
+    c.fill();
+  }
+}
+function drawModuleArt(c, id, s, ang, team, st) {
   const m = MOD[id],
     A = m.art,
     h = s / 2,
@@ -1922,6 +1998,20 @@ function designURL(design, size, paint, livery, overlay) {
   const c = cv.getContext('2d');
   const ox = (size - cols * cs) / 2 - x0 * cs,
     oy = (size - rows * cs) / 2 - y0 * cs;
+  // shadow and dark outline behind the chassis, so the preview reads as one vehicle
+  for (const [dx, dy, col, pad] of [
+    [cs * 0.08, cs * 0.12, 'rgba(0,0,0,.3)', 0],
+    [0, 0, '#0a0d12', cs * 0.06]
+  ]) {
+    c.fillStyle = col;
+    for (const [x, y] of cells)
+      c.fillRect(
+        ox + x * cs + dx - pad + cs * 0.02,
+        oy + y * cs + dy - pad + cs * 0.02,
+        cs * 0.96 + pad * 2,
+        cs * 0.96 + pad * 2
+      );
+  }
   for (const [, e] of design.base) {
     const [ccx, ccy] = instCenter(e);
     c.save();
