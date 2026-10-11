@@ -625,10 +625,9 @@ function stepCarHazards(v, dt) {
   for (const p of B.pk || []) {
     if (p.cd > 0) continue;
     if (Math.hypot(p.x - v.x, p.y - v.y) < (v.rad * 0.6 + 22) * reach) {
-      if (p.kind === 'salvage' || p.kind === 'gift') {
+      if (p.kind === 'gift') {
         p.cd = 1e9;
-        if (p.kind === 'salvage') storyGrab(v, p);
-        else crowdGiftTaken(v, p);
+        crowdGiftTaken(v, p);
         continue;
       }
       p.cd = p.kind === 'power' ? POWER_RESPAWN : 25;

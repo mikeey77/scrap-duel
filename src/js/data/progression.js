@@ -125,7 +125,7 @@ const STICKER_SETS = {
 };
 const liverySet = id => Object.keys(STICKER_SETS).find(s => STICKER_SETS[s].liveries.includes(id)) || null;
 
-// unlock: {lvl} | {ach} | {story: missionId} — story stickers are earned on the Scrap Road.
+// unlock: {lvl} | {ach}
 const STICKERS = [
   { id: 'flag', set: 'speed', name: 'Checker Flag', perk: 'Top speed +3%', fx: { speedK: 0.03 }, unlock: null },
   {
@@ -142,7 +142,7 @@ const STICKERS = [
     name: 'Lightning',
     perk: 'Start every round with a 4 s speed boost',
     fx: { quick: 1 },
-    unlock: { story: 'r1b' }
+    unlock: { lvl: 3 }
   },
   {
     id: 'wrench',
@@ -160,7 +160,7 @@ const STICKERS = [
     fx: { res: { ram: 0.1 } },
     unlock: { lvl: 6 }
   },
-  { id: 'rat', set: 'junk', name: 'Junk Rat', perk: 'Coin pickups +30%', fx: { coinK: 0.3 }, unlock: { story: 'r1a' } },
+  { id: 'rat', set: 'junk', name: 'Junk Rat', perk: 'Coin pickups +30%', fx: { coinK: 0.3 }, unlock: { lvl: 2 } },
   { id: 'star', set: 'show', name: 'Gold Star', perk: 'Hype +20%', fx: { hypeK: 0.2 }, unlock: { lvl: 2 } },
   { id: 'crown', set: 'show', name: 'Tiny Crown', perk: 'Max HP +4%', fx: { hpK: 0.04 }, unlock: { ach: 'match_win' } },
   {
@@ -169,7 +169,7 @@ const STICKERS = [
     name: 'Fan Mail',
     perk: 'Crowd gifts you grab also repair 6%',
     fx: { giftHeal: 0.06 },
-    unlock: { story: 'r2c' }
+    unlock: { lvl: 7 }
   },
   {
     id: 'paw',
@@ -177,7 +177,7 @@ const STICKERS = [
     name: 'Tiger Paw',
     perk: 'Ram damage dealt +8%',
     fx: { ramOut: 0.08 },
-    unlock: { story: 'r2a' }
+    unlock: { lvl: 5 }
   },
   {
     id: 'cat',
@@ -209,7 +209,7 @@ const STICKERS = [
     name: 'Overclock Chip',
     perk: 'Fire rate +4%',
     fx: { rateK: 0.04 },
-    unlock: { story: 'r3b' }
+    unlock: { lvl: 9 }
   },
   {
     id: 'eye',
@@ -217,7 +217,7 @@ const STICKERS = [
     name: 'Watchful Eye',
     perk: 'Bullet damage taken −8%',
     fx: { res: { light: 0.08 } },
-    unlock: { story: 'r3d' }
+    unlock: { lvl: 12 }
   }
 ];
 STICKERS.push(

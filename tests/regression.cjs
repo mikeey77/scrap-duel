@@ -1093,7 +1093,12 @@ test('the prize wheel charges once, grants its slice and the MEGA slice gives tw
 test('shop filters discovered parts by search and rarity and exposes their real footprints', () => {
   const rr = runtime(),
     aa = rr.api;
-  aa.startMatch('sandbox');
+  aa.startMatch('solo');
+  for (const m of aa.MODS) {
+    aa.G.inv[m.id] = m.id === 'cockpit' ? 1 : 99;
+    aa.G.found.add(m.id);
+  }
+  aa.G.coins = 9999;
   aa.G.leftTab = 'shop';
   aa.G.catalogQ = 'Dragon Bellows';
   aa.refreshUI();
@@ -1156,22 +1161,6 @@ test('one Escape closes the codex without also opening the pause menu', () => {
   assert.equal(rr.elements.get('ovCodex').hidden, true);
   assert.equal(rr.elements.get('ovPause').hidden, true);
   assert.notEqual(aa.getB().paused, true);
-});
-
-test('auto-build in the sandbox makes an armed, sensibly sized car', () => {
-  const rr = runtime(),
-    aa = rr.api;
-  aa.startMatch('sandbox');
-  aa.openBuild();
-  aa.autoBuild();
-  const tops = [...aa.G.top.values()];
-  assert(
-    tops.some(e => aa.MOD[e.id].wpn),
-    'no weapons'
-  );
-  assert(aa.G.base.size < 120, 'base of ' + aa.G.base.size + ' parts');
-  assert.equal(aa.blockedList().length, 0);
-  assert(aa.designConnected(aa.G.base));
 });
 
 test('match length follows the chosen rounds and the countdown takes three seconds', () => {
@@ -1358,7 +1347,12 @@ function jointCar(a, jid, rot, extra = []) {
 test('hinge swings its side 90 degrees, carries tops and stays in sync through snapshots', () => {
   const r = runtime(),
     a = r.api;
-  a.startMatch('sandbox');
+  a.startMatch('solo');
+  for (const m of a.MODS) {
+    a.G.inv[m.id] = m.id === 'cockpit' ? 1 : 99;
+    a.G.found.add(m.id);
+  }
+  a.G.coins = 9999;
   a.openBuild();
   a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
   const v = jointCar(a, 'hinge', 1, [{ id: 'mg', x: 3, y: 0, rot: 0 }]);
@@ -1394,7 +1388,12 @@ test('hinge swings its side 90 degrees, carries tops and stays in sync through s
 test('ram extends two cells, rotator spins, spring settles and a joint never moves the cockpit', () => {
   const r = runtime(),
     a = r.api;
-  a.startMatch('sandbox');
+  a.startMatch('solo');
+  for (const m of a.MODS) {
+    a.G.inv[m.id] = m.id === 'cockpit' ? 1 : 99;
+    a.G.found.add(m.id);
+  }
+  a.G.coins = 9999;
   a.openBuild();
   a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
   const p = jointCar(a, 'hydraulic', 1),
@@ -1424,7 +1423,12 @@ test('ram extends two cells, rotator spins, spring settles and a joint never mov
 test('action keys: only moving parts take keys 1-9, weapons always fire, keys travel in car codes', async () => {
   const r = runtime(),
     a = r.api;
-  a.startMatch('sandbox');
+  a.startMatch('solo');
+  for (const m of a.MODS) {
+    a.G.inv[m.id] = m.id === 'cockpit' ? 1 : 99;
+    a.G.found.add(m.id);
+  }
+  a.G.coins = 9999;
   a.openBuild();
   a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
   const v = jointCar(a, 'hinge', 1, [{ id: 'mg', x: 3, y: 0, rot: 0, g: 2 }]);
@@ -1627,60 +1631,6 @@ test('stickers: perks, set bonus with a matching skin, and online looks keep onl
   a.G.mode = 'mp';
   assert(!('flair' in a.myCarCfg()));
 });
-test('story: missions use their own round count, layout, salvage and rewards', () => {
-  const r = runtime(),
-    a = r.api;
-  a.setGear({ bolts: 0, items: [], next: 1 });
-  a.startStory('r1a');
-  assert(a.G.story && a.G.story.mid === 'r1a');
-  assert.equal(a.G.sched.length, 2);
-  const f = a.storyField(a.THEMES.find(t => t.id === 'junkyard'));
-  assert.equal(f.pk.filter(p => p.kind === 'salvage').length, 3);
-  a.openBuild();
-  a.prepareBot();
-  a.toBattle({ ...a.makeCfg(a.botCarCfg()), me: 0, net: null });
-  const b = a.getB();
-  const salv = b.pk.filter(p => p.kind === 'salvage');
-  assert.equal(salv.length, 3);
-  a.storyGrab(b.cars[1], salv[0]);
-  assert.equal(a.G.story.stolen, 1);
-  a.storyGrab(b.cars[0], salv.find(p => p.gear) || salv[1]);
-  assert(a.G.story.got + a.G.story.gearGot.length === 1);
-  a.G.log = [
-    { win: true, dealt: 100, taken: 10 },
-    { win: true, dealt: 100, taken: 10 }
-  ];
-  const res = a.storyFinish(true, { d: 200, t: 20, w: 2 });
-  assert.equal(res.stars, 2, 'win + no round lost, salvage incomplete');
-  assert(res.first && res.bolts >= 40);
-  assert.equal(a.STORYP().stars.r1a, 2);
-  assert(a.stickerUnlocked(a.STICKER.rat), 'mission sticker unlocked');
-  // the next mission is open, the boss of region 1 is still locked
-  a.startStory('r1x');
-  assert(!a.G.storyNext || a.G.storyNext.mid !== 'r1x');
-});
-test('story bosses are valid hand-built cars that change phase', () => {
-  const r = runtime(),
-    a = r.api;
-  for (const id of Object.keys(a.STORY_BOSSES)) {
-    const d = a.bossDesign(id);
-    assert(a.designConnected(d.base), id + ' is connected');
-    assert([...d.base.values()].some(e => e.id === 'cockpit'));
-  }
-  for (const m of a.STORY) if (m.id !== 'r1x') a.STORYP().stars[m.id] = 1;
-  a.startStory('r1x');
-  a.openBuild();
-  a.prepareBot();
-  a.toBattle({ ...a.makeCfg(a.botCarCfg()), me: 0, net: null });
-  const b = a.getB(),
-    boss = b.cars.find(c => c.boss);
-  assert(boss, 'boss car');
-  assert.equal(boss.name, 'Mother Crusher');
-  b.seq = 'play';
-  for (const I of boss.insts) if (I.id !== 'cockpit') I.hp = I.max * 0.3;
-  a.storyTick();
-  assert(boss.phase >= 2, 'phase changes when health drops');
-});
 test('crowd: damage builds hype, full hype throws a gift offline, never online', () => {
   const r = runtime(),
     a = r.api,
@@ -1713,20 +1663,6 @@ test('crowd: damage builds hype, full hype throws a gift offline, never online',
   const n = b.pk.length;
   a.crowdStep(0.016);
   assert.equal(b.pk.length, n, 'no gifts online');
-});
-
-test('scrap road map: every mission has a site in its region and the map is generated the same every time', () => {
-  const r = runtime(),
-    a = r.api;
-  const W = a.owWorld();
-  for (const m of a.STORY) {
-    const p = a.OW_SITES[m.id];
-    assert(p, 'site for ' + m.id);
-    assert.equal(a.owRegionAt(p[0], p[1]), m.region, m.id + ' sits in its region');
-    for (const o of W.solids) assert(Math.hypot(o.x - p[0], o.y - p[1]) > o.r + 60, m.id + ' is clear of props');
-  }
-  const r2 = runtime();
-  assert.equal(JSON.stringify(r2.api.owWorld().solids.slice(0, 5)), JSON.stringify(W.solids.slice(0, 5)));
 });
 
 test('garage: loadout gear is in the bin from round 1, the fabricator turns bolts into gear, locked gear is safe', () => {
@@ -1779,7 +1715,12 @@ test('expansion parts: every new weapon and melee part deals damage, joints move
   for (const id of ids) assert(a.dpsOf(id, {}) > 0, id + ' has damage');
   for (const id of ['fender', 'ablative', 'chromeplate']) assert(Object.keys(a.MOD[id].res).length, id + ' resists');
   for (const id of ['snaphinge', 'longram', 'quickspin']) {
-    a.startMatch('sandbox');
+    a.startMatch('solo');
+  for (const m of a.MODS) {
+    a.G.inv[m.id] = m.id === 'cockpit' ? 1 : 99;
+    a.G.found.add(m.id);
+  }
+  a.G.coins = 9999;
     a.openBuild();
     a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
     const v = jointCar(a, id, 1, []);

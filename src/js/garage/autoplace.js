@@ -165,8 +165,7 @@ function autoBuild() {
   G.hist.push(before);
   G.redo = [];
   fixAutoDirections();
-  // the sandbox owns 99 of everything: bolting all of it on made 800-tonne bricks with no guns
-  if (G.mode !== 'sandbox') autoPlace(true);
+  autoPlace(true);
   G.hist.length = historyLength;
   G.hist.push(before);
   sfx('legend');
@@ -215,7 +214,7 @@ function enterWaitShow() {
 function readyCheck() {
   const loose = looseCount(),
     rich = G.coins >= 80;
-  if (G.mode === 'sandbox' || G.skipReadyWarn || (!loose && !rich)) return enterWaitShow();
+  if (G.skipReadyWarn || (!loose && !rich)) return enterWaitShow();
   const bits = [];
   if (loose) bits.push(`<b>${loose} loose part${loose > 1 ? 's' : ''}</b> in your bin`);
   if (rich) bits.push(`<b class="coin">${G.coins}</b> unspent coins`);

@@ -356,28 +356,6 @@
   }
 }
 
-/* Scrap Road Remix */
-.sr-sum.gold b {
-  color: #ffd257;
-}
-.sr-sum.locked {
-  opacity: 0.55;
-}
-.remixline {
-  margin: 4px 0;
-  padding: 6px 10px;
-  border-left: 3px solid #ffd257;
-  background: rgba(255, 210, 87, 0.08);
-  font-size: 14px;
-}
-.remixtag {
-  color: #ffd257;
-}
-.storyres.remix .stars i.on {
-  background: #ffd257;
-  box-shadow: 0 0 10px #ffd257;
-}
-
 /* result nudges and online series */
 .nudge {
   display: flex;

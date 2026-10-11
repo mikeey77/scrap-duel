@@ -467,9 +467,8 @@ function stepArena(rdt) {
   if (sim) simulate(dt);
   else clientStep(dt);
   if (sim && !B.demo && !B.replay) {
-    storyTick();
+    bossTick();
     stepGifts(dt);
-    sparringTick(dt);
   }
   // both peers watch the fight for the commentators; only the offline host throws gifts
   if (!B.demo && !B.replay) crowdStep(dt);

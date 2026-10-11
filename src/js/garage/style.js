@@ -41,14 +41,16 @@ function isUnlocked(item, xp = PROG.xp, ach = PROG.ach) {
 const allItems = () => STYLE_SLOTS.flatMap(([slot]) => COSMETICS[slot].map(i => ({ ...i, slot })));
 const unlockedCount = () => allItems().filter(i => isUnlocked(i)).length;
 const totalCosmetics = () => allItems().length;
+const stickerUnlocked = st =>
+  !st.unlock ||
+  (st.unlock.lvl && levelInfo().lvl >= st.unlock.lvl) ||
+  (st.unlock.ach && PROG.ach.includes(st.unlock.ach));
 const unlockText = u =>
   !u
     ? 'Starter item'
     : u.lvl
       ? `Reach Scrap Cred level ${u.lvl}`
-      : u.story
-        ? `Scrap Road: beat ${STORY_BY[u.story].name}`
-        : `Achievement: ${ACHIEVEMENTS[u.ach].name} (${ACHIEVEMENTS[u.ach].desc})`;
+      : `Achievement: ${ACHIEVEMENTS[u.ach].name} (${ACHIEVEMENTS[u.ach].desc})`;
 
 /** Applies XP and achievements, returning what changed so the result screen can celebrate it. */
 function grant(xp, achIds) {
@@ -66,7 +68,6 @@ function grant(xp, achIds) {
   return { xp, newAch, unlocked, stickers, lvl0, lvl: levelInfo().lvl };
 }
 function progressRound({ win, special, integ, by, powers = 0 }) {
-  if (G.mode === 'sandbox') return null;
   const ach = [],
     S = special && SPECIALS[special];
   let xp = XP.round + (win ? XP.roundWin : 0) + (win && S ? XP.specialWin : 0);
@@ -80,7 +81,6 @@ function progressRound({ win, special, integ, by, powers = 0 }) {
   return grant(xp, ach);
 }
 function progressMatch({ won }) {
-  if (G.mode === 'sandbox') return null;
   const ach = [];
   if (won) {
     ach.push('match_win');

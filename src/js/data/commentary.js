@@ -155,11 +155,6 @@ const CALLS = {
     [['dash', 'They are THROWING THINGS! Nice things, I think!']]
   ],
   giftgot: [[['dash', 'Got the gift! The crowd goes wild!']], [['doc', 'Never refuse a present from the stands.']]],
-  salvage: [[['doc', 'A bit of salvage. Waste not, want not.']], [['dash', 'A goodie in the scrap! Shiny!']]],
-  stolen: [
-    [['dash', 'Cheeky! Somebody stole the salvage!']],
-    [['doc', 'That crate is gone for good. A professional thief.']]
-  ],
   phase: [
     [['dash', 'The boss is getting ANGRY!']],
     [['doc', "When a boss changes phase, it's time to change plans."]],

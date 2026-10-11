@@ -102,10 +102,10 @@ const COSMETICS = {
       unlock: { ach: 'powered' }
     },
     { id: 'legend', name: 'Scrap Legend', desc: 'Reached Scrap Cred level 20.', unlock: { lvl: 20 } },
-    { id: 'yardboss', name: 'Yard Boss', desc: 'Took out the garbage. Literally.', unlock: { ach: 'road1' } },
-    { id: 'canyon', name: 'Canyon Runner', desc: 'Outlasted the Twin Drill.', unlock: { ach: 'road2' } },
-    { id: 'baron', name: 'Unstuck', desc: 'Escaped the Magnet Baron.', unlock: { ach: 'road3' } },
-    { id: 'junkking', name: 'The New Junk King', desc: 'Sits on a throne of scrap.', unlock: { ach: 'kingslayer' } }
+    { id: 'yardboss', name: 'Tag Team', desc: 'Never fights alone.', unlock: { ach: 'road1' } },
+    { id: 'canyon', name: 'Wave Rider', desc: 'Surfs on scrap.', unlock: { ach: 'road2' } },
+    { id: 'baron', name: 'Hardcase', desc: 'Picks the hard bot on purpose.', unlock: { ach: 'road3' } },
+    { id: 'junkking', name: 'The New Junk King', desc: 'Sits on a throne of concrete.', unlock: { ach: 'kingslayer' } }
   ]
 };
 const ACHIEVEMENTS = {
@@ -128,10 +128,10 @@ const ACHIEVEMENTS = {
   sumo: { name: 'Sumo Champ', desc: 'Win a Sumo Ring round.' },
   powered: { name: 'Juiced', desc: 'Grab three power-ups in one round.' },
   jackpot: { name: 'Jackpot', desc: 'Hit the 1 in 100 jackpot in a Scrap Crate.' },
-  road1: { name: 'Bin Day', desc: 'Beat Mother Crusher on the Scrap Road.' },
-  road2: { name: 'Drill Sergeant', desc: 'Beat the Twin Drill on the Scrap Road.' },
-  road3: { name: 'Demagnetised', desc: 'Beat the Magnet Baron on the Scrap Road.' },
-  kingslayer: { name: 'Kingslayer', desc: 'Beat the Junk King at the end of the Scrap Road.' }
+  road1: { name: 'Tag Team', desc: 'Win a 2v2 match.' },
+  road2: { name: 'Wave Rider', desc: 'Reach wave 15 in the Scrap Gauntlet.' },
+  road3: { name: 'Hardcase', desc: 'Win a match against a Hard bot.' },
+  kingslayer: { name: 'Kingslayer', desc: 'Beat King Kongcrete in the Scrap Gauntlet.' }
 };
 const XP = { round: 25, roundWin: 25, specialWin: 15, match: 50, matchWin: 100 };
 const xpForLevel = lvl => 100 + 50 * (lvl - 1); // XP needed to go from lvl to lvl + 1

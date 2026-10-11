@@ -10,7 +10,7 @@ const commReset = () =>
   (COMM = { q: [], cur: null, t: 0, gap: 1.5, last: {}, used: {}, B: B, firstDone: false, idle: 0, shown: 0 });
 /** Queues a call for an event. ctx is kept for callers; the lines themselves name nobody. */
 function commentate(kind, ctx = {}) {
-  if (!B || B.demo || B.replay || G.mode === 'sandbox' || SETTINGS.comm === false || !CALLS[kind]) return;
+  if (!B || B.demo || B.replay || SETTINGS.comm === false || !CALLS[kind]) return;
   if (!COMM || COMM.B !== B) commReset();
   const now = B.time || 0,
     pri = COMM_PRI[kind] || 1;
@@ -58,7 +58,7 @@ function stepCommentary(rdt) {
     Voice.preload(['start', 'firstblood', 'bighit', 'partoff']);
   }
   COMM.t += rdt;
-  if (B.seq === 'play' && G.mode !== 'sandbox') {
+  if (B.seq === 'play') {
     COMM.idle += rdt;
     if (COMM.idle > 16 && !COMM.cur && !COMM.q.length && Math.random() < rdt * 0.25) commentate('banter');
   }
@@ -209,7 +209,7 @@ function drawCommentary(c) {
 /* ---------- crowd and hype ---------- */
 const HYPE_GIFT = 100;
 const GIFT_KINDS = ['repair', 'coins', 'power'];
-const crowdOn = () => B && !B.demo && !B.replay && G.mode !== 'sandbox';
+const crowdOn = () => B && !B.demo && !B.replay;
 /** Per-battle crowd state; created lazily. */
 function crowdState() {
   if (B.crowd) return B.crowd;
@@ -582,7 +582,7 @@ function drawSalvage(c, p) {
 }
 /** One hype meter, drawn right under a health bar (screen space). */
 function drawHypeBar(c, x, y, w, car, right) {
-  if (!crowdOn() || !B.crowd || G.phase !== 'battle' || G.mode === 'sandbox') return;
+  if (!crowdOn() || !B.crowd || G.phase !== 'battle') return;
   const i = B.cars.indexOf(car);
   if (i < 0) return;
   const f = B.crowd.hype[i] / HYPE_GIFT,

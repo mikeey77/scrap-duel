@@ -508,7 +508,7 @@ function drawZone(c, z) {
   }
 }
 function drawPickup(c, p) {
-  if (p.kind === 'salvage' || p.kind === 'gift') return p.cd > 0 ? undefined : drawSalvage(c, p);
+  if (p.kind === 'gift') return p.cd > 0 ? undefined : drawSalvage(c, p);
   const ready = p.cd <= 0,
     bob = Math.sin(ANIM * 3 + p.x) * 3;
   c.save();
@@ -1211,7 +1211,7 @@ function drawHUD(c) {
     c.textBaseline = 'top';
     c.font = '700 10px "Barlow Semi Condensed", sans-serif';
     let sx = 12;
-    const sy = 12 + 8 + rows.length * 26 + 4 + (B.crowd && G.mode !== 'sandbox' && G.phase === 'battle' ? 20 : 0); // under the hype meter
+    const sy = 12 + 8 + rows.length * 26 + 4 + (B.crowd && G.phase === 'battle' ? 20 : 0); // under the hype meter
     for (const [t, lvl] of syn) {
       const label = `${TAGS[t].toUpperCase()} ${'★'.repeat(lvl)}`,
         w = c.measureText(label).width + 12;

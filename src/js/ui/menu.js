@@ -9,7 +9,7 @@ const MENU_MODES = [
   },
   { id: 'run', name: 'Scrap Gauntlet', col: '#ff5c7a', line: 'Endless waves, three hearts, a boss every fifth wave.' },
   { id: 'online', name: 'Online', col: '#5be7ff', line: 'Duel or brawl a friend with a 4-letter room code.' },
-  { id: 'sand', name: 'Sandbox', col: '#c58bff', line: 'Every part, 99 of each. Build anything, test it.' }
+
 ];
 const TAGLINES = [
   'Tip: loadout gear in the Garage is in your parts bin from round 1.',
@@ -43,11 +43,14 @@ function showMenu() {
   }
   menuMode = MENU_MODES.some(m => m.id === load('sd.menuTab')) ? load('sd.menuTab') : 'solo';
   G.quickFmt = load('sd.quickFmt') === 'brawl' ? 'brawl' : 'balanced';
-  G.sandBot = load('sd.sandBot') === '1' || load('sd.sandBot') === 1;
   const L = levelInfo(),
-    next = nextMission(),
-    done = STORY.filter(m => storyStars(m.id)).length,
-    reg = next ? STORY_REGIONS.find(r => r.id === next.region) : null;
+    rec = (() => {
+      try {
+        return { w: 0, l: 0, ...JSON.parse(load('sd.record') || '{}') };
+      } catch (e) {
+        return { w: 0, l: 0 };
+      }
+    })();
   let car = '';
   try {
     car = designURL(stylePreviewDesign(), 420, G.paint, G.style.livery);
@@ -84,11 +87,10 @@ function showMenu() {
       <section class="hg-play">
         ${
           resume
-            ? `<div class="hg-cont" style="--rc:#3fe0a0"><span class="label">Match in progress</span><h2>${esc(G.story ? storyMission().name : MATCH_FORMATS[G.format].name)}</h2><button class="btn hg-go" id="mResume">Resume match</button></div>`
-            : `<div class="hg-cont" style="--rc:${reg ? reg.col : '#ffd257'}"><span class="label">Scrap Road · ${done}/${STORY.length} missions · ${totalStars()}★</span>
-          <h2>${next ? esc(next.name) : 'Every boss beaten'}</h2><p class="small">${next ? `${esc(reg.name)} · ${esc({ duel: 'Duel', salvage: 'Salvage hunt', special: 'Special rules', boss: 'Boss fight' }[next.kind])}` : 'Go back for three stars everywhere.'}</p>
-          <div class="hg-prog"><i style="width:${Math.round((done / STORY.length) * 100)}%"></i></div>
-          <div class="hg-row"><button class="btn hg-go" id="mStory">${next ? (done ? 'Continue' : 'Start the story') : 'Open the map'}</button><button class="btn ghost" id="mMap">Map</button></div></div>`
+            ? `<div class="hg-cont" style="--rc:#3fe0a0"><span class="label">Match in progress</span><h2>${esc(MATCH_FORMATS[G.format].name)}</h2><button class="btn hg-go" id="mResume">Resume match</button></div>`
+            : `<div class="hg-cont" style="--rc:#ffd257"><span class="label">Ready when you are</span>
+          <h2>Jump into a fight</h2><p class="small">${rec.w + rec.l ? `Your record against bots: <b>${rec.w}</b> wins, <b>${rec.l}</b> losses${runBest() ? ` · best Gauntlet wave ${runBest()}` : ''}.` : 'Draft a car, outbuild a bot, or team up with a friend online.'}</p>
+          <div class="hg-row"><button class="btn hg-go" id="mQuick">Quick match vs bot</button><button class="btn ghost" id="mQuick2">2v2 with a bot partner</button></div></div>`
         }
         <div class="hg-modes" role="tablist" aria-label="Other modes">${MENU_MODES.map(m => `<button class="hg-mode" role="tab" data-mode="${m.id}" aria-selected="${m.id === menuMode}" style="--rc:${m.col}"><b>${m.name}</b><span>${esc(m.line)}</span><em>${stat(m.id)}</em></button>`).join('')}</div>
         <div class="hg-opts" id="hgOpts" role="tabpanel"></div>
@@ -127,21 +129,16 @@ function showMenu() {
       menuOpts();
     })
   );
-  on('mStory', () => {
-    sfx('ui');
-    menuLeave();
-    const n = nextMission();
-    if (n) {
-      storySel = n.id;
+  const quick = size =>
+    on(size === 2 ? 'mQuick2' : 'mQuick', () => {
+      sfx('ui');
+      menuLeave();
       G.started = true;
-      startStory(n.id);
-    } else openStory();
-  });
-  on('mMap', () => {
-    sfx('ui');
-    menuLeave();
-    openStory();
-  });
+      G.teamSize = size;
+      startMatch('solo', null, G.quickFmt === 'brawl' ? 'brawl' : 'balanced');
+    });
+  quick(1);
+  quick(2);
   on('mGarage', () => {
     sfx('ui');
     $('#ovMenu').hidden = true;
@@ -205,15 +202,6 @@ function menuOpts() {
     )}</div><div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><p class="small" id="fmtText">${G.quickFmt === 'brawl' ? `Bring one finished car worth up to ${BRAWL_BUDGET} coins: a saved blueprint or a ready-made one. No drafting, no shop.` : 'Start with a cockpit, draft a part every round, shop and outbuild the bot.'}</p><button class="btn hg-go2" id="mPlay">${G.quickFmt === 'brawl' ? 'Start a Brawl' : 'Play vs bot'}</button>`,
     run: `<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
     online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>`,
-    sand: `<div class="hg-o"><span class="mlab">Sparring</span>${seg(
-      'sparSeg',
-      [
-        ['0', 'Test dummies'],
-        ['1', 'A bot that fights back']
-      ],
-      G.sandBot ? '1' : '0',
-      'b'
-    )}</div><p class="small">No rounds and no score: build with everything, then test it. The sparring bot uses your difficulty and comes back after it is wrecked.</p><button class="btn hg-go2" id="mPlay">Open the sandbox</button>`
   }[m.id];
   el.style.setProperty('--rc', m.col);
   el.innerHTML = body;
@@ -222,14 +210,6 @@ function menuOpts() {
       G.diff = +b.dataset.i;
       $$('#diffSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
       store('sd.diff', G.diff);
-      sfx('ui');
-    })
-  );
-  $$('#sparSeg button').forEach(b =>
-    b.addEventListener('click', () => {
-      G.sandBot = b.dataset.b === '1';
-      store('sd.sandBot', G.sandBot ? 1 : 0);
-      $$('#sparSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
       sfx('ui');
     })
   );
@@ -259,7 +239,6 @@ function menuOpts() {
       menuLeave();
       G.started = true;
       if (m.id === 'run') startRun();
-      else if (m.id === 'sand') startMatch('sandbox');
       else startMatch('solo', null, G.quickFmt === 'brawl' ? 'brawl' : 'balanced');
     });
   const host = $('#mHost');
@@ -417,9 +396,7 @@ function loop(t) {
     syncPresentation();
     BattleMusic.update();
     Net.updateStatus();
-    if (owFrame(dt)) {
-      // the Scrap Road map draws itself
-    } else if (G.phase === 'replay' && B) {
+    if (G.phase === 'replay' && B) {
       replayStep(dt);
       if (B) drawArena();
     } else if (B && B.demo) {
@@ -446,7 +423,7 @@ function loop(t) {
       if (!B.paused && !Net.reconnecting) stepArena(dt);
       if (B && B.cars.length) drawArena();
       if (B && B.rec && G.phase === 'battle' && !B.paused && !Net.reconnecting) recTick(dt);
-      if (B && G.phase === 'wait' && G.mode !== 'sandbox' && Math.random() < 0.05) oppStatusUI();
+      if (B && G.phase === 'wait' && Math.random() < 0.05) oppStatusUI();
     } else {
       ANIM += dt;
       if ((building() || G.phase === 'draft') && $('#ovCrate').hidden && builderBusy()) {
@@ -475,7 +452,6 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw
   MUTE = load('sd.mute') == 1;
   const pt = load('sd.paint');
   if (pt && /^#[0-9a-f]{6}$/i.test(pt)) G.paint = pt;
-  loadStory();
   loadStyle();
   loadGear();
   try {
@@ -496,7 +472,6 @@ requestAnimationFrame(loop);
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
 if (window.__SD_TEST__)
   window.__SD = {
-    STORY,
     gearActive,
     designCost,
     brawlDesign,
@@ -513,7 +488,6 @@ if (window.__SD_TEST__)
     NAMED_CALLS,
     COMM_NAMES,
     runPathChoose,
-    sparringBot,
     centerDesign,
     turnDesign,
     mirrorDesign,
@@ -536,13 +510,6 @@ if (window.__SD_TEST__)
     loadoutSlots,
     openGarageHQ,
     dpsOf,
-    OW_SITES,
-    OW_W,
-    OW_H,
-    owWorld,
-    owHit,
-    owOpen,
-    owRegionAt,
     makeBot,
     botDraft,
     botShop,
@@ -551,21 +518,10 @@ if (window.__SD_TEST__)
     openSettings,
     sanitizeLook,
     ACHIEVEMENTS,
-    STORY_BY,
-    STORY_BOSSES,
-    STORY_LAYOUTS,
     STICKERS,
     STICKER,
     STICKER_SETS,
     QUIRKS,
-    bossDesign,
-    startStory,
-    storyField,
-    storyFinish,
-    storyGrab,
-    storyTick,
-    openStory,
-    STORYP: () => STORYP,
     GEAR: () => GEAR,
     setGear: g => (GEAR = { loadout: [], locked: [], ...g }),
     addGear,

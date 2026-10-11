@@ -176,7 +176,7 @@ function carsFromCfg(cfg) {
 function makeCfg(opp) {
   const ti = G.nextTheme != null ? G.nextTheme : pickTheme(),
     special = specialOf(G.round),
-    f = applySpecialField(G.story ? storyField(THEMES[ti]) : genArena('battle', THEMES[ti]), special);
+    f = applySpecialField(genArena('battle', THEMES[ti]), special);
   G.nextTheme = null;
   return {
     round: G.round,
@@ -288,7 +288,7 @@ function hideOverlays() {
     '#ovStyle',
     '#ovBlueprint',
     '#ovWork',
-    '#ovStory'
+    '#ovSettings'
   ])
     $(id).hidden = true;
 }
@@ -297,10 +297,7 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
     G.diff = G.run.prevDiff;
     G.run = null;
   }
-  G.story = (mode === 'solo' && G.storyNext) || null;
-  G.storyNext = null;
   setRounds(mode === 'mp' ? rounds || 10 : mode === 'solo' ? G.rounds || 10 : 10);
-  if (G.story) ROUNDS = G.story.rounds; // missions are short and not limited to the menu choices
   G.format = MATCH_FORMATS[format] ? format : 'balanced';
   G.brawlBotReady = false;
   G.lives = [20, 20];
@@ -313,8 +310,7 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
   G.mode = mode;
   resetProfile();
   if (mode === 'solo') applyLoadout();
-  if (G.story) storySetup();
-  else if (mode === 'solo') {
+  if (mode === 'solo') {
     G.bot = makeBot(G.diff);
     G.bot.coins += DIFF[G.diff].bonus;
     G.oppName = G.bot.name;
@@ -324,25 +320,12 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
   }
   if (mode === 'solo' || mode === 'mp') G.sched = sched || makeSchedule();
   if (G.format === 'finalehill') G.sched[ROUNDS - 1] = 'hill';
-  if (mode === 'sandbox') {
-    for (const m of MODS) {
-      G.inv[m.id] = m.id === 'cockpit' ? 1 : 99;
-      G.found.add(m.id);
-    }
-    G.coins = 9999;
-    G.ws = new Set();
-    for (let y = -WS_BOUND.y; y <= WS_BOUND.y; y++) for (let x = -WS_BOUND.x; x <= WS_BOUND.x; x++) G.ws.add(key(x, y));
-    G.oppName = 'Dummies';
-  }
   $('#arena').hidden = true;
   $('#build').hidden = false;
   turnBrush(0);
   setTool('place');
   updateHUD();
-  if (mode === 'sandbox') {
-    openBuild();
-    window.__toast('Sandbox: every module, 99 of each. Ready drops you in the test arena.', true);
-  } else if (G.format === 'brawl') openBrawlPick();
+  if (G.format === 'brawl') openBrawlPick();
   else {
     openDraft();
     showTip('draft');
@@ -359,7 +342,7 @@ function openBuild() {
   refreshUI();
   updateHUD();
   showTip(specialOf(G.round) ? 'special' : 'build');
-  if (G.nextTheme == null && G.mode !== 'sandbox' && !(G.mode === 'mp' && Net.role === 'client'))
+  if (G.nextTheme == null && !(G.mode === 'mp' && Net.role === 'client'))
     G.nextTheme = pickTheme();
   intelUI(true);
 }
@@ -595,8 +578,7 @@ const botCarCfg = () => ({
   style: G.bot.style,
   diff: G.diff,
   look: G.oppLook,
-  ...runBotExtras(),
-  ...storyBotExtras()
+  ...runBotExtras()
 });
 
 /* ---------- waiting arena ---------- */
@@ -605,7 +587,7 @@ function enterWait() {
   updateHUD();
   $('#build').hidden = true;
   $('#arena').hidden = false;
-  $('#waitcard').hidden = G.mode === 'sandbox';
+  $('#waitcard').hidden = false;
   sizeArena();
   B = newB({ net: null, me: 0, theme: THEMES[0] });
   setupField('wait');
@@ -614,7 +596,6 @@ function enterWait() {
   v.ctrl = 'local';
   v.look = { ...G.style };
   B.cars = [v];
-  if (G.mode === 'sandbox' && G.sandBot) sparringBot(v);
   cam.x = cam.tx = v.x;
   cam.y = cam.ty = v.y;
   cam.z = cam.tz = 1.8;
@@ -628,40 +609,6 @@ function enterWait() {
   setButtons();
   oppStatusUI();
   showTip('wait');
-}
-/** Sandbox sparring partner: a bot car on your difficulty in the test arena; it comes back after a wreck. */
-function sparringBot(me) {
-  const P = makeBot(G.diff);
-  for (let r = 1; r <= 5; r++) {
-    botDraft(P);
-    P.coins += 140;
-    botShop(P);
-  }
-  const d = botBuildFor(P, G.diff),
-    ang = Math.atan2(me.y - AH / 2, me.x - AW / 2),
-    x = clamp(AW / 2 - Math.cos(ang) * 260, WM + 80, AW - WM - 80),
-    y = clamp(AH / 2 - Math.sin(ang) * 260, WM + 80, AH - WM - 80);
-  const e = makeCar(d, 1, x, y, ang, { tune: [...P.tune], name: 'Sparring ' + P.name, paint: '#ff5c7a' });
-  e.ctrl = 'bot';
-  e.diff = G.diff;
-  e.style = P.style;
-  e.spar = true;
-  B.cars.push(e);
-  return e;
-}
-/** Called every frame in the test arena: a wrecked sparring bot is replaced after a short pause. */
-function sparringTick(dt) {
-  if (G.mode !== 'sandbox' || !G.sandBot || G.phase !== 'wait' || !B || !B.cars[0]) return;
-  const e = B.cars.find(c => c.spar);
-  if (!e) return sparringBot(B.cars[0]);
-  if (e.dead) {
-    e.respawn = (e.respawn || 2.5) - dt;
-    if (e.respawn <= 0) {
-      B.cars = B.cars.filter(c => c !== e);
-      txt(B.cars[0].x, B.cars[0].y - 50, 'NEW SPARRING PARTNER', '#ff5c7a', 1.2);
-      sparringBot(B.cars[0]);
-    }
-  }
 }
 function oppReady() {
   if (G.mode === 'solo') return G.botRound === G.round && performance.now() >= G.botReadyAt;
@@ -720,7 +667,6 @@ function setButtons() {
     });
 }
 function pickTheme() {
-  if (G.story) return storyThemeIndex();
   let ti;
   do ti = Math.floor(Math.random() * THEMES.length);
   while (ti === G.lastTheme && THEMES.length > 1);
@@ -1104,10 +1050,10 @@ function showFinal() {
     tie = G.format === 'lives' ? G.lives[0] === G.lives[1] : s[0] === s[1];
   const prog = progressMatch({ won });
   if (G.mode === 'mp') h2hRecord(G.oppName, won, tie);
-  const spoils = G.story ? storyFinish(won, tot) : matchSpoils(won, tot.w);
+  const spoils = matchSpoils(won, tot.w);
   // streaks against the bot: offer an easier (or harder) bot after three in a row
   let nudge = '';
-  if (G.mode === 'solo' && !G.story && !G.run) {
+  if (G.mode === 'solo' && !G.run) {
     const st = +(load('sd.streak') || 0),
       ns = won ? Math.max(0, st) + 1 : Math.min(0, st) - 1;
     store('sd.streak', ns);
@@ -1128,7 +1074,7 @@ function showFinal() {
       .map(([t]) => TAGS[t])
       .join(' + ') || 'Scrap';
   $('#resultCard').innerHTML =
-    `<span class="label">${G.story ? `Scrap Road · ${esc(storyMission().name)}` : `${esc(MATCH_FORMATS[G.format].name)} · Match over`}${tie ? ' · tie broken on damage dealt' : ''}</span><h2 style="color:${won ? '#5cc38f' : '#e2504a'}">${won ? 'Victory' : 'Defeat'}</h2>
+    `<span class="label">${esc(MATCH_FORMATS[G.format].name)}${G.teamSize === 2 ? ' · 2v2' : ''} · Match over${tie ? ' · tie broken on damage dealt' : ''}</span><h2 style="color:${won ? '#5cc38f' : '#e2504a'}">${won ? 'Victory' : 'Defeat'}</h2>
     ${podiumHTML(won)}
     <div class="score" style="justify-content:center;font-size:34px"><span class="me">${G.format === 'lives' ? '♥ ' + G.lives[0] : s[0]}</span>–<span class="op">${G.format === 'lives' ? G.lives[1] + ' ♥' : s[1]}</span></div>
     ${funAwardsHTML()}
@@ -1140,8 +1086,8 @@ function showFinal() {
         ? `<p class="small">MVP part of the match: <b>${esc(mvp[0])}</b> with ${mvp[1].toLocaleString()} damage.</p>`
         : '';
     })()}
-    ${progressHtml(prog)}${G.story ? storyResultHtml(spoils) : spoilsHtml(spoils)}
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.story ? '<button class="btn" id="btnRoad">Back to the Scrap Road</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
+    ${progressHtml(prog)}${spoilsHtml(spoils)}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
     ${nudge}
     ${G.mode === 'mp' ? `<p class="series">Tonight: <b>${G.series.w}–${G.series.l}</b> against ${esc(G.oppName)}${h2hLine(G.oppName) ? ` · ${h2hLine(G.oppName)}` : ''}</p>` : ''}`;
   $('#ovResult').hidden = false;
@@ -1158,8 +1104,6 @@ function showFinal() {
   };
   if (ez) ez.addEventListener('click', () => changeDiff(-1));
   if (hd) hd.addEventListener('click', () => changeDiff(1));
-  const rd = $('#btnRoad');
-  if (rd) rd.addEventListener('click', () => openStory());
   const bm = $('#btnBest');
   if (bm) bm.addEventListener('click', () => startReplay('kill', G.bestReplay));
   if (won && SETTINGS.motion !== false)
