@@ -201,6 +201,41 @@ const ANNOUNCE = [
   'New record',
   'Game over'
 ];
+// Lines that name a bot or boss. Each name in COMM_NAMES is recorded with every template ({n} = the name).
+// The player's own name is never spoken (it can be anything), so these only fire about the computer's cars.
+const COMM_NAMES = [
+  'Rusty Ramirez',
+  'Gunny McBolt',
+  'Big Boom Betty',
+  'Scorch',
+  'Magpie',
+  'Professor Volt',
+  'Granny Gearbox',
+  'DJ Dynamo',
+  'Mother Crusher',
+  'Twin Drill',
+  'The Magnet Baron',
+  'The Junk King',
+  'Mega Mauler',
+  'Grandma Tank',
+  'The Shredder 3000',
+  'Professor Overkill',
+  'Inferno Ingrid',
+  'King Kongcrete'
+];
+const NAMED_CALLS = {
+  start: ['dash', '{n} rolls in. Lock up your spare parts!'],
+  hitBy: ['dash', '{n} means business!'],
+  hitOn: ['dash', '{n} felt that one!'],
+  wreck: ['doc', '{n} has been turned into a coffee table.'],
+  lowhp: ['dash', '{n} is running on fumes and prayers!']
+};
+/** The roster name behind a car name ("Sparring Magpie", "Magpie Jr." → "Magpie"), or null. */
+function commName(car) {
+  if (!car || !car.name) return null;
+  const n = car.name.replace(/^Sparring /, '').replace(/ Jr\.$/, '');
+  return COMM_NAMES.includes(n) ? n : null;
+}
 // Higher priority cuts in; low priority waits its turn or is dropped.
 const COMM_PRI = {
   wreck: 5,

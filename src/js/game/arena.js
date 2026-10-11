@@ -707,6 +707,10 @@ const faceAng = (v, I) => v.a - Math.PI / 2 + (I.rot * Math.PI) / 2 + (I.la || 0
 function impulse(v, jx, jy, px, py, noSpin) {
   if (v.joints) kickSprings(v, jx, jy);
   if (v.anchored) return;
+  if (v.knockRes) {
+    jx *= 1 - v.knockRes;
+    jy *= 1 - v.knockRes;
+  }
   const M = v.c.mass;
   v.vx += jx / M;
   v.vy += jy / M;

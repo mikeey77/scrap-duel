@@ -823,6 +823,8 @@ function weapons(v, dt) {
     if (!I.alive) continue;
     const _fire = v.fire;
     v.fire = partFiring(v, I, _fire);
+    const n0 = B.shots.length,
+      l0 = B.lobs.length;
     try {
       B.curSrc = B.hitSrc = I.id; // anything this part fires or hits is credited to it
       const m = I.m,
@@ -1039,7 +1041,7 @@ function weapons(v, dt) {
           }
         if (target) {
           const melK = 1 + (v.aura.dmg_melee || 0),
-            dps = m.mel.dps * (I.id === 'saw' && CT(v, 'diamond') ? 1.4 : 1) * I.mount * melK;
+            dps = m.mel.dps * (I.id === 'saw' && CT(v, 'diamond') ? 1.4 : 1) * I.mount * melK * (I.gDmg || 1);
           if (m.mel.dps) {
             applyHit(target, dps * dt, 'melee', cx, cy, fa, v.idx);
             if (Math.random() < dt * 25) {
@@ -1049,7 +1051,7 @@ function weapons(v, dt) {
           } else if (I.cd <= 0) {
             I.cd = m.mel.cd;
             I.punch = 0.2;
-            applyHit(target, m.mel.hit * I.mount * melK, 'melee', cx, cy, fa, v.idx);
+            applyHit(target, m.mel.hit * I.mount * melK * (I.gDmg || 1), 'melee', cx, cy, fa, v.idx);
             spark(cx, cy, 12);
             B.shake = Math.max(B.shake, 3);
             sfx('clang', cx, cy);
@@ -1417,6 +1419,7 @@ function weapons(v, dt) {
       }
     } finally {
       v.fire = _fire;
+      if (I.gx) gearShots(v, I, n0, l0); // gear specials on what this part just fired
     }
   }
   for (const d of v.drones) {
@@ -1943,6 +1946,10 @@ function hitCar(v, s) {
     spark(s.x, s.y, 3);
   } else {
     hitCarBlock(v, hb, s.dmg, s.dt, s.x, s.y, s.vx / sp, s.vy / sp, s.own);
+    // gear specials carried by the shot
+    if (s.burn && hb.inst && hb.inst.alive) hb.inst.burn = Math.max(hb.inst.burn || 0, s.burn);
+    if (s.shock) v.emp = Math.max(v.emp || 0, s.shock);
+    if (s.crit) txt(s.x, s.y - 14, 'CRIT', '#ffd257', 0.6);
     if (s.kind !== 'flame') spark(s.x, s.y, s.kind === 'shell' ? 7 : 3, s.dt === 'energy' ? '#bff' : null);
     if (s.kind === 'shell' || s.kind === 'bounce')
       impulse(

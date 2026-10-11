@@ -21,7 +21,8 @@
     "20-menu-v3.css",
     "21-progression.css",
     "22-hangar.css",
-    "23-alive.css"
+    "23-alive.css",
+    "24-gear2.css"
   ],
   "js": [
     "js/core/utils.js",
@@ -35,6 +36,7 @@
     "js/data/synergy.js",
     "js/data/cosmetics.js",
     "js/data/progression.js",
+    "js/data/gear-specials.js",
     "js/data/commentary.js",
     "js/render/module-art.js",
     "js/garage/builder.js",

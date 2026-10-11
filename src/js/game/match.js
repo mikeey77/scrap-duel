@@ -614,6 +614,7 @@ function enterWait() {
   v.ctrl = 'local';
   v.look = { ...G.style };
   B.cars = [v];
+  if (G.mode === 'sandbox' && G.sandBot) sparringBot(v);
   cam.x = cam.tx = v.x;
   cam.y = cam.ty = v.y;
   cam.z = cam.tz = 1.8;
@@ -627,6 +628,40 @@ function enterWait() {
   setButtons();
   oppStatusUI();
   showTip('wait');
+}
+/** Sandbox sparring partner: a bot car on your difficulty in the test arena; it comes back after a wreck. */
+function sparringBot(me) {
+  const P = makeBot(G.diff);
+  for (let r = 1; r <= 5; r++) {
+    botDraft(P);
+    P.coins += 140;
+    botShop(P);
+  }
+  const d = botBuildFor(P, G.diff),
+    ang = Math.atan2(me.y - AH / 2, me.x - AW / 2),
+    x = clamp(AW / 2 - Math.cos(ang) * 260, WM + 80, AW - WM - 80),
+    y = clamp(AH / 2 - Math.sin(ang) * 260, WM + 80, AH - WM - 80);
+  const e = makeCar(d, 1, x, y, ang, { tune: [...P.tune], name: 'Sparring ' + P.name, paint: '#ff5c7a' });
+  e.ctrl = 'bot';
+  e.diff = G.diff;
+  e.style = P.style;
+  e.spar = true;
+  B.cars.push(e);
+  return e;
+}
+/** Called every frame in the test arena: a wrecked sparring bot is replaced after a short pause. */
+function sparringTick(dt) {
+  if (G.mode !== 'sandbox' || !G.sandBot || G.phase !== 'wait' || !B || !B.cars[0]) return;
+  const e = B.cars.find(c => c.spar);
+  if (!e) return sparringBot(B.cars[0]);
+  if (e.dead) {
+    e.respawn = (e.respawn || 2.5) - dt;
+    if (e.respawn <= 0) {
+      B.cars = B.cars.filter(c => c !== e);
+      txt(B.cars[0].x, B.cars[0].y - 50, 'NEW SPARRING PARTNER', '#ff5c7a', 1.2);
+      sparringBot(B.cars[0]);
+    }
+  }
 }
 function oppReady() {
   if (G.mode === 'solo') return G.botRound === G.round && performance.now() >= G.botReadyAt;
@@ -1070,6 +1105,22 @@ function showFinal() {
   const prog = progressMatch({ won });
   if (G.mode === 'mp') h2hRecord(G.oppName, won, tie);
   const spoils = G.story ? storyFinish(won, tot) : matchSpoils(won, tot.w);
+  // streaks against the bot: offer an easier (or harder) bot after three in a row
+  let nudge = '';
+  if (G.mode === 'solo' && !G.story && !G.run) {
+    const st = +(load('sd.streak') || 0),
+      ns = won ? Math.max(0, st) + 1 : Math.min(0, st) - 1;
+    store('sd.streak', ns);
+    if (ns <= -3 && G.diff > 0)
+      nudge = `<div class="nudge"><span>Three losses in a row. No shame in it: the bot builds fast.</span><button class="btn ghost sm" id="btnEasier">Try ${DIFF[G.diff - 1].name}</button></div>`;
+    else if (ns >= 3 && G.diff < DIFF.length - 1)
+      nudge = `<div class="nudge up"><span>Three wins in a row. The bot is not scaring you any more.</span><button class="btn ghost sm" id="btnHarder">Try ${DIFF[G.diff + 1].name}</button></div>`;
+  }
+  // online: the score of this session against this friend
+  if (G.mode === 'mp') {
+    if (!G.series || G.series.opp !== G.oppName) G.series = { opp: G.oppName, w: 0, l: 0 };
+    if (!tie) G.series[won ? 'w' : 'l']++;
+  }
   const br =
     Object.entries(G.aff)
       .sort((a, b) => b[1] - a[1])
@@ -1091,11 +1142,22 @@ function showFinal() {
     })()}
     ${progressHtml(prog)}${G.story ? storyResultHtml(spoils) : spoilsHtml(spoils)}
     <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.story ? '<button class="btn" id="btnRoad">Back to the Scrap Road</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
-    ${G.mode === 'mp' && h2hLine(G.oppName) ? `<p class="small">${h2hLine(G.oppName)}</p>` : ''}`;
+    ${nudge}
+    ${G.mode === 'mp' ? `<p class="series">Tonight: <b>${G.series.w}–${G.series.l}</b> against ${esc(G.oppName)}${h2hLine(G.oppName) ? ` · ${h2hLine(G.oppName)}` : ''}</p>` : ''}`;
   $('#ovResult').hidden = false;
   sfx(won ? 'win' : 'lose');
   const a = $('#btnAgain');
   if (a) a.addEventListener('click', () => startMatch('solo', null, G.format));
+  const ez = $('#btnEasier'),
+    hd = $('#btnHarder');
+  const changeDiff = d => {
+    G.diff = clamp(G.diff + d, 0, DIFF.length - 1);
+    store('sd.diff', G.diff);
+    store('sd.streak', 0);
+    startMatch('solo', null, G.format);
+  };
+  if (ez) ez.addEventListener('click', () => changeDiff(-1));
+  if (hd) hd.addEventListener('click', () => changeDiff(1));
   const rd = $('#btnRoad');
   if (rd) rd.addEventListener('click', () => openStory());
   const bm = $('#btnBest');

@@ -51,20 +51,26 @@ function openSettings(back) {
   const toggle = (id, label, on) =>
     `<label class="tgl"><input type="checkbox" id="${id}" ${on ? 'checked' : ''}><span>${esc(label)}</span></label>`;
   c.innerHTML = `<span class="label">Settings</span><h2>Settings</h2>
+    <div class="setgrid">
+    <section><h3>Sound</h3>
     <label class="vol"><span>Volume</span><input type="range" id="setVol" min="0" max="1" step="0.05" value="${SETTINGS.vol}"><b id="setVolV">${Math.round(SETTINGS.vol * 100)}%</b></label>
     <label class="vol"><span>Battle music</span><input type="range" id="setMusic" aria-label="Battle music volume" min="0" max="1" step="0.05" value="${SETTINGS.music}"><b id="setMusicV">${Math.round(SETTINGS.music * 100)}%</b></label>
-    ${toggle('setMute', 'Mute all sound', MUTE)}
     ${toggle('setVoice', 'Announcer voice', SETTINGS.voice !== false)}
-    ${toggle('setComm', 'Commentators (captions)', SETTINGS.comm !== false)}
     ${toggle('setCommVoice', 'Commentator voices', SETTINGS.commVoice !== false)}
-    ${toggle('setMotion', 'Decorative motion', SETTINGS.motion)}
-    ${toggle('setCrateSpin', 'Animate mystery crates', SETTINGS.crateSpin)}
-    ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
+    <p class="small">Volume at 0% is silent. The Sound on/off button in the menu mutes everything at once.</p></section>
+    <section><h3>Screen</h3>
+    ${toggle('setComm', 'Commentator captions', SETTINGS.comm !== false)}
     ${toggle('setNums', 'Floating damage numbers', SETTINGS.nums)}
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
+    ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
+    ${toggle('setMotion', 'Interface animations', SETTINGS.motion)}
+    ${toggle('setCrateSpin', 'Animate mystery crates', SETTINGS.crateSpin)}</section>
+    <section><h3>Performance</h3>
     ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
     ${toggle('setFps', 'Show frame rate (FPS)', SETTINGS.fps)}
-    <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset level and unlocks</button></div>
+    <h3>Progress</h3>
+    <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset level and unlocks</button></div></section>
+    </div>
     <button class="btn" id="setDone">Done</button>`;
   $('#ovSettings').hidden = false;
   $('#setVol').addEventListener('input', e => {
@@ -80,10 +86,6 @@ function openSettings(back) {
     saveSettings();
     BattleMusic.update();
   };
-  $('#setMute').addEventListener('change', e => {
-    MUTE = e.target.checked;
-    store('sd.mute', MUTE ? 1 : 0);
-  });
   for (const [id, k] of [
     ['setVoice', 'voice'],
     ['setComm', 'comm'],

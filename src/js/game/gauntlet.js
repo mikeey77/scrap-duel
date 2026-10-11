@@ -98,7 +98,8 @@ function setupWaveBot() {
   if (R.relics.includes('magnet')) addCoins(RUN_RELICS.magnet.bonus);
 }
 /** Extra fields for the bot's battle config: boss multipliers. */
-const runBotExtras = () => (G.run && G.run.boss ? { boss: G.run.boss } : {});
+const runBotExtras = () =>
+  G.run && G.run.boss ? { boss: G.run.boss } : G.run && G.run.tough ? { tough: G.run.tough } : {};
 /** Run perks for the player's own car config. */
 function runMods() {
   if (!G.run) return null;
@@ -108,7 +109,7 @@ function runMods() {
 }
 /** Applies boss or relic multipliers to a freshly built car. */
 function applyCarMods(v, c) {
-  const hp = c.boss ? c.boss.hp : c.run ? 1 + c.run.hp : 1;
+  const hp = (c.boss ? c.boss.hp : c.run ? 1 + c.run.hp : 1) * (c.tough || 1);
   if (hp !== 1) {
     for (const I of v.insts) {
       I.max *= hp;
@@ -162,6 +163,7 @@ function runWaveDone(iWon, draw) {
     text =
       R.hearts > 0 ? `Ouch. ${R.hearts} heart${R.hearts > 1 ? 's' : ''} left.` : 'Out of hearts. The run ends here.';
   }
+  R.tough = 0; // a Mystery Crate's tougher rival only lasts one wave
   if (R.wave >= 10) grantAch('wave10');
   if (R.wave >= 25) grantAch('wave25');
   return { over: R.hearts <= 0, text, relic: iWon && !!R.boss };
@@ -217,7 +219,54 @@ function runNext(over, relic) {
     openDraft();
   };
   if (relic) openRelicPick(go);
+  else if (G.run.wave % 5 === 2 && G.log.length && G.log[G.log.length - 1].win) openPathPick(go);
   else go();
+}
+/** Halfway to every boss: pick a path. Coins now, a heart back, or a relic with a tougher next rival. */
+const RUN_PATHS = [
+  { id: 'heap', icon: '🔩', name: 'Scrap Heap', desc: '+90 coins right now.' },
+  { id: 'pit', icon: '🔧', name: 'Pit Stop', desc: 'Get a heart back (up to five).' },
+  {
+    id: 'crate',
+    icon: '📦',
+    name: 'Mystery Crate',
+    desc: 'A random relic now, but the next rival has 30% more armour.'
+  }
+];
+function openPathPick(done) {
+  const R = G.run;
+  $('#resultCard').innerHTML =
+    `<span class="label">Wave ${R.wave} cleared · a fork in the road</span><h2>Pick a path</h2><p class="small">Halfway to the next boss. Choose what you need most.</p>
+    <div class="relics">${RUN_PATHS.map(p => `<button class="relic" data-id="${p.id}" ${p.id === 'pit' && R.hearts >= RUN_HEARTS + 2 ? 'disabled' : ''}><i>${p.icon}</i><b>${esc(p.name)}</b><span>${esc(p.desc)}</span></button>`).join('')}</div>`;
+  $('#ovResult').hidden = false;
+  sfx('reveal');
+  R.pathDone = done;
+  $$('#resultCard .relic').forEach(b => b.addEventListener('click', () => runPathChoose(b.dataset.id)));
+}
+function runPathChoose(id) {
+  const R = G.run,
+    done = R.pathDone;
+  if (!done) return;
+  R.pathDone = null;
+  {
+    {
+      if (id === 'heap') addCoins(90);
+      else if (id === 'pit') R.hearts = Math.min(RUN_HEARTS + 2, R.hearts + 1);
+      else {
+        const pool = Object.keys(RUN_RELICS).filter(x => !R.relics.includes(x) || x === 'heart'),
+          rid = pick(pool),
+          r = RUN_RELICS[rid];
+        R.relics.push(rid);
+        if (r.heart) R.hearts++;
+        if (r.shield) R.shield = 1;
+        R.tough = 1.3;
+        toast(`${r.icon} ${r.name}: ${r.desc}`, true);
+      }
+      sfx('legend');
+      $('#ovResult').hidden = true;
+      done();
+    }
+  }
 }
 function openRelicPick(done) {
   const own = G.run.relics,
@@ -250,6 +299,7 @@ function showRunOver() {
   if (record) store('sd.runBest', reached);
   const prog = grant(20 + R.cleared * 12 + R.bosses * 40, []);
   const spoils = matchSpoils(R.cleared >= 5, 0, {
+    rounds: R.wave,
     bolts: R.cleared * 8 + R.bosses * 30 - 20,
     from: 'Gauntlet wave ' + R.wave
   });

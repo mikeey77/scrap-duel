@@ -1303,6 +1303,12 @@ test('Scrap Gauntlet: hearts, boss every fifth wave, relics and run over', () =>
     play(0);
     assert(!r.elements.get('ovResult').hidden);
     a.runNext(false, false);
+    if (w === 2) {
+      assert.equal(G.run.wave, 2, 'halfway to the boss the run waits for a path');
+      const c0 = G.coins;
+      a.runPathChoose('heap');
+      assert.equal(G.coins, c0 + 90, 'Scrap Heap pays out');
+    }
   }
   assert.equal(G.run.wave, 5);
   assert(G.run.boss && G.run.boss.hp > 1);
@@ -1505,23 +1511,40 @@ function playRT(r) {
     }
   };
 }
-test('gear: upgrades cost bolts, quirks at level 3, fuse, scrap, and only solo cars carry it', () => {
+test('gear: upgrades need XP and bolts, quirks at 3, a special choice at 5, fuse gives XP, only solo cars carry it', () => {
   const r = runtime(),
     a = r.api;
   a.setGear({ bolts: 0, items: [], next: 1 });
   const g = a.addGear('saw', 1, true);
   assert.equal(g.lvl, 1);
-  assert.equal(a.gearUpgrade(g), false, 'no bolts, no upgrade');
-  a.addBolts(1000);
-  assert(a.gearUpgrade(g) && a.gearUpgrade(g));
+  a.addBolts(5000);
+  assert.equal(a.gearUpgrade(g), false, 'no XP, no upgrade');
+  const fill = () => (g.xp = a.gearNeed(g.lvl));
+  fill();
+  assert(a.gearUpgrade(g));
+  fill();
+  assert(a.gearUpgrade(g));
   assert.equal(g.lvl, 3);
+  assert.equal(g.xp, 0, 'the XP bar empties on upgrade');
   assert.equal(g.qo.length, 3, 'three quirk offers at level 3');
   assert(a.gearPickQuirk(g, g.qo[0]));
   assert(a.QUIRKS[g.q]);
+  a.setGear({ ...a.GEAR(), bolts: 0 });
+  fill();
+  assert.equal(a.gearUpgrade(g), false, 'full XP but no bolts');
+  a.addBolts(5000);
   const g2 = a.addGear('saw', 3, true);
+  g.xp = 0;
   const keep = a.gearFuse(g, g2);
-  assert.equal(keep.lvl, 4);
+  assert.equal(keep.lvl, 3, 'fusing no longer jumps a level');
+  assert(keep.xp > 0, 'the spare copy becomes XP');
   assert.equal(a.GEAR().items.filter(x => x.id === 'saw').length, 1);
+  while (keep.lvl < 5) {
+    keep.xp = a.gearNeed(keep.lvl);
+    assert(a.gearUpgrade(keep));
+  }
+  assert(a.gearPickSpecial(keep, 'sp'), 'pick the level 5 special');
+  assert.equal(keep.c5, 'sp');
   const b0 = a.GEAR().bolts;
   const mg = a.addGear('mg', 2, true);
   a.gearScrap(mg);
@@ -1532,6 +1555,7 @@ test('gear: upgrades cost bolts, quirks at level 3, fuse, scrap, and only solo c
   a.findGear(keep);
   const cfg = a.myCarCfg();
   assert.equal(JSON.stringify(cfg.gear.map(x => x.id)), '["saw"]');
+  assert.equal(cfg.gear[0].c5, 'sp');
   a.G.mode = 'mp';
   assert(!('gear' in a.myCarCfg()), 'online never carries gear');
   a.G.mode = 'solo';
@@ -1540,11 +1564,37 @@ test('gear: upgrades cost bolts, quirks at level 3, fuse, scrap, and only solo c
   des.base.set('0,-1', { id: 'saw', x: 0, y: -1, rot: 0 });
   const plain = a.makeCar(des, 0, 500, 500, 0, { tune: [] });
   const tuned = a.makeCar(des, 0, 500, 500, 0, { tune: [] });
-  a.applyGear(tuned, [{ id: 'saw', lvl: 4, q: null }]);
-  const s0 = plain.insts.find(I => I.id === 'saw'),
-    s1 = tuned.insts.find(I => I.id === 'saw');
-  assert(s1.max > s0.max * 1.2, 'level 4 saw has more HP');
-  assert(s1.gear && !s0.gear);
+  a.applyGear(tuned, [{ id: 'saw', lvl: 5, q: null, c5: 'sp' }]);
+  const s1 = tuned.insts.find(I => I.id === 'saw');
+  assert(s1.gDmg > 1.4, 'level 5 saw with Diamond Teeth hits much harder');
+  assert(s1.gear && !plain.insts.find(I => I.id === 'saw').gear);
+});
+test('gear specials: double tap, hot rounds, crits, armour repair, and the to-invent list', () => {
+  const r = runtime(),
+    a = r.api;
+  a.startMatch('solo');
+  const des = { base: new Map(), top: new Map() };
+  des.base.set('0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 });
+  des.base.set('0,-1', { id: 'frame', x: 0, y: -1, rot: 0 });
+  des.top.set('0,-1', { id: 'mg', x: 0, y: -1, rot: 0 });
+  des.base.set('1,0', { id: 'armor', x: 1, y: 0, rot: 0 });
+  const v = a.makeCar(des, 0, 500, 500, 0, { tune: [] });
+  a.applyGear(v, [
+    { id: 'mg', lvl: 10, q: null, c5: 'sp' },
+    { id: 'armor', lvl: 10, q: null, c5: 'st' }
+  ]);
+  const mg = v.insts.find(I => I.id === 'mg'),
+    ar = v.insts.find(I => I.id === 'armor');
+  assert.equal(mg.gx.multi, 1, 'Double Tap at level 10');
+  assert.equal(mg.gx.burn, 1.5, 'Hot Rounds at level 5');
+  assert(ar.gRegen > 0, 'Self-Repair at level 10');
+  const [s5, s10] = a.gearSpecials('sniper');
+  assert.equal(s5.id, 'headshot');
+  assert(s10 && !s10.tbd);
+  const todo = a.gearToInvent();
+  assert(todo.length > 10 && todo.every(x => x.need5 || x.need10), 'gadgets are listed as still to invent');
+  assert(!todo.some(x => x.id === 'mg'), 'the machine gun is done');
+  for (let l = 1; l <= 10; l++) assert(/^#[0-9a-f]{6}$/.test(a.lvCol(l)), 'every level has a colour');
 });
 test('gear turns up as a draft card in solo and never online', () => {
   const r = runtime(),
@@ -1791,7 +1841,17 @@ test('garage: the whole car moves, turns and flips, and stays inside the bay', (
   assert(G.base.has('0,0') && G.base.get('0,0').id === 'cockpit', 'centred again');
   assert(a.turnDesign(), 'turns');
   assert(G.base.has('0,1') && G.base.has('0,-1'), 'the side frames are now in front and behind');
-  assert.equal(G.top.get('0,1').rot, 1, 'equipment turned along');
+  assert.equal(G.top.get('0,1').rot, 0, 'the gun keeps facing forward');
+  // copy left to right uses spare parts from the bin
+  G.base.clear();
+  G.top.clear();
+  G.base.set('0,0', { id: 'cockpit', rot: 0, x: 0, y: 0 });
+  G.base.set('-1,0', { id: 'frame', rot: 0, x: -1, y: 0 });
+  G.base.set('-2,0', { id: 'wheel', rot: 0, x: -2, y: 0 });
+  G.inv = { cockpit: 1, frame: 2, wheel: 2 };
+  a.copyLeftToRight();
+  assert(G.base.has('1,0') && G.base.get('1,0').id === 'frame', 'frame copied');
+  assert(G.base.has('2,0') && G.base.get('2,0').id === 'wheel', 'wheel copied');
   assert(a.mirrorDesign() && a.turnDesign() && a.turnDesign() && a.turnDesign(), 'flip and a full turn');
   a.undo && a.undo();
 });
@@ -1812,6 +1872,53 @@ test('commentary: every call has a known caster, no names in the lines, stable v
   assert.equal(a.voiceId('dash', 'Lights, rust, action!'), a.voiceId('dash', 'Lights, rust, action!'));
   assert.notEqual(a.voiceId('dash', 'Lights, rust, action!'), a.voiceId('doc', 'Lights, rust, action!'));
   assert(a.ANNOUNCE.includes('Round one') && a.ANNOUNCE.includes('Final round'));
+  assert.equal(a.commName({ name: 'Sparring Magpie' }), 'Magpie', 'sparring bots keep their name');
+  assert.equal(a.commName({ name: 'Player' }), null, 'the player is never named');
+  for (const [who, tpl] of Object.values(a.NAMED_CALLS)) assert(a.CASTERS[who] && tpl.includes('{n}'));
+});
+
+test('gear specials fire in battle: a level 10 machine gun shoots twice as many burning bullets', () => {
+  const count = lvl => {
+    const { aa } = arenaRuntime(),
+      b = aa.getB(),
+      base = new Map(),
+      top = new Map();
+    base.set('0,0', { id: 'cockpit', rot: 0, x: 0, y: 0 });
+    base.set('0,-1', { id: 'frame', rot: 0, x: 0, y: -1 });
+    top.set('0,-1', { id: 'mg', rot: 0, x: 0, y: -1 });
+    const v = aa.makeCar({ base, top }, 0, 700, 600, 0, { tune: [], name: 'Gear test', paint: '#fff' });
+    aa.applyGear(v, [{ id: 'mg', lvl, q: null, c5: 'sp' }]);
+    b.cars[0] = v;
+    b.cars[1].x = 1500;
+    b.cars[1].y = 600;
+    b.st = [];
+    b.objs = [];
+    b.seq = 'play';
+    b.time = 1;
+    aa.G.phase = 'battle';
+    v.fire = true;
+    v.aimX = 700;
+    v.aimY = 0;
+    b.shots.length = 0;
+    let n = 0,
+      burn = 0;
+    for (let k = 0; k < 40; k++) {
+      b.time += 0.05;
+      const before = b.shots.length;
+      aa.weapons(v, 0.05);
+      for (const s of b.shots.slice(before)) {
+        n++;
+        if (s.burn) burn++;
+      }
+    }
+    return { n, burn };
+  };
+  const one = count(1),
+    ten = count(10);
+  assert(one.n > 5, 'the gun fires');
+  assert.equal(one.burn, 0);
+  assert(ten.n >= one.n * 1.7, `double tap: ${one.n} vs ${ten.n}`);
+  assert(ten.burn > 0, 'hot rounds');
 });
 
 console.log(`\n${passed} regression tests passed.`);

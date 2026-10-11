@@ -23,6 +23,7 @@ function openGarageHQ(back, tab) {
   hideOverlays();
   renderHQ();
   $('#ovWork').hidden = false;
+  if (!load('sd.walletSeen')) setTimeout(showWalletHelp, 400); // explain the currencies the first time
 }
 // the old entry points open the matching tab
 const openWorkbench = back => openGarageHQ(back, 'gear');
@@ -81,7 +82,7 @@ function hqGearHtml() {
           ? list
               .map(
                 x =>
-                  `<button class="wb-row${x.u === wbSel ? ' on' : ''}" data-u="${x.u}"><img alt="" src="${iconURL(x.id, 48)}"><span class="nm"><b>${esc(gearName(x))}</b><span>${gearEquipped(x) ? 'In loadout' : x.q ? esc(QUIRKS[x.q].name) : x.qo ? 'Quirk ready' : esc(RAR[MOD[x.id].rar].name)}</span></span>${lvPips(x)}${gearLocked(x) ? '<em class="locktag" title="Locked">L</em>' : ''}${x.isNew ? '<em class="newtag">New</em>' : counts[x.id] > 1 ? '<em class="fusetag">Fuse</em>' : ''}</button>`
+                  `<button class="wb-row${x.u === wbSel ? ' on' : ''}" data-u="${x.u}"><img alt="" src="${iconURL(x.id, 48)}"><span class="nm"><b>${lvBadge(x)} ${esc(MOD[x.id].name)}</b><span>${gearEquipped(x) ? 'In loadout' : x.lvl >= 5 && !x.c5 ? 'Pick a special' : gearReady(x) ? 'Ready to upgrade' : x.qo ? 'Pick a quirk' : esc(RAR[MOD[x.id].rar].name)}</span>${xpBar(x)}</span>${gearLocked(x) ? '<em class="locktag" title="Locked">L</em>' : ''}${x.isNew ? '<em class="newtag">New</em>' : gearReady(x) || (x.lvl >= 5 && !x.c5) ? '<em class="readytag">Up</em>' : counts[x.id] > 1 ? '<em class="fusetag">Fuse</em>' : ''}</button>`
               )
               .join('')
           : '<p class="small" style="padding:12px">Nothing in this category. Try the Fabricator.</p>'
@@ -153,15 +154,20 @@ function renderHQ() {
             : hqLookHtml(tab);
   $('#ovWork').innerHTML = `<div class="hq">
     <header><div><span class="label">Garage</span><h2>${esc(G.name)} <span class="ttl">${esc(titleName(G.style.title))}</span></h2></div>
-      <div class="lvl"><span class="lv">${L.lvl}</span><div><b>Scrap Cred level ${L.lvl}</b><div class="xpbar"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></div><span class="small">${L.into} / ${L.need} XP</span></div></div>
-      <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b><span>bolts</span></div>
+      ${walletHtml()}
       <button class="btn ghost" id="hqDone">Done</button></header>
     <div class="hq-body"><aside class="hq-car" aria-label="Your car">${hqCarHtml()}</aside>
       <div class="hq-main"><nav class="hq-tabs" aria-label="Garage sections">${HQ_TABS.map(([id, n]) => `<button data-hq="${id}" aria-pressed="${id === tab}">${n}</button>`).join('')}</nav>
         <div class="hq-pane">${main}</div></div></div></div>`;
   hqWire();
 }
+let hqLevelUp = null; // the piece that just levelled up flashes once
 function hqWire() {
+  if (hqLevelUp) {
+    const el = $('#ovWork .wb-detail');
+    if (el) el.classList.add('levelup');
+    hqLevelUp = null;
+  }
   const on = (sel, f) => $$('#ovWork ' + sel).forEach(b => b.addEventListener('click', e => f(b, e)));
   const rerender = s => {
     if (s) sfx(s);
@@ -229,8 +235,24 @@ function hqWire() {
     rerender('legend');
   });
   on('#wbUp', () => {
-    if (gearUpgrade(g)) toast(`${gearName(g)}${g.lvl >= GEAR_MAX ? ' is now a Masterwork!' : ' upgraded'}`, true);
-    rerender(g.lvl >= GEAR_MAX ? 'jackpot' : 'repair');
+    if (gearUpgrade(g))
+      toast(
+        g.lvl >= GEAR_MAX
+          ? `${MOD[g.id].name} is LEGENDARY: ${gearSpecials(g.id)[1].name} unlocked!`
+          : g.lvl === 5
+            ? `${gearName(g)}: pick your special!`
+            : `${gearName(g)}`,
+        true
+      );
+    hqLevelUp = g.u;
+    rerender(g.lvl >= GEAR_MAX || g.lvl === 5 ? 'jackpot' : 'repair');
+  });
+  on('[data-sp]', b => {
+    if (gearPickSpecial(g, b.dataset.sp)) {
+      const S = b.dataset.sp === 'sp' ? gearSpecials(g.id)[0] : gearSteady(g.id);
+      toast(`${S.name} fitted to ${MOD[g.id].name}`, true);
+      rerender('legend');
+    } else rerender('remove');
   });
   on('#wbReroll', () => {
     gearRerollQuirk(g);

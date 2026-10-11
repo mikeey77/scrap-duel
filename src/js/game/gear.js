@@ -28,14 +28,15 @@ function loadGear() {
 }
 const saveGear = () => store('sd.gear', GEAR);
 function sanitizeGear(x) {
-  const g = { u: x.u | 0, id: x.id, lvl: clamp(x.lvl | 0, 1, GEAR_MAX) };
+  const g = { u: x.u | 0, id: x.id, lvl: clamp(x.lvl | 0, 1, GEAR_MAX), xp: Math.max(0, x.xp | 0) };
   if (x.q && QUIRKS[x.q]) g.q = x.q;
+  if (x.c5 === 'sp' || x.c5 === 'st') g.c5 = x.c5;
   if (Array.isArray(x.qo)) g.qo = x.qo.filter(q => QUIRKS[q]).slice(0, 3);
   if (x.from) g.from = String(x.from).slice(0, 40);
   if (x.isNew) g.isNew = 1;
   return g;
 }
-const gearName = g => `${MOD[g.id].name}${g.lvl > 1 ? ' +' + (g.lvl - 1) : ''}`;
+const gearName = g => `${MOD[g.id].name} Lv ${g.lvl}`;
 const gearById = u => GEAR.items.find(g => g.u === u);
 
 /** Adds a gear item. A full locker turns the drop into bolts instead. */
@@ -48,7 +49,7 @@ function addGear(id, lvl = 1, quiet, from) {
     if (!quiet) toast(`Gear storage full: ${MOD[id].name} scrapped for ${b} bolts`);
     return null;
   }
-  const g = { u: GEAR.next++, id, lvl: clamp(lvl, 1, GEAR_MAX), isNew: 1 };
+  const g = { u: GEAR.next++, id, lvl: clamp(lvl, 1, GEAR_MAX), xp: 0, isNew: 1 };
   if (from) g.from = from;
   if (g.lvl >= 3) g.qo = quirkOffers(g);
   GEAR.items.push(g);
@@ -67,15 +68,43 @@ function quirkOffers(g) {
   while (out.length < 3 && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
   return out;
 }
+/** Upgrading needs a full XP bar (play matches with the part) and bolts (win matches). */
 function gearUpgrade(g) {
-  if (g.lvl >= GEAR_MAX) return false;
+  if (g.lvl >= GEAR_MAX || !gearReady(g)) return false;
   const c = gearCost(g);
   if (GEAR.bolts < c) return false;
   GEAR.bolts -= c;
+  g.xp -= gearNeed(g.lvl);
   g.lvl++;
   if (g.lvl === 3 && !g.q) g.qo = quirkOffers(g);
   saveGear();
   return true;
+}
+/** Level 5: the part's own special ('sp') or Steady ('st'). Can be changed later for bolts. */
+const SPECIAL_SWAP = 40;
+function gearPickSpecial(g, c) {
+  if (g.lvl < 5 || (c !== 'sp' && c !== 'st')) return false;
+  if (c === 'sp' && !gearSpecials(g.id)[0]) return false;
+  if (g.c5 && g.c5 !== c) {
+    if (GEAR.bolts < SPECIAL_SWAP) return false;
+    GEAR.bolts -= SPECIAL_SWAP;
+  }
+  g.c5 = c;
+  saveGear();
+  return true;
+}
+/** XP for every gear piece that rode along in a match. Returns [{g, xp, ready}]. */
+function gearGainXp(n) {
+  const out = [];
+  for (const u of new Set(Object.values(G.gearFound || {}))) {
+    const g = gearById(u);
+    if (!g || g.lvl >= GEAR_MAX) continue;
+    const was = gearReady(g);
+    g.xp = Math.min((g.xp || 0) + n, gearNeed(g.lvl) * 2);
+    out.push({ g, xp: n, ready: !was && gearReady(g) });
+  }
+  saveGear();
+  return out;
 }
 function gearPickQuirk(g, q) {
   if (!g.qo || !g.qo.includes(q)) return false;
@@ -103,10 +132,9 @@ function gearFuse(a, b) {
   if (GEAR.loadout.includes(lose.u)) GEAR.loadout = GEAR.loadout.map(u => (u === lose.u ? keep.u : u));
   GEAR.loadout = [...new Set(GEAR.loadout)];
   GEAR.locked = GEAR.locked.filter(u => u !== lose.u);
-  if (keep.lvl < GEAR_MAX) {
-    keep.lvl++;
-    if (keep.lvl === 3 && !keep.q) keep.qo = quirkOffers(keep);
-  } else GEAR.bolts += gearScrapValue(lose);
+  // the spare copy becomes experience for the one you keep
+  if (keep.lvl < GEAR_MAX) keep.xp = Math.min((keep.xp || 0) + (lose.xp || 0) + 50 * lose.lvl, gearNeed(keep.lvl) * 2);
+  else GEAR.bolts += gearScrapValue(lose);
   if (!keep.q && lose.q) keep.q = lose.q;
   saveGear();
   return keep;
@@ -194,7 +222,7 @@ function gearCfg() {
   const list = Object.values(G.gearFound)
     .map(gearById)
     .filter(Boolean)
-    .map(g => ({ id: g.id, lvl: g.lvl, q: g.q || null }));
+    .map(g => ({ id: g.id, lvl: g.lvl, q: g.q || null, c5: g.c5 || null }));
   return list.length ? list : null;
 }
 /** Sticker and set perks for your car config. */
@@ -238,7 +266,7 @@ function applyGear(v, list) {
     const b = gearBonus(g),
       k = gearKind(g.id);
     let hpK = k === 'hp' ? 1 + b : 1;
-    if (k === 'rate') I.gRate = 1 + b;
+    if (k === 'dmg') applyGearFx(v, I, { dmg: 1 + b });
     if (k === 'speed') speedMul(v, b);
     const q = g.q;
     if (q === 'overclock') {
@@ -266,6 +294,7 @@ function applyGear(v, list) {
       hpK *= 0.9;
       I.gBurst = 1;
     }
+    for (const S of gearActiveSpecials(g)) if (S) hpK *= applyGearFx(v, I, S.fx);
     if (g.lvl >= GEAR_MAX) {
       I.mw = true;
       v.hypeK = (v.hypeK || 0) + 0.25;
@@ -276,6 +305,80 @@ function applyGear(v, list) {
       I.hp *= hpK;
     }
   }
+  if (v.insts.some(I => I.gRegen)) v.gearHeal = true;
+}
+/** One special's effects on its part (and the car). Returns the HP multiplier for the caller to apply. */
+function applyGearFx(v, I, fx) {
+  const W = I.W;
+  let hpK = 1;
+  for (const [key, val] of Object.entries(fx)) {
+    if (key === 'dmg') {
+      if (W) {
+        if (W.dmg) W.dmg *= val;
+        if (W.dps) W.dps *= val;
+      }
+      I.gDmg = (I.gDmg || 1) * val;
+      if (!W && !I.m.mel && I.m.cat === 'melee') v.gRamOut = (v.gRamOut || 0) + (val - 1); // rams hit with the car
+    } else if (key === 'rate') I.gRate = (I.gRate || 1) * val;
+    else if (key === 'hp') hpK *= val;
+    else if (key === 'regen') I.gRegen = (I.gRegen || 0) + val;
+    else if (key === 'thorns') I.gSpiky = (I.gSpiky || 0) + val;
+    else if (key === 'res') {
+      I.gRes = I.gRes || {};
+      for (const t in val) I.gRes[t] = (I.gRes[t] || 0) + val[t];
+    } else if (key === 'blast') I.gBurst = 1;
+    else if (key === 'speed') speedMul(v, val);
+    else if (key === 'accel') v.c.accel *= val;
+    else if (key === 'ram') v.gRamOut = (v.gRamOut || 0) + val;
+    else if (key === 'ramIn') v.gRamIn = Math.min(0.6, (v.gRamIn || 0) + val);
+    else if (key === 'knockRes') v.knockRes = Math.min(0.7, (v.knockRes || 0) + val);
+    else if (key === 'hype') v.hypeK = (v.hypeK || 0) + val;
+    else if (W) {
+      // weapon tuning: these change this part's own weapon stats
+      if (key === 'splash') W.splash = (W.splash || 0) * val;
+      else if (key === 'rng' && W.rng) W.rng *= val;
+      else if (key === 'spd' && W.spd) W.spd *= val;
+      else if (key === 'knock') W.knock = (W.knock || 1) * val;
+      else if (key === 'bounces') W.bounces = (W.bounces || 3) + val;
+      else if (key === 'chain') W.chain = (W.chain || 0) + val;
+      else if (key === 'charge' && W.charge) W.charge *= val;
+      else if (key === 'push' && W.push) W.push *= val;
+      else if (key === 'freeze') W.freeze = (W.freeze || 0) + val;
+      else if (key === 'volley') {
+        if (W.burst) W.burst += val;
+        else I.gx = { ...(I.gx || {}), multi: ((I.gx && I.gx.multi) || 0) + 1 };
+      } else if (['multi', 'burn', 'shock', 'crit', 'splashAdd'].includes(key))
+        I.gx = { ...(I.gx || {}), [key]: ((I.gx && I.gx[key]) || 0) + val };
+    }
+  }
+  return hpK;
+}
+/** Shot specials: called for the shots and lobs a gear part just fired. */
+function gearShots(v, I, n0, l0) {
+  const x = I.gx;
+  for (let i = n0, n = B.shots.length; i < n; i++) {
+    const s = B.shots[i];
+    if (s.own !== v.idx) continue;
+    if (x.burn) s.burn = x.burn;
+    if (x.shock) s.shock = x.shock;
+    if (x.splashAdd) s.splash = Math.max(s.splash || 0, x.splashAdd);
+    if (x.crit && Math.random() < x.crit) {
+      s.dmg *= 2.5;
+      s.crit = 1;
+    }
+    for (let k = 1; k <= (x.multi || 0); k++) {
+      const a = (k % 2 ? 1 : -1) * 0.09 * Math.ceil(k / 2),
+        c = Math.cos(a),
+        si = Math.sin(a);
+      B.shots.push({ ...s, vx: s.vx * c - s.vy * si, vy: s.vx * si + s.vy * c, tgt: s.tgt });
+    }
+  }
+  if (x.multi)
+    for (let i = l0, n = B.lobs.length; i < n; i++) {
+      const l = B.lobs[i];
+      if (l.own !== v.idx) continue;
+      for (let k = 1; k <= x.multi; k++) B.lobs.push({ ...l, tx: l.tx + rnd(-40, 40), ty: l.ty + rnd(-40, 40) });
+    }
 }
 function applyFlair(v, fx) {
   if (!fx) return;
@@ -296,6 +399,11 @@ function applyFlair(v, fx) {
 /** Extra damage rules from gear and stickers, called from hurtInst. */
 function flairHurt(v, I, a, type, attacker) {
   if (I.gFrag) a *= 1 + I.gFrag;
+  if (I.gRes && I.gRes[type]) a *= 1 - Math.min(0.7, I.gRes[type]);
+  if (type === 'ram' && attacker && attacker !== v) {
+    if (attacker.gRamOut) a *= 1 + attacker.gRamOut;
+    if (v.gRamIn) a *= 1 - v.gRamIn;
+  }
   if (v.flair && v.flair.res[type]) a *= 1 - Math.min(0.5, v.flair.res[type]);
   if (type === 'ram' && attacker && attacker.flair && attacker.flair.ramOut) a *= 1 + attacker.flair.ramOut;
   if (I.gSpiky && attacker && attacker !== v && (type === 'ram' || type === 'melee' || type === 'kin')) {
@@ -323,12 +431,15 @@ function gearBreak(v, I) {
 }
 
 /* ---------- rewards ---------- */
-/** Bolts and a possible gear drop at the end of a single-player match. Returns what was earned. */
+/** End of a single-player match. Bolts come from winning (every round you win, more for the match),
+ *  XP from playing: every gear piece that rode along gets it. A gear drop is a bonus. */
 function matchSpoils(won, roundsWon, extra = {}) {
   if (!gearActive()) return null;
-  let bolts = (won ? 50 : 20) + roundsWon * 6 + (extra.bolts || 0);
-  bolts = Math.round(bolts * [0.8, 1, 1.3][G.diff ?? 1]);
+  let bolts = (won ? 40 : 0) + roundsWon * 5 + (extra.bolts || 0);
+  bolts = Math.max(0, Math.round(bolts * [0.8, 1, 1.3][G.diff ?? 1]));
   addBolts(bolts);
+  const played = extra.rounds ?? (G.log ? G.log.length : G.round || 1),
+    xp = gearGainXp(Math.round(20 + 6 * played + (won ? 10 : 0)));
   const drops = [];
   if (Math.random() < (won ? 0.55 : 0.25) || extra.drop) {
     const used = [...new Set([...G.base.values(), ...G.top.values()].map(e => e.id))].filter(
@@ -338,14 +449,74 @@ function matchSpoils(won, roundsWon, extra = {}) {
     const g = addGear(id, extra.dropLvl || 1, true, extra.from || 'Match salvage');
     if (g) drops.push(g);
   }
-  return { bolts, drops };
+  return { bolts, drops, xp };
 }
 function spoilsHtml(s) {
   if (!s) return '';
-  return `<div class="spoils"><div class="sp-b"><i class="boltico" aria-hidden="true"></i><b>+${s.bolts} bolts</b><span>${GEAR.bolts} in the Garage</span></div>${s.drops
+  return `<div class="spoils"><div class="sp-b"><i class="boltico" aria-hidden="true"></i><b>+${s.bolts} bolts</b><span>${s.bolts ? 'for your wins' : 'win rounds to earn bolts'} · ${GEAR.bolts} in the Garage</span></div>${(
+    s.xp || []
+  )
+    .map(
+      ({ g, xp, ready }) =>
+        `<div class="sp-x${ready ? ' ready' : ''}"><img alt="" src="${iconURL(g.id, 48)}"><span><b>${esc(gearName(g))}</b> +${xp} XP</span>${xpBar(g)}${ready ? '<em>Ready to upgrade</em>' : ''}</div>`
+    )
+    .join('')}${s.drops
     .map(
       g =>
         `<div class="sp-g"><img alt="" src="${iconURL(g.id, 64)}"><span>New gear · <b>${esc(gearName(g))}</b></span></div>`
     )
     .join('')}</div>`;
 }
+/** A small XP bar in the colour of the part's level. */
+function xpBar(g) {
+  if (g.lvl >= GEAR_MAX)
+    return `<span class="xpbar2 max" style="--lc:${lvCol(g.lvl)}"><i style="width:100%"></i><b>Max level</b></span>`;
+  const need = gearNeed(g.lvl),
+    f = clamp((g.xp || 0) / need, 0, 1);
+  return `<span class="xpbar2${f >= 1 ? ' full' : ''}" style="--lc:${lvCol(g.lvl)}"><i style="width:${Math.round(f * 100)}%"></i><b>${Math.min(g.xp || 0, need)} / ${need} XP</b></span>`;
+}
+
+/* ---------- the wallet: every currency side by side ---------- */
+/** Coins (this match), bolts (kept, from wins) and Scrap Cred (your level), with a "?" that explains them. */
+function walletHtml(opt = {}) {
+  const L = levelInfo(),
+    coins =
+      opt.coins != null
+        ? `<span class="wl coins" title="Coins: spend them in the shop during a match. Every match starts fresh."><i class="coinico" aria-hidden="true"></i><b>${opt.coins}</b><small>coins</small></span>`
+        : '';
+  return `<div class="wallet" role="group" aria-label="Your currencies">${coins}
+    <span class="wl bolts" title="Bolts: earned by winning rounds and matches. Spend them on gear upgrades and the Fabricator."><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b><small>bolts</small></span>
+    <span class="wl cred" title="Scrap Cred: your player level. Playing anything fills it and unlocks skins, stickers and a 4th loadout slot."><b class="lvn">${L.lvl}</b><span class="xpb"><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></span><small>Scrap Cred</small></span>
+    <button class="wl-help" type="button" aria-label="What are coins, bolts and XP?" title="What are these?">?</button></div>`;
+}
+/** A one-card explanation of the currencies and gear XP. */
+function showWalletHelp() {
+  let ov = $('#ovWallet');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.className = 'overlay';
+    ov.id = 'ovWallet';
+    ov.hidden = true;
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `<div class="card walletcard"><span class="label">How you earn things</span><h2>Coins, bolts and XP</h2>
+    <dl>
+      <dt><i class="coinico" aria-hidden="true"></i> Coins</dt><dd>Only inside a match. Spend them in the shop and on crates between rounds. Every match starts fresh.</dd>
+      <dt><i class="boltico" aria-hidden="true"></i> Bolts</dt><dd>Kept forever. You earn them by <b>winning</b>: every round you win, and more for winning the match. Spend them on gear upgrades and in the Fabricator.</dd>
+      <dt><span class="xpdot" aria-hidden="true"></span> Gear XP</dt><dd>Every gear piece in your car earns XP by <b>playing</b>, win or lose. When its bar is full, you can upgrade it with bolts.</dd>
+      <dt><b class="lvn">3</b> Scrap Cred</dt><dd>Your player level. Everything you play fills it and unlocks skins, stickers, titles and a fourth loadout slot.</dd>
+    </dl>
+    <button class="btn" id="wlDone">Got it</button></div>`;
+  ov.hidden = false;
+  $('#wlDone').onclick = () => {
+    ov.hidden = true;
+    store('sd.walletSeen', '1');
+    sfx('ui');
+  };
+}
+addEventListener('click', e => {
+  if (e.target.closest && e.target.closest('.wl-help')) {
+    sfx('ui');
+    showWalletHelp();
+  }
+});

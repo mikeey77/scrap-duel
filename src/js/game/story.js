@@ -613,7 +613,7 @@ function storyFree(f, x, y, r) {
 }
 
 /* ---------- progress ---------- */
-let STORYP = { stars: {}, seen: {}, pos: null, fog: null, caches: [] };
+let STORYP = { stars: {}, seen: {}, pos: null, fog: null, caches: [], remix: {} };
 function loadStory() {
   try {
     const s = JSON.parse(load('sd.story') || 'null');
@@ -623,12 +623,17 @@ function loadStory() {
         seen: s.seen || {},
         pos: Array.isArray(s.pos) ? s.pos : null,
         fog: typeof s.fog === 'string' ? s.fog : null,
-        caches: []
+        caches: [],
+        remix: s.remix && typeof s.remix === 'object' ? s.remix : {}
       };
   } catch (e) {}
 }
 const saveStory = () => store('sd.story', STORYP);
 const storyStars = id => STORYP.stars[id] || 0;
+// Remix: after the Junk King, every mission can be replayed one difficulty up with tougher bosses, for gold stars
+const remixOpen = () => storyStars(STORY[STORY.length - 1].id) > 0;
+const remixStars = id => (STORYP.remix || {})[id] || 0;
+const remixOn = () => !!G.remix && remixOpen();
 const totalStars = () => STORY.reduce((a, m) => a + storyStars(m.id), 0);
 /** A mission is open when the one before it (in story order) is beaten. */
 function storyOpen(id) {
@@ -665,9 +670,12 @@ function startStory(id) {
     got: 0,
     stolen: 0,
     gearGot: [],
+    remix: remixOn(),
     boss: M.boss ? STORY_BOSSES[M.boss] : null
   };
-  G.diff = M.diff;
+  if (G.storyNext.remix && G.storyNext.boss)
+    G.storyNext.boss = { ...G.storyNext.boss, hp: G.storyNext.boss.hp * 1.3, dmg: G.storyNext.boss.dmg * 1.15 };
+  G.diff = G.storyNext.remix ? Math.min(DIFF.length - 1, M.diff + 1) : M.diff;
   G.started = true;
   startMatch('solo', G.storyNext.sched, 'balanced');
 }
@@ -676,7 +684,7 @@ function storySetup() {
   const S = G.story,
     M = storyMission();
   if (M.coins) G.coins += M.coins;
-  const bot = makeBot(M.diff);
+  const bot = makeBot(G.diff);
   const r = M.rival || STORY_BOSSES[M.boss];
   Object.assign(bot, { name: r.name, style: r.style, likes: r.likes || ['melee'], paint: r.paint });
   if (r.taunt) bot.say = [r.taunt];
@@ -766,9 +774,24 @@ function storyFinish(won, tot) {
     lostRound = G.log.some(r => !r.win),
     bonus = M.salvage && M.kind === 'salvage' ? S.got + S.gearGot.length >= M.salvage : tot.d >= tot.t * 2;
   const stars = won ? 1 + (lostRound ? 0 : 1) + (bonus ? 1 : 0) : 0;
-  const res = { won, stars, before, first: won && !before, bolts: 0, drops: [...S.gearGot], unlocks: [] };
-  if (stars > before) STORYP.stars[M.id] = stars;
-  if (won) {
+  const res = {
+    won,
+    stars,
+    before,
+    first: won && !before,
+    bolts: 0,
+    drops: [...S.gearGot],
+    unlocks: [],
+    remix: S.remix
+  };
+  if (S.remix) {
+    // remix: gold stars and bolts every time you win, no first-clear rewards
+    const rb = remixStars(M.id);
+    if (stars > rb) STORYP.remix[M.id] = stars;
+    res.before = rb;
+    if (won) res.bolts = 30 + stars * 15 + (M.boss ? 40 : 0);
+  } else if (stars > before) STORYP.stars[M.id] = stars;
+  if (won && !S.remix) {
     const R = M.reward || {};
     res.bolts = res.first ? R.bolts || 0 : Math.round((R.bolts || 0) * 0.25);
     res.bolts += (stars - before > 0 ? stars - before : 0) * 15;
@@ -783,17 +806,19 @@ function storyFinish(won, tot) {
       for (const it of p.unlocked)
         res.unlocks.push([STYLE_SLOTS.find(x => x[0] === it.slot)[1].toLowerCase(), it.name]);
     }
-  } else res.bolts = 15;
+  }
+  // bolts only for a win; XP for every gear piece that rode along, win or lose
   addBolts(res.bolts);
+  res.xp = gearGainXp(Math.round(20 + 6 * (G.log ? G.log.length : 1) + (won ? 10 : 0)));
   saveStory();
   return res;
 }
 function storyResultHtml(r) {
   if (!r) return '';
   const M = storyMission();
-  return `<div class="storyres"><div class="stars big" aria-label="${r.stars} of 3 stars">${[1, 2, 3].map(i => `<i class="${i <= r.stars ? 'on' : ''}"></i>`).join('')}</div>
+  return `<div class="storyres${r.remix ? ' remix' : ''}">${r.remix ? '<span class="label remixtag">Remix · gold stars</span>' : ''}<div class="stars big" aria-label="${r.stars} of 3 stars">${[1, 2, 3].map(i => `<i class="${i <= r.stars ? 'on' : ''}"></i>`).join('')}</div>
     <p class="small">${r.won ? (r.first ? 'Mission complete! The road continues.' : 'Mission replayed.') : 'Mission failed. The road is still here.'} ${M.kind === 'salvage' ? `Salvage: ${G.story.got + G.story.gearGot.length}/${M.salvage}${G.story.stolen ? ` · ${G.story.stolen} stolen` : ''}` : ''}</p>
-    ${spoilsHtml({ bolts: r.bolts, drops: r.drops })}
+    ${spoilsHtml({ bolts: r.bolts, drops: r.drops, xp: r.xp })}
     ${r.unlocks.map(([k, n]) => `<div class="unl">Unlocked ${esc(k)}: <b>${esc(n)}</b></div>`).join('')}</div>`;
 }
 
@@ -826,7 +851,8 @@ function openStory() {
 function storyCardHtml(M) {
   const R = STORY_REGIONS.find(r => r.id === M.region),
     open = storyOpen(M.id),
-    st = storyStars(M.id),
+    rx = remixOn(),
+    st = rx ? remixStars(M.id) : storyStars(M.id),
     rw = M.reward || {};
   const rewards = [
     rw.bolts ? `${rw.bolts} bolts` : '',
@@ -844,15 +870,16 @@ function storyCardHtml(M) {
   const boss = M.boss ? STORY_BOSSES[M.boss] : null;
   return `<span class="label" style="color:${R.col}">${esc(R.name)} · ${esc(kindText)}</span>
     <h3>${esc(M.name)}</h3>
-    ${boss ? `<p class="bossline">Boss: <b>${esc(boss.name)}</b> · best of ${M.rounds}, angrier at ⅔ and ⅓ health</p>` : M.rival ? `<p class="small">Rival: <b>${esc(M.rival.name)}</b> · ${esc(DIFF[M.diff].name)}</p>` : ''}
+    ${rx ? `<p class="remixline">Remix: one difficulty up${boss ? ', the boss has 30% more armour and hits 15% harder' : ''}. Win for bolts and gold stars.</p>` : ''}
+    ${boss ? `<p class="bossline">Boss: <b>${esc(boss.name)}</b> · best of ${M.rounds}, angrier at ⅔ and ⅓ health</p>` : M.rival ? `<p class="small">Rival: <b>${esc(M.rival.name)}</b> · ${esc(DIFF[Math.min(DIFF.length - 1, M.diff + (rx ? 1 : 0))].name)}</p>` : ''}
     <p>${esc(M.intro)}</p>
     <div class="sr-facts"><span>${M.rounds} round${M.rounds > 1 ? 's' : ''}</span><span>${esc(THEMES[THEMES.findIndex(t => t.id === M.theme)].name)}</span>${M.salvage ? `<span>${M.salvage} salvage crates</span>` : ''}${M.coins ? `<span>+${M.coins} starting coins</span>` : ''}</div>
     <div class="sr-goals"><span class="label">Stars</span>
       <div class="${st >= 1 ? 'on' : ''}">★ Win the mission</div>
       <div class="${st >= 2 ? 'on' : ''}">★ Do not lose a round</div>
       <div class="${st >= 3 ? 'on' : ''}">★ ${esc(goal3)}</div></div>
-    <div class="sr-rew"><span class="label">${st ? 'First-clear rewards (claimed)' : 'Rewards'}</span>${rewards.map(r => `<span>${esc(r)}</span>`).join('')}</div>
-    <button class="btn mgo" id="srGo" ${open ? '' : 'disabled'}>${open ? (st ? 'Replay mission' : 'Start mission') : 'Beat the previous mission first'}</button>`;
+    <div class="sr-rew"><span class="label">${rx ? 'Remix rewards (every win)' : st ? 'First-clear rewards (claimed)' : 'Rewards'}</span>${(rx ? [`${30 + (M.boss ? 40 : 0)}+ bolts`, 'Gold stars'] : rewards).map(r => `<span>${esc(r)}</span>`).join('')}</div>
+    <button class="btn mgo" id="srGo" ${open ? '' : 'disabled'}>${open ? (rx ? 'Start Remix' : st ? 'Replay mission' : 'Start mission') : 'Beat the previous mission first'}</button>`;
 }
 /** Boss health bar across the top of the arena. */
 function drawBossBar(c) {

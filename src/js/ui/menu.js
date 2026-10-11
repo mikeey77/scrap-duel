@@ -1,12 +1,11 @@
 // Main menu (over a live bot battle), multiplayer lobby, the main loop and start-up.
 const inMatch = () => !['intro', 'menu', 'final'].includes(G.phase) && G.mode !== undefined && G.started;
 const MENU_MODES = [
-  { id: 'solo', name: 'Duel vs bot', col: '#3fe0a0', line: 'Draft a part every round and outbuild a bot.' },
   {
-    id: 'brawl',
-    name: 'Blueprint Brawl',
-    col: '#ff8a3a',
-    line: `Bring one car worth ${BRAWL_BUDGET} coins. No drafting.`
+    id: 'solo',
+    name: 'Quick match',
+    col: '#3fe0a0',
+    line: 'Fight a bot. Draft a car round by round, or bring a finished one.'
   },
   { id: 'run', name: 'Scrap Gauntlet', col: '#ff5c7a', line: 'Endless waves, three hearts, a boss every fifth wave.' },
   { id: 'online', name: 'Online', col: '#5be7ff', line: 'Duel or brawl a friend with a 4-letter room code.' },
@@ -38,7 +37,13 @@ function showMenu() {
     B.menuPaused = true;
     clearArenaInput && clearArenaInput();
   }
+  if (load('sd.menuTab') === 'brawl') {
+    store('sd.menuTab', 'solo'); // Brawl is now a format of Quick match
+    store('sd.quickFmt', 'brawl');
+  }
   menuMode = MENU_MODES.some(m => m.id === load('sd.menuTab')) ? load('sd.menuTab') : 'solo';
+  G.quickFmt = load('sd.quickFmt') === 'brawl' ? 'brawl' : 'balanced';
+  G.sandBot = load('sd.sandBot') === '1' || load('sd.sandBot') === 1;
   const L = levelInfo(),
     next = nextMission(),
     done = STORY.filter(m => storyStars(m.id)).length,
@@ -55,20 +60,17 @@ function showMenu() {
         ? `Best: wave ${runBest()}`
         : 'No run yet'
       : id === 'solo'
-        ? `${DIFF[G.diff].name} · ${G.rounds || 10} rounds`
-        : id === 'brawl'
-          ? `Budget ${BRAWL_BUDGET}`
-          : id === 'online'
-            ? 'Peer to peer'
-            : `${MODS.length} parts`;
+        ? `${G.quickFmt === 'brawl' ? 'Brawl' : 'Draft'} · ${DIFF[G.diff].name} · ${G.rounds || 10} rounds`
+        : id === 'online'
+          ? 'Peer to peer'
+          : `${MODS.length} parts`;
   $('#ovMenu').classList.toggle('live', false);
   $('#ovMenu').innerHTML = `<div class="hangar${resume ? ' resume' : ''}">
     <header class="hg-top">
       <div class="hg-brand" aria-label="Scrap Duel">SCRAP<b>DUEL</b></div>
       <div class="hg-prof">${badgeHTML(G.style.badge, 40)}
         <div><input id="mName" class="hg-name" maxlength="16" value="${esc(G.name)}" aria-label="Your name"><span class="small">${esc(titleName(G.style.title))}</span></div>
-        <div class="hg-lvl" title="Scrap Cred level ${L.lvl}"><b>${L.lvl}</b><span><i style="width:${Math.round((L.into / L.need) * 100)}%"></i></span></div>
-        <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b></div></div>
+        ${walletHtml()}</div>
       <nav class="hg-sys" aria-label="System"><button class="mlink" id="mHow">How to play</button><button class="mlink" id="mCodex">Codex</button><button class="mlink" id="mSettings">Settings</button><button class="mlink" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button>${window.desktop ? '<button class="mlink" id="mQuit">Quit</button>' : ''}</nav>
     </header>
     <main class="hg-main">
@@ -192,11 +194,26 @@ function menuOpts() {
       'n'
     );
   const body = {
-    solo: `<div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><button class="btn hg-go2" id="mPlay">Play vs bot</button>`,
-    brawl: `<div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><p class="small">Pick one of your saved blueprints or a ready-made archetype. You keep the same parts all match.</p><button class="btn hg-go2" id="mPlay">Start a Brawl</button>`,
+    solo: `<div class="hg-o"><span class="mlab">Format</span>${seg(
+      'fmtSeg',
+      [
+        ['balanced', 'Draft duel'],
+        ['brawl', 'Blueprint Brawl']
+      ],
+      G.quickFmt,
+      'f'
+    )}</div><div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><p class="small" id="fmtText">${G.quickFmt === 'brawl' ? `Bring one finished car worth up to ${BRAWL_BUDGET} coins: a saved blueprint or a ready-made one. No drafting, no shop.` : 'Start with a cockpit, draft a part every round, shop and outbuild the bot.'}</p><button class="btn hg-go2" id="mPlay">${G.quickFmt === 'brawl' ? 'Start a Brawl' : 'Play vs bot'}</button>`,
     run: `<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
     online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>`,
-    sand: `<p class="small">No rounds and no rival: build with everything and try it on test dummies.</p><button class="btn hg-go2" id="mPlay">Open the sandbox</button>`
+    sand: `<div class="hg-o"><span class="mlab">Sparring</span>${seg(
+      'sparSeg',
+      [
+        ['0', 'Test dummies'],
+        ['1', 'A bot that fights back']
+      ],
+      G.sandBot ? '1' : '0',
+      'b'
+    )}</div><p class="small">No rounds and no score: build with everything, then test it. The sparring bot uses your difficulty and comes back after it is wrecked.</p><button class="btn hg-go2" id="mPlay">Open the sandbox</button>`
   }[m.id];
   el.style.setProperty('--rc', m.col);
   el.innerHTML = body;
@@ -206,6 +223,25 @@ function menuOpts() {
       $$('#diffSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
       store('sd.diff', G.diff);
       sfx('ui');
+    })
+  );
+  $$('#sparSeg button').forEach(b =>
+    b.addEventListener('click', () => {
+      G.sandBot = b.dataset.b === '1';
+      store('sd.sandBot', G.sandBot ? 1 : 0);
+      $$('#sparSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      sfx('ui');
+    })
+  );
+  $$('#fmtSeg button').forEach(b =>
+    b.addEventListener('click', () => {
+      G.quickFmt = b.dataset.f;
+      store('sd.quickFmt', G.quickFmt);
+      sfx('ui');
+      menuOpts();
+      const t = document.querySelector('.hg-mode[data-mode="solo"] em');
+      if (t)
+        t.textContent = `${G.quickFmt === 'brawl' ? 'Brawl' : 'Draft'} · ${DIFF[G.diff].name} · ${G.rounds || 10} rounds`;
     })
   );
   $$('#roundSeg button').forEach(b =>
@@ -224,7 +260,7 @@ function menuOpts() {
       G.started = true;
       if (m.id === 'run') startRun();
       else if (m.id === 'sand') startMatch('sandbox');
-      else startMatch('solo', null, m.id === 'brawl' ? 'brawl' : 'balanced');
+      else startMatch('solo', null, G.quickFmt === 'brawl' ? 'brawl' : 'balanced');
     });
   const host = $('#mHost');
   if (host)
@@ -277,6 +313,7 @@ function lobbyUI() {
         : ''
     }
     ${n.connected && h2hLine(G.oppName) ? `<p class="small">${h2hLine(G.oppName)}</p>` : ''}
+    <p class="small fairline">Online is fair play: your gear levels and sticker perks stay at home. Your skin, stickers and trail still show.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>Start match</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Cancel</button></div>`;
   $$('#lFormat button').forEach(b =>
     b.addEventListener('click', () => {
@@ -464,7 +501,19 @@ if (window.__SD_TEST__)
     designCost,
     brawlDesign,
     brawlApply,
+    gearNeed,
+    gearPickSpecial,
+    gearSpecials,
+    gearToInvent,
+    gearGainXp,
+    lvCol,
     shiftDesign,
+    copyLeftToRight,
+    commName,
+    NAMED_CALLS,
+    COMM_NAMES,
+    runPathChoose,
+    sparringBot,
     centerDesign,
     turnDesign,
     mirrorDesign,

@@ -816,10 +816,10 @@ function drawRing(c) {
   c.stroke();
   c.restore();
 }
-/** Small level chevrons on a gear part (gold on masterwork). */
+/** Small level chevrons on a gear part, in the colour of its level. */
 function drawGearPip(c, I) {
-  const n = Math.min(4, I.gear.lvl - 1),
-    col = I.mw ? '#ffd257' : '#ffb423';
+  const n = Math.min(4, Math.ceil((I.gear.lvl - 1) / 2)),
+    col = lvCol(I.gear.lvl);
   c.save();
   c.translate(-S * 0.32, S * 0.3);
   c.strokeStyle = col;

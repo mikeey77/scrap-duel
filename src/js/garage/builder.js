@@ -1120,10 +1120,23 @@ function drawBP() {
     c.moveTo(X, Y - cell * 0.35);
     c.lineTo(X, Y + cell * 0.35);
     c.stroke();
+    // the label sits under the car on a dark tag, so it never covers a part
+    const ys = [...occupancy(G.base).keys()].map(k => unkey(k)[1]),
+      LY = cpy(Math.max(0, ...ys)) + cell * 1.25,
+      label = off > 0.75 ? 'Heavy side: the car pulls this way' : 'Balance point';
+    c.font = `700 ${Math.max(10, cell * 0.26)}px "Barlow Semi Condensed", sans-serif`;
+    c.textAlign = 'center';
+    const tw = c.measureText(label).width + 12;
+    c.setLineDash([3, 3]);
+    c.beginPath();
+    c.moveTo(X, Y + cell * 0.35);
+    c.lineTo(X, LY - cell * 0.22);
+    c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = 'rgba(10,16,32,.9)';
+    c.fillRect(X - tw / 2, LY - cell * 0.22, tw, cell * 0.36);
     c.fillStyle = '#ff6fae';
-    c.font = `700 ${Math.max(9, cell * 0.2)}px sans-serif`;
-    c.textAlign = 'left';
-    c.fillText(off > 0.75 ? 'Heavy side' : 'Balance', X + cell * 0.25, Y - cell * 0.25);
+    c.fillText(label, X, LY + cell * 0.04);
   }
   if (G.mirror) {
     c.strokeStyle = 'rgba(127,224,255,.8)';
@@ -1344,11 +1357,13 @@ function hintFor() {
               ? `${m.name} needs a ${SOCKET[m.mnt]} ${MOUNTNAME[m.mnt]}. ${free} glowing socket${free > 1 ? 's' : ''} on your chassis fit it.`
               : `${m.name} needs a ${SOCKET[m.mnt]} ${MOUNTNAME[m.mnt]}. None free: place a ${m.mnt > 1 ? 'Steel Girder' : 'Scrap Frame'} first.`;
           })()
-        : `${m.name}: ${left(G.sel)} available. Dots mark where it can attach.`
+        : left(G.sel) > 0
+          ? `${m.name}: ${left(G.sel)} available. Dots mark where it can attach.`
+          : `${m.name}: none left in your bin. Buy more in the Shop, or pick another part.`
       : G.tool === 'keys'
         ? 'Click a hinge, rotator or ram to put it on key 1–9 (right-click counts down). Without a key it follows right click.'
         : G.tool === 'rotate'
-          ? 'Click a part to turn it 90°. Top modules turn first.'
+          ? 'Click a placed part to turn it 90°. Equipment on top turns first.'
           : 'Click a part to put it back in the bin. Top modules come off first.';
   const [x, y] = hover,
     k = key(x, y);
@@ -1641,7 +1656,59 @@ function centerDesign() {
   if (!shiftDesign(dx, dy)) shiftDesign(Math.sign(dx), Math.sign(dy));
 }
 /** Turns the whole car a quarter turn clockwise around the centre of the bay. */
-const turnDesign = () => moveDesign(e => ({ x: -e.y, y: e.x, rot: (e.rot + 1) % 4 }), 'turn the car');
+/** Turns the whole car a quarter turn clockwise. Weapons, blades and other parts with a front keep facing forward. */
+const keepsFacing = e => {
+  const m = MOD[e.id];
+  return cellCount(m) === 1 && !!(m.wpn || m.mel || m.dir || m.front);
+};
+const turnDesign = () =>
+  moveDesign(e => ({ x: -e.y, y: e.x, rot: keepsFacing(e) ? e.rot : (e.rot + 1) % 4 }), 'turn the car');
+/** Copies everything on the left half to the right half, as far as the bin has parts for it. */
+function copyLeftToRight() {
+  if (!building()) return;
+  const before = designKey(),
+    flip = e => ({ ...e, x: -e.x, rot: [0, 3, 2, 1][e.rot] });
+  let placed = 0,
+    short = 0;
+  for (const e of [...G.base.values()].filter(e => footprint(e.id, e.rot, e.x, e.y).every(([x]) => x < 0))) {
+    const n = flip(e),
+      occ = occupancy(G.base),
+      cells = footprint(n.id, n.rot, n.x, n.y);
+    if (cells.some(([x, y]) => !G.ws.has(key(x, y)) || occ.has(key(x, y)))) continue;
+    if (left(n.id) <= 0) {
+      short++;
+      continue;
+    }
+    G.base.set(key(n.x, n.y), n);
+    placed++;
+  }
+  for (const t of [...G.top.values()].filter(t => t.x < 0)) {
+    const n = flip(t),
+      k = key(n.x, n.y);
+    if (G.top.has(k) || !occupancy(G.base).has(k) || canPlaceTop(n.id, n.x, n.y, occupancy(G.base), n.rot)) continue;
+    if (left(n.id) <= 0) {
+      short++;
+      continue;
+    }
+    G.top.set(k, n);
+    placed++;
+  }
+  if (designKey() !== before) {
+    G.hist.push(before);
+    G.redo = [];
+    G.spin = { t0: performance.now() };
+    sfx('clank');
+  } else sfx('nope');
+  toast(
+    placed
+      ? `Copied ${placed} part${placed > 1 ? 's' : ''} to the right${short ? `. ${short} more need parts from the shop` : ''}`
+      : short
+        ? `Nothing copied: the bin has no spare parts for the right side`
+        : 'Nothing to copy: the right side already matches or is blocked',
+    placed > 0
+  );
+  refreshUI();
+}
 /** Swaps left and right. */
 const mirrorDesign = () => moveDesign(e => ({ x: -e.x, rot: [0, 3, 2, 1][e.rot] }), 'flip the car');
 for (const [id, fn] of [
@@ -1651,7 +1718,8 @@ for (const [id, fn] of [
   ['mvRight', () => shiftDesign(1, 0)],
   ['mvCenter', centerDesign],
   ['mvTurn', turnDesign],
-  ['mvFlip', mirrorDesign]
+  ['mvFlip', mirrorDesign],
+  ['mvCopy', copyLeftToRight]
 ])
   $('#' + id).addEventListener('click', fn);
 addEventListener('keydown', e => {

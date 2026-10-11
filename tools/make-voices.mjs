@@ -42,13 +42,18 @@ const ctx = {};
 vm.createContext(ctx);
 vm.runInContext(
   fs.readFileSync(path.join(root, 'src/js/data/commentary.js'), 'utf8') +
-    ';this.CALLS=CALLS;this.ANNOUNCE=ANNOUNCE;this.voiceId=voiceId;',
+    ';this.CALLS=CALLS;this.ANNOUNCE=ANNOUNCE;this.voiceId=voiceId;this.NAMED_CALLS=NAMED_CALLS;this.COMM_NAMES=COMM_NAMES;',
   ctx
 );
 const lines = new Map();
 for (const calls of Object.values(ctx.CALLS))
   for (const call of calls) for (const [who, text] of call) lines.set(ctx.voiceId(who, text), { who, text });
 for (const text of ctx.ANNOUNCE) lines.set(ctx.voiceId('ann', text), { who: 'ann', text });
+for (const [who, tpl] of Object.values(ctx.NAMED_CALLS))
+  for (const n of ctx.COMM_NAMES) {
+    const text = tpl.replace('{n}', n);
+    lines.set(ctx.voiceId(who, text), { who, text });
+  }
 
 // What the voice reads: shouted words in normal case (all caps can get spelled out), sound effects spelled to be said
 const spoken = t =>

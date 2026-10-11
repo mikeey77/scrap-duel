@@ -24,7 +24,10 @@ function commentate(kind, ctx = {}) {
     fresh = opts.map((_, i) => i).filter(i => !used.includes(i)),
     i = pick(fresh.length ? fresh : opts.map((_, i) => i));
   COMM.used[kind] = [...used, i].slice(-Math.max(1, opts.length - 1));
-  const lines = opts[i].map(([who, text]) => ({ who, text, pri }));
+  let lines = opts[i].map(([who, text]) => ({ who, text, pri }));
+  // half the time, a moment about a bot or boss uses its name
+  const named = namedCall(kind, ctx);
+  if (named && Math.random() < 0.5) lines = [{ who: named[0], text: named[1], pri }];
   if (pri >= 4) {
     COMM.q = lines; // big moments cut in
     if (COMM.cur) COMM.cur.out = true;
@@ -32,6 +35,20 @@ function commentate(kind, ctx = {}) {
     COMM.cut = true;
   } else COMM.q.push(...lines);
   COMM.idle = 0;
+}
+/** A line naming the computer's car for this moment, or null. */
+function namedCall(kind, ctx) {
+  const a = ctx.car,
+    b = ctx.other || (a && B.cars.find(c => c !== a));
+  let tpl = null,
+    n = null;
+  if (kind === 'start') ((n = commName(B.cars.find(c => c.ctrl === 'bot'))), (tpl = NAMED_CALLS.start));
+  else if (kind === 'bighit' || kind === 'firstblood') {
+    if ((n = commName(b))) tpl = NAMED_CALLS.hitOn;
+    else if ((n = commName(a))) tpl = NAMED_CALLS.hitBy;
+  } else if (kind === 'wreck') ((n = commName(b)), (tpl = NAMED_CALLS.wreck));
+  else if (kind === 'lowhp') ((n = commName(b)), (tpl = NAMED_CALLS.lowhp));
+  return n && tpl ? [tpl[0], tpl[1].replace('{n}', n)] : null;
 }
 /** Advances the captions and plays new lines. Long quiet spells get some banter. */
 function stepCommentary(rdt) {

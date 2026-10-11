@@ -2,33 +2,49 @@
 // Gear and stickers only work in single-player modes (Duel vs bot, Story, Gauntlet); online stays fair.
 
 /* ---------- Gear ---------- */
-const GEAR_MAX = 5; // levels 1..5, quirk at 3, masterwork at 5
+const GEAR_MAX = 10; // levels 1..10: quirk at 3, first special at 5, legendary special at 10
 const GEAR_CAP = 40; // items in the locker
-// Bolts needed to reach the next level, scaled by rarity.
-const GEAR_COST = [0, 40, 90, 160, 260];
-const GEAR_RARK = [1, 1.2, 1.5, 1.9, 2.4];
-const gearCost = (g, lvl = g.lvl) => Math.round(GEAR_COST[lvl] * GEAR_RARK[MOD[g.id] ? MOD[g.id].rar : 0]);
+// Each level has its own colour, from scrap grey to legendary gold.
+const LV_COLS = [
+  '#9aa3ab',
+  '#5fd38a',
+  '#2fd6c3',
+  '#4ea1ff',
+  '#7a7dff',
+  '#b06bff',
+  '#ff5ec4',
+  '#ff5c5c',
+  '#ff9a3a',
+  '#ffd257'
+];
+const lvCol = l => LV_COLS[clamp((l | 0) - 1, 0, LV_COLS.length - 1)];
+// Upgrading needs both: XP (the part earns it by riding along in your matches) and bolts (earned by winning).
+const gearNeed = lvl => 40 + 30 * lvl; // XP to fill the bar at this level
+const GEAR_COST = [0, 30, 50, 75, 110, 150, 200, 260, 330, 420]; // bolts to go from level i to i+1
+const GEAR_RARK = [1, 1.15, 1.35, 1.6, 2];
+const gearCost = (g, lvl = g.lvl) =>
+  Math.round(GEAR_COST[Math.min(lvl, GEAR_COST.length - 1)] * GEAR_RARK[MOD[g.id] ? MOD[g.id].rar : 0]);
+const gearReady = g => g.lvl < GEAR_MAX && (g.xp || 0) >= gearNeed(g.lvl);
 const gearScrapValue = g =>
   Math.round(10 + 6 * (MOD[g.id] ? MOD[g.id].rar : 0) + 0.3 * GEAR_COST.slice(1, g.lvl).reduce((a, b) => a + b, 0));
 
-/** What kind of bonus a part's levels give. */
+/** What every level adds: weapons hit harder, armour and gadgets get tougher, movement gets faster. */
 function gearKind(id) {
   const m = MOD[id];
   if (!m) return 'hp';
   if (m.cat === 'move') return 'speed';
-  if (m.cat === 'weapon') return 'rate';
+  if (m.cat === 'weapon' || m.cat === 'melee') return 'dmg';
   return 'hp';
 }
-/** Total bonus (fraction) at a level; masterwork adds a final kick. */
+/** Total level bonus (fraction) at a level, before specials. */
 function gearBonus(g) {
   const k = gearKind(g.id),
-    L = g.lvl,
-    mw = L >= GEAR_MAX ? 1 : 0;
-  if (k === 'speed') return 0.015 + 0.015 * (L - 1) + 0.02 * mw;
-  if (k === 'rate') return 0.04 + 0.06 * (L - 1) + 0.06 * mw;
-  return 0.05 + 0.08 * (L - 1) + 0.08 * mw;
+    L = g.lvl - 1;
+  if (k === 'speed') return 0.01 * L;
+  if (k === 'dmg') return 0.03 * L;
+  return 0.05 * L;
 }
-const GEAR_KIND_TEXT = { hp: 'part HP', rate: 'fire / use rate', speed: 'car top speed' };
+const GEAR_KIND_TEXT = { hp: 'part HP', dmg: 'damage', speed: 'car top speed' };
 
 /** Quirks: every one is a trade-off, picked at level 3. `fits` limits which parts can roll it. */
 const QUIRKS = {

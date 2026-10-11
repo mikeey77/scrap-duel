@@ -53,7 +53,7 @@ if (typeof MutationObserver !== 'undefined') {
     .querySelectorAll('.overlay')
     .forEach(o => enter.observe(o, { attributes: true, attributeFilter: ['hidden'] }));
   // coins, bolts and levels pop when their number changes
-  const BUMP = ['#tCoins', '.wb-bolts b', '.hg-lvl', '.hq .lv'],
+  const BUMP = ['#tCoins', '.wl.bolts b', '.wl.cred .lvn'],
     seen = new Map();
   let queued = false;
   const check = () => {

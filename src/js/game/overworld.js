@@ -624,10 +624,20 @@ function owHit(px, py) {
 function owHeader() {
   const el = $('#owHead');
   if (!el) return;
-  const done = STORY.filter(m => storyStars(m.id)).length;
+  const done = STORY.filter(m => storyStars(m.id)).length,
+    gold = STORY.reduce((a, m) => a + remixStars(m.id), 0);
   el.innerHTML = `<div class="sr-sum"><b>${done}</b><span>/ ${STORY.length} missions</span></div>
     <div class="sr-sum"><b>${totalStars()}</b><span>/ ${STORY.length * 3} stars</span></div>
-    <div class="wb-bolts"><i class="boltico" aria-hidden="true"></i><b>${GEAR.bolts}</b><span>bolts</span></div>`;
+    ${remixOpen() ? `<div class="sr-sum gold"><b>${gold}</b><span>/ ${STORY.length * 3} gold</span></div><div class="seg" id="rxSeg"><button data-rx="0" aria-pressed="${!G.remix}">Story</button><button data-rx="1" aria-pressed="${!!G.remix}">Remix</button></div>` : '<div class="sr-sum locked" title="Beat the Junk King to unlock Remix"><b>🔒</b><span>Remix</span></div>'}
+    ${walletHtml()}`;
+  $$('#rxSeg button').forEach(b =>
+    b.addEventListener('click', () => {
+      G.remix = b.dataset.rx === '1';
+      sfx('ui');
+      owHeader();
+      owCard();
+    })
+  );
 }
 function owCard() {
   const el = $('#owCard');

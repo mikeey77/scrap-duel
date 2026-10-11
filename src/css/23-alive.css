@@ -45,6 +45,20 @@
 .cp-grid #mvCenter {
   color: var(--hazard, #ffb423);
 }
+.cp-copy {
+  margin-top: 3px;
+  width: 100%;
+  border: 1px solid rgba(169, 203, 232, 0.18);
+  background: rgba(169, 203, 232, 0.06);
+  color: #d5e4f1;
+  border-radius: 6px;
+  font: 600 11px var(--f-display);
+  padding: 4px 6px;
+}
+.cp-copy:hover {
+  border-color: var(--holo, #5be7ff);
+  color: #fff;
+}
 .reviewing .carpad {
   display: none;
 }
@@ -126,7 +140,7 @@
     animation-delay: 0.25s;
   }
   /* the chosen mode's colour bar shimmers */
-  body:not(.reduced-motion) .hg-mode[aria-pressed='true'] {
+  body:not(.reduced-motion) .hg-mode[aria-selected='true'] {
     background-image: linear-gradient(
       100deg,
       transparent 30%,
@@ -209,4 +223,42 @@
       0 0 0 1px var(--rc),
       0 0 16px -2px var(--rc);
   }
+}
+
+/* settings in three groups */
+.setgrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 10px 0 16px;
+  text-align: left;
+}
+.setgrid section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.setgrid h3 {
+  font: 700 13px var(--f-display);
+  letter-spacing: 0.04em;
+  color: var(--holo, #5be7ff);
+  margin: 4px 0 2px;
+}
+#settingsCard:has(.setgrid) {
+  max-width: 980px;
+  width: min(980px, 96vw);
+}
+@media (max-width: 900px) {
+  .setgrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* the draft screen gets its own dark backdrop, so the garage does not show through */
+#ovDraft {
+  background: rgba(7, 11, 22, 0.96);
+}
+/* the Codex is for the garage and menu, not for the middle of a fight */
+body.arena-battle #btnCodex {
+  display: none;
 }

@@ -161,10 +161,17 @@ function optView(o) {
       m = MOD[o.id],
       q = g && g.q ? QUIRKS[g.q] : null;
     return {
-      kind: g && g.lvl >= GEAR_MAX ? 'Masterwork gear' : 'Personal gear',
-      img: `<img alt="" src="${iconURL(m.id, 184)}"><span class="x gearlv">+${g ? g.lvl - 1 : 0}</span>`,
+      kind: g && g.lvl >= GEAR_MAX ? 'Legendary gear' : 'Personal gear',
+      img: `<img alt="" src="${iconURL(m.id, 184)}"><span class="x gearlv" style="color:${lvCol(g ? g.lvl : 1)}">Lv ${g ? g.lvl : 1}</span>`,
       title: g ? gearName(g) : m.name,
-      body: `<p class="pro">+ ${Math.round(gearBonus(g || { id: o.id, lvl: 1 }) * 100)}% ${GEAR_KIND_TEXT[gearKind(o.id)]}</p>${q ? `<p class="pro">+ ${esc(q.name)}: ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p>` : ''}<p class="small">One copy. Upgrade it in the Garage.</p>`
+      body: `<p class="pro">+ ${Math.round(gearBonus(g || { id: o.id, lvl: 1 }) * 100)}% ${GEAR_KIND_TEXT[gearKind(o.id)]}</p>${
+        g
+          ? gearActiveSpecials(g)
+              .filter(Boolean)
+              .map(S => `<p class="pro">★ ${esc(S.name)}: ${esc(S.text)}</p>`)
+              .join('')
+          : ''
+      }${q ? `<p class="pro">+ ${esc(q.name)}: ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p>` : ''}<p class="small">One copy. Upgrade it in the Garage.</p>`
     };
   }
   if (o.type === 'ws') {
