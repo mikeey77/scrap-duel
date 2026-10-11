@@ -1222,7 +1222,11 @@ function drawHUD(c) {
     planPortrait(c, e, W - 32, 28);
     drawHypeBar(c, W - 12 - pw, 12 + 8 + 26 + 3, pw, e, true);
   }
-  if (B.cars.length > 2) drawTeamBars(c, v, e, W, pw, 12 + 8 + rows.length * 26 + 50);
+  if (B.cars.length > 2) {
+    // under the hype meter and the synergy chips, so nothing overlaps
+    const synRow = !narrow && v.syn && v.syn.tier && Object.keys(v.syn.tier).length ? 20 : 0;
+    drawTeamBars(c, v, e, W, pw, 12 + 8 + rows.length * 26 + 4 + (B.crowd && G.phase === 'battle' ? 20 : 0) + synRow + 4);
+  }
   drawBossBar(c);
   drawCommentary(c);
   drawTelemetry(c, v, W, H);

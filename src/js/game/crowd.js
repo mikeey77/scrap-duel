@@ -516,7 +516,7 @@ function drawStands(c) {
   }
   c.restore();
 }
-/** Salvage crate (story) and crowd gift drawing. */
+/** Crowd gift drawing. */
 function drawSalvage(c, p) {
   const bob = Math.sin(ANIM * 3 + p.x) * 3;
   c.save();

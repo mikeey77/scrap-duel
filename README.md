@@ -1,6 +1,6 @@
 # Scrap Duel
 
-Build a battle car from scrap, then fight a bot, a boss or a friend. A desktop game for Windows.
+Build a battle car from scrap, then fight a bot, a boss or a friend, 1v1 or 2v2. A desktop game for Windows.
 
 **[Download for Windows](https://scrap-duel.netlify.app)** · [All releases](https://github.com/mikeey77/scrap-duel/releases) · [Changelog](CHANGELOG.md)
 
@@ -10,20 +10,18 @@ Build a battle car from scrap, then fight a bot, a boss or a friend. A desktop g
 
 Every round of a duel has three parts: **draft** a part from three cards, **build** it onto your car on a grid, and **fight** in an arena. Parts break off as you take hits; the last car with a cockpit wins the round.
 
-| Mode            | What it is                                                                    |
-| --------------- | ----------------------------------------------------------------------------- |
-| Scrap Road      | The story: 19 missions in four regions, each region ending with a boss car    |
-| Duel            | Draft, build and fight a bot on Easy, Normal or Hard, over 5, 10 or 25 rounds |
-| Blueprint Brawl | No drafting. Bring one car worth up to 700 coins. Against a bot or online     |
-| Scrap Gauntlet  | Endless waves with three hearts; a boss every fifth wave drops a relic        |
-| Online          | Duel or Brawl a friend with a 4-letter room code, peer to peer                |
-| Sandbox         | Every part, 99 of each, to build and test anything                            |
+| Mode            | What it is                                                                            |
+| --------------- | ------------------------------------------------------------------------------------- |
+| Duel            | Draft, build and fight a bot on Easy, Normal or Hard, alone or 2v2 with a bot partner |
+| Blueprint Brawl | No drafting. Bring one car worth up to 700 coins. Against a bot or online             |
+| Scrap Gauntlet  | Endless waves with three hearts; a boss every fifth wave drops a relic                |
+| Online          | Play a friend with a room code: 1v1, or 2v2 on one team or against each other         |
 
-Between matches, **Garage HQ** holds the gear you have found: pick a loadout, upgrade parts to a level 5 Masterwork, build new gear in the Fabricator, and dress your car with skins, stickers, trails and wreck effects.
+Between matches, **Garage HQ** holds the gear you have found: pick a loadout, level parts up to 10 (they earn XP in your matches, wins pay the bolts, specials at level 5 and 10), build new gear in the Fabricator, and dress your car with skins, stickers, trails and wreck effects.
 
-| Garage                                 | Scrap Road                                | Garage HQ                                   |
-| -------------------------------------- | ----------------------------------------- | ------------------------------------------- |
-| ![Building a car](web/img/garage.webp) | ![The story map](web/img/scrap-road.webp) | ![Gear and loadout](web/img/garage-hq.webp) |
+| Garage                                 | 2v2                                       | Workbench                                  |
+| -------------------------------------- | ----------------------------------------- | ------------------------------------------ |
+| ![Building a car](web/img/garage.webp) | ![A 2v2 battle](web/img/team-battle.webp) | ![A level 10 part](web/img/garage-hq.webp) |
 
 ### Controls
 

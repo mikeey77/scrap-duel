@@ -1,5 +1,5 @@
 // Personal progression data: gear (your own upgraded parts), quirks, stickers and sticker sets.
-// Gear and stickers only work in single-player modes (Duel vs bot, Story, Gauntlet); online stays fair.
+// Gear and stickers only work in single-player modes (Duel vs bot, Gauntlet); online stays fair.
 
 /* ---------- Gear ---------- */
 const GEAR_MAX = 10; // levels 1..10: quirk at 3, first special at 5, legendary special at 10

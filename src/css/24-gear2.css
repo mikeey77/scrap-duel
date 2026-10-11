@@ -417,3 +417,190 @@
 .tside li.bot {
   color: var(--muted);
 }
+
+/* ---------- workbench showcase ---------- */
+.wbx {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.wbx-stage {
+  position: relative;
+  height: 280px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--lc) 22%, transparent), transparent 62%),
+    repeating-linear-gradient(0deg, transparent 0 23px, rgba(91, 231, 255, 0.05) 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, rgba(91, 231, 255, 0.05) 23px 24px),
+    #0b1324;
+  border: 1px solid var(--line);
+  border-bottom: 3px solid var(--lc);
+}
+.wbx-glow {
+  position: absolute;
+  width: 210px;
+  height: 46px;
+  bottom: 30px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--lc) 45%, transparent), transparent);
+  filter: blur(4px);
+}
+.wbx-ring {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+}
+.wbx-part {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  image-rendering: auto;
+  filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.6));
+}
+.wbx-lv {
+  position: absolute;
+  right: 18px;
+  top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.wbx-lv b {
+  font: 700 46px var(--f-display);
+  color: var(--lc);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--lc) 60%, transparent);
+}
+.wbx-lv span {
+  font: 700 10px var(--f-display);
+  letter-spacing: 0.2em;
+  color: var(--muted);
+}
+.wbx-head h3 {
+  font: 700 30px var(--f-display);
+  margin: 2px 0 8px;
+}
+.wbx-rar {
+  font: 600 13px var(--f-display);
+  color: var(--rc);
+}
+.wbx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wbx-chips .chip {
+  padding: 4px 10px;
+  font: 600 13px var(--f-display);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  clip-path: var(--chamfer-s);
+}
+.wbx-chips .chip.sp {
+  color: var(--lc);
+  border-color: var(--lc);
+}
+.wbx-chips .chip.q {
+  color: var(--holo);
+}
+.wbx-chips .chip.lo {
+  color: var(--ok);
+}
+.wbx-chips .chip.dim {
+  color: var(--muted);
+}
+.wbx-q {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  font-size: 14px;
+}
+.wbx-q > span {
+  font: 700 12px var(--f-display);
+  color: var(--holo);
+}
+.wbx-q em {
+  font-style: normal;
+  font-size: 13px;
+}
+.wbx-q .pro,
+.qopt .pro {
+  color: var(--ok);
+}
+.wbx-q .con,
+.qopt .con {
+  color: #ff8268;
+}
+.wbx-q.pick {
+  flex-direction: column;
+  align-items: stretch;
+}
+.wbx.legend .wbx-stage {
+  border-bottom-width: 4px;
+  box-shadow: inset 0 0 60px -20px #ffd257;
+}
+/* right column */
+.wbx-order {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wbx-up {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 10px;
+}
+.wbx-up b {
+  font: 700 18px var(--f-display);
+}
+.wbx-up span {
+  font-size: 13px;
+  opacity: 0.85;
+}
+.wbx-up:disabled {
+  filter: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  border: 1px dashed var(--line);
+}
+.wbx-max {
+  padding: 14px;
+  text-align: center;
+  font: 700 16px var(--f-display);
+  color: #ffd257;
+  border: 1px solid #ffd257;
+}
+.wbx-acts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wbx-help {
+  width: auto;
+  padding: 6px 10px;
+  font: 600 12px var(--f-display);
+}
+@media (prefers-reduced-motion: no-preference) {
+  body:not(.reduced-motion) .wbx-ring {
+    animation: wbx-spin 40s linear infinite;
+  }
+  body:not(.reduced-motion) .wbx-part {
+    animation: hgfloat 4s ease-in-out infinite;
+  }
+  body:not(.reduced-motion) .wbx-up.go {
+    animation: cta-breathe 2.4s ease-in-out infinite;
+  }
+}
+@keyframes wbx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

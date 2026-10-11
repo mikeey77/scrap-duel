@@ -2,6 +2,16 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 1.4.0 · Tag Team · 2026-10-11
+
+- **2v2**: fight two bots with a bot partner (pick its style: Gunner, Rammer, Artillery or Brawler), or play a friend online in 2v2. In the lobby each player picks Blue or Red: same side means you and your friend against two bots, different sides means each of you gets a bot partner. No friendly fire; a team loses when both cars are wrecked.
+- **Gear 2.0**: parts now go to level 10, each level with its own colour. Parts earn XP by riding along in your matches; wins pay the bolts. With a full XP bar you upgrade. Weapons get +3% damage per level, armour +5% HP, movement +1% speed. Every part has a special at level 5 (or the safe "Steady" pick) and a second one at level 10, like double bullets on the Machine Gun. Bolts and Scrap Cred sit side by side at the top.
+- **New workbench**: your part on a stage inside a ring of its ten level colours, the level in big numbers, and one clear upgrade button that says what you still need. Less table data.
+- **Better looking parts**: blocks and modules got a rim light, bolts, shadows and seams; cars get an outline and a drop shadow.
+- **Fewer modes, all sharper**: Duel (1v1 or 2v2), Blueprint Brawl, Scrap Gauntlet and Online. Story mode (Scrap Road) and the sandbox are gone. Their stickers now unlock by player level, and there are new achievements: win a 2v2, reach wave 15, beat a Hard bot and beat King Kongcrete.
+- After a match the game offers an easier or harder bot when you keep losing or winning.
+- Fixed: an arena hazard could now and then spawn inside a wall.
+
 ## 1.3.0 · Showtime · 2026-10-11
 
 - **Real commentator voices**: Dash Danvers and Doc Gasket are now recorded neural voices instead of the robotic system voice, with a booth sound, and the music ducks while they talk. The arena announcer got a deep stadium voice with echo.

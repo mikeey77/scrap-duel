@@ -49,7 +49,7 @@ function hqCarHtml() {
     <div class="hq-paint" role="group" aria-label="Paint colour">${PAINTS.map(p => `<button style="background:${p}" data-paint="${p}" aria-pressed="${G.paint === p}" title="Paint"></button>`).join('')}</div>
     ${setPanelHtml()}
     <div class="hq-lo"><span class="label">Loadout · ${GEAR.loadout.length}/${slots}</span>
-      <p class="small">Loadout gear is in your parts bin from round 1 of every Duel, Scrap Road and Gauntlet match.</p>${lo}</div>
+      <p class="small">Loadout gear is in your parts bin from round 1 of every Duel against bots (1v1 and 2v2) and every Gauntlet run. Not in Blueprint Brawl or online..</p>${lo}</div>
     <div class="hq-presets"><span class="label">Looks</span>${[0, 1, 2]
       .map(i => {
         const P = (PROG.presets || [])[i];
