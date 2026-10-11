@@ -1766,4 +1766,52 @@ test('auto-place: wheels in left/right pairs, melee facing forward, moving parts
   assert(![...G.base.values()].some(e => e.id === 'hinge'), 'hinge stays in the bin');
 });
 
+test('garage: the whole car moves, turns and flips, and stays inside the bay', () => {
+  const r = runtime(),
+    a = r.api,
+    G = a.G;
+  a.setGear({ bolts: 0, items: [], next: 1 });
+  a.startMatch('solo');
+  a.openBuild();
+  G.base.clear();
+  G.top.clear();
+  G.base.set('0,0', { id: 'cockpit', rot: 0, x: 0, y: 0 });
+  G.base.set('1,0', { id: 'frame', rot: 0, x: 1, y: 0 });
+  G.base.set('-1,0', { id: 'frame', rot: 0, x: -1, y: 0 });
+  G.top.set('1,0', { id: 'mg', rot: 0, x: 1, y: 0 });
+  const cells = () => [...a.occupancy(G.base).keys()].sort().join(' ');
+  assert(a.shiftDesign(1, 0), 'moves right');
+  assert(G.base.has('1,0') && G.base.get('1,0').id === 'cockpit', 'cockpit moved with the car');
+  assert(G.top.has('2,0') && G.top.get('2,0').id === 'mg', 'equipment moved along');
+  assert(a.shiftDesign(1, 0) && a.shiftDesign(0, 2), 'more moves');
+  const before = cells();
+  assert(!a.shiftDesign(1, 0), 'refuses to leave the bay');
+  assert.equal(cells(), before, 'nothing changed after a refused move');
+  a.centerDesign();
+  assert(G.base.has('0,0') && G.base.get('0,0').id === 'cockpit', 'centred again');
+  assert(a.turnDesign(), 'turns');
+  assert(G.base.has('0,1') && G.base.has('0,-1'), 'the side frames are now in front and behind');
+  assert.equal(G.top.get('0,1').rot, 1, 'equipment turned along');
+  assert(a.mirrorDesign() && a.turnDesign() && a.turnDesign() && a.turnDesign(), 'flip and a full turn');
+  a.undo && a.undo();
+});
+
+test('commentary: every call has a known caster, no names in the lines, stable voice ids', () => {
+  const r = runtime(),
+    a = r.api;
+  let n = 0;
+  for (const [kind, calls] of Object.entries(a.CALLS))
+    for (const call of calls)
+      for (const [who, text] of call) {
+        n++;
+        assert(a.CASTERS[who], `${kind}: unknown caster ${who}`);
+        assert(!/\{\w\}/.test(text), `${kind}: placeholder in "${text}"`);
+        assert(text.length < 140, `${kind}: line too long to caption`);
+      }
+  assert(n > 90, 'plenty of lines');
+  assert.equal(a.voiceId('dash', 'Lights, rust, action!'), a.voiceId('dash', 'Lights, rust, action!'));
+  assert.notEqual(a.voiceId('dash', 'Lights, rust, action!'), a.voiceId('doc', 'Lights, rust, action!'));
+  assert(a.ANNOUNCE.includes('Round one') && a.ANNOUNCE.includes('Final round'));
+});
+
 console.log(`\n${passed} regression tests passed.`);

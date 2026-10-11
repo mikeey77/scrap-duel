@@ -1,32 +1,5 @@
-/* Deep arena announcer (browser speech, pitched way down) plus a sub-bass hit so it lands. */
-const NUM_WORDS = [
-  'zero',
-  'one',
-  'two',
-  'three',
-  'four',
-  'five',
-  'six',
-  'seven',
-  'eight',
-  'nine',
-  'ten',
-  'eleven',
-  'twelve',
-  'thirteen',
-  'fourteen',
-  'fifteen',
-  'sixteen',
-  'seventeen',
-  'eighteen',
-  'nineteen',
-  'twenty',
-  'twenty one',
-  'twenty two',
-  'twenty three',
-  'twenty four',
-  'twenty five'
-];
+/* The arena announcer: a recorded deep voice with stadium echo (see ANNOUNCE in data/commentary.js),
+   plus a sub-bass hit so it lands. Lines without a recording use the system voice, pitched way down. */
 const Announcer = {
   voice: null,
   pick() {
@@ -44,6 +17,7 @@ const Announcer = {
     try {
       sfx('boom');
     } catch (e) {}
+    if (Voice.play('ann', text, { cut: true })) return;
     if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return;
     if (!this.voice) this.pick();
     try {

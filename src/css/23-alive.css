@@ -1,0 +1,212 @@
+/* ---------- whole-car pad (garage, bottom left of the bay) ---------- */
+.carpad {
+  position: absolute;
+  left: 10px;
+  bottom: calc(var(--tb-h, 54px) + 22px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 6px 7px;
+  background: rgba(12, 22, 32, 0.9);
+  border: 1px solid rgba(169, 203, 232, 0.25);
+  border-radius: 10px;
+}
+.carpad .cp-lbl {
+  font: 600 10px var(--f-display);
+  letter-spacing: 0.06em;
+  color: var(--bp-ink, #a9cbe8);
+}
+.cp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 28px);
+  grid-auto-rows: 28px;
+  gap: 3px;
+}
+.cp-grid button {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(169, 203, 232, 0.18);
+  background: rgba(169, 203, 232, 0.06);
+  color: #d5e4f1;
+  border-radius: 6px;
+  padding: 0;
+}
+.cp-grid button svg {
+  width: 14px;
+  height: 14px;
+}
+.cp-grid button:hover {
+  background: rgba(91, 231, 255, 0.16);
+  border-color: var(--holo, #5be7ff);
+  color: #fff;
+}
+.cp-grid #mvCenter {
+  color: var(--hazard, #ffb423);
+}
+.reviewing .carpad {
+  display: none;
+}
+
+/* ---------- life: motion that answers what you do ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* everything you can press gives a little under your finger */
+  body:not(.reduced-motion)
+    :is(.btn, .hbtn, .hg-mode, .toolbar button, .seg button, .cp-grid button, .tile, .opt, .bp-card, .hq-tabs button) {
+    transition:
+      transform 0.14s cubic-bezier(0.3, 1.5, 0.5, 1),
+      filter 0.12s,
+      background-color 0.12s,
+      border-color 0.12s,
+      box-shadow 0.18s;
+  }
+  body:not(.reduced-motion)
+    :is(.btn, .hbtn, .toolbar button, .seg button, .cp-grid button, .hq-tabs button):active:not(:disabled) {
+    transform: scale(0.95);
+  }
+  body:not(.reduced-motion) :is(.hg-mode, .tile, .bp-card):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.9);
+  }
+  body:not(.reduced-motion) :is(.hg-mode, .tile, .bp-card):active {
+    transform: translateY(0) scale(0.97);
+  }
+  body:not(.reduced-motion) .cp-grid button.hit {
+    animation: cp-hit 0.22s ease-out;
+  }
+
+  /* a light glint runs across yellow buttons when you point at them */
+  body:not(.reduced-motion) .btn:not(.ghost) {
+    position: relative;
+    overflow: hidden;
+  }
+  body:not(.reduced-motion) .btn:not(.ghost)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+    transform: translateX(-120%);
+    pointer-events: none;
+  }
+  body:not(.reduced-motion) .btn:not(.ghost):hover:not(:disabled)::after {
+    transform: translateX(120%);
+    transition: transform 0.55s ease-out;
+  }
+  /* the main call to action breathes, so your eye finds it */
+  body:not(.reduced-motion) :is(#btnReady, .hg-go2, #srGo):not(:disabled) {
+    animation: cta-breathe 2.8s ease-in-out infinite;
+  }
+
+  /* screens arrive instead of blinking in */
+  body:not(.reduced-motion) .overlay.entering {
+    animation: ov-fade 0.2s ease-out both;
+  }
+  body:not(.reduced-motion) .overlay.entering > * {
+    animation: ov-in 0.32s cubic-bezier(0.2, 1.25, 0.4, 1) both;
+  }
+
+  /* menu tiles deal in one after the other */
+  body:not(.reduced-motion) .hg-modes > .hg-mode {
+    animation: tile-in 0.42s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+  }
+  body:not(.reduced-motion) .hg-modes > .hg-mode:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+  body:not(.reduced-motion) .hg-modes > .hg-mode:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  body:not(.reduced-motion) .hg-modes > .hg-mode:nth-child(4) {
+    animation-delay: 0.15s;
+  }
+  body:not(.reduced-motion) .hg-modes > .hg-mode:nth-child(5) {
+    animation-delay: 0.2s;
+  }
+  body:not(.reduced-motion) .hg-modes > .hg-mode:nth-child(6) {
+    animation-delay: 0.25s;
+  }
+  /* the chosen mode's colour bar shimmers */
+  body:not(.reduced-motion) .hg-mode[aria-pressed='true'] {
+    background-image: linear-gradient(
+      100deg,
+      transparent 30%,
+      color-mix(in srgb, var(--rc) 16%, transparent) 50%,
+      transparent 70%
+    );
+    background-size: 250% 100%;
+    animation: tile-shimmer 3.2s linear infinite;
+  }
+
+  /* numbers that change pop, so you notice coins and bolts coming in */
+  body:not(.reduced-motion) .bump {
+    display: inline-block;
+    animation: num-bump 0.42s cubic-bezier(0.3, 1.8, 0.5, 1);
+  }
+  /* meters slide to their new value */
+  body:not(.reduced-motion) :is(.meter b, .bp-cost i) {
+    transition: width 0.45s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  /* the garage warning slides in with a bounce */
+  body:not(.reduced-motion) #toast.show {
+    animation: toast-in 0.32s cubic-bezier(0.2, 1.6, 0.4, 1);
+  }
+  /* the part you hold in the bin glows */
+  body:not(.reduced-motion) .tile[aria-pressed='true'] {
+    animation: sel-glow 1.6s ease-in-out infinite;
+  }
+}
+@keyframes cp-hit {
+  40% {
+    transform: scale(0.88);
+    background: rgba(91, 231, 255, 0.3);
+  }
+}
+@keyframes cta-breathe {
+  50% {
+    filter: brightness(1.12) drop-shadow(0 0 10px rgba(255, 180, 35, 0.45));
+  }
+}
+@keyframes ov-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ov-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) rotate(-1.5deg);
+  }
+}
+@keyframes tile-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+@keyframes num-bump {
+  40% {
+    transform: scale(1.35) translateY(-2px);
+    color: #fff3c4;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scale(0.9);
+  }
+}
+@keyframes sel-glow {
+  50% {
+    box-shadow:
+      0 0 0 1px var(--rc),
+      0 0 16px -2px var(--rc);
+  }
+}

@@ -20,7 +20,8 @@
     "19-extras.css",
     "20-menu-v3.css",
     "21-progression.css",
-    "22-hangar.css"
+    "22-hangar.css",
+    "23-alive.css"
   ],
   "js": [
     "js/core/utils.js",
@@ -34,6 +35,7 @@
     "js/data/synergy.js",
     "js/data/cosmetics.js",
     "js/data/progression.js",
+    "js/data/commentary.js",
     "js/render/module-art.js",
     "js/garage/builder.js",
     "js/garage/draft-shop-codex.js",
@@ -53,6 +55,7 @@
     "js/render/battle-render.js",
     "js/game/play.js",
     "js/audio/sfx.js",
+    "js/audio/voice.js",
     "js/audio/announcer.js",
     "js/game/crowd.js",
     "js/net/netcode.js",

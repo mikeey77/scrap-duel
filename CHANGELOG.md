@@ -2,6 +2,14 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 1.3.0 · Showtime · 2026-10-11
+
+- **Real commentator voices**: Dash Danvers and Doc Gasket are now recorded neural voices instead of the robotic system voice, with a booth sound, and the music ducks while they talk. The arena announcer got a deep stadium voice with echo.
+- **112 new commentary lines**, funnier and more random: "Two engineering disasters enter. One insurance claim leaves!", "THAT PART HAS LEFT THE CONVERSATION!", "Held together by one bolt and incredible confidence!". New moments: clutch survival on almost no health, the last ten seconds, and random banter and sponsor reads when it goes quiet.
+- **New caption**: the commentator's badge, a live light and a level meter; the words appear as they are spoken, and Dash's shouts shake. Fixed the text sometimes sitting outside its box.
+- **Move the whole car** in the garage: arrow keys or the new pad move every part at once, the middle button centres the car, and you can turn it a quarter turn or swap left and right. Moves that would leave the bay bounce back.
+- **A livelier interface**: screens slide in, menu tiles deal in, buttons react when you press them, yellow buttons glint, the main button breathes, coins and bolts pop when they change. Settings → Decorative motion turns it all off.
+
 ## 1.2.1 · 2026-10-11
 
 - Map labels no longer cover the region names on the Scrap Road.

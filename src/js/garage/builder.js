@@ -927,6 +927,32 @@ function drawBP() {
     }
   }
   const now = performance.now();
+  // whole-car moves glide into place (and bounce off the bay edge when they can't)
+  let carFx = false;
+  if (G.slide || G.bump || G.spin) {
+    const ease = t => 1 - Math.pow(1 - t, 3);
+    c.save();
+    carFx = true;
+    if (G.slide) {
+      const t = Math.min(1, (now - G.slide.t0) / 160);
+      c.translate(-G.slide.dx * cell * (1 - ease(t)), -G.slide.dy * cell * (1 - ease(t)));
+      if (t >= 1) G.slide = null;
+    }
+    if (G.bump) {
+      const t = Math.min(1, (now - G.bump.t0) / 260),
+        k = Math.sin(t * Math.PI) * cell * 0.18 * (1 - t);
+      c.translate(G.bump.dx * k, G.bump.dy * k);
+      if (t >= 1) G.bump = null;
+    }
+    if (G.spin) {
+      const t = Math.min(1, (now - G.spin.t0) / 220),
+        sc = 1 - Math.sin(t * Math.PI) * 0.08;
+      c.translate(cpx(0) + cell / 2, cpy(0) + cell / 2);
+      c.scale(sc, sc);
+      c.translate(-(cpx(0) + cell / 2), -(cpy(0) + cell / 2));
+      if (t >= 1) G.spin = null;
+    }
+  }
   for (const [k, e] of G.base) {
     const pt = pops.get('b' + k);
     let sc = 1;
@@ -985,6 +1011,7 @@ function drawBP() {
     drawPiece(c, e, true, sc);
   }
   drawTreads(c);
+  if (carFx) c.restore();
   // the bright flash when a part clicks into place
   for (const [pk, t0] of pops) {
     const t = (performance.now() - t0) / 220;
@@ -1263,6 +1290,9 @@ function bfxTick(dt) {
 }
 const builderBusy = () =>
   (building() && SETTINGS.motion !== false) ||
+  G.slide ||
+  G.bump ||
+  G.spin ||
   bfx.length ||
   pops.size ||
   ghosts.length ||
@@ -1558,6 +1588,86 @@ function redo() {
   sfx('ui');
   refreshUI();
 }
+/* ---------- whole-car moves: shift, centre, turn, flip ---------- */
+/** Applies a transform to every part at once. f maps an entry to its new {x, y, rot}. Refuses when the car
+ *  would leave the bay or parts would overlap, and nudges the car the way it tried to go. */
+function moveDesign(f, label, slide) {
+  if (!building() || !G.base.size) return false;
+  const nb = new Map(),
+    nt = new Map(),
+    seen = new Set();
+  for (const e of G.base.values()) {
+    const n = { ...e, ...f(e) };
+    for (const [x, y] of footprint(n.id, n.rot, n.x, n.y)) {
+      const k = key(x, y);
+      if (!G.ws.has(k) || seen.has(k)) {
+        toast(seen.has(k) ? `Can't ${label}: parts would overlap` : `Can't ${label}: it would leave the bay`);
+        sfx('nope');
+        if (slide) G.bump = { dx: slide[0], dy: slide[1], t0: performance.now() };
+        drawBP();
+        return false;
+      }
+      seen.add(k);
+    }
+    nb.set(key(n.x, n.y), n);
+  }
+  for (const t of G.top.values()) {
+    const n = { ...t, ...f(t) };
+    nt.set(key(n.x, n.y), n);
+  }
+  const before = designKey();
+  G.base = nb;
+  G.top = nt;
+  if (designKey() === before) return false;
+  G.hist.push(before);
+  if (G.hist.length > 80) G.hist.shift();
+  G.redo = [];
+  if (slide) G.slide = { dx: slide[0], dy: slide[1], t0: performance.now() };
+  else G.spin = { t0: performance.now() };
+  sfx(slide ? 'slide' : 'clank');
+  refreshUI();
+  return true;
+}
+const shiftDesign = (dx, dy) => moveDesign(e => ({ x: e.x + dx, y: e.y + dy }), 'move the car', [dx, dy]);
+/** Moves the car to the middle of the bay (the cockpit column stays on the centre line when it can). */
+function centerDesign() {
+  if (!G.base.size) return;
+  const cells = [...occupancy(G.base).keys()].map(unkey),
+    ws = [...G.ws].map(unkey),
+    mid = (arr, i) => (Math.min(...arr.map(c => c[i])) + Math.max(...arr.map(c => c[i]))) / 2;
+  const dx = Math.round(mid(ws, 0) - mid(cells, 0)),
+    dy = Math.round(mid(ws, 1) - mid(cells, 1));
+  if (!dx && !dy) return toast('The car is already in the middle');
+  if (!shiftDesign(dx, dy)) shiftDesign(Math.sign(dx), Math.sign(dy));
+}
+/** Turns the whole car a quarter turn clockwise around the centre of the bay. */
+const turnDesign = () => moveDesign(e => ({ x: -e.y, y: e.x, rot: (e.rot + 1) % 4 }), 'turn the car');
+/** Swaps left and right. */
+const mirrorDesign = () => moveDesign(e => ({ x: -e.x, rot: [0, 3, 2, 1][e.rot] }), 'flip the car');
+for (const [id, fn] of [
+  ['mvUp', () => shiftDesign(0, -1)],
+  ['mvDown', () => shiftDesign(0, 1)],
+  ['mvLeft', () => shiftDesign(-1, 0)],
+  ['mvRight', () => shiftDesign(1, 0)],
+  ['mvCenter', centerDesign],
+  ['mvTurn', turnDesign],
+  ['mvFlip', mirrorDesign]
+])
+  $('#' + id).addEventListener('click', fn);
+addEventListener('keydown', e => {
+  if (!building() || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+  const d = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.code];
+  if (!d) return;
+  e.preventDefault();
+  shiftDesign(...d);
+  const b = $({ '0,-1': '#mvUp', '0,1': '#mvDown', '-1,0': '#mvLeft', '1,0': '#mvRight' }[d.join()]);
+  if (b) {
+    b.classList.remove('hit');
+    void b.offsetWidth;
+    b.classList.add('hit');
+  }
+});
 function setMirror(on) {
   G.mirror = on;
   $('#btnMirror').classList.toggle('on', on);

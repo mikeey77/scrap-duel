@@ -35,3 +35,45 @@ function zap(el, opt = {}) {
   setTimeout(() => g.remove(), 520);
   if (opt.sound) sfx('zap');
 }
+
+/* ---------- a livelier interface ---------- */
+// Screens get an `entering` class for a moment when they open, so the CSS can animate them in
+// (only on open: re-rendering an open screen does not replay it).
+if (typeof MutationObserver !== 'undefined') {
+  const enter = new MutationObserver(ms => {
+    for (const m of ms) {
+      const el = m.target;
+      if (el.hidden || !el.classList.contains('overlay')) continue;
+      el.classList.add('entering');
+      clearTimeout(el._enterT);
+      el._enterT = setTimeout(() => el.classList.remove('entering'), 450);
+    }
+  });
+  document
+    .querySelectorAll('.overlay')
+    .forEach(o => enter.observe(o, { attributes: true, attributeFilter: ['hidden'] }));
+  // coins, bolts and levels pop when their number changes
+  const BUMP = ['#tCoins', '.wb-bolts b', '.hg-lvl', '.hq .lv'],
+    seen = new Map();
+  let queued = false;
+  const check = () => {
+    queued = false;
+    for (const sel of BUMP) {
+      const el = document.querySelector(sel);
+      if (!el) continue;
+      const v = el.textContent;
+      if (seen.has(sel) && seen.get(sel) !== v && el.offsetParent) {
+        el.classList.remove('bump');
+        void el.offsetWidth;
+        el.classList.add('bump');
+      }
+      seen.set(sel, v);
+    }
+  };
+  new MutationObserver(() => {
+    if (!queued) {
+      queued = true;
+      requestAnimationFrame(check);
+    }
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+}

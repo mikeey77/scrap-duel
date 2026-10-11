@@ -4,110 +4,11 @@
 // Crowd gifts change the match, so they only fall in offline matches.
 
 /* ---------- the duo ---------- */
-const CASTERS = {
-  dash: { name: 'Dash Danvers', col: '#ffb423', pitch: 1.15, rate: 1.1 },
-  doc: { name: 'Doc Gasket', col: '#5be7ff', pitch: 0.75, rate: 0.95 }
-};
-// {a} = the car that did it, {b} = the other car, {p} = a part name. A line is [caster, text] or a short exchange.
-const CALLS = {
-  start: [
-    [['dash', 'Engines hot, tyres bald, and the crowd is already loud!']],
-    [
-      ['dash', "{a} against {b}. Doc, who's your money on?"],
-      ['doc', "Whoever doesn't fall apart first. That's science."]
-    ],
-    [['doc', 'Remember folks: every bolt you see out there was once a perfectly good toaster.']],
-    [
-      ['dash', 'Welcome back to the junkyard!'],
-      ['doc', 'Mind the oil. And the saws. And everything.']
-    ],
-    [['dash', 'Lights, rust, action!']]
-  ],
-  firstblood: [
-    [['dash', 'First blood goes to {a}!']],
-    [['doc', '{a} draws first. The paint job on {b} will never be the same.']],
-    [['dash', 'And {a} opens the scoring with a dent!']]
-  ],
-  bighit: [
-    [['dash', 'OH! What a hit from {a}!']],
-    [['doc', 'I felt that one in my fillings. Big hit, {a}.']],
-    [['dash', '{b} is going to need a bigger toolbox!']],
-    [['dash', 'KA-CHUNK! {a} means business!']]
-  ],
-  partoff: [
-    [['dash', "{b}'s {p} is gone!"]],
-    [['doc', 'That {p} belonged to {b}. Past tense.']],
-    [['dash', 'There goes the {p}! Somebody catch it!']]
-  ],
-  weaponoff: [
-    [['doc', "{b} just lost the {p}. That's their teeth, Dash."]],
-    [['dash', '{a} rips the {p} right off {b}!']]
-  ],
-  wreck: [
-    [['dash', '{b} IS WRECKED! {a} takes it!']],
-    [
-      ['dash', "That's the end of {b}!"],
-      ['doc', 'Scrap value: about four coins and a sad hubcap.']
-    ],
-    [['doc', 'And {b} has been returned to its natural state: junk.']],
-    [['dash', 'Down goes {b}! Down goes {b}!']]
-  ],
-  lowhp: [
-    [['doc', '{b} is held together by hope and one bolt.']],
-    [['dash', "{b} is smoking! One more hit and that's it!"]]
-  ],
-  comeback: [
-    [['dash', 'Look at {a} fight back! This is a COMEBACK!']],
-    [['doc', 'Never count out a car with nothing left to lose.']]
-  ],
-  air: [
-    [['dash', '{a} is FLYING!']],
-    [['doc', 'Airtime! Nobody told {a} that cars stay on the ground.']],
-    [['dash', 'Big air from {a}! Ten out of ten, no notes!']]
-  ],
-  power: [
-    [['doc', '{a} grabs a power-up. That changes the maths.']],
-    [['dash', 'Power-up for {a}! Here comes trouble!']]
-  ],
-  boring: [
-    [
-      ['dash', 'Doc, are they... parking?'],
-      ['doc', 'The crowd paid good scrap for this. Get in there!']
-    ],
-    [['doc', 'I can hear the crowd booing from up here. Somebody hit something!']],
-    [['dash', "Come on, this isn't a car show!"]]
-  ],
-  gift: [
-    [['dash', 'The crowd loves {a}! Here comes a gift from the stands!']],
-    [['doc', 'Fan mail for {a}! Hopefully not a brick this time.']],
-    [['dash', 'They are THROWING THINGS for {a}! Nice things, I think!']]
-  ],
-  giftgot: [[['dash', '{a} grabs the gift!']], [['doc', 'Never refuse a present from the stands.']]],
-  salvage: [
-    [['doc', '{a} picks up some salvage. Waste not, want not.']],
-    [['dash', '{a} finds a goodie in the scrap!']]
-  ],
-  stolen: [
-    [['dash', 'Cheeky! {a} steals the salvage!']],
-    [['doc', 'That crate is gone for good. {a} is a professional thief.']]
-  ],
-  phase: [
-    [['dash', '{a} is getting ANGRY!']],
-    [['doc', "Uh oh. When a boss changes phase, it's time to change plans."]]
-  ],
-  masterwork: [[['doc', 'Look at that golden glow: {a} brought masterwork gear.']]],
-  setbonus: [[['dash', '{a} rolls out with a full sticker set! Style AND substance!']]],
-  close: [
-    [['dash', 'Both cars are hanging by a thread!']],
-    [['doc', 'Whoever lands the next hit wins this. Hold your breath.']]
-  ]
-};
-const COMM_PRI = { wreck: 5, phase: 4, start: 3, gift: 3, firstblood: 3, comeback: 3, close: 3, bighit: 2 };
-
+// The lines themselves live in data/commentary.js (CASTERS, CALLS, COMM_PRI); each has a recorded voice clip.
 let COMM = null; // caption queue + state for the current battle
 const commReset = () =>
-  (COMM = { q: [], cur: null, t: 0, gap: 1.5, last: {}, used: {}, B: B, firstDone: false, sayAt: 0 });
-/** Queues a line for an event. ctx.car is the car that did it; its rival becomes {b}. */
+  (COMM = { q: [], cur: null, t: 0, gap: 1.5, last: {}, used: {}, B: B, firstDone: false, idle: 0, shown: 0 });
+/** Queues a call for an event. ctx is kept for callers; the lines themselves name nobody. */
 function commentate(kind, ctx = {}) {
   if (!B || B.demo || B.replay || G.mode === 'sandbox' || SETTINGS.comm === false || !CALLS[kind]) return;
   if (!COMM || COMM.B !== B) commReset();
@@ -117,105 +18,174 @@ function commentate(kind, ctx = {}) {
   if (COMM.last[kind] && now - COMM.last[kind] < (pri >= 3 ? 4 : 9)) return;
   if (pri < 3 && (COMM.q.length || (COMM.cur && COMM.cur.pri >= pri))) return;
   COMM.last[kind] = now;
-  const a = ctx.car || null,
-    b = ctx.other || (a && B.cars.find(c => c !== a)) || null,
-    names = { a: a ? a.name : 'someone', b: b ? b.name : 'the other car', p: ctx.part || 'part' };
+  // pick a call that was not used lately in this battle
   const opts = CALLS[kind],
-    used = COMM.used[kind] || [];
-  let i = Math.floor(Math.random() * opts.length);
-  if (opts.length > 1 && used.includes(i)) i = (i + 1 + Math.floor(Math.random() * (opts.length - 1))) % opts.length;
-  COMM.used[kind] = [...used.slice(-1), i];
-  const lines = opts[i].map(([who, t]) => ({ who, text: t.replace(/\{(\w)\}/g, (_, k) => names[k] || ''), pri }));
+    used = COMM.used[kind] || [],
+    fresh = opts.map((_, i) => i).filter(i => !used.includes(i)),
+    i = pick(fresh.length ? fresh : opts.map((_, i) => i));
+  COMM.used[kind] = [...used, i].slice(-Math.max(1, opts.length - 1));
+  const lines = opts[i].map(([who, text]) => ({ who, text, pri }));
   if (pri >= 4) {
     COMM.q = lines; // big moments cut in
-    COMM.cur = null;
-    COMM.t = 0;
+    if (COMM.cur) COMM.cur.out = true;
+    COMM.t = Math.max(COMM.t, (COMM.cur && COMM.cur.dur) || 0);
+    COMM.cut = true;
   } else COMM.q.push(...lines);
+  COMM.idle = 0;
 }
-/** Advances the captions and speaks new lines. */
+/** Advances the captions and plays new lines. Long quiet spells get some banter. */
 function stepCommentary(rdt) {
   if (!B || B.demo || B.replay) return;
-  if (!COMM || COMM.B !== B) commReset();
+  if (!COMM || COMM.B !== B) {
+    commReset();
+    Voice.preload(['start', 'firstblood', 'bighit', 'partoff']);
+  }
   COMM.t += rdt;
+  if (B.seq === 'play' && G.mode !== 'sandbox') {
+    COMM.idle += rdt;
+    if (COMM.idle > 16 && !COMM.cur && !COMM.q.length && Math.random() < rdt * 0.25) commentate('banter');
+  }
   if (COMM.cur && COMM.t > COMM.cur.dur) {
     COMM.cur = null;
     COMM.t = 0;
   }
   if (!COMM.cur && COMM.q.length && COMM.t > (COMM.gap || 0)) {
-    const l = COMM.q.shift();
-    l.dur = clamp(1.6 + l.text.length * 0.055, 2.2, 5.5);
+    const l = COMM.q.shift(),
+      spoken = speakLine(l, COMM.cut);
+    COMM.cut = false;
+    // a recorded line stays up exactly as long as it is spoken; text-only lines by reading speed
+    l.dur = spoken ? spoken + 0.45 : clamp(1.6 + l.text.length * 0.055, 2.2, 5.5);
+    l.talk = spoken;
     COMM.cur = l;
     COMM.t = 0;
-    COMM.gap = COMM.q.length ? 0.25 : 1.2;
-    speakLine(l);
+    COMM.shown++;
+    COMM.gap = COMM.q.length ? 0.15 : 1.2;
   }
 }
-function speakLine(l) {
-  if (MUTE || SETTINGS.voice === false || SETTINGS.commVoice === false || !('speechSynthesis' in window)) return;
+/** Speaks a line; returns how long the recording lasts (0 for the system voice or silence). */
+function speakLine(l, cut) {
+  if (MUTE || SETTINGS.voice === false || SETTINGS.commVoice === false) return 0;
+  const len = Voice.play(l.who, l.text, { cut: cut || l.pri >= 4 });
+  if (len || Voice.has(l.who, l.text) || !('speechSynthesis' in window)) return len;
   try {
+    // fallback for lines that have no recording yet
     const s = speechSynthesis;
-    if (s.speaking && COMM.cur && COMM.cur.pri < 4) return; // never talk over the announcer
+    if (s.speaking && l.pri < 4) return 0;
     if (l.pri >= 4) s.cancel();
-    const c = CASTERS[l.who],
-      u = new SpeechSynthesisUtterance(l.text);
-    u.pitch = c.pitch;
-    u.rate = c.rate;
+    const u = new SpeechSynthesisUtterance(l.text);
+    u.pitch = l.who === 'doc' ? 0.8 : 1.1;
+    u.rate = l.who === 'doc' ? 0.98 : 1.12;
     u.volume = clamp(0.85 * SETTINGS.vol, 0, 1);
     const vs = s.getVoices().filter(v => /^en/i.test(v.lang));
     if (vs.length) u.voice = l.who === 'doc' ? vs[Math.min(1, vs.length - 1)] : vs[0];
     s.speak(u);
   } catch (e) {}
+  return 0;
 }
-/** Caption box at the bottom centre of the arena. */
+/** Caption at the bottom centre: slides up, types along with the voice, and shows who is talking. */
 function drawCommentary(c) {
   if (!COMM || COMM.B !== B || !COMM.cur || SETTINGS.comm === false) return;
   const l = COMM.cur,
     who = CASTERS[l.who],
-    a = Math.min(1, COMM.t * 6, (l.dur - COMM.t) * 3);
+    calm = SETTINGS.motion === false,
+    tin = Math.min(1, COMM.t * 5),
+    tout = clamp((l.dur - COMM.t) * 4, 0, 1),
+    a = Math.min(tin, tout);
   if (a <= 0) return;
   c.save();
-  c.globalAlpha = a;
-  c.font = '600 15px "Barlow Semi Condensed", sans-serif';
-  const maxW = Math.min(620, view.w - 80),
+  c.textAlign = 'left';
+  c.textBaseline = 'alphabetic';
+  c.font = '600 16px "Barlow Semi Condensed", sans-serif';
+  const maxW = Math.min(640, view.w - 80),
     words = l.text.split(' '),
     rows = [];
   let row = '';
   for (const w of words) {
     const t = row ? row + ' ' + w : w;
-    if (c.measureText(t).width > maxW - 28 && row) {
+    if (c.measureText(t).width > maxW - 84 && row) {
       rows.push(row);
       row = w;
     } else row = t;
   }
   rows.push(row);
-  const w = Math.min(maxW, Math.max(...rows.map(r => c.measureText(r).width)) + 28),
-    h = 30 + rows.length * 19,
+  const ease = 1 - Math.pow(1 - tin, 3),
+    w = Math.min(maxW, Math.max(...rows.map(r => c.measureText(r).width)) + 84),
+    h = 36 + rows.length * 20,
     x = view.w / 2 - w / 2,
-    y = view.h - h - 54;
+    y = view.h - h - 54 + (calm ? 0 : (1 - ease) * 26 + (1 - tout) * 10),
+    shout = /!/.test(l.text) && l.who === 'dash';
+  c.globalAlpha = a;
+  // a quick shake when Dash shouts
+  if (shout && !calm && COMM.t < 0.35) c.translate(Math.sin(COMM.t * 70) * 3 * (1 - COMM.t / 0.35), 0);
   // chamfered glass panel with the caster's colour on the edge
   c.beginPath();
-  c.moveTo(x + 8, y);
+  c.moveTo(x + 10, y);
   c.lineTo(x + w, y);
-  c.lineTo(x + w, y + h - 8);
-  c.lineTo(x + w - 8, y + h);
+  c.lineTo(x + w, y + h - 10);
+  c.lineTo(x + w - 10, y + h);
   c.lineTo(x, y + h);
-  c.lineTo(x, y + 8);
+  c.lineTo(x, y + 10);
   c.closePath();
-  c.fillStyle = 'rgba(10,16,32,.88)';
+  c.fillStyle = 'rgba(10,16,32,.92)';
   c.fill();
   c.strokeStyle = who.col;
-  c.globalAlpha = a * 0.7;
-  c.lineWidth = 1;
+  c.globalAlpha = a * 0.75;
+  c.lineWidth = 1.5;
   c.stroke();
   c.globalAlpha = a;
+  // caster badge: initials in a ring that pulses while the voice is talking
+  const bx = x + 30,
+    by = y + h / 2,
+    talking = l.talk && COMM.t < l.talk,
+    pulse = talking && !calm ? 1 + Math.abs(Math.sin(COMM.t * 13)) * 0.08 : 1;
   c.fillStyle = who.col;
-  c.fillRect(x, y + 8, 3, h - 16);
+  c.globalAlpha = a * 0.18;
+  c.beginPath();
+  c.arc(bx, by, 19 * pulse + 3, 0, Math.PI * 2);
+  c.fill();
+  c.globalAlpha = a;
+  c.beginPath();
+  c.arc(bx, by, 17 * pulse, 0, Math.PI * 2);
+  c.fillStyle = '#0f1a30';
+  c.fill();
+  c.lineWidth = 2.5;
+  c.strokeStyle = who.col;
+  c.stroke();
+  c.fillStyle = who.col;
+  c.font = '700 14px "Chakra Petch", sans-serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText(l.who === 'dash' ? 'DD' : 'DG', bx, by + 1);
+  c.textAlign = 'left';
+  c.textBaseline = 'alphabetic';
+  // name, a LIVE dot and a little level meter while talking
+  const tx = x + 60;
   c.font = '700 12px "Chakra Petch", sans-serif';
-  c.textBaseline = 'top';
-  c.fillText(who.name.toUpperCase(), x + 14, y + 8);
+  c.fillText(who.name.toUpperCase(), tx, y + 19);
+  const nw = c.measureText(who.name.toUpperCase()).width;
+  c.fillStyle = '#ff4d5e';
+  c.globalAlpha = a * (0.55 + 0.45 * Math.abs(Math.sin(ANIM * 3)));
+  c.beginPath();
+  c.arc(tx + nw + 11, y + 15, 3.5, 0, Math.PI * 2);
+  c.fill();
+  c.globalAlpha = a;
+  if (talking && !calm)
+    for (let i = 0; i < 4; i++) {
+      const bh = 3 + Math.abs(Math.sin(COMM.t * (11 + i * 3.7) + i)) * 9;
+      c.fillStyle = who.col;
+      c.fillRect(tx + nw + 22 + i * 5, y + 19 - bh, 3, bh);
+    }
+  // the words appear as they are spoken
+  const total = l.text.length,
+    reveal = calm ? total : Math.ceil(total * clamp(COMM.t / Math.max(0.4, (l.talk || l.dur * 0.5) * 0.85), 0, 1));
   c.fillStyle = '#e6f1ff';
-  c.font = '600 15px "Barlow Semi Condensed", sans-serif';
-  rows.forEach((r, i) => c.fillText(r, x + 14, y + 25 + i * 19));
+  c.font = '600 16px "Barlow Semi Condensed", sans-serif';
+  let left = reveal;
+  rows.forEach((r, i) => {
+    const part = r.slice(0, Math.max(0, left));
+    left -= r.length + 1;
+    c.fillText(part, tx, y + 40 + i * 20);
+  });
   c.restore();
 }
 
@@ -235,6 +205,8 @@ function crowdState() {
     started: false,
     lowSaid: B.cars.map(() => false),
     worst: B.cars.map(() => 1),
+    clutchT: B.cars.map(() => 0),
+    clutchSaid: B.cars.map(() => false),
     flare: 0
   };
   return B.crowd;
@@ -301,6 +273,13 @@ function crowdStep(dt) {
       C.lowSaid[i] = true;
       commentate('lowhp', { car: other, other: v });
     }
+    // still alive on almost nothing for a few seconds: the clutch call
+    C.clutchT[i] = hp < 0.08 && !v.dead ? C.clutchT[i] + dt : 0;
+    if (C.clutchT[i] > 2.5 && !C.clutchSaid[i]) {
+      C.clutchSaid[i] = true;
+      gainHype(C, i, 15);
+      commentate('clutch', { car: v });
+    }
     // comeback: was nearly dead, now the other car is lower
     C.worst[i] = Math.min(C.worst[i], hp);
     if (C.worst[i] < 0.25 && other && carHealth(other) < hp - 0.05 && !C.cb) {
@@ -312,6 +291,10 @@ function crowdStep(dt) {
   if (!C.closeSaid && B.cars.length === 2 && B.cars.every(v => !v.dead && carHealth(v) < 0.3)) {
     C.closeSaid = true;
     commentate('close', {});
+  }
+  if (!C.lastSaid && B.t > 0 && B.t < 10 && B.cars.every(v => !v.dead)) {
+    C.lastSaid = true;
+    commentate('lastsecs', {});
   }
   // a quiet arena bores the crowd
   C.quiet = action ? 0 : C.quiet + dt;

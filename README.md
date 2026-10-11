@@ -30,7 +30,7 @@ Between matches, **Garage HQ** holds the gear you have found: pick a loadout, up
 - **Drive** with WASD or the arrow keys, **aim** with the mouse, **fire** with left click or Space.
 - **Moving parts** (hinges, rotators, rams) are on keys 1–9; set them with the Keys tool in the garage.
 - **Quick chat** online: T, then 1–4.
-- **Garage**: click or drag to place, right click to remove, R to turn the next part, T to rotate a placed part, M to mirror, Ctrl+Z / Ctrl+Y to undo and redo.
+- **Garage**: click or drag to place, right click to remove, R to turn the next part, T to rotate a placed part, M to mirror, the arrow keys move the whole car, Ctrl+Z / Ctrl+Y to undo and redo.
 - F11 for fullscreen, Esc for the pause menu.
 
 ## Project layout
@@ -40,6 +40,8 @@ src/            the game: index.html, css/ and js/ split by feature, manifest.js
 desktop/        the Electron shell (window, app:// protocol, saved window size, preload bridge)
 site/           build output the app loads (only the icons are checked in)
 tests/          regression suite
+assets/voice/   recorded commentator and announcer lines (tools/make-voices.mjs)
+tools/          the voice recorder
 web/            the download page that Netlify publishes
 CHANGELOG.md    release notes; the newest section also appears on the download page
 ```
@@ -59,6 +61,10 @@ npm run format   # Prettier
 ```
 
 To play in a browser while developing, build and serve `site/` (for example `python -m http.server 8765 --directory site`). Online play needs an internet connection for the room code exchange (PeerJS); the match itself is peer to peer.
+
+## Commentator voices
+
+The commentators and the announcer are recorded clips in `assets/voice/` (Opus, about 2 MB), made offline from the lines in `src/js/data/commentary.js` with the Kokoro neural voice. After changing or adding lines, run `tools/make-voices.mjs` (it lists what it needs at the top); it records only new or changed lines and removes clips nobody uses. Lines without a clip fall back to the system voice.
 
 ## Releasing a new version
 
