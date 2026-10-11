@@ -104,6 +104,8 @@ function mpRematch() {
   const format = G.mpFormat || 'balanced',
     rounds = setRounds(G.mpRounds || 10),
     sched = makeSchedule(rounds);
-  Net.send({ t: 'begin', sched, format, rounds });
-  beginMP(sched, format, rounds);
+  const teamSize = G.mpTeamSize === 2 ? 2 : 1,
+    coop = !!G.mpCoop;
+  Net.send({ t: 'begin', sched, format, rounds, teamSize, coop });
+  beginMP(sched, format, rounds, teamSize, coop);
 }

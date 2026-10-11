@@ -568,8 +568,15 @@ function deathSeq(rdt) {
   if (respawns && B.seqT > 1.7) return respawnCar(v.idx);
   if (B.seqT > 2.8) {
     if (G.phase === 'battle' || B.demo) {
-      const o = B.cars.find(c => c !== v);
-      endRound(o && !o.dead ? o.idx : null, `${v.name}'s cockpit was destroyed.`);
+      // the round goes to the other team (its leader is car 0 or 1, which is also the team number)
+      const ot = 1 - teamOf(v),
+        alive = teamAlive(ot);
+      endRound(
+        alive ? ot : null,
+        G.teamSize === 2 && B.cars.length > 2
+          ? `${v.name} was the last one standing on that team.`
+          : `${v.name}'s cockpit was destroyed.`
+      );
     } else {
       B.seq = 'respawn';
       B.seqT = 0;
@@ -685,7 +692,7 @@ function simulate(dt) {
       }
     stepCarHazards(v, dt);
   }
-  if (B.cars.length > 1) collideCars(B.cars[0], B.cars[1]);
+  for (let i = 0; i < B.cars.length; i++) for (let j = i + 1; j < B.cars.length; j++) collideCars(B.cars[i], B.cars[j]);
   for (const p of B.pk) p.cd = Math.max(0, p.cd - dt);
   for (const d of B.decoys) {
     d.life -= dt;
@@ -722,9 +729,13 @@ function simulate(dt) {
     if (B.t <= 0) {
       const sp = specialTimeout();
       if (sp) return endRound(sp[0], sp[1]);
-      const [a, b] = B.cars,
-        ia = a.dead ? 0 : integrity(a),
-        ib = b.dead ? 0 : integrity(b),
+      // team integrity: the average of each team's cars (a wrecked car counts as zero)
+      const teamInt = t => {
+          const cs = B.cars.filter(c => teamOf(c) === t);
+          return cs.reduce((s, c) => s + (c.dead ? 0 : integrity(c)), 0) / (cs.length || 1);
+        },
+        ia = teamInt(0),
+        ib = teamInt(1),
         w = Math.abs(ia - ib) < 0.005 ? null : ia > ib ? 0 : 1;
       endRound(
         w,
@@ -732,7 +743,7 @@ function simulate(dt) {
           ? ia > 0.99 && ib > 0.99
             ? 'Time ran out and neither car took real damage. Nobody scores.'
             : 'Time ran out with both cars equally battered.'
-          : `Time! ${B.cars[w].name} had more car left (${Math.round(Math.max(ia, ib) * 100)}% vs ${Math.round(Math.min(ia, ib) * 100)}%).`
+          : `Time! ${B.cars.length > 2 ? `${B.cars[w].name}'s team` : B.cars[w].name} had more car left (${Math.round(Math.max(ia, ib) * 100)}% vs ${Math.round(Math.min(ia, ib) * 100)}%).`
       );
     }
   }

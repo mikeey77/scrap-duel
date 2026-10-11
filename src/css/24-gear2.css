@@ -383,3 +383,37 @@
 .fairline {
   opacity: 0.85;
 }
+
+/* online lobby: team sides */
+.tpick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 10px 0 4px;
+}
+.tside {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--tc);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tside b {
+  font-family: var(--f-display);
+  color: var(--tc);
+}
+.tside ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+.tside li.you {
+  font-weight: 700;
+}
+.tside li.bot {
+  color: var(--muted);
+}

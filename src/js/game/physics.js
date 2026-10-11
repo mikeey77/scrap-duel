@@ -357,6 +357,7 @@ function collideCars(U, V) {
         a[0].cc = b[0].cc = B.time + 0.25;
         const tot = U.mass + V.mass || 1;
         const hit = (X, Y, xa, xb, dirx, diry) => {
+          if (teamOf(X) === teamOf(Y)) return; // teammates bump, they do not hurt each other
           const ma = xa[0].inst.m;
           let mult = ma.ram || 1;
           if (ma.lance && !xa[0].inst.blocked) {

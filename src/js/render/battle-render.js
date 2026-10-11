@@ -292,6 +292,16 @@ function drawVehicle(c, v, alpha) {
     c.fillText(v.name, v.x + 1, y - 1);
     c.fillStyle = '#ece8df';
     c.fillText(v.name, v.x, y - 2);
+    if (B.cars.length > 2) {
+      // team marker: blue for your side, red for the other side
+      const mine = teamOf(v) === myTeam();
+      c.fillStyle = mine ? '#4ea1ff' : '#ff5c5c';
+      c.beginPath();
+      c.moveTo(v.x - w / 2 - 10, y + 2.5);
+      c.lineTo(v.x - w / 2 - 4, y - 2);
+      c.lineTo(v.x - w / 2 - 4, y + 7);
+      c.fill();
+    }
     if (look.title !== 'rookie') {
       c.font = '600 9px "Barlow Semi Condensed", sans-serif';
       c.fillStyle = '#ffd257';
@@ -816,6 +826,34 @@ function drawRing(c) {
   c.stroke();
   c.restore();
 }
+/** 2v2: a slim bar for your teammate under your bars, and for the second rival under theirs. */
+function drawTeamBars(c, me, lead, W, pw, yL) {
+  const ally = B.cars.find(x => x !== me && teamOf(x) === teamOf(me)),
+    foe2 = B.cars.find(x => x !== lead && teamOf(x) !== teamOf(me));
+  const slim = (car, x, right) => {
+    if (!car) return;
+    const y = right ? 74 : yL,
+      w = pw * 0.8,
+      f = car.dead ? 0 : clamp(integrity(car), 0, 1);
+    c.save();
+    c.fillStyle = 'rgba(10,16,32,.8)';
+    c.fillRect(x, y, w, 22);
+    c.fillStyle = right ? '#ff5c5c' : '#4ea1ff';
+    c.fillRect(right ? x + w - 3 : x, y, 3, 22);
+    c.font = '700 10px "Chakra Petch", sans-serif';
+    c.textBaseline = 'top';
+    c.textAlign = right ? 'right' : 'left';
+    c.fillStyle = car.dead ? '#8b939c' : '#e6f1ff';
+    c.fillText((car.dead ? 'OUT · ' : '') + car.name.toUpperCase(), right ? x + w - 9 : x + 9, y + 3);
+    c.fillStyle = 'rgba(255,255,255,.1)';
+    c.fillRect(x + 9, y + 15, w - 18, 4);
+    c.fillStyle = car.paint;
+    c.fillRect(right ? x + 9 + (w - 18) * (1 - f) : x + 9, y + 15, (w - 18) * f, 4);
+    c.restore();
+  };
+  slim(ally, 12, false);
+  slim(foe2, W - 12 - pw * 0.8, true);
+}
 /** Small level chevrons on a gear part, in the colour of its level. */
 function drawGearPip(c, I) {
   const n = Math.min(4, Math.ceil((I.gear.lvl - 1) / 2)),
@@ -1158,13 +1196,14 @@ function drawHUD(c) {
   bars(c, 12, 12, pw, rows, false, 26);
   planPortrait(c, v, 32, 28);
   drawHypeBar(c, 12, 12 + 8 + rows.length * 26 + 3, pw, v, false);
-  const e = B.cars.find(x => x !== v);
+  const e = B.cars[1 - myTeam()] && B.cars[1 - myTeam()] !== v ? B.cars[1 - myTeam()] : others(v)[0];
   if (e) {
     const r2 = [[e.name.toUpperCase(), e.dead ? 0 : integrity(e), e.paint]];
     bars(c, W - 12 - pw, 12, pw, r2, true, 26);
     planPortrait(c, e, W - 32, 28);
     drawHypeBar(c, W - 12 - pw, 12 + 8 + 26 + 3, pw, e, true);
   }
+  if (B.cars.length > 2) drawTeamBars(c, v, e, W, pw, 12 + 8 + rows.length * 26 + 50);
   drawBossBar(c);
   drawCommentary(c);
   drawTelemetry(c, v, W, H);

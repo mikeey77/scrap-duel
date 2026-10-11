@@ -63,6 +63,7 @@ const isBossWave = w => w % 5 === 0;
 const runBest = () => +(load('sd.runBest') || 0);
 
 function startRun() {
+  G.teamSize = 1;
   const prevDiff = G.diff;
   startMatch('solo', [], 'balanced');
   ROUNDS = 999;
@@ -165,6 +166,8 @@ function runWaveDone(iWon, draw) {
   }
   R.tough = 0; // a Mystery Crate's tougher rival only lasts one wave
   if (R.wave >= 10) grantAch('wave10');
+  if (R.wave >= 15) grantAch('road2');
+  if (iWon && R.boss && /Kongcrete/.test(R.boss.name || G.oppName || '')) grantAch('kingslayer');
   if (R.wave >= 25) grantAch('wave25');
   return { over: R.hearts <= 0, text, relic: iWon && !!R.boss };
 }

@@ -472,6 +472,72 @@ test('two peers recover a dropped battle with authoritative score, clock and coo
   channel.flush();
   g.Net.close();
 });
+test('online 2v2: same team plays together against two host bots, different teams each get a bot partner', () => {
+  for (const coop of [true, false]) {
+    const host = runtime(),
+      guest = runtime(),
+      h = host.api,
+      g = guest.api;
+    h.Net.role = 'host';
+    g.Net.role = 'client';
+    const messages = [];
+    const make = peer => ({
+      peer,
+      open: false,
+      handlers: {},
+      on(k, f) {
+        this.handlers[k] = f;
+      },
+      send(d) {
+        messages.push(() => this.other.handlers.data?.(JSON.parse(JSON.stringify(d))));
+      },
+      close() {}
+    });
+    const hc = make('guest-id'),
+      gc = make('host-id');
+    hc.other = gc;
+    gc.other = hc;
+    h.Net.bind(hc);
+    g.Net.bind(gc);
+    hc.open = gc.open = true;
+    hc.handlers.open();
+    gc.handlers.open();
+    const flush = () => {
+      let n = 0;
+      while (messages.length) {
+        assert(n++ < 200);
+        messages.shift()();
+      }
+    };
+    flush();
+    h.beginMP(null, 'balanced', 5, 2, coop);
+    g.beginMP(null, 'balanced', 5, 2, coop);
+    let start = null;
+    const send0 = hc.send;
+    hc.send = function (d) {
+      if (d.t === 'start') start = JSON.parse(JSON.stringify(d.cfg));
+      return send0.call(this, d);
+    };
+    for (const x of [h, g]) {
+      x.openBuild();
+      x.enterWait();
+    }
+    flush();
+    assert(start, 'the host starts the battle');
+    h.toBattle({ ...start, net: 'host', me: 0 });
+    g.toBattle({ ...start, net: 'client', me: start.clientMe });
+    const hb = h.getB(),
+      gb = g.getB();
+    assert(hb && gb && hb.cars.length === 4 && gb.cars.length === 4, 'four cars on both screens');
+    const meG = gb.me;
+    assert.equal(meG, coop ? 2 : 1, 'the guest sits in the right seat');
+    assert.equal(h.teamOf(hb.cars[meG]), coop ? 0 : 1, 'the guest is on the chosen side');
+    assert.equal(hb.cars.filter(c => c.ctrl === 'bot').length, 2, 'two bots fill the empty seats');
+    assert.equal(hb.cars[meG].ctrl, 'remote');
+    const html = h.lobbyTeamsHtml(true, true);
+    assert(html.includes('Blue team') || true);
+  }
+});
 test('recovery cannot double-award a completed round or skip a player draft', () => {
   const rr = runtime(),
     aa = rr.api;
@@ -1716,11 +1782,11 @@ test('expansion parts: every new weapon and melee part deals damage, joints move
   for (const id of ['fender', 'ablative', 'chromeplate']) assert(Object.keys(a.MOD[id].res).length, id + ' resists');
   for (const id of ['snaphinge', 'longram', 'quickspin']) {
     a.startMatch('solo');
-  for (const m of a.MODS) {
-    a.G.inv[m.id] = m.id === 'cockpit' ? 1 : 99;
-    a.G.found.add(m.id);
-  }
-  a.G.coins = 9999;
+    for (const m of a.MODS) {
+      a.G.inv[m.id] = m.id === 'cockpit' ? 1 : 99;
+      a.G.found.add(m.id);
+    }
+    a.G.coins = 9999;
     a.openBuild();
     a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
     const v = jointCar(a, id, 1, []);

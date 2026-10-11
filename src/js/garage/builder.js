@@ -2471,14 +2471,22 @@ function updateHUD() {
   if (G.run) return updateRunHUD();
   $('#tRoundLbl').textContent = `Round ${Math.min(G.round, ROUNDS)} of ${ROUNDS}`;
   $('#segs').innerHTML = Array.from({ length: ROUNDS }, (_, i) => {
-          const r = G.log[i];
-          const sp = specialOf(i + 1),
-            S = sp && SPECIALS[sp];
-          return `<i class="${r ? (r.win ? 'w' : r.draw ? 'd' : 'l') : i + 1 === G.round ? 'now' : ''}${S ? ' sp' : ''}"${S ? ` style="--sc:${S.col}" title="Round ${i + 1}: ${esc(S.name)}"` : ''}>${S ? S.icon : ''}</i>`;
-        }).join('');
+    const r = G.log[i];
+    const sp = specialOf(i + 1),
+      S = sp && SPECIALS[sp];
+    return `<i class="${r ? (r.win ? 'w' : r.draw ? 'd' : 'l') : i + 1 === G.round ? 'now' : ''}${S ? ' sp' : ''}"${S ? ` style="--sc:${S.col}" title="Round ${i + 1}: ${esc(S.name)}"` : ''}>${S ? S.icon : ''}</i>`;
+  }).join('');
   $('#tCoins').textContent = G.coins;
-  $('#tScore').innerHTML = `${badgeHTML(G.style.badge, 18)}<span class="sw" style="background:${G.paint}"></span><span class="me">${G.score[0]}</span>–<span class="op">${G.score[1]}</span><span class="sw" style="background:${G.oppPaint}"></span>${badgeHTML(G.oppBadge, 18)}`;
-  $('#tScoreLbl').textContent = G.teamSize === 2 ? `Your team vs ${G.oppName}'s team` : `You vs ${G.oppName}`;
+  $('#tScore').innerHTML =
+    `${badgeHTML(G.style.badge, 18)}<span class="sw" style="background:${G.paint}"></span><span class="me">${G.score[0]}</span>–<span class="op">${G.score[1]}</span><span class="sw" style="background:${G.oppPaint}"></span>${badgeHTML(G.oppBadge, 18)}`;
+  $('#tScoreLbl').textContent =
+    G.teamSize === 2
+      ? G.mode === 'mp' && G.mpCoop
+        ? `You & ${G.oppName} vs the bots`
+        : G.mode === 'mp'
+          ? `Your team vs ${G.oppName}'s team`
+          : `Your team vs ${G.oppName}`
+      : `You vs ${G.oppName}`;
   $('#tStake').textContent = `Round ${Math.min(G.round, ROUNDS)} · ${stakeLine(G.round)}`;
   $('#tStake').hidden = false;
   $('#formatStatus').textContent =

@@ -17,7 +17,12 @@ function bossTick() {
     v.rateMul = (v.rateMul || 1) * 1.25;
     v.c.topCap *= 1.08;
     v.c.accel *= 1.12;
-    B.banner = { text: want === 3 ? 'FINAL PHASE' : 'PHASE 2', col: '#ff5c7a', t: 2.2, sub: v.name + ' is getting angry' };
+    B.banner = {
+      text: want === 3 ? 'FINAL PHASE' : 'PHASE 2',
+      col: '#ff5c7a',
+      t: 2.2,
+      sub: v.name + ' is getting angry'
+    };
     sfx('alarm');
     B.shake = Math.max(B.shake || 0, 8);
     commentate('phase', { car: v, n: want });

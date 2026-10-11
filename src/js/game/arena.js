@@ -341,14 +341,17 @@ function genArena(kind, th) {
     st.every(s => circRectDist(x, y, s) > r + 40) &&
     zn.every(z => Math.hypot(z.x + (z.w || 0) / 2 - x, z.y + (z.h || 0) / 2 - y) > r + 120);
   const addZ = (n, f) => {
-    for (let i = 0, t = 0; i < n && t < 200; t++) {
-      const x = rnd(WM + 140, L - 80),
-        y = rnd(WM + 140, AH - WM - 140);
-      if (zfree(x, y, 70)) {
-        zn.push(f(x, y));
-        i++;
+    // crowded arenas: if there is no roomy spot after 200 tries, accept a tighter one
+    let i = 0;
+    for (const room of [70, 35])
+      for (let t = 0; i < n && t < 200; t++) {
+        const x = rnd(WM + 140, L - 80),
+          y = rnd(WM + 140, AH - WM - 140);
+        if (zfree(x, y, room)) {
+          zn.push(f(x, y));
+          i++;
+        }
       }
-    }
   };
   addZ(th.ramps, (x, y) => {
     const ang = pick([0, Math.PI / 2, -Math.PI / 2]),
@@ -721,8 +724,25 @@ function impulse(v, jx, jy, px, py, noSpin) {
   }
 }
 const integrity = v => v.insts.reduce((s, I) => s + (I.alive ? Math.max(0, I.hp) : 0), 0) / v.total;
-const enemyOf = v => B.cars.find(c => c !== v && !c.dead);
-const others = v => B.cars.filter(c => c !== v);
+// Teams: in 1v1 every car is its own team (team = index). In 2v2 cars 0 and 2 are team 0, cars 1 and 3 team 1.
+const teamOf = v => v.team ?? v.idx;
+const sameTeam = (i, j) => i === j || (B.cars[i] && B.cars[j] && teamOf(B.cars[i]) === teamOf(B.cars[j]));
+/** The nearest car of the other team that is still in the fight. */
+const enemyOf = v => {
+  let best = null,
+    bd = 1e18;
+  for (const c of B.cars) {
+    if (c === v || c.dead || teamOf(c) === teamOf(v)) continue;
+    const d = (c.x - v.x) ** 2 + (c.y - v.y) ** 2;
+    if (d < bd) ((bd = d), (best = c));
+  }
+  return best;
+};
+const others = v => B.cars.filter(c => c !== v && teamOf(c) !== teamOf(v));
+const myTeam = () => (B && B.cars[B.me] ? teamOf(B.cars[B.me]) : B ? B.me : 0);
+const allyOf = v => B.cars.find(c => c !== v && teamOf(c) === teamOf(v)) || null;
+/** The team that is on the other side of `team` (0 or 1). */
+const teamAlive = t => B.cars.some(c => teamOf(c) === t && !c.dead);
 
 /* FX that also replicate to a remote client */
 function fx(o) {
@@ -919,6 +939,7 @@ function killText(v) {
 }
 function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   if (!I.alive || v.dead || amt <= 0 || B.seq === 'in' || B.seq === 'count' || v.spawnT > 0) return;
+  if (att != null && att !== v.idx && B.cars[att] && teamOf(B.cars[att]) === teamOf(v)) return; // no friendly fire
   amt = planHurt(v, I, amt, type);
   if (amt <= 0) return;
   v.lastHurt = B.time;
@@ -1088,6 +1109,8 @@ function startDeath(v) {
   v.dead = true;
   v.drones = [];
   if (B.seq === 'death' || B.seq === 'end') return;
+  // 2v2: while a teammate is still driving, the wreck just blows apart and the fight goes on
+  if (teamAlive(teamOf(v))) return teamWreck(v);
   B.ts = 0.22;
   B.seq = 'death';
   B.seqT = 0;
@@ -1106,6 +1129,23 @@ function startDeath(v) {
     .sort((a, b) => a.d - b.d);
   B.chain = rest.map((r, i) => ({ ...r, t: 0.04 + i * 0.03, car: v.idx }));
   sfx('wreck');
+}
+function teamWreck(v) {
+  boom(v.x, v.y, 2.2, true);
+  for (const I of v.insts)
+    if (I.alive) {
+      I.alive = false;
+      const [x, y] = ipos(v, I);
+      if (Math.random() < 0.5) debris(x, y, I.id, v.a);
+    }
+  B.flash = 0.4;
+  B.flashCol = '255,200,120';
+  B.shake = Math.max(B.shake || 0, 10);
+  txt(v.x, v.y - 40, `${v.name.toUpperCase()} IS OUT`, '#ff8268', 1.6);
+  sfx('wreck');
+  if (v.lastBy && B.cars[v.lastBy.att]) botSay(B.cars[v.lastBy.att], 'wreck');
+  const k = v.lastBy && B.cars[v.lastBy.att];
+  commentate('wreck', { car: k || enemyOf(v), other: v });
 }
 function shieldBlock(v, x, y, amt) {
   for (const I of v.shields) {

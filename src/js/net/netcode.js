@@ -25,7 +25,7 @@ function loadPeer() {
   });
 }
 const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const NET_PROTOCOL = 11,
+const NET_PROTOCOL = 12,
   RECONNECT_MS = 30000;
 const connectionToken = () =>
   crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
@@ -303,7 +303,7 @@ const Net = {
       }
       case 'recover':
         if (this.role === 'client') {
-          G.score = [d.score[1], d.score[0]];
+          G.score = G.mpCoop ? [...d.score] : [d.score[1], d.score[0]];
           G.sched = d.sched;
           G.format = MATCH_FORMATS[d.format] ? d.format : 'balanced';
           G.lives = d.lives ? [d.lives[1], d.lives[0]] : [20, 20];
@@ -311,7 +311,8 @@ const Net = {
           G.bountyWinner = d.bountyWinner == null ? null : 1 - d.bountyWinner;
           if (d.cfg && d.phase === 'battle') {
             G.round = d.round;
-            if (!B || G.phase !== 'battle' || B.cfg?.round !== d.round) toBattle({ ...d.cfg, net: 'client', me: 1 });
+            if (!B || G.phase !== 'battle' || B.cfg?.round !== d.round)
+              toBattle({ ...d.cfg, net: 'client', me: d.cfg.clientMe ?? 1 });
             B.time = d.time;
             if (d.snap) applySnap(d.snap);
           }
@@ -322,7 +323,7 @@ const Net = {
             !['result', 'final', 'draft', 'build', 'replay'].includes(G.phase)
           ) {
             if (d.phase === 'result' && d.cfg && B?.cfg?.round !== result.round)
-              toBattle({ ...d.cfg, net: 'client', me: 1 });
+              toBattle({ ...d.cfg, net: 'client', me: d.cfg.clientMe ?? 1 });
             if (B?.net === 'client') {
               // The result animation awards the point locally once. A completed host score already includes it.
               if (d.resultScoreIncluded && result.win != null) {
@@ -351,6 +352,7 @@ const Net = {
         this.resumeConnection();
         G.oppName = String(d.name || 'Rival').slice(0, 16);
         G.oppPaint = d.paint === G.paint ? PAINTS.find(p => p !== G.paint) : d.paint;
+        this.sendLobby();
         if (!$('#ovLobby').hidden) lobbyUI();
         break;
       case 'chat':
@@ -361,7 +363,29 @@ const Net = {
         break;
       case 'begin':
         if (this.role === 'client')
-          beginMP(Array.isArray(d.sched) ? d.sched : null, d.format, ROUND_CHOICES.includes(d.rounds) ? d.rounds : 10);
+          beginMP(
+            Array.isArray(d.sched) ? d.sched : null,
+            d.format,
+            ROUND_CHOICES.includes(d.rounds) ? d.rounds : 10,
+            d.teamSize === 2 ? 2 : 1,
+            !!d.coop
+          );
+        break;
+      case 'lobby':
+        // host -> client: team size and who is on which side
+        if (this.role === 'client') {
+          G.mpTeamSize = d.teamSize === 2 ? 2 : 1;
+          G.mpTeams = { host: d.teams && d.teams.host ? 1 : 0, client: d.teams && d.teams.client ? 1 : 0 };
+          if (!$('#ovLobby').hidden) lobbyUI();
+        }
+        break;
+      case 'team':
+        // client -> host: the side the client wants to play on
+        if (this.role === 'host') {
+          G.mpTeams = { ...(G.mpTeams || { host: 0, client: 1 }), client: d.team ? 1 : 0 };
+          this.sendLobby();
+          if (!$('#ovLobby').hidden) lobbyUI();
+        }
         break;
       case 'ready':
         this.oppReady = d;
@@ -377,7 +401,7 @@ const Net = {
         break;
       case 'start':
         if (this.role === 'client') {
-          const cfg = { ...d.cfg, net: 'client', me: 1 };
+          const cfg = { ...d.cfg, net: 'client', me: d.cfg.clientMe ?? 1 };
           launchBattle(cfg);
         }
         break;
@@ -411,17 +435,33 @@ const Net = {
     )
       return;
     const o = this.oppReady;
-    const cfg = makeCfg({
+    const remote = {
       design: o.design,
       tune: o.tune,
       name: String(o.name).slice(0, 16),
       paint: G.oppPaint,
       ctrl: 'remote',
       look: sanitizeLook(o.look)
-    });
+    };
+    const cfg = makeCfg(remote);
+    if (G.teamSize === 2) {
+      // 2v2 with bots filling the empty seats. Car 0/1 lead team 0/1; cars 2/3 are the second seat of each team.
+      const [b1, b2] = mpTeamBots();
+      if (G.mpCoop) {
+        cfg.cars = [cfg.cars[0], { ...b1, team: 1 }, { ...remote, team: 0 }, { ...b2, team: 1 }];
+        cfg.clientMe = 2;
+      } else {
+        cfg.cars = [cfg.cars[0], { ...remote, team: 1 }, { ...b1, team: 0 }, { ...b2, team: 1 }];
+        cfg.clientMe = 1;
+      }
+    }
     this.oppReady = null;
     this.send({ t: 'start', cfg });
     launchBattle({ ...cfg, net: 'host', me: 0 });
+  },
+  sendLobby() {
+    if (this.role === 'host')
+      this.send({ t: 'lobby', teamSize: G.mpTeamSize || 1, teams: G.mpTeams || { host: 0, client: 1 } });
   },
   sendSnap(snap) {
     if (this.conn && this.conn.open) this.send(snap);

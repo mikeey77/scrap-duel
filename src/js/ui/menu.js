@@ -8,8 +8,7 @@ const MENU_MODES = [
     line: 'Fight a bot. Draft a car round by round, or bring a finished one.'
   },
   { id: 'run', name: 'Scrap Gauntlet', col: '#ff5c7a', line: 'Endless waves, three hearts, a boss every fifth wave.' },
-  { id: 'online', name: 'Online', col: '#5be7ff', line: 'Duel or brawl a friend with a 4-letter room code.' },
-
+  { id: 'online', name: 'Online', col: '#5be7ff', line: 'Duel or brawl a friend with a 4-letter room code.' }
 ];
 const TAGLINES = [
   'Tip: loadout gear in the Garage is in your parts bin from round 1.',
@@ -43,6 +42,8 @@ function showMenu() {
   }
   menuMode = MENU_MODES.some(m => m.id === load('sd.menuTab')) ? load('sd.menuTab') : 'solo';
   G.quickFmt = load('sd.quickFmt') === 'brawl' ? 'brawl' : 'balanced';
+  G.quickTeams = +load('sd.teamSize') === 2 ? 2 : 1;
+  G.partnerStyle = PARTNER_STYLES.some(p => p[0] === load('sd.partner')) ? load('sd.partner') : 'gunner';
   const L = levelInfo(),
     rec = (() => {
       try {
@@ -63,7 +64,7 @@ function showMenu() {
         ? `Best: wave ${runBest()}`
         : 'No run yet'
       : id === 'solo'
-        ? `${G.quickFmt === 'brawl' ? 'Brawl' : 'Draft'} · ${DIFF[G.diff].name} · ${G.rounds || 10} rounds`
+        ? `${G.quickTeams === 2 ? '2v2' : '1v1'} · ${G.quickFmt === 'brawl' ? 'Brawl' : 'Draft'} · ${DIFF[G.diff].name}`
         : id === 'online'
           ? 'Peer to peer'
           : `${MODS.length} parts`;
@@ -191,7 +192,19 @@ function menuOpts() {
       'n'
     );
   const body = {
-    solo: `<div class="hg-o"><span class="mlab">Format</span>${seg(
+    solo: `<div class="hg-o"><span class="mlab">Teams</span>${seg(
+      'teamSeg',
+      [
+        ['1', '1 vs 1'],
+        ['2', '2 vs 2 with a bot partner']
+      ],
+      String(G.quickTeams),
+      't'
+    )}</div>${
+      G.quickTeams === 2
+        ? `<div class="hg-o"><span class="mlab">Your partner</span>${seg('partnerSeg', PARTNER_STYLES, G.partnerStyle, 'p')}</div>`
+        : ''
+    }<div class="hg-o"><span class="mlab">Format</span>${seg(
       'fmtSeg',
       [
         ['balanced', 'Draft duel'],
@@ -201,7 +214,7 @@ function menuOpts() {
       'f'
     )}</div><div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><p class="small" id="fmtText">${G.quickFmt === 'brawl' ? `Bring one finished car worth up to ${BRAWL_BUDGET} coins: a saved blueprint or a ready-made one. No drafting, no shop.` : 'Start with a cockpit, draft a part every round, shop and outbuild the bot.'}</p><button class="btn hg-go2" id="mPlay">${G.quickFmt === 'brawl' ? 'Start a Brawl' : 'Play vs bot'}</button>`,
     run: `<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
-    online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>`,
+    online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>`
   }[m.id];
   el.style.setProperty('--rc', m.col);
   el.innerHTML = body;
@@ -210,6 +223,22 @@ function menuOpts() {
       G.diff = +b.dataset.i;
       $$('#diffSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
       store('sd.diff', G.diff);
+      sfx('ui');
+    })
+  );
+  $$('#teamSeg button').forEach(b =>
+    b.addEventListener('click', () => {
+      G.quickTeams = +b.dataset.t;
+      store('sd.teamSize', G.quickTeams);
+      sfx('ui');
+      menuOpts();
+    })
+  );
+  $$('#partnerSeg button').forEach(b =>
+    b.addEventListener('click', () => {
+      G.partnerStyle = b.dataset.p;
+      store('sd.partner', G.partnerStyle);
+      $$('#partnerSeg button').forEach(x => x.setAttribute('aria-pressed', x === b));
       sfx('ui');
     })
   );
@@ -239,7 +268,10 @@ function menuOpts() {
       menuLeave();
       G.started = true;
       if (m.id === 'run') startRun();
-      else startMatch('solo', null, G.quickFmt === 'brawl' ? 'brawl' : 'balanced');
+      else {
+        G.teamSize = G.quickTeams;
+        startMatch('solo', null, G.quickFmt === 'brawl' ? 'brawl' : 'balanced');
+      }
     });
   const host = $('#mHost');
   if (host)
@@ -291,6 +323,7 @@ function lobbyUI() {
           <div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div>`
         : ''
     }
+    ${lobbyTeamsHtml(host, n.connected)}
     ${n.connected && h2hLine(G.oppName) ? `<p class="small">${h2hLine(G.oppName)}</p>` : ''}
     <p class="small fairline">Online is fair play: your gear levels and sticker perks stay at home. Your skin, stickers and trail still show.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>Start match</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Cancel</button></div>`;
@@ -308,15 +341,42 @@ function lobbyUI() {
       sfx('ui');
     })
   );
+  $$('#lTeamSize button').forEach(b =>
+    b.addEventListener('click', () => {
+      G.mpTeamSize = +b.dataset.ts;
+      G.mpTeams = G.mpTeams || { host: 0, client: 1 };
+      Net.sendLobby();
+      sfx('ui');
+      lobbyUI();
+    })
+  );
+  $$('[data-side]').forEach(b =>
+    b.addEventListener('click', () => {
+      const side = +b.dataset.side;
+      G.mpTeams = G.mpTeams || { host: 0, client: 1 };
+      if (host) {
+        G.mpTeams.host = side;
+        Net.sendLobby();
+      } else {
+        G.mpTeams.client = side;
+        Net.send({ t: 'team', team: side });
+      }
+      sfx('ui');
+      lobbyUI();
+    })
+  );
   const s = $('#lStart');
   if (s)
     s.addEventListener('click', () => {
       if (!n.connected) return;
       const format = G.mpFormat || 'balanced';
       const rounds = setRounds(G.mpRounds || 10);
-      const sched = makeSchedule(rounds);
-      Net.send({ t: 'begin', sched, format, rounds });
-      beginMP(sched, format, rounds);
+      const sched = makeSchedule(rounds),
+        teamSize = G.mpTeamSize === 2 ? 2 : 1,
+        T = G.mpTeams || { host: 0, client: 1 },
+        coop = teamSize === 2 && T.host === T.client;
+      Net.send({ t: 'begin', sched, format, rounds, teamSize, coop });
+      beginMP(sched, format, rounds, teamSize, coop);
     });
   $('#lCancel').addEventListener('click', () => {
     Net.close();
@@ -324,8 +384,33 @@ function lobbyUI() {
     showMenu();
   });
 }
-function beginMP(sched, format = 'balanced', rounds = 10) {
+/** Lobby: 1v1 or 2v2 (the host decides), and in 2v2 both players pick their own side. Bots fill the rest. */
+function lobbyTeamsHtml(host, connected) {
+  const size = G.mpTeamSize === 2 ? 2 : 1,
+    T = G.mpTeams || { host: 0, client: 1 },
+    meSide = host ? T.host : T.client,
+    friendSide = host ? T.client : T.host;
+  const sizeSeg = host
+    ? `<div class="seg rseg" id="lTeamSize" aria-label="Teams"><button data-ts="1" aria-pressed="${size === 1}">1 vs 1</button><button data-ts="2" aria-pressed="${size === 2}">2 vs 2</button></div>`
+    : `<p class="small">${size === 2 ? 'The host picked 2 vs 2.' : 'The host picked 1 vs 1.'}</p>`;
+  if (size !== 2) return sizeSeg;
+  const side = (i, label, col) => {
+    const members = [];
+    if (meSide === i) members.push(`<li class="you">${esc(G.name)} (you)</li>`);
+    if (connected && friendSide === i) members.push(`<li>${esc(G.oppName || 'Friend')}</li>`);
+    while (members.length < 2) members.push('<li class="bot">Bot</li>');
+    return `<div class="tside" style="--tc:${col}"><b>${label}</b><ul>${members.join('')}</ul>${meSide === i ? '<span class="small">You are here</span>' : `<button class="btn ghost sm" data-side="${i}">Join ${label}</button>`}</div>`;
+  };
+  return `${sizeSeg}<div class="tpick">${side(0, 'Blue team', '#4ea1ff')}${side(1, 'Red team', '#ff5c5c')}</div>
+    <p class="small">${meSide === friendSide ? 'Same team: you two against two bots.' : 'Different teams: each of you gets a bot partner.'}</p>`;
+}
+function beginMP(sched, format = 'balanced', rounds = 10, teamSize = 1, coop = false) {
   G.started = true;
+  G.mpTeamSize = teamSize;
+  G.mpCoop = teamSize === 2 && coop;
+  G.mpBots = null;
+  G.mpBotsRound = null;
+  G.teamSize = teamSize;
   $('#ovLobby').hidden = true;
   startMatch('mp', sched, format, rounds);
 }
@@ -633,6 +718,10 @@ if (window.__SD_TEST__)
     sizeArena,
     updateCam,
     enterWait,
+    beginMP,
+    myTeam,
+    teamOf,
+    lobbyTeamsHtml,
     syncPresentation,
     clearArenaInput,
     unlock,

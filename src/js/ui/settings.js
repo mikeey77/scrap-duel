@@ -177,7 +177,7 @@ function togglePause(force) {
   if (f)
     f.addEventListener('click', () => {
       togglePause(false);
-      if (B && B.seq === 'play') endRound(1 - B.me, `${G.name} forfeited the round.`);
+      if (B && B.seq === 'play') endRound(1 - myTeam(), `${G.name} forfeited the round.`);
     });
   const g = $('#pGarage');
   if (g)

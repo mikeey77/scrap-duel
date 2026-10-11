@@ -152,13 +152,23 @@ const myCarCfg = () => ({
   ...(gearActive() ? { gear: gearCfg(), flair: flairCfg() } : {})
 });
 /** Builds one car from a config entry at its spawn point. */
+/** Spawn point for car i. In 2v2 the second car of a team starts next to its teammate. */
+function spawnFor(i) {
+  const base = B.sp[i % 2] || B.sp[0];
+  if (i < 2) return base;
+  // teammates line up side by side, on the half of the arena with more room
+  const [x, y, a] = base,
+    dy = y < AH / 2 ? 170 : -170;
+  return [x, clamp(y + dy, WM + 70, AH - WM - 70), a];
+}
 function carFromCfg(c, i) {
-  const sp = B.sp[i],
+  const sp = spawnFor(i),
     v = makeCar(unpackDesign(c.design), i, sp[0], sp[1], sp[2], {
       tune: c.tune,
       name: c.name,
       paint: c.paint
     });
+  v.team = c.team ?? i % 2;
   v.style = c.style;
   v.diff = c.diff;
   v.look = { ...DEFAULT_STYLE, ...(c.look || {}) };
@@ -185,7 +195,11 @@ function makeCfg(opp) {
     theme: ti,
     special,
     field: serializeField(f),
-    cars: [myCarCfg(), opp]
+    cars: [
+      myCarCfg(),
+      opp,
+      ...(G.mode === 'solo' && G.ally && G.bot2 ? [teamBotCfg(G.ally, 0), teamBotCfg(G.bot2, 1)] : [])
+    ]
   };
 }
 
@@ -310,6 +324,8 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
   G.mode = mode;
   resetProfile();
   if (mode === 'solo') applyLoadout();
+  if (mode !== 'solo') G.teamSize = mode === 'mp' ? G.teamSize : 1;
+  G.ally = G.bot2 = null;
   if (mode === 'solo') {
     G.bot = makeBot(G.diff);
     G.bot.coins += DIFF[G.diff].bonus;
@@ -318,7 +334,10 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
     G.oppLook = randomLook(G.diff);
     G.oppBadge = G.oppLook.badge;
   }
+  if (mode === 'solo' && G.teamSize === 2) setupTeamBots();
   if (mode === 'solo' || mode === 'mp') G.sched = sched || makeSchedule();
+  // special rounds are built for two cars, so team matches are plain fights
+  if (G.teamSize === 2) G.sched = G.sched.map(() => null);
   if (G.format === 'finalehill') G.sched[ROUNDS - 1] = 'hill';
   $('#arena').hidden = true;
   $('#build').hidden = false;
@@ -342,8 +361,7 @@ function openBuild() {
   refreshUI();
   updateHUD();
   showTip(specialOf(G.round) ? 'special' : 'build');
-  if (G.nextTheme == null && !(G.mode === 'mp' && Net.role === 'client'))
-    G.nextTheme = pickTheme();
+  if (G.nextTheme == null && !(G.mode === 'mp' && Net.role === 'client')) G.nextTheme = pickTheme();
   intelUI(true);
 }
 /* ---------- garage intel: the arena through the window, and the rival's shadow ---------- */
@@ -556,9 +574,85 @@ function botBuildFor(P, diff) {
   }
   return botBuild({ ...P, inv });
 }
+/** 2v2 against bots: your partner (the style you picked) and a second rival, each with their own garage. */
+const PARTNER_STYLES = [
+  ['gunner', 'Gunner'],
+  ['rammer', 'Rammer'],
+  ['artillery', 'Artillery'],
+  ['brawler', 'Brawler']
+];
+function botOfStyle(style, diff, not = []) {
+  const pool = BOTS.filter(b => (!style || b.style === style) && !not.includes(b.name)),
+    b = pick(pool.length ? pool : BOTS.filter(b => !not.includes(b.name)));
+  return Object.assign(newProfile(), {
+    name: b.name,
+    style: b.style,
+    likes: b.likes,
+    paint: b.paint,
+    say: b.say,
+    diff
+  });
+}
+function setupTeamBots() {
+  G.ally = botOfStyle(G.partnerStyle || 'gunner', G.diff, [G.bot.name]);
+  G.bot2 = botOfStyle(null, G.diff, [G.bot.name, G.ally.name]);
+  for (const P of [G.ally, G.bot2]) P.coins += DIFF[G.diff].bonus;
+  if (G.ally.paint === G.paint) G.ally.paint = PAINTS.find(p => p !== G.paint && p !== G.oppPaint);
+  if ([G.paint, G.oppPaint, G.ally.paint].includes(G.bot2.paint))
+    G.bot2.paint = PAINTS.find(p => ![G.paint, G.oppPaint, G.ally.paint].includes(p));
+  G.oppName = `${G.bot.name} & ${G.bot2.name}`;
+}
+/** Each extra bot drafts, shops and builds every round like the main rival. */
+function prepareTeamBots() {
+  if (!G.ally || !G.bot2) return;
+  for (const P of [G.ally, G.bot2]) {
+    if (G.format === 'brawl') {
+      if (!P.design) P.design = brawlDesign(BRAWL_TYPES.find(t => t.style === P.style) || pick(BRAWL_TYPES), G.diff);
+      continue;
+    }
+    P.coins += 105;
+    botDraft(P);
+    if (DIFF[G.diff].build >= 0.8 || Math.random() < 0.5) botShop(P);
+    P.design = botBuildFor(P, G.diff);
+  }
+}
+/** Online 2v2: the host runs two bots. Co-op: two rivals. Versus: one partner for each player. */
+function mpTeamBots() {
+  if (!G.mpBots) {
+    const a = botOfStyle(null, 1),
+      b = botOfStyle(null, 1, [a.name]);
+    G.mpBots = [a, b];
+  }
+  if (G.mpBotsRound !== G.round) {
+    G.mpBotsRound = G.round;
+    for (const P of G.mpBots) {
+      if (G.format === 'brawl') {
+        if (!P.design) P.design = brawlDesign(BRAWL_TYPES.find(t => t.style === P.style) || pick(BRAWL_TYPES), 1);
+        continue;
+      }
+      P.coins += 105 + (G.round === 1 ? DIFF[1].bonus : 0);
+      botDraft(P);
+      botShop(P);
+      P.design = botBuildFor(P, 1);
+    }
+  }
+  return G.mpBots.map(P => ({ ...teamBotCfg(P, 0), diff: 1 }));
+}
+const teamBotCfg = (P, team) => ({
+  design: packDesign(P.design),
+  tune: [...P.tune],
+  name: P.name,
+  paint: P.paint,
+  ctrl: 'bot',
+  style: P.style,
+  diff: G.diff,
+  look: randomLook(G.diff),
+  team
+});
 function prepareBot() {
   if (G.botRound === G.round) return;
   G.botRound = G.round;
+  prepareTeamBots();
   if (G.format === 'brawl') {
     brawlBot();
     G.botReadyAt = performance.now() + rnd(700, 1800);
@@ -663,7 +757,7 @@ function setButtons() {
   const be = $('#bEnd');
   if (be)
     be.addEventListener('click', () => {
-      if (B && B.seq === 'play') endRound(1 - B.me, `${G.name} forfeited the round.`);
+      if (B && B.seq === 'play') endRound(1 - myTeam(), `${G.name} forfeited the round.`);
     });
 }
 function pickTheme() {
@@ -687,7 +781,7 @@ function launchBattle(cfg) {
 }
 function showVS(cfg, done) {
   const me = cfg.cars[cfg.me],
-    op = cfg.cars[1 - cfg.me],
+    op = cfg.cars[1 - (cfg.me % 2)],
     th = THEMES[cfg.theme],
     S = cfg.special && SPECIALS[cfg.special];
   const img = c => {
@@ -730,8 +824,9 @@ function showVS(cfg, done) {
 function toBattle(cfg) {
   G.scars = null; // a fresh round: the repair bay has done its job
   try {
-    G.lastOppDesign = cfg.cars[1 - cfg.me].design;
-    G.oppBadge = validBadge(cfg.cars[1 - cfg.me].look && cfg.cars[1 - cfg.me].look.badge);
+    const opI = 1 - (cfg.me % 2);
+    G.lastOppDesign = cfg.cars[opI].design;
+    G.oppBadge = validBadge(cfg.cars[opI].look && cfg.cars[opI].look.badge);
   } catch (e) {}
   if (cfg.format) G.format = cfg.format;
   G.phase = 'battle';
@@ -780,14 +875,14 @@ function setEndBanner() {
   B.banner =
     w == null
       ? { text: 'DRAW', col: '#ece8df', t: 0, sub: 'No points this round' }
-      : w === B.me
+      : w === myTeam()
         ? {
             text: 'ROUND WON',
             col: '#5cc38f',
             t: 0,
             sub:
               G.format === 'lives'
-                ? `${B.cars[1 - B.me].name} loses ${loss} lives`
+                ? `${B.cars[1 - myTeam()].name} loses ${loss} lives`
                 : `+${points} point${points > 1 ? 's' : ''}`
           }
         : {
@@ -796,7 +891,7 @@ function setEndBanner() {
             t: 0,
             sub: G.format === 'lives' ? `You lose ${loss} lives` : `${B.cars[w].name} takes ${points}`
           };
-  if (!B.demo && !B.replay) Announcer.say(w == null ? 'Draw' : w === B.me ? 'Round won' : 'Round lost');
+  if (!B.demo && !B.replay) Announcer.say(w == null ? 'Draw' : w === myTeam() ? 'Round won' : 'Round lost');
 }
 function endRound(win, why) {
   if (!B || B.seq === 'end') return;
@@ -828,7 +923,7 @@ function endRound(win, why) {
     Net.lastResult = { t: 'result', round: G.round, win, why, points: B.points, stats: B.stats };
     Net.send(Net.lastResult);
   }
-  sfx(win === B.me ? 'win' : win == null ? 'ui' : 'lose');
+  sfx(win === myTeam() ? 'win' : win == null ? 'ui' : 'lose');
   if (!B.demo) $('#abtns').innerHTML = '';
 }
 function clientResult(d) {
@@ -842,7 +937,7 @@ function clientResult(d) {
   B.seqT = 0;
   B.ts = 1;
   setEndBanner();
-  sfx(d.win === B.me ? 'win' : d.win == null ? 'ui' : 'lose');
+  sfx(d.win === myTeam() ? 'win' : d.win == null ? 'ui' : 'lose');
 }
 
 /** A losing player picks one free part from three, so a bad round still moves your car forward. */
@@ -865,10 +960,10 @@ function pityOptions() {
 function finishBattle() {
   if (B.demo) return demoNext();
   const me = B.me,
-    op = 1 - me,
+    op = 1 - myTeam(),
     st = B.stats,
     win = B.win,
-    iWon = win === me,
+    iWon = win === myTeam(),
     draw = win == null,
     pts = B.points ?? roundPoints(G.round),
     why = B.why,
@@ -1049,7 +1144,21 @@ function showFinal() {
         : s[0] > s[1] || (s[0] === s[1] && tot.d > tot.t),
     tie = G.format === 'lives' ? G.lives[0] === G.lives[1] : s[0] === s[1];
   const prog = progressMatch({ won });
-  if (G.mode === 'mp') h2hRecord(G.oppName, won, tie);
+  if (G.mode === 'mp' && !G.mpCoop) h2hRecord(G.oppName, won, tie);
+  // new achievements: team wins and beating a Hard bot
+  if (won && G.teamSize === 2) grantAch('road1');
+  if (won && G.mode === 'solo' && !G.run && G.diff === 2) grantAch('road3');
+  if (G.mode === 'solo' && !G.run && !tie) {
+    const rec = (() => {
+      try {
+        return { w: 0, l: 0, ...JSON.parse(load('sd.record') || '{}') };
+      } catch (e) {
+        return { w: 0, l: 0 };
+      }
+    })();
+    rec[won ? 'w' : 'l']++;
+    store('sd.record', rec);
+  }
   const spoils = matchSpoils(won, tot.w);
   // streaks against the bot: offer an easier (or harder) bot after three in a row
   let nudge = '';
@@ -1089,7 +1198,7 @@ function showFinal() {
     ${progressHtml(prog)}${spoilsHtml(spoils)}
     <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
     ${nudge}
-    ${G.mode === 'mp' ? `<p class="series">Tonight: <b>${G.series.w}–${G.series.l}</b> against ${esc(G.oppName)}${h2hLine(G.oppName) ? ` · ${h2hLine(G.oppName)}` : ''}</p>` : ''}`;
+    ${G.mode === 'mp' ? `<p class="series">Tonight: <b>${G.series.w}–${G.series.l}</b> ${G.mpCoop ? 'together with' : 'against'} ${esc(G.oppName)}${!G.mpCoop && h2hLine(G.oppName) ? ` · ${h2hLine(G.oppName)}` : ''}</p>` : ''}`;
   $('#ovResult').hidden = false;
   sfx(won ? 'win' : 'lose');
   const a = $('#btnAgain');

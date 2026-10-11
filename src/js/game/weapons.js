@@ -53,7 +53,7 @@ function rayHit(x, y, a, rng, pierce, own) {
       break;
     }
     for (const v of B.cars) {
-      if (v.idx === own || v.dead || v.z > 40 || hits.some(h => h.car === v)) continue;
+      if (sameTeam(v.idx, own) || v.dead || v.z > 40 || hits.some(h => h.car === v)) continue;
       const b = carBlockAt(v, px, py, 0);
       if (b) {
         hits.push({ car: v, b });
@@ -2062,7 +2062,7 @@ function stepShots(dt) {
         break;
       }
       for (const v of B.cars) {
-        if (v.dead || v.idx === s.own || v.z >= 30 || v === s.ignore) continue;
+        if (v.dead || sameTeam(v.idx, s.own) || v.z >= 30 || v === s.ignore) continue;
         if (hitCar(v, s)) {
           if (s.kind === 'bounce' && s.bounces-- > 0) {
             s.vx *= -0.8;
@@ -2190,7 +2190,7 @@ function stepShots(dt) {
       B.lobs.splice(i, 1);
       let screened = false;
       for (const v of B.cars) {
-        if (v.dead || v.idx === l.own) continue;
+        if (v.dead || sameTeam(v.idx, l.own)) continue;
         const sc = v.insts.find(
           I => I.alive && I.m.screen && Math.hypot(ipos(v, I)[0] - l.tx, ipos(v, I)[1] - l.ty) < S * 2.2
         );
