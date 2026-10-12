@@ -8,6 +8,7 @@ let hqTab = 'gear',
 const HQ_TABS = [
   ['gear', 'Gear'],
   ['fab', 'Fabricator'],
+  ['chips', 'Chips'],
   ['livery', 'Skins'],
   ['stickers', 'Stickers'],
   ['trail', 'Trails'],
@@ -49,13 +50,81 @@ function hqCarHtml() {
     <div class="hq-paint" role="group" aria-label="Paint colour">${PAINTS.map(p => `<button style="background:${p}" data-paint="${p}" aria-pressed="${G.paint === p}" title="Paint"></button>`).join('')}</div>
     ${setPanelHtml()}
     <div class="hq-lo"><span class="label">Loadout · ${GEAR.loadout.length}/${slots}</span>
-      <p class="small">Loadout gear is in your parts bin from round 1 of every Duel against bots (1v1 and 2v2) and every Gauntlet run. Not in Blueprint Brawl or online..</p>${lo}</div>
+      <p class="small">In your parts bin from round 1 of every Duel against bots and every Gauntlet run.</p>${lo}${hqSetsHtml()}</div>
     <div class="hq-presets"><span class="label">Looks</span>${[0, 1, 2]
       .map(i => {
         const P = (PROG.presets || [])[i];
         return `<div class="pre"><button class="btn ghost sm" data-wear="${i}" ${P ? '' : 'disabled'}>${P ? esc(P.name) : 'Empty'}</button><button class="btn ghost sm" data-save="${i}" title="Save the current look here">Save</button></div>`;
       })
       .join('')}</div>`;
+}
+
+/** Loadout sets: the ones that are on, and the ones your loadout is halfway to. */
+function hqSetsHtml() {
+  const prog = setProgress(loadoutGear()),
+    shown = prog
+      .filter(p => p.on)
+      .concat(
+        prog
+          .filter(p => !p.on && p.have > 0)
+          .sort((a, b) => b.have / b.need - a.have / a.need)
+          .slice(0, 2)
+      );
+  const row = p =>
+    `<div class="setrow${p.on ? ' on' : ''}" style="--sc:${p.set.col}"><b>${esc(p.set.name)}</b><span class="setpips">${Array.from({ length: p.need }, (_, i) => `<i class="${i < p.have ? 'on' : ''}"></i>`).join('')}</span><span class="small">${esc(p.set.text)}${
+      p.on
+        ? ''
+        : ` Needs ${Object.entries(p.set.need)
+            .map(([f, n]) => (f === 'mix' ? `${n} different families` : `${n} ${FAMILY_NAME[f].toLowerCase()}`))
+            .join(' + ')}.`
+    }</span></div>`;
+  return `<div class="hq-sets"><span class="label">Loadout sets</span>${shown.length ? shown.map(row).join('') : '<p class="small">Put parts of one family in your loadout for a set bonus: three guns, two explosives, three armour pieces…</p>'}<button class="linkbtn" id="setAll" type="button">All ${GEAR_SETS.length} sets</button></div>`;
+}
+function showAllSets() {
+  const prog = setProgress(loadoutGear());
+  toastCard(
+    'Loadout sets',
+    prog
+      .map(
+        p =>
+          `<div class="setrow${p.on ? ' on' : ''}" style="--sc:${p.set.col}"><b>${esc(p.set.name)}</b><span class="setpips">${Array.from({ length: p.need }, (_, i) => `<i class="${i < p.have ? 'on' : ''}"></i>`).join('')}</span><span class="small">${esc(p.set.text)} Needs ${Object.entries(
+            p.set.need
+          )
+            .map(([f, n]) => (f === 'mix' ? `${n} different families` : `${n} ${FAMILY_NAME[f].toLowerCase()}`))
+            .join(' + ')}.</span></div>`
+      )
+      .join('')
+  );
+}
+/** A simple card overlay with a title and some HTML. */
+function toastCard(title, html) {
+  let ov = $('#ovInfo');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.className = 'overlay';
+    ov.id = 'ovInfo';
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `<div class="card infocard"><h2>${esc(title)}</h2>${html}<button class="btn" id="infoDone">Got it</button></div>`;
+  ov.hidden = false;
+  $('#infoDone').onclick = () => {
+    ov.hidden = true;
+    sfx('ui');
+  };
+}
+/** The chip case: every chip you own, three of a kind fuse into the next mark. */
+function hqChipsHtml() {
+  const rows = CHIP_IDS.map(c => {
+    const C = CHIPS[c];
+    return `<div class="chiprow" style="--cc:${C.col}"><b class="cn">${esc(C.name)}</b>${[1, 2, 3]
+      .map(t => {
+        const k = chipKey(c, t),
+          n = chipCount(k);
+        return `<div class="chipcell${n ? '' : ' none'}">${chipIcon(k, 38)}<span><b>${CHIP_MK[t]}</b>${esc(C.text(t))}</span><em>×${n}</em>${t < 3 ? `<button class="btn ghost sm" data-cfuse="${k}" ${n >= 3 ? '' : 'disabled'} title="Three ${esc(chipName(k))} become one ${esc(chipName(chipKey(c, t + 1)))}">Fuse 3 → ${CHIP_MK[t + 1]}</button>` : ''}</div>`;
+      })
+      .join('')}</div>`;
+  }).join('');
+  return `<div class="hq-chips"><p>Mod chips go into the sockets of your gear: one opens at level 3, 6 and 9. You find them after matches, and every Gauntlet boss drops a Mk II. Taking a chip out is free.</p><div class="chipcase">${rows}</div></div>`;
 }
 
 /* ---------- tabs ---------- */
@@ -101,7 +170,7 @@ function hqFabHtml() {
     ).join('')}</div>
     ${
       hqFabLast
-        ? `<div class="fab-out"><img alt="" src="${iconURL(hqFabLast.id, 96)}"><div><span class="label" style="color:${RAR[MOD[hqFabLast.id].rar].col}">${RAR[MOD[hqFabLast.id].rar].name} · fresh off the line</span><h3>${esc(MOD[hqFabLast.id].name)}</h3><button class="btn ghost sm" id="fabShow">Open in Gear</button></div></div>`
+        ? `<div class="fab-out"><img alt="" src="${iconURL(hqFabLast.id, 96)}"><div><span class="label" style="color:${RAR[MOD[hqFabLast.id].rar].col}">${RAR[MOD[hqFabLast.id].rar].name} · ${DUP_XP.get(hqFabLast) ? `a copy: +${DUP_XP.get(hqFabLast).xp} XP for yours` : 'fresh off the line'}</span><h3>${esc(MOD[hqFabLast.id].name)}</h3><button class="btn ghost sm" id="fabShow">Open in Gear</button></div></div>`
         : ''
     }</div>`;
 }
@@ -149,9 +218,11 @@ function renderHQ() {
         ? hqGearHtml()
         : tab === 'fab'
           ? hqFabHtml()
-          : tab === 'profile'
-            ? hqProfileHtml()
-            : hqLookHtml(tab);
+          : tab === 'chips'
+            ? hqChipsHtml()
+            : tab === 'profile'
+              ? hqProfileHtml()
+              : hqLookHtml(tab);
   $('#ovWork').innerHTML = `<div class="hq">
     <header><div><span class="label">Garage</span><h2>${esc(G.name)} <span class="ttl">${esc(titleName(G.style.title))}</span></h2></div>
       ${walletHtml()}
@@ -227,6 +298,7 @@ function hqWire() {
   on('.wb-row', b => {
     wbSel = +b.dataset.u;
     wbArmed = null;
+    wbSock = null;
     rerender('ui');
   });
   const g = gearById(wbSel);
@@ -249,10 +321,37 @@ function hqWire() {
   });
   on('[data-sp]', b => {
     if (gearPickSpecial(g, b.dataset.sp)) {
-      const S = b.dataset.sp === 'sp' ? gearSpecials(g.id)[0] : gearSteady(g.id);
+      const S = gearPicked5(g);
       toast(`${S.name} fitted to ${MOD[g.id].name}`, true);
       rerender('legend');
     } else rerender('remove');
+  });
+  on('[data-sock]', b => {
+    const i = +b.dataset.sock;
+    wbSock = wbSock === i ? null : i;
+    rerender('ui');
+  });
+  on('[data-chip]', b => {
+    if (gearSocket(g, wbSock, b.dataset.chip))
+      toast(`${chipName(b.dataset.chip)} plugged into ${MOD[g.id].name}`, true);
+    wbSock = null;
+    rerender('place');
+  });
+  on('#sockOut', () => {
+    gearUnsocket(g, wbSock);
+    wbSock = null;
+    rerender('remove');
+  });
+  on('[data-cfuse]', b => {
+    const up = chipFuse(b.dataset.cfuse);
+    if (up) toast(`Fused into ${chipName(up)}`, true);
+    rerender(up ? 'jackpot' : 'remove');
+  });
+  on('#setAll', () => showAllSets());
+  on('#wbReforge', () => {
+    if (gearReforge(g)) toast(`${MOD[g.id].name} reforged: ${'✦'.repeat(g.s)} and back to level 1`, true);
+    hqLevelUp = g.u;
+    rerender('jackpot');
   });
   on('#wbReroll', () => {
     gearRerollQuirk(g);
@@ -261,6 +360,10 @@ function hqWire() {
   on('#wbEquip', () => {
     const r = gearEquip(g);
     if (r === 'full') toast(`All ${loadoutSlots()} loadout slots are full. Take something out first.`);
+    if (r === 'on') {
+      const now = loadoutSets();
+      if (now.length) toast(`Set on: ${now.map(id => GEAR_SETS.find(S => S.id === id).name).join(', ')}`, true);
+    }
     rerender(r === 'full' ? 'remove' : 'place');
   });
   on('#wbLock', () => {

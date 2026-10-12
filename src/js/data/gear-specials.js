@@ -1,5 +1,5 @@
 // Gear specials: every part gets two milestones.
-//   Level 5: pick one of two. The part's own special, or "Steady" (+10%, the safe choice).
+//   Level 5: pick A or B, two different play styles. Swapping later costs bolts.
 //   Level 10: the legendary special, always on.
 // A part uses its own entry in GEAR_SPECIAL_PART when it has one, otherwise the defaults of its group.
 // Parts in a group without specials (gadgets) only get Steady and a +10% placeholder at level 10:
@@ -124,7 +124,44 @@ const GEAR_SPECIAL_GROUP = {
     gsp('tuned', 'Tuned Engine', '+4% top speed and +10% acceleration.', { speed: 0.04, accel: 1.1 }),
     gsp('lowrider', 'Low Rider', '+5% top speed and 35% less knockback.', { speed: 0.05, knockRes: 0.35 })
   ],
-  gadget: [null, null]
+  gadget: [
+    gsp('hardened', 'Hardened Casing', '+30% part HP and explosions do 30% less to it.', {
+      hp: 1.3,
+      res: { expl: 0.3 }
+    }),
+    null
+  ]
+};
+// The B option at level 5 per group: a different play style than A.
+const GEAR_SPECIAL_ALT = {
+  bullet: gsp('tracer', 'Tracer Rounds', 'Bullets fly 30% faster and hit 10% harder.', { spd: 1.3, dmg: 1.1 }),
+  shell: gsp('shrapnel', 'Shrapnel', 'Every hit bursts in a 30 px blast.', { splashAdd: 30 }),
+  bolt: gsp('capacitor', 'Capacitor', '+25% fire rate.', { rate: 1.25 }),
+  plasma: gsp('unstable', 'Unstable Core', '25% chance to hit for 2.5× damage.', { crit: 0.25 }),
+  rocket: gsp('napalm', 'Napalm Warheads', 'Hits set the part they hit on fire for 2 s.', { burn: 2 }),
+  homing: gsp('shockpayload', 'Shock Payload', "Hits stall the target's weapons for 0.4 s.", { shock: 0.4 }),
+  flame: gsp('fueltank', 'Armoured Tank', '+15% damage, and fire and explosions do 40% less to it.', {
+    dmg: 1.15,
+    res: { fire: 0.4, expl: 0.4 }
+  }),
+  water: gsp('boiling', 'Boiling Water', '+40% damage.', { dmg: 1.4 }),
+  arc: gsp('capbank', 'Capacitor Bank', '+30% fire rate.', { rate: 1.3 }),
+  beam: gsp('coolingfins', 'Cooling Fins', '+20% damage, and fire and energy do 30% less to it.', {
+    dmg: 1.2,
+    res: { fire: 0.3, energy: 0.3 }
+  }),
+  rail: gsp('shrapnelslug', 'Shrapnel Slug', 'Every hit bursts in a 35 px blast.', { splashAdd: 35 }),
+  lob: gsp('heavyshell', 'Heavy Shell', '+30% damage.', { dmg: 1.3 }),
+  bounce: gsp('spikedrounds', 'Spiked Rounds', '20% chance to hit for 2.5× damage.', { crit: 0.2 }),
+  sticky: gsp('shockcharge', 'Shock Charge', "Hits stall the target's weapons for 0.4 s.", { shock: 0.4 }),
+  harpoon: gsp('electrohook', 'Electro Hook', "Hits stall the target's weapons for 0.5 s.", { shock: 0.5 }),
+  blade: gsp('whirlwind', 'Whirlwind', 'Hits 30% faster.', { rate: 1.3 }),
+  ram: gsp('shockbumper', 'Shock Absorber', 'You take 30% less ram damage.', { ramIn: 0.3 }),
+  armour: gsp('heatshield', 'Heat Shield', 'Fire and energy do 40% less damage to this part.', {
+    res: { fire: 0.4, energy: 0.4 }
+  }),
+  move: gsp('offroad', 'Off-road Kit', '+15% acceleration and 30% less knockback.', { accel: 1.15, knockRes: 0.3 }),
+  gadget: gsp('showpiece', 'Showpiece', 'The crowd loves it: +40% hype, and +10% part HP.', { hype: 0.4, hp: 1.1 })
 };
 // Parts with their own idea; either slot can be null to fall back to the group.
 const GEAR_SPECIAL_PART = {
@@ -227,11 +264,22 @@ function gearSpecials(id) {
   return [own[0] || grp[0] || null, own[1] || grp[1] || GEAR_PLACEHOLDER[k]];
 }
 const gearSteady = id => GEAR_STEADY[gearKind(id)];
+/** The two level-5 options [A, B]. A part with its own idea gets it as A and the group's idea as B. */
+function gearOptions5(id) {
+  const grp = GEAR_SPECIAL_GROUP[gearGroup(id)] || [null, null],
+    own = (GEAR_SPECIAL_PART[id] || [null])[0],
+    a = own || grp[0] || gearSteady(id);
+  let b = own && grp[0] && grp[0].id !== own.id ? grp[0] : GEAR_SPECIAL_ALT[gearGroup(id)];
+  if (!b || b.id === a.id) b = gearSteady(id);
+  return [a, b];
+}
+/** The picked level-5 special: 'sp' = A, 'sp2' = B. */
+const gearPicked5 = g => (g.c5 ? gearOptions5(g.id)[g.c5 === 'sp2' ? 1 : 0] : null);
 /** The fx that are switched on for a gear piece at its level and choice. */
 function gearActiveSpecials(g) {
-  const [s5, s10] = gearSpecials(g.id),
+  const [, s10] = gearSpecials(g.id),
     out = [];
-  if (g.lvl >= 5 && g.c5) out.push(g.c5 === 'sp' && s5 ? s5 : gearSteady(g.id));
+  if (g.lvl >= 5 && g.c5) out.push(gearPicked5(g));
   if (g.lvl >= 10) out.push(s10);
   return out;
 }

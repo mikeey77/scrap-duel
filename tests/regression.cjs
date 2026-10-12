@@ -1928,4 +1928,69 @@ test('gear specials fire in battle: a level 10 machine gun shoots twice as many 
   assert(ten.burn > 0, 'hot rounds');
 });
 
+test('gear 1.5: A/B specials, chips, sets, duplicate XP and reforging', () => {
+  const { api: a } = runtime();
+  a.setGear({ bolts: 1000, items: [], next: 1 });
+  // every part offers two different level-5 options
+  for (const id of ['mg', 'sniper', 'armor', 'wheel', 'saw', 'cannon']) {
+    const [A, B] = a.gearOptions5(id);
+    assert(A && B && A.id !== B.id, `${id} has A and B`);
+  }
+  const mg = a.addGear('mg', 5, true);
+  assert(a.gearPickSpecial(mg, 'sp2'));
+  assert.equal(a.gearPicked5(mg).id, a.gearOptions5('mg')[1].id);
+  assert.equal(a.GEAR().bolts, 1000, 'first pick is free');
+  assert(a.gearPickSpecial(mg, 'sp'));
+  assert.equal(a.GEAR().bolts, 960, 'switching costs bolts');
+  // chips: socket 1 open at level 5, socket 2 not; fusing three makes the next mark
+  a.addChip('power1', 4);
+  assert(a.gearSocket(mg, 0, 'power1'));
+  assert(!a.gearSocket(mg, 1, 'power1'), 'level 6 socket is still closed');
+  assert.equal(a.GEAR().chips.power1, 3);
+  assert.equal(a.chipFuse('power1'), 'power2');
+  assert.equal(a.GEAR().chips.power2, 1);
+  assert(!a.GEAR().chips.power1);
+  assert(a.gearUnsocket(mg, 0));
+  assert.equal(a.GEAR().chips.power1, 1, 'unsocketing returns the chip');
+  // duplicates become XP for the copy you own
+  const before = mg.xp || 0,
+    n = a.GEAR().items.length,
+    dup = a.addGear('mg', 1, true, 'test', { dup: true });
+  assert.equal(dup, mg);
+  assert.equal(a.GEAR().items.length, n, 'no new item');
+  assert(mg.xp > before, 'the copy got XP');
+  // sets from the loadout
+  const s1 = a.addGear('smg', 1, true),
+    s2 = a.addGear('sniper', 1, true);
+  a.GEAR().loadout = [mg.u, s1.u, s2.u];
+  assert.equal(a.loadoutSets().join(), 'leadstorm');
+  // reforge a level 10 piece
+  s2.lvl = 10;
+  s2.c5 = 'sp';
+  assert(a.gearReforge(s2));
+  assert.equal(s2.lvl, 1);
+  assert.equal(s2.s, 1);
+  assert(!s2.c5);
+  assert(a.gearBonus(s2) > 0, 'a star adds to the level bonus');
+});
+
+test('gear 1.5 in battle: chips and sets change the car', () => {
+  const { aa } = arenaRuntime(),
+    base = new Map(),
+    top = new Map();
+  base.set('0,0', { id: 'cockpit', rot: 0, x: 0, y: 0 });
+  base.set('0,-1', { id: 'frame', rot: 0, x: 0, y: -1 });
+  top.set('0,-1', { id: 'mg', rot: 0, x: 0, y: -1 });
+  const mk = () => aa.makeCar({ base, top }, 0, 700, 600, 0, { tune: [], name: 'T', paint: '#fff' });
+  const plain = mk(),
+    chipped = mk();
+  aa.applyGear(chipped, [{ id: 'mg', lvl: 3, q: null, c5: null, ch: ['power3'] }]);
+  const gun = v => v.insts.find(I => I.id === 'mg');
+  assert(gun(chipped).W.dmg > gun(plain).W.dmg * 1.15, 'a Power Mk III chip adds damage');
+  const set = mk();
+  aa.applySets(set, ['leadstorm', 'bunker']);
+  assert((gun(set).gRate || 1) > 1.1, 'Lead Storm speeds up guns');
+  assert(set.total > plain.total * 1.09, 'Bunker adds HP');
+});
+
 console.log(`\n${passed} regression tests passed.`);

@@ -1,7 +1,7 @@
 // Personal gear and sticker flair: your own upgraded parts (found again in matches) and sticker perks.
 // Only single-player cars carry gear or flair; online configs never include them.
 
-let GEAR = { bolts: 0, items: [], next: 1, loadout: [], locked: [] };
+let GEAR = { bolts: 0, items: [], next: 1, loadout: [], locked: [], chips: {} };
 function loadGear() {
   try {
     const g = JSON.parse(load('sd.gear') || 'null');
@@ -11,8 +11,11 @@ function loadGear() {
         items: g.items.filter(x => x && MOD[x.id] && x.lvl >= 1).map(sanitizeGear),
         next: Math.max(1, g.next | 0),
         loadout: [],
-        locked: []
+        locked: [],
+        chips: {}
       };
+      for (const [k, n] of Object.entries(g.chips || {}))
+        if (chipParse(k) && n > 0) GEAR.chips[k] = Math.min(99, n | 0);
       for (const x of GEAR.items) GEAR.next = Math.max(GEAR.next, x.u + 1);
       const has = u => GEAR.items.some(x => x.u === u);
       GEAR.loadout = (Array.isArray(g.loadout) ? g.loadout : []).filter(has).slice(0, 4);
@@ -21,7 +24,7 @@ function loadGear() {
     }
   } catch (e) {}
   // first time: three starter pieces so the Workbench is never empty
-  GEAR = { bolts: 60, items: [], next: 1, loadout: [], locked: [] };
+  GEAR = { bolts: 60, items: [], next: 1, loadout: [], locked: [], chips: {} };
   for (const id of ['wheel', 'frame', 'mg']) if (MOD[id]) addGear(id, 1, true);
   GEAR.loadout = GEAR.items.filter(g => g.id === 'mg').map(g => g.u);
   saveGear();
@@ -30,7 +33,10 @@ const saveGear = () => store('sd.gear', GEAR);
 function sanitizeGear(x) {
   const g = { u: x.u | 0, id: x.id, lvl: clamp(x.lvl | 0, 1, GEAR_MAX), xp: Math.max(0, x.xp | 0) };
   if (x.q && QUIRKS[x.q]) g.q = x.q;
-  if (x.c5 === 'sp' || x.c5 === 'st') g.c5 = x.c5;
+  if (x.c5 === 'sp' || x.c5 === 'sp2') g.c5 = x.c5;
+  else if (x.c5 === 'st') g.c5 = 'sp2'; // Steady (before 1.5) became the B option
+  if (Array.isArray(x.ch)) g.ch = [0, 1, 2].map(i => (chipParse(x.ch[i]) ? x.ch[i] : null));
+  if (x.s) g.s = clamp(x.s | 0, 0, GEAR_STARS);
   if (Array.isArray(x.qo)) g.qo = x.qo.filter(q => QUIRKS[q]).slice(0, 3);
   if (x.from) g.from = String(x.from).slice(0, 40);
   if (x.isNew) g.isNew = 1;
@@ -39,9 +45,24 @@ function sanitizeGear(x) {
 const gearName = g => `${MOD[g.id].name} Lv ${g.lvl}`;
 const gearById = u => GEAR.items.find(g => g.u === u);
 
-/** Adds a gear item. A full locker turns the drop into bolts instead. */
-function addGear(id, lvl = 1, quiet, from) {
+/** XP a duplicate drop gives to every copy you own (mastery per part type). */
+const DUP_XP = new WeakMap();
+const dupXpFor = id => 60 + 25 * (MOD[id] ? MOD[id].rar : 0);
+/** Adds a gear item. A full locker turns the drop into bolts instead.
+ *  With opt.dup, a part you already own becomes XP for every copy of it instead of a new item. */
+function addGear(id, lvl = 1, quiet, from, opt = {}) {
   if (!MOD[id] || id === 'cockpit') return null;
+  const copies = GEAR.items.filter(x => x.id === id);
+  if (opt.dup && copies.length) {
+    const xp = dupXpFor(id);
+    for (const c of copies)
+      if (c.lvl < GEAR_MAX) c.xp = Math.min((c.xp || 0) + xp, gearNeed(c.lvl) * 2);
+      else GEAR.bolts += Math.round(xp / 2);
+    const best = copies.reduce((a, b) => (b.lvl > a.lvl ? b : a));
+    DUP_XP.set(best, { xp, n: copies.length });
+    saveGear();
+    return best;
+  }
   if (GEAR.items.length >= GEAR_CAP) {
     const b = gearScrapValue({ id, lvl });
     GEAR.bolts += b;
@@ -80,11 +101,10 @@ function gearUpgrade(g) {
   saveGear();
   return true;
 }
-/** Level 5: the part's own special ('sp') or Steady ('st'). Can be changed later for bolts. */
+/** Level 5: option A ('sp') or B ('sp2'). Can be changed later for bolts. */
 const SPECIAL_SWAP = 40;
 function gearPickSpecial(g, c) {
-  if (g.lvl < 5 || (c !== 'sp' && c !== 'st')) return false;
-  if (c === 'sp' && !gearSpecials(g.id)[0]) return false;
+  if (g.lvl < 5 || (c !== 'sp' && c !== 'sp2')) return false;
   if (g.c5 && g.c5 !== c) {
     if (GEAR.bolts < SPECIAL_SWAP) return false;
     GEAR.bolts -= SPECIAL_SWAP;
@@ -132,6 +152,7 @@ function gearFuse(a, b) {
   if (GEAR.loadout.includes(lose.u)) GEAR.loadout = GEAR.loadout.map(u => (u === lose.u ? keep.u : u));
   GEAR.loadout = [...new Set(GEAR.loadout)];
   GEAR.locked = GEAR.locked.filter(u => u !== lose.u);
+  returnChips(lose);
   // the spare copy becomes experience for the one you keep
   if (keep.lvl < GEAR_MAX) keep.xp = Math.min((keep.xp || 0) + (lose.xp || 0) + 50 * lose.lvl, gearNeed(keep.lvl) * 2);
   else GEAR.bolts += gearScrapValue(lose);
@@ -141,11 +162,73 @@ function gearFuse(a, b) {
 }
 function gearScrap(g) {
   if (gearLocked(g)) return false;
+  returnChips(g);
   GEAR.items = GEAR.items.filter(x => x !== g);
   GEAR.loadout = GEAR.loadout.filter(u => u !== g.u);
   GEAR.bolts += gearScrapValue(g);
   for (const k in G.gearFound || {}) if (G.gearFound[k] === g.u) delete G.gearFound[k];
   saveGear();
+}
+
+/* ---------- mod chips ---------- */
+function addChip(k, n = 1) {
+  if (!chipParse(k)) return;
+  GEAR.chips[k] = (GEAR.chips[k] || 0) + n;
+  if (GEAR.chips[k] <= 0) delete GEAR.chips[k];
+  saveGear();
+}
+const chipCount = k => GEAR.chips[k] || 0;
+const socketOpen = (g, i) => g.lvl >= CHIP_SOCKETS[i];
+function returnChips(g) {
+  for (const k of g.ch || []) if (k) GEAR.chips[k] = (GEAR.chips[k] || 0) + 1;
+  delete g.ch;
+}
+/** Puts a chip from your case into socket i (the chip that was there goes back to the case). */
+function gearSocket(g, i, k) {
+  if (!socketOpen(g, i) || !chipCount(k)) return false;
+  g.ch = g.ch || [null, null, null];
+  if (g.ch[i]) GEAR.chips[g.ch[i]] = (GEAR.chips[g.ch[i]] || 0) + 1;
+  g.ch[i] = k;
+  addChip(k, -1);
+  return true;
+}
+function gearUnsocket(g, i) {
+  if (!g.ch || !g.ch[i]) return false;
+  addChip(g.ch[i], 1);
+  g.ch[i] = null;
+  saveGear();
+  return true;
+}
+/** Three of the same chip fuse into one of the next mark. */
+function chipFuse(k) {
+  const p = chipParse(k);
+  if (!p || p.t >= 3 || chipCount(k) < 3) return null;
+  addChip(k, -3);
+  const up = chipKey(p.c, p.t + 1);
+  addChip(up, 1);
+  return up;
+}
+/** A random chip: mostly Mk I, now and then better. */
+function rollChip(minT = 1) {
+  const t = Math.max(minT, Math.random() < 0.12 ? 2 : 1);
+  return chipKey(pick(CHIP_IDS), t);
+}
+/** Chips that are in an open socket. */
+const gearChipsOn = g => (g.ch || []).filter((k, i) => k && socketOpen(g, i));
+
+/* ---------- prestige ---------- */
+const canReforge = g => g.lvl >= GEAR_MAX && (g.s || 0) < GEAR_STARS;
+/** Reforge: a level-10 piece goes back to level 1 with a permanent star. Specials are earned again. */
+function gearReforge(g) {
+  if (!canReforge(g) || GEAR.bolts < REFORGE_COST) return false;
+  GEAR.bolts -= REFORGE_COST;
+  g.s = (g.s || 0) + 1;
+  g.lvl = 1;
+  g.xp = 0;
+  delete g.c5;
+  returnChips(g);
+  saveGear();
+  return true;
 }
 
 /* ---------- loadout, locks and fabrication ---------- */
@@ -194,7 +277,7 @@ function fabricate(kind) {
   const of = pool.filter(m => m.rar === rar),
     m = pick(of.length ? of : pool);
   GEAR.bolts -= F.cost;
-  return addGear(m.id, 1, true, 'Fabricator');
+  return addGear(m.id, 1, true, 'Fabricator', { dup: true });
 }
 /** At the start of a single-player match: every loadout piece goes straight into your bin. */
 function applyLoadout() {
@@ -222,15 +305,17 @@ function gearCfg() {
   const list = Object.values(G.gearFound)
     .map(gearById)
     .filter(Boolean)
-    .map(g => ({ id: g.id, lvl: g.lvl, q: g.q || null, c5: g.c5 || null }));
+    .map(g => ({ id: g.id, lvl: g.lvl, q: g.q || null, c5: g.c5 || null, s: g.s || 0, ch: gearChipsOn(g) }));
   return list.length ? list : null;
 }
 /** Sticker and set perks for your car config. */
 function flairCfg() {
   if (!gearActive()) return null;
-  const st = (G.style.stickers || []).filter(id => STICKER[id]);
-  if (!st.length) return null;
+  const st = (G.style.stickers || []).filter(id => STICKER[id]),
+    sets = loadoutSets();
+  if (!st.length && !sets.length) return null;
   const fx = { res: {} };
+  if (sets.length) fx.sets = sets;
   const add = f => {
     for (const k in f)
       if (k === 'res') for (const t in f.res) fx.res[t] = (fx.res[t] || 0) + f.res[t];
@@ -244,6 +329,12 @@ function flairCfg() {
   }
   return fx;
 }
+/** Loadout sets that are complete with the gear in your loadout. */
+const loadoutGear = () => GEAR.loadout.map(gearById).filter(Boolean);
+const loadoutSets = () =>
+  setProgress(loadoutGear())
+    .filter(p => p.on)
+    .map(p => p.set.id);
 /** The set bonus is on when the livery's set has at least two matching stickers. */
 function activeSet(style = G.style) {
   const s = liverySet(style.livery);
@@ -295,6 +386,11 @@ function applyGear(v, list) {
       I.gBurst = 1;
     }
     for (const S of gearActiveSpecials(g)) if (S) hpK *= applyGearFx(v, I, S.fx);
+    for (const k of g.ch || []) {
+      const p = chipParse(k);
+      if (p) hpK *= applyGearFx(v, I, CHIPS[p.c].fx(p.t));
+    }
+    if (g.s) I.stars = g.s;
     if (g.lvl >= GEAR_MAX) {
       I.mw = true;
       v.hypeK = (v.hypeK || 0) + 0.25;
@@ -395,6 +491,46 @@ function applyFlair(v, fx) {
   if (fx.hypeK) v.hypeK = (v.hypeK || 0) + fx.hypeK;
   if (fx.reach) v.reach = (v.reach || 0) + fx.reach;
   if (fx.quick) v.buff = { p: 'speed', t: 7 };
+  if (fx.sets) applySets(v, fx.sets);
+}
+/** Loadout set bonuses on a freshly built car. */
+function applySets(v, sets) {
+  const fam = I => gearFamily(I.id),
+    allHp = k => {
+      for (const I of v.insts) {
+        I.max *= k;
+        I.hp *= k;
+      }
+      v.total *= k;
+    };
+  for (const id of sets) {
+    if (id === 'leadstorm') for (const I of v.insts) if (I.W && fam(I) === 'gun') I.gRate = (I.gRate || 1) * 1.12;
+    if (id === 'demolition')
+      for (const I of v.insts)
+        if (I.W && fam(I) === 'boom') {
+          if (I.W.splash) I.W.splash *= 1.2;
+          if (I.W.dmg) I.W.dmg *= 1.1;
+        }
+    if (id === 'stormfront')
+      for (const I of v.insts)
+        if (I.W && fam(I) === 'element') {
+          if (I.W.dmg) I.W.dmg *= 1.2;
+          if (I.W.dps) I.W.dps *= 1.2;
+        }
+    if (id === 'bunker') allHp(1.1);
+    if (id === 'berserker') {
+      v.gRamOut = (v.gRamOut || 0) + 0.2;
+      for (const I of v.insts) if (I.m.mel) I.gDmg = (I.gDmg || 1) * 1.2;
+    }
+    if (id === 'hotrod') {
+      speedMul(v, 0.05);
+      v.c.accel *= 1.1;
+    }
+    if (id === 'allround') {
+      v.dmgOut = (v.dmgOut || 1) * 1.06;
+      allHp(1.06);
+    }
+  }
 }
 /** Extra damage rules from gear and stickers, called from hurtInst. */
 function flairHurt(v, I, a, type, attacker) {
@@ -446,10 +582,15 @@ function matchSpoils(won, roundsWon, extra = {}) {
       id => id !== 'cockpit' && MOD[id]
     );
     const id = extra.drop || (used.length ? pick(used) : pick(MODS.filter(m => m.rar <= 1)).id);
-    const g = addGear(id, extra.dropLvl || 1, true, extra.from || 'Match salvage');
+    const g = addGear(id, extra.dropLvl || 1, true, extra.from || 'Match salvage', { dup: true });
     if (g) drops.push(g);
   }
-  return { bolts, drops, xp };
+  // mod chips: a chance on every match, and a Mk II for every Gauntlet boss
+  const chips = [];
+  if (Math.random() < (won ? 0.4 : 0.15)) chips.push(rollChip());
+  for (let i = 0; i < (extra.bossChips || 0); i++) chips.push(rollChip(2));
+  for (const k of chips) addChip(k);
+  return { bolts, drops, xp, chips };
 }
 function spoilsHtml(s) {
   if (!s) return '';
@@ -461,11 +602,22 @@ function spoilsHtml(s) {
         `<div class="sp-x${ready ? ' ready' : ''}"><img alt="" src="${iconURL(g.id, 48)}"><span><b>${esc(gearName(g))}</b> +${xp} XP</span>${xpBar(g)}${ready ? '<em>Ready to upgrade</em>' : ''}</div>`
     )
     .join('')}${s.drops
-    .map(
-      g =>
-        `<div class="sp-g"><img alt="" src="${iconURL(g.id, 64)}"><span>New gear · <b>${esc(gearName(g))}</b></span></div>`
-    )
-    .join('')}</div>`;
+    .map(g => {
+      const d = DUP_XP.get(g);
+      return d
+        ? `<div class="sp-g dup"><img alt="" src="${iconURL(g.id, 64)}"><span>Another ${esc(MOD[g.id].name)} · <b>+${d.xp} XP</b> for ${d.n > 1 ? `all ${d.n} copies` : 'yours'}</span></div>`
+        : `<div class="sp-g"><img alt="" src="${iconURL(g.id, 64)}"><span>New gear · <b>${esc(gearName(g))}</b></span></div>`;
+    })
+    .join(
+      ''
+    )}${(s.chips || []).map(k => `<div class="sp-g chipdrop">${chipIcon(k)}<span>Mod chip · <b>${esc(chipName(k))}</b></span></div>`).join('')}</div>`;
+}
+/** A chip drawn as a little circuit board in its colour, with its mark as pips. */
+function chipIcon(k, size = 34) {
+  const p = chipParse(k);
+  if (!p) return '';
+  const C = CHIPS[p.c];
+  return `<svg class="chipico" width="${size}" height="${size}" viewBox="0 0 32 32" aria-hidden="true"><g fill="${C.col}">${[8, 14, 20].map(x => `<rect x="${x}" y="2" width="3" height="4"/><rect x="${x}" y="26" width="3" height="4"/><rect x="2" y="${x}" width="4" height="3"/><rect x="26" y="${x}" width="4" height="3"/>`).join('')}</g><rect x="6" y="6" width="20" height="20" rx="3" fill="#121a2c" stroke="${C.col}" stroke-width="2"/><rect x="10" y="10" width="12" height="12" rx="2" fill="${C.col}" fill-opacity=".25"/>${Array.from({ length: p.t }, (_, i) => `<circle cx="${16 - (p.t - 1) * 3 + i * 6}" cy="16" r="2.2" fill="${C.col}"/>`).join('')}</svg>`;
 }
 /** A small XP bar in the colour of the part's level. */
 function xpBar(g) {

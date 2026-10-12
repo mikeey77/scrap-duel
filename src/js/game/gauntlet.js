@@ -304,6 +304,7 @@ function showRunOver() {
   const spoils = matchSpoils(R.cleared >= 5, 0, {
     rounds: R.wave,
     bolts: R.cleared * 8 + R.bosses * 30 - 20,
+    bossChips: R.bosses,
     from: 'Gauntlet wave ' + R.wave
   });
   G.phase = 'final';

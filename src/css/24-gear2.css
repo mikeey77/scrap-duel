@@ -433,8 +433,7 @@
   background:
     radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--lc) 22%, transparent), transparent 62%),
     repeating-linear-gradient(0deg, transparent 0 23px, rgba(91, 231, 255, 0.05) 23px 24px),
-    repeating-linear-gradient(90deg, transparent 0 23px, rgba(91, 231, 255, 0.05) 23px 24px),
-    #0b1324;
+    repeating-linear-gradient(90deg, transparent 0 23px, rgba(91, 231, 255, 0.05) 23px 24px), #0b1324;
   border: 1px solid var(--line);
   border-bottom: 3px solid var(--lc);
 }
@@ -603,4 +602,298 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ---------- 1.5: A/B specials, chips, sets, stars ---------- */
+.sp-opts.ab {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.spc {
+  position: relative;
+}
+.spc .ab {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  font: 700 18px var(--f-display);
+  font-style: normal;
+  color: var(--lc);
+  opacity: 0.35;
+}
+.spc.on .ab {
+  opacity: 1;
+}
+.spc i {
+  font-style: normal;
+  font: 700 12px var(--f-display);
+  margin-top: 4px;
+}
+.spc.on i {
+  color: var(--lc);
+}
+.spc.alt {
+  cursor: pointer;
+  opacity: 0.75;
+}
+.spc.alt i {
+  color: var(--muted);
+}
+.spc.alt:hover:not(:disabled) {
+  opacity: 1;
+  border-color: var(--lc);
+}
+.wbx-sock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.socks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.sock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 92px;
+  height: auto;
+  padding: 8px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  color: var(--fg);
+  clip-path: var(--chamfer-s);
+}
+.sock span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.sock.locked {
+  border-style: dashed;
+  opacity: 0.55;
+}
+.sock.locked b {
+  color: var(--lc);
+  font: 700 16px var(--f-display);
+}
+.sock.empty {
+  cursor: pointer;
+  border-style: dashed;
+  border-color: var(--holo);
+}
+.sock.empty i {
+  font: 700 26px var(--f-display);
+  font-style: normal;
+  color: var(--holo);
+  line-height: 1;
+}
+.sock.full {
+  cursor: pointer;
+  border-color: var(--cc);
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--cc) 20%, transparent), transparent 70%);
+}
+.sock.full b {
+  font: 700 13px var(--f-display);
+  color: var(--cc);
+}
+.sock.sel {
+  outline: 2px solid var(--hazard);
+  outline-offset: -2px;
+}
+.chippick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+.chipbtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: auto;
+  padding: 6px 10px 6px 6px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid color-mix(in srgb, var(--cc) 50%, transparent);
+  color: var(--fg);
+  font-size: 12px;
+  cursor: pointer;
+}
+.chipbtn span {
+  display: flex;
+  flex-direction: column;
+  color: var(--muted);
+}
+.chipbtn b {
+  color: var(--cc);
+  font: 700 13px var(--f-display);
+}
+.chipbtn em {
+  font-style: normal;
+  font: 700 13px var(--f-display);
+}
+.chipbtn:hover {
+  border-color: var(--cc);
+}
+.wbx-chips .chip.mc {
+  color: var(--cc);
+  border-color: var(--cc);
+}
+.wbx-chips .chip.fam {
+  color: var(--muted);
+  border-style: dashed;
+}
+.gstars {
+  font-style: normal;
+  color: #ffd257;
+  letter-spacing: 1px;
+  margin-left: 3px;
+  text-shadow: 0 0 6px rgba(255, 210, 87, 0.7);
+}
+.wbx-lv .gstars {
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+.wbx-up.reforge {
+  border-color: #ffd257;
+  background: linear-gradient(135deg, #ffd257, #ff9a3a);
+  color: #241400;
+}
+.wbx-up.reforge:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+}
+/* loadout sets */
+.hq-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.setrow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-left: 3px solid color-mix(in srgb, var(--sc) 45%, transparent);
+  background: rgba(255, 255, 255, 0.02);
+}
+.setrow b {
+  font: 700 14px var(--f-display);
+  color: var(--muted);
+}
+.setrow .small {
+  grid-column: 1 / -1;
+  font-size: 12px;
+}
+.setrow.on {
+  border-left-color: var(--sc);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--sc) 16%, transparent), transparent);
+}
+.setrow.on b {
+  color: var(--sc);
+}
+.setpips {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.setpips i {
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  border: 1px solid var(--sc);
+}
+.setpips i.on {
+  background: var(--sc);
+  box-shadow: 0 0 6px var(--sc);
+}
+.infocard {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* chip case */
+.hq-chips > p {
+  color: var(--muted);
+  max-width: 70ch;
+}
+.chipcase {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chiprow {
+  display: grid;
+  grid-template-columns: 90px repeat(3, 1fr);
+  gap: 8px;
+  align-items: stretch;
+}
+.chiprow .cn {
+  align-self: center;
+  font: 700 15px var(--f-display);
+  color: var(--cc);
+}
+.chipcell {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 4px 8px;
+  align-items: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid color-mix(in srgb, var(--cc) 40%, transparent);
+}
+.chipcell.none {
+  opacity: 0.4;
+  border-color: var(--line);
+}
+.chipcell span {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: var(--muted);
+}
+.chipcell span b {
+  color: var(--fg);
+  font: 700 13px var(--f-display);
+}
+.chipcell em {
+  font-style: normal;
+  font: 700 16px var(--f-display);
+  color: var(--cc);
+}
+.chipcell .btn {
+  grid-column: 1 / -1;
+}
+.sp-g.dup span b,
+.sp-g.chipdrop span b {
+  color: var(--holo);
+}
+.sp-g .chipico {
+  flex: none;
+}
+@media (max-width: 900px) {
+  .chiprow {
+    grid-template-columns: 1fr;
+  }
+  .sp-opts.ab,
+  .socks {
+    grid-template-columns: 1fr;
+  }
+}
+.lvb {
+  white-space: nowrap;
+}
+.lvb .gstars {
+  font-size: 10px;
+  margin-left: 2px;
 }
