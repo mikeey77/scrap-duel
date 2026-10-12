@@ -1061,8 +1061,9 @@ function drawArena() {
     c.lineWidth = 14;
     c.strokeRect(0, 0, view.w, view.h);
   }
-  if (B.demo) drawDemoHUD(c);
-  else drawHUD(c);
+  if (B.demo) {
+    if (!hangarOn()) drawDemoHUD(c); // the hangar shows its own live scoreboard
+  } else drawHUD(c);
 }
 /** Pulsing diamond over the rival's cockpit: the thing you are trying to destroy. */
 function drawCockpitMarker(c) {

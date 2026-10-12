@@ -627,8 +627,27 @@ function updateCam(rdt) {
   const pk = B.demo ? 0 : STAND * 0.75,
     cx = hw * 2 >= AW + pk * 2 ? AW / 2 : clamp(cam.tx, hw - pk, AW - hw + pk),
     cy = hh * 2 >= AH + pk * 2 ? AH / 2 : clamp(cam.ty, hh - pk, AH - hh + pk);
-  cam.x += (cx - cam.x) * k;
-  cam.y += (cy - cam.y) * k;
+  // behind the hangar menu the fight sits in the open top left, above your car and left of the panels
+  const hang = B.demo && hangarOn(),
+    sx = hang && view.w > 1100 ? (view.w * 0.2) / s : 0,
+    sy = hang && view.w > 1100 ? (view.h * 0.1) / s : 0;
+  if (hang) {
+    // zoom out far enough that both bots fit in the open part of the screen
+    const al = B.cars.filter(c => !c.dead);
+    const dx = al.length > 1 ? Math.abs(al[0].x - al[1].x) : 0,
+      dy = al.length > 1 ? Math.abs(al[0].y - al[1].y) : 0;
+    cam.tz = clamp(
+      Math.min((view.w * 0.5) / (view.sc * (dx + 260)), (view.h * 0.6) / (view.sc * (dy + 220))),
+      0.55,
+      1.25
+    );
+    if (al.length > 1) {
+      cam.tx = (al[0].x + al[1].x) / 2;
+      cam.ty = (al[0].y + al[1].y) / 2;
+    }
+  }
+  cam.x += (cx + sx - cam.x) * k;
+  cam.y += (cy + sy - cam.y) * k;
 }
 function simulate(dt) {
   for (const v of B.cars) {

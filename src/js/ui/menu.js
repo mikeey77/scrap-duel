@@ -8,7 +8,7 @@ const MENU_MODES = [
     line: 'Fight a bot. Draft a car round by round, or bring a finished one.'
   },
   { id: 'run', name: 'Scrap Gauntlet', col: '#ff5c7a', line: 'Endless waves, three hearts, a boss every fifth wave.' },
-  { id: 'online', name: 'Online', col: '#5be7ff', line: 'Duel or brawl a friend with a 4-letter room code.' }
+  { id: 'online', name: 'Online', col: '#5be7ff', line: 'Play a friend with a room code, 1v1 or 2v2.' }
 ];
 const TAGLINES = [
   'Tip: loadout gear in the Garage is in your parts bin from round 1.',
@@ -22,6 +22,12 @@ const TAGLINES = [
   'Warning: may contain traces of flying fridges.'
 ];
 let menuMode = null;
+// small line icons for the mode tiles
+const MODE_ICONS = {
+  solo: '<path d="M5 19 19 5M14 5h5v5M5 5l14 14M5 14v5h5"/>',
+  run: '<path d="M12 3c-4.4 0-8 3.2-8 7.3 0 2.4 1.2 4.3 3 5.5V19h10v-3.2c1.8-1.2 3-3.1 3-5.5C20 6.2 16.4 3 12 3Z"/><circle cx="9" cy="11" r="1.6"/><circle cx="15" cy="11" r="1.6"/><path d="M10 19v2M14 19v2"/>',
+  online: '<path d="M12 13v8M8.5 9.5a5 5 0 0 1 7 0M5.6 6.6a9 9 0 0 1 12.8 0"/><circle cx="12" cy="12.5" r="1.4"/>'
+};
 function showMenu() {
   hideOverlays();
   if (G.phase === 'review') closeGarageReport();
@@ -29,7 +35,7 @@ function showMenu() {
   if (!resume) {
     G.phase = 'menu';
     updateHUD();
-    demoStop(); // the hangar has its own backdrop
+    if (!(B && B.demo)) demoStart(); // two bots fight behind the hangar
   } else if (B && !B.demo && G.mode !== 'mp' && (G.phase === 'battle' || G.phase === 'wait') && !B.paused) {
     // solo: the bot must not keep shooting while you browse the menu
     B.paused = true;
@@ -79,7 +85,7 @@ function showMenu() {
     </header>
     <main class="hg-main">
       <section class="hg-car" aria-label="Your car">
-        <div class="hg-pad"><img src="${car}" alt="Your car"><div class="hq-stk">${(G.style.stickers || []).map(id => `<img alt="" src="${stickerURL(id, 48)}">`).join('')}</div></div>
+        <div class="hg-pad"><div class="hg-spot" aria-hidden="true"></div><div class="hg-turn" aria-hidden="true"></div><img src="${car}" alt="Your car"><canvas class="hg-fx" id="hgFx" aria-hidden="true"></canvas><div class="hq-stk">${(G.style.stickers || []).map(id => `<img alt="" src="${stickerURL(id, 48)}">`).join('')}</div></div>
         <div class="hg-carinfo">
           <div class="hg-chips">${set ? `<span class="settag" style="--sc:${STICKER_SETS[set].col}">${esc(STICKER_SETS[set].name)} set on</span>` : ''}${lo.map(g => `<span class="hg-chip"><img alt="" src="${iconURL(g.id, 32)}">${esc(gearName(g))}</span>`).join('')}${lo.length ? '' : '<span class="small">No gear in your loadout yet.</span>'}</div>
           <button class="btn ghost" id="mGarage">Garage · gear, skins, stickers</button>
@@ -90,14 +96,14 @@ function showMenu() {
           resume
             ? `<div class="hg-cont" style="--rc:#3fe0a0"><span class="label">Match in progress</span><h2>${esc(MATCH_FORMATS[G.format].name)}</h2><button class="btn hg-go" id="mResume">Resume match</button></div>`
             : `<div class="hg-cont" style="--rc:#ffd257"><span class="label">Ready when you are</span>
-          <h2>Jump into a fight</h2><p class="small">${rec.w + rec.l ? `Your record against bots: <b>${rec.w}</b> wins, <b>${rec.l}</b> losses${runBest() ? ` · best Gauntlet wave ${runBest()}` : ''}.` : 'Draft a car, outbuild a bot, or team up with a friend online.'}</p>
+          <h2>Jump into a fight</h2><div class="hg-live" id="hgLive" hidden></div><p class="small">${rec.w + rec.l ? `Your record against bots: <b>${rec.w}</b> wins, <b>${rec.l}</b> losses${runBest() ? ` · best Gauntlet wave ${runBest()}` : ''}.` : 'Draft a car, outbuild a bot, or team up with a friend online.'}</p>
           <div class="hg-row"><button class="btn hg-go" id="mQuick">Quick match vs bot</button><button class="btn ghost" id="mQuick2">2v2 with a bot partner</button></div></div>`
         }
-        <div class="hg-modes" role="tablist" aria-label="Other modes">${MENU_MODES.map(m => `<button class="hg-mode" role="tab" data-mode="${m.id}" aria-selected="${m.id === menuMode}" style="--rc:${m.col}"><b>${m.name}</b><span>${esc(m.line)}</span><em>${stat(m.id)}</em></button>`).join('')}</div>
+        <div class="hg-modes" role="tablist" aria-label="Other modes">${MENU_MODES.map(m => `<button class="hg-mode" role="tab" data-mode="${m.id}" aria-selected="${m.id === menuMode}" style="--rc:${m.col}"><svg class="hg-ico" viewBox="0 0 24 24" aria-hidden="true">${MODE_ICONS[m.id] || ''}</svg><b>${m.name}</b><span>${esc(m.line)}</span><em>${stat(m.id)}</em></button>`).join('')}</div>
         <div class="hg-opts" id="hgOpts" role="tabpanel"></div>
       </section>
     </main>
-    <footer class="hg-foot"><span id="tagline">${esc(pick(TAGLINES))}</span></footer>
+    <footer class="hg-foot"><div class="hg-led" aria-live="off"><b>PIT FM</b><div class="hg-tick" id="hgTick"><span>${esc(pick(TAGLINES))}</span></div></div></footer>
   </div>`;
   $('#ovMenu').hidden = false;
   menuOpts();
@@ -108,14 +114,9 @@ function showMenu() {
   on('mQuit', () => window.desktop.quit());
   clearInterval(showMenu.tag);
   showMenu.tag = setInterval(() => {
-    const t = $('#tagline');
-    if (!t || $('#ovMenu').hidden) return clearInterval(showMenu.tag);
-    t.classList.add('swap');
-    setTimeout(() => {
-      t.textContent = pick(TAGLINES);
-      t.classList.remove('swap');
-    }, 350);
-  }, 8000);
+    if (!$('#hgTick') || $('#ovMenu').hidden) return clearInterval(showMenu.tag);
+    hangarTicker(pick(TAGLINES)); // tips and jokes between the live lines
+  }, 17000);
   const nameIn = $('#mName');
   nameIn.addEventListener('input', () => {
     G.name = nameIn.value.trim().slice(0, 16) || 'Player';
@@ -490,6 +491,7 @@ function loop(t) {
         drawArena();
         demoTick(dt);
       }
+      hangarFxTick(dt);
     } else if ((G.phase === 'wait' || G.phase === 'battle') && B) {
       if (
         B.menuPaused &&
@@ -511,6 +513,7 @@ function loop(t) {
       if (B && G.phase === 'wait' && Math.random() < 0.05) oppStatusUI();
     } else {
       ANIM += dt;
+      hangarFxTick(dt);
       if ((building() || G.phase === 'draft') && $('#ovCrate').hidden && builderBusy()) {
         bfxTick(dt);
         drawBP();

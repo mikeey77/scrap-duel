@@ -17,7 +17,7 @@ Every round of a duel has three parts: **draft** a part from three cards, **buil
 | Scrap Gauntlet  | Endless waves with three hearts; a boss every fifth wave drops a relic                |
 | Online          | Play a friend with a room code: 1v1, or 2v2 on one team or against each other         |
 
-Between matches, **Garage HQ** holds the gear you have found: pick a loadout, level parts up to 10 (they earn XP in your matches, wins pay the bolts, specials at level 5 and 10), build new gear in the Fabricator, and dress your car with skins, stickers, trails and wreck effects.
+Between matches, **Garage HQ** holds the gear you have found: pick a loadout, level parts up to 10 (they earn XP in your matches, wins pay the bolts, an A/B special at level 5, a legendary one at 10, mod chips and loadout sets), build new gear in the Fabricator, and dress your car with skins, stickers, trails and wreck effects.
 
 | Garage                                 | 2v2                                       | Workbench                                  |
 | -------------------------------------- | ----------------------------------------- | ------------------------------------------ |

@@ -2,6 +2,15 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 1.5.0 · Live from the Pit · 2026-10-12
+
+- **A living main menu**: two bots fight live in the pit behind the menu, with a live scoreboard in the main card. Your car turns on a pedestal under a swaying work light while a welder throws sparks, and the PIT FM board carries the casters' banter and tips. Performance mode turns the glass blur off.
+- **Pick A or B at level 5**: every part now has two real play styles, like Hot Rounds or Tracer Rounds on the Machine Gun. Switching later costs 40 bolts. Old "Steady" picks became the B option.
+- **Mod chips**: gear opens a chip socket at level 3, 6 and 9. Chips (Power, Plating, Turbo, Lucky, Ember, Static, Mender, Crowd) come in Mk I, II and III; three of a kind fuse into the next mark in the new Chips tab. You find them after matches, and every Gauntlet boss drops a Mk II.
+- **Loadout sets**: three guns turn on Lead Storm, two explosives Demolition Crew, three armour pieces Bunker, and more. The Garage shows which sets are on and which ones you are close to.
+- **Duplicates are never wasted**: a part you already own becomes XP for every copy of it.
+- **Reforge**: a level 10 part can go back to level 1 with a permanent star (+2% each, up to five stars).
+
 ## 1.4.0 · Tag Team · 2026-10-11
 
 - **2v2**: fight two bots with a bot partner (pick its style: Gunner, Rammer, Artillery or Brawler), or play a friend online in 2v2. In the lobby each player picks Blue or Red: same side means you and your friend against two bots, different sides means each of you gets a bot partner. No friendly fire; a team loses when both cars are wrecked.

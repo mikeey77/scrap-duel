@@ -70,6 +70,7 @@ function demoFeed(text, reset) {
   const el = $('#demoFeed');
   el.innerHTML = demoFeedItems.map((f, i) => `<div class="${i === 0 ? 'new' : ''}">${esc(f.text)}</div>`).join('');
   el.hidden = !(G.phase === 'menu' || G.phase === 'intro');
+  hangarTicker(text);
 }
 let demoChat = 0;
 /** Light commentary while the bots fight. */
@@ -77,15 +78,22 @@ function demoTick(dt) {
   $('#demoFeed').hidden = !(G.phase === 'menu' || G.phase === 'intro');
   demoChat -= dt;
   if (demoChat > 0 || B.seq !== 'play') return;
-  demoChat = rnd(6, 11);
+  demoChat = rnd(5, 8);
   const [a, b] = B.cars,
     lead = integrity(a) > integrity(b) ? a : b,
     other = lead === a ? b : a;
   const lines = [
     `${lead.name} is ahead on armor`,
     `${other.name} needs a miracle`,
-    `${other.name} is down to ${Math.round(integrity(other) * 100)}%`,
+    integrity(other) < 0.85
+      ? `${other.name} is down to ${Math.round(integrity(other) * 100)}%`
+      : `${other.name} has not even scratched the paint yet`,
     B.obj ? `${SPECIALS[B.special].name}: it's anyone's game` : `${Math.ceil(B.t)} seconds on the clock`
   ];
+  // now and then a line from the casters' banter, so the ticker has some personality
+  if (Math.random() < 0.4) {
+    const call = pick(CALLS.banter.concat(CALLS.boring));
+    return demoFeed(call.map(([who, t]) => `${who === 'doc' ? 'DOC' : 'DASH'}: ${t}`).join('  ·  '));
+  }
   demoFeed(pick(lines));
 }
