@@ -480,6 +480,9 @@ function loop(t) {
   fpsTick(t);
   autoPerf(dt);
   try {
+    gamepadTick(dt);
+  } catch (e) {}
+  try {
     syncPresentation();
     BattleMusic.update();
     Net.updateStatus();

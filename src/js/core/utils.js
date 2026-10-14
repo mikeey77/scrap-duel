@@ -22,7 +22,8 @@ const SAVE = {
       if (!d || typeof d !== 'object' || !d.keys) return;
       const localAt = +(localStorage.getItem('sd._savedAt') || 0);
       if ((d.savedAt || 0) <= localAt) return;
-      for (const [k, v] of Object.entries(d.keys)) if (k.startsWith('sd.') && typeof v === 'string') localStorage.setItem(k, v);
+      for (const [k, v] of Object.entries(d.keys))
+        if (k.startsWith('sd.') && typeof v === 'string') localStorage.setItem(k, v);
     } catch (e) {}
   },
   mark() {
@@ -38,7 +39,10 @@ const SAVE = {
     try {
       localStorage.setItem('sd._savedAt', String(now));
     } catch (e) {}
-    window.desktop.writeSave({ savedAt: now, version: typeof GAME_VERSION === 'string' ? GAME_VERSION : '', keys: this.collect() }, !!sync);
+    window.desktop.writeSave(
+      { savedAt: now, version: typeof GAME_VERSION === 'string' ? GAME_VERSION : '', keys: this.collect() },
+      !!sync
+    );
   }
 };
 SAVE.restore();
@@ -56,7 +60,9 @@ const reportError = (() => {
 })();
 try {
   addEventListener('error', e => reportError(e.message, e.error && e.error.stack));
-  addEventListener('unhandledrejection', e => reportError('promise: ' + (e.reason && e.reason.message), e.reason && e.reason.stack));
+  addEventListener('unhandledrejection', e =>
+    reportError('promise: ' + (e.reason && e.reason.message), e.reason && e.reason.stack)
+  );
 } catch (e) {}
 try {
   addEventListener('beforeunload', () => SAVE.flush(true));

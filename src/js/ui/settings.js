@@ -64,7 +64,9 @@ function openSettings(back) {
     ${toggle('setMarks', 'Hit markers', SETTINGS.marks)}
     ${toggle('setShake', 'Screen shake', SETTINGS.shake)}
     ${toggle('setMotion', 'Interface animations', SETTINGS.motion)}
-    ${toggle('setCrateSpin', 'Animate mystery crates', SETTINGS.crateSpin)}</section>
+    ${toggle('setCrateSpin', 'Animate mystery crates', SETTINGS.crateSpin)}
+    <h3>Controls</h3>
+    <button class="btn ghost sm" id="setKeys" type="button">Keys and controller</button></section>
     <section><h3>Performance</h3>
     ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
     ${toggle('setFps', 'Show frame rate (FPS)', SETTINGS.fps)}
@@ -108,6 +110,10 @@ function openSettings(back) {
         clearArenaInput();
       }
     });
+  $('#setKeys').onclick = () => {
+    $('#ovSettings').hidden = true;
+    openControls(() => openSettings(back));
+  };
   if ($('#setSaves')) $('#setSaves').onclick = () => (SAVE.flush(), window.desktop.openSaveFolder());
   if ($('#setLog')) $('#setLog').onclick = () => window.desktop.openLog();
   const full = $('#setFull');

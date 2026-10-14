@@ -27,17 +27,19 @@ const CTRL = [
 ];
 addEventListener('keydown', e => {
   if (e.target && (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable)) return;
+  const code = mappedKey(e.code); // the player's own key bindings
   if (
     (G.phase === 'wait' || G.phase === 'battle') &&
     B &&
     !B.paused &&
     !Net.reconnecting &&
     ['#ovMenu', '#ovCodex', '#ovSettings', '#ovPause'].every(id => $(id).hidden) &&
-    CTRL.includes(e.code)
+    code &&
+    CTRL.includes(code)
   ) {
     e.preventDefault();
-    if (!e.repeat) edges.add(e.code);
-    keys.add(e.code);
+    if (!e.repeat) edges.add(code);
+    keys.add(code);
     return;
   }
   if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -66,7 +68,11 @@ addEventListener('keydown', e => {
     else if (e.code === 'Minus') setZoom(G.zoom / 1.2);
   }
 });
-addEventListener('keyup', e => keys.delete(e.code));
+addEventListener('keyup', e => {
+  keys.delete(e.code);
+  const code = mappedKey(e.code);
+  if (code) keys.delete(code);
+});
 addEventListener('blur', () => clearArenaInput());
 const toWorld = (cx, cy) => {
   const r = ac.getBoundingClientRect(),
@@ -153,6 +159,7 @@ function readLocal() {
   if (mouse.sx !== undefined) [mouse.x, mouse.y] = toWorld(mouse.sx, mouse.sy);
   i.aimX = mouse.x;
   i.aimY = mouse.y;
+  padBattle(i, v);
   return i;
 }
 function applyInput(v, i) {

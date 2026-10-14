@@ -427,3 +427,99 @@ body {
     opacity: 0;
   }
 }
+
+/* ---------- controls screen ---------- */
+.kbcard {
+  width: min(920px, 96vw);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+}
+.kb-cols {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  margin: 8px 0 16px;
+}
+.kb-cols h3 {
+  font: 700 13px var(--f-display);
+  color: var(--holo);
+  margin: 0 0 8px;
+}
+.kb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-bottom: 10px;
+}
+.kb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--line);
+}
+.kb-key {
+  min-width: 110px;
+  padding: 3px 12px;
+  font: 700 13px var(--f-display);
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line-2);
+  cursor: pointer;
+}
+.kb-key.custom {
+  color: var(--hazard);
+  border-color: var(--hazard);
+}
+.kb-key.wait {
+  color: var(--holo);
+  border-color: var(--holo);
+  animation: fin-glow 1s ease-in-out infinite;
+}
+.kb-pad {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 14px;
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+.kb-pad dt {
+  font: 700 13px var(--f-display);
+  color: var(--hazard);
+}
+.kb-pad dd {
+  margin: 0;
+}
+/* controller focus: a clear ring on whatever the stick is on */
+.gp-focus {
+  outline: 3px solid var(--hazard) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 18px -4px var(--hazard) !important;
+}
+@media (max-width: 800px) {
+  .kb-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- screens leave instead of blinking out ----------
+   An overlay that gets [hidden] fades and sinks for a moment before display:none lands (Chromium 117+). It stops
+   taking clicks at once, so nothing behind it is blocked. */
+.overlay[hidden] {
+  pointer-events: none;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  body:not(.reduced-motion) .overlay {
+    transition:
+      opacity 0.16s ease-in,
+      display 0.16s allow-discrete;
+  }
+  body:not(.reduced-motion) .overlay > * {
+    transition: transform 0.16s ease-in;
+  }
+  body:not(.reduced-motion) .overlay[hidden] > * {
+    transform: translateY(10px) scale(0.98);
+  }
+}

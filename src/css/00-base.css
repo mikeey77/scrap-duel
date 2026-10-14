@@ -849,8 +849,11 @@ main {
   padding: 16px;
   overflow: auto;
 }
-[hidden] {
+[hidden]:not(.overlay) {
   display: none !important;
+}
+.overlay[hidden] {
+  display: none;
 }
 .card {
   background: var(--panel);
