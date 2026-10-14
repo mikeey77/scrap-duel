@@ -13,6 +13,8 @@ Every round of a duel has three parts: **draft** a part from three cards, **buil
 | Mode            | What it is                                                                            |
 | --------------- | ------------------------------------------------------------------------------------- |
 | Duel            | Draft, build and fight a bot on Easy, Normal or Hard, alone or 2v2 with a bot partner |
+| League          | A season against five rivals: top the table, then win the final                       |
+| Daily challenge | One seed a day for everyone, plus an odd rule; keep your best score and streak        |
 | Blueprint Brawl | No drafting. Bring one car worth up to 700 coins. Against a bot or online             |
 | Scrap Gauntlet  | Endless waves with three hearts; a boss every fifth wave drops a relic                |
 | Online          | Play a friend with a room code: 1v1, or 2v2 on one team or against each other         |
@@ -29,7 +31,9 @@ Between matches, **Garage HQ** holds the gear you have found: pick a loadout, le
 - **Moving parts** (hinges, rotators, rams) are on keys 1–9; set them with the Keys tool in the garage.
 - **Quick chat** online: T, then 1–4.
 - **Garage**: click or drag to place, right click to remove, R to turn the next part, T to rotate a placed part, M to mirror, the arrow keys move the whole car, Ctrl+Z / Ctrl+Y to undo and redo.
-- F11 for fullscreen, Esc for the pause menu.
+- **Controller**: left stick drives, right stick aims, RT fires, LT uses moving parts; the d-pad moves through menus.
+- Keys can be changed in Settings → Keys and controller.
+- F11 for fullscreen, Esc or P to pause, F2 for photo mode.
 
 ## Project layout
 

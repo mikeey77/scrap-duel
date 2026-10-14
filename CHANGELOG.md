@@ -2,6 +2,40 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.0.0 · The Big One · 2026-10-14
+
+**New ways to play**
+
+- **League**: a season of five matchdays against the same five rivals, with a table, rival matches played off-screen, a final for the top two, prizes, a title and the Dynasty achievement for three seasons.
+- **Daily challenge**: one seed a day, so everyone gets the same arena, rival and drafts, plus one odd rule (Glass Cannons, Bumper Cars, Tank Battle…). Your best score and your streak are kept, and the first play of the day pays out.
+- **Gauntlet co-op**: run the Gauntlet with a bot partner. Every wave brings two rivals.
+- **Local duel**: player 1 on keyboard and mouse, player 2 on a controller, on one PC. The Online tile is now Friends.
+- **Workshop contracts**: three small jobs a day with bolts as pay, and a Mk II chip for finishing all three.
+
+**More to fight**
+
+- **Twelve Gauntlet bosses, each with its own trick**: Mega Mauler charges, Grandma Tank raises a shield, the Shredder's magnet drags you in, Professor Overkill calls in artillery, Inferno Ingrid leaves burning puddles, King Kongcrete slams the ground, plus six new ones: Ghost Rider Gus (invisible), The Tower (repairs itself), Mirror Max (drives a copy of your car), Minefield Mona, Hurricane Harriet (throws couches) and The Press (hits harder as it breaks). Every attack is telegraphed.
+- **Six new arenas**: Crusher Yard, Frozen Parking Lot, Neon Speedway, Warp Lab, Funfair Bumper Cars and Glacier Pass, with three new arena tricks: portals, black ice and boost rings.
+- **Rivals remember you**: every bot keeps your head-to-head record and radios in on the VS screen with a line that fits. Your profile has a rivals album.
+
+**Sound and feel**
+
+- **Music for every arena**: nine generated styles (metal, ice, lava, neon, toy, spooky, desert, surf and a calm garage track) that build up in the last 30 seconds, at low health and in the final round.
+- **Screens fade out** when they close, instead of blinking away.
+- **Photo mode** (F2 or the pause menu): freeze, pan, zoom, six filters, save a PNG.
+
+**Desktop**
+
+- **Controller support**: drive, aim and use every part in battle, and move through all menus with the d-pad or stick.
+- **Set your own keys** in Settings → Keys and controller.
+- **A real save file** in your profile folder, with three rotating back-ups, so progress survives clearing data or reinstalling. Settings can open the save folder.
+- **Error log**: problems are written to errors.log; Settings → Report a problem opens it.
+
+**Also**
+
+- Fourteen new achievements and four new titles.
+- Fixed: the menu fight no longer uses dark arenas, which looked like an empty screen.
+
 ## 1.6.0 · Finishing Touches · 2026-10-14
 
 - **Start-up screen**: the logo is welded together while the game loads. Any key skips it.
