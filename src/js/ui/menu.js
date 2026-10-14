@@ -51,6 +51,7 @@ function showMenu() {
   menuMode = MENU_MODES.some(m => m.id === load('sd.menuTab')) ? load('sd.menuTab') : 'solo';
   G.quickFmt = load('sd.quickFmt') === 'brawl' ? 'brawl' : 'balanced';
   G.quickTeams = +load('sd.teamSize') === 2 ? 2 : 1;
+  G.runTeams = +load('sd.runTeams') === 2 ? 2 : 1;
   G.partnerStyle = PARTNER_STYLES.some(p => p[0] === load('sd.partner')) ? load('sd.partner') : 'gunner';
   const L = levelInfo(),
     rec = (() => {
@@ -220,7 +221,15 @@ function menuOpts() {
       'f'
     )}</div><div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><p class="small" id="fmtText">${G.quickFmt === 'brawl' ? `Bring one finished car worth up to ${BRAWL_BUDGET} coins: a saved blueprint or a ready-made one. No drafting, no shop.` : 'Start with a cockpit, draft a part every round, shop and outbuild the bot.'}</p><button class="btn hg-go2" id="mPlay">${G.quickFmt === 'brawl' ? 'Start a Brawl' : 'Play vs bot'}</button>`,
     league: leagueMenuHtml(),
-    run: `<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
+    run: `<div class="hg-o"><span class="mlab">Teams</span>${seg(
+      'runSeg',
+      [
+        [1, 'Alone'],
+        [2, 'With a bot partner']
+      ],
+      G.runTeams === 2 ? 2 : 1,
+      'rt'
+    )}</div>${G.runTeams === 2 ? `<div class="hg-o"><span class="mlab">Your partner</span>${seg('partnerSeg', PARTNER_STYLES, G.partnerStyle, 'p')}</div>` : ''}<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.${G.runTeams === 2 ? ' With a partner, every wave brings two rivals.' : ''}</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
     online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>`
   }[m.id];
   el.style.setProperty('--rc', m.col);
@@ -238,6 +247,14 @@ function menuOpts() {
     b.addEventListener('click', () => {
       G.quickTeams = +b.dataset.t;
       store('sd.teamSize', G.quickTeams);
+      sfx('ui');
+      menuOpts();
+    })
+  );
+  $$('#runSeg button').forEach(b =>
+    b.addEventListener('click', () => {
+      G.runTeams = +b.dataset.rt;
+      store('sd.runTeams', G.runTeams);
       sfx('ui');
       menuOpts();
     })

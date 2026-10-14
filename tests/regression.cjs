@@ -2074,4 +2074,21 @@ test('championship: five matchdays, a table, a final and a champion', () => {
   assert(a.GEAR().bolts >= 300, 'prize money');
 });
 
+test('Gauntlet co-op: you and a bot partner against two rivals every wave', () => {
+  const { api: a } = runtime();
+  a.G.runTeams = 2;
+  a.G.partnerStyle = 'gunner';
+  a.startRun();
+  assert.equal(a.G.teamSize, 2);
+  assert(a.G.ally && a.G.bot2, 'a partner and a second rival');
+  assert(a.G.oppName.includes('&'), 'both rivals named');
+  a.openBuild();
+  a.prepareBot();
+  const cfg = a.makeCfg(a.myCarCfg());
+  assert.equal(cfg.cars.length, 4);
+  a.G.runTeams = 1;
+  a.startRun();
+  assert.equal(a.G.teamSize, 1);
+});
+
 console.log(`\n${passed} regression tests passed.`);

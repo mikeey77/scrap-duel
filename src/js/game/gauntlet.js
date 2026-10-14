@@ -130,7 +130,7 @@ const isBossWave = w => w % 5 === 0;
 const runBest = () => +(load('sd.runBest') || 0);
 
 function startRun() {
-  G.teamSize = 1;
+  G.teamSize = G.runTeams === 2 ? 2 : 1; // co-op: you and a bot partner against two rivals per wave
   const prevDiff = G.diff;
   startMatch('solo', [], 'balanced');
   ROUNDS = 999;
@@ -160,6 +160,19 @@ function setupWaveBot() {
   G.botRound = -1;
   G.botDesign = null;
   G.oppName = bot.name;
+  if (G.teamSize === 2 && G.ally) {
+    // co-op: the wave brings a second rival, built up like the first (a boss brings a henchman)
+    const b2 = botOfStyle(null, G.diff, [bot.name, G.ally.name]);
+    b2.coins += 40 * (w - 1);
+    for (let i = 1; i < w; i++) {
+      botDraft(b2);
+      if (i % 2 === 0) botShop(b2);
+    }
+    if ([G.paint, bot.paint, G.ally.paint].includes(b2.paint))
+      b2.paint = PAINTS.find(p => ![G.paint, bot.paint, G.ally.paint].includes(p));
+    G.bot2 = b2;
+    G.oppName = `${bot.name} & ${b2.name}`;
+  }
   G.oppPaint = bot.paint === G.paint ? PAINTS.find(p => p !== G.paint) : bot.paint;
   G.oppLook = randomLook(boss ? 2 : G.diff);
   G.oppBadge = G.oppLook.badge;
