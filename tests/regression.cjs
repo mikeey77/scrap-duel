@@ -1795,7 +1795,7 @@ test('expansion parts: every new weapon and melee part deals damage, joints move
     for (let i = 0; i < 30; i++) a.stepJoints(v, 0.05);
     assert(Math.abs(v.joints[0].s) > 0.5, id + ' moves');
   }
-  for (const id of ['icerink', 'scrapfactory', 'stormroof'])
+  for (const id of ['chess', 'scrapfactory', 'stormroof'])
     assert(
       a.THEMES.some(t => t.id === id),
       id
@@ -2173,6 +2173,44 @@ test('workshop contracts: three a day, progress adds up, pay out once, all three
   a.contractsUpdate(all);
   assert.equal(a.GEAR().bolts, bolts, 'paid once');
   assert(a.PROG().ach.includes('shift'));
+});
+
+test('arena floors: every arena has a surface, tyres feel it (off-road wins on sand, spikes on ice, slicks on asphalt)', () => {
+  const { api: a } = runtime();
+  for (const th of a.THEMES) assert(a.surfaceOf(th) && a.surfaceOf(th).name, th.id + ' has a surface');
+  const fit = (ty, s) => {
+    const f = a.surfaceFit({ [ty]: 10 }, a.SURFACES[s]);
+    return f.spd * f.grip;
+  };
+  assert(fit('offroad', 'sand') > fit('slick', 'sand'), 'off-road beats slicks on sand');
+  assert(fit('track', 'mud') > fit('road', 'mud'));
+  assert(fit('spiked', 'ice') > fit('road', 'ice') && fit('spiked', 'ice') > fit('slick', 'ice'), 'spikes on ice');
+  assert(fit('slick', 'asphalt') > fit('offroad', 'asphalt'), 'slicks on asphalt');
+  assert(Math.abs(a.surfaceFit({ hover: 5 }, a.SURFACES.sand).spd - 1) < 1e-9, 'hover ignores the floor');
+  assert.equal(a.surfaceAdvice(a.SURFACES.sand).worst, 'slick');
+  assert.equal(a.tyreOf(a.MOD.monster), 'offroad');
+  assert.equal(a.tyreOf(a.MOD.studded), 'spiked');
+  assert.equal(a.tyreOf(a.MOD.track), 'track');
+  assert.equal(a.tyreOf(a.MOD.slick), 'slick');
+  const C = a.calc([{ m: a.MOD.monster, mass: 2.5, x: 0, y: 0 }, { m: a.MOD.slick, mass: 1, x: 1, y: 0 }]);
+  assert(C.tyreW.offroad === 9 && C.tyreW.slick === 7, 'tyre mix by drive power');
+});
+
+test('themed arenas: the beach has umbrellas and palms, the chessboard has both colours of pieces, the rink has goals', () => {
+  const { api: a } = runtime();
+  a.openBuild();
+  a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
+  const T = id => a.THEMES.find(t => t.id === id);
+  assert(!T('icerink'), 'no second ice rink');
+  for (const k of Object.keys(a.JUNK)) assert(a.JUNKDRAW[k], k + ' has art');
+  const kinds = id => a.genArena('battle', T(id)).ob.map(o => o.kind);
+  const beach = kinds('beach');
+  assert(beach.filter(k => k === 'palm').length === 4, 'two palms each side');
+  assert(beach.some(k => /umbrella|sandcastle|lifebuoy|surfboard|cooler/.test(k)), 'beach junk');
+  const ch = kinds('chess');
+  assert(ch.includes('king') && ch.includes('bking'), 'a white and a black king');
+  assert(ch.some(k => k === 'pawn') && ch.some(k => k === 'bpawn'), 'pawns on both sides');
+  assert(kinds('ice').filter(k => k === 'goal').length === 2, 'a goal at each end');
 });
 
 console.log(`\n${passed} regression tests passed.`);

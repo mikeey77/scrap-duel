@@ -1,15 +1,15 @@
 // Match flow: profile setup, waiting arena, battle start, round end, results and the final screen.
 const THEME_BLURB = {
-  icerink: 'Everything slides. Bumpers in the corners, nothing to stop you but the boards.',
   scrapfactory: 'Conveyor belts, hot plates and a lot of barrels. Mind the oil.',
   stormroof: 'Gusts push you around the roof. Vents throw you higher.',
   carpark: 'Painted bays, shopping trolleys and ramps between the levels.',
-  beach: 'Soft sand, deck chairs and trampolines on the boardwalk.',
+  beach: 'Soft sand slows you down. Umbrellas, sandcastles and towels everywhere; the boardwalk is the fast lane.',
+  chess: 'A giant chessboard. The pieces are heavy, the knights bounce you and the king does not move for anyone.',
   junkyard: 'Heavy junk everywhere. Watch the oil slicks.',
   backyard: 'Trampolines and garden chaos. Expect air time.',
   market: 'Speed pads between the aisles, spills on the floor.',
   construction: 'Ramps and spike strips. Mind your tyres.',
-  ice: 'Half the grip. Momentum is everything.',
+  ice: 'Half the grip. Bumpers by the boards, hockey goals at both ends. Momentum is everything.',
   volcano: 'Lava pools burn your chassis. Do not park there.',
   space: 'Low gravity and air vents that blast you across the deck.',
   carwash: 'Soap everywhere and blowers that push. Free rinse included.',
@@ -91,7 +91,8 @@ function setupField(kind, f) {
     zones: f.zn,
     pk: f.pk || [],
     sp: f.sp,
-    grip: kind === 'wait' ? 1 : B.theme.grip
+    grip: kind === 'wait' ? 1 : B.theme.grip,
+    surf: kind === 'wait' ? SURFACES.asphalt : surfaceOf(B.theme)
   });
   B.uidc = Math.max(B.uidc, 0, ...B.objs.map(o => o.uid || 0));
 }
@@ -463,6 +464,24 @@ function drawWindow(dt) {
   const lbl = $('#winLbl'),
     txt = (known ? th.name : 'Arena unknown') + (S ? ' · ' + S.name : '');
   if (lbl && lbl.textContent !== txt) lbl.textContent = txt;
+  winFx.st = (winFx.st || 0) - dt;
+  const se = $('#winSurf');
+  if (se && winFx.st <= 0) {
+    winFx.st = 0.6;
+    se.hidden = !known;
+    if (known) {
+      const S = surfaceOf(th),
+        C = calc(designItems()),
+        f = surfaceFit(C.tyreW, S),
+        adv = surfaceAdvice(S),
+        sp = Math.round(f.spd * 100),
+        gr = Math.round(f.grip * Math.max(0.3, th.grip) * 100),
+        cls = f.spd * f.grip >= 1.02 ? 'good' : f.spd * f.grip <= 0.85 ? 'bad' : '';
+      const h = `<b>${esc(S.name)}</b> · your tyres <em class="${cls}">${sp}% speed · ${gr}% grip</em>`;
+      if (se.innerHTML !== h) se.innerHTML = h;
+      se.title = `${S.tip} Best here: ${adv.top}. Worst: ${TYRE_NAME[adv.worst]}.`;
+    }
+  }
   winFx.t += dt;
   const g = c.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, known ? th.ground[0] : '#2a3344');
@@ -837,7 +856,7 @@ function showVS(cfg, done) {
     `<div class="vs"><div class="side"><img src="${img(me)}" alt="${esc(me.name)}'s car"><span class="nm" style="color:${me.paint}">${esc(me.name)}</span><span class="ttl">${title(me)}</span><span class="small">${G.score[0]} points</span></div>
     <div class="mid">VS</div>
     <div class="side r"><img src="${img(op)}" alt="${esc(op.name)}'s car"><span class="nm" style="color:${op.paint}">${esc(op.name)}</span><span class="ttl">${title(op)}</span><span class="small">${G.score[1]} points</span></div>
-    <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">${G.run ? `Scrap Gauntlet · wave ${cfg.round}${G.run.boss ? ' · BOSS' : ''}` : `Round ${cfg.round} of ${ROUNDS} · ${stakeLine(cfg.round)}`}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span>
+    <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">${G.run ? `Scrap Gauntlet · wave ${cfg.round}${G.run.boss ? ' · BOSS' : ''}` : `Round ${cfg.round} of ${ROUNDS} · ${stakeLine(cfg.round)}`}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span><span class="vs-surf">${(Sf => `<b>${esc(Sf.name)}</b> · best here: ${esc(surfaceAdvice(Sf).top)}`)(surfaceOf(th))}</span>
     ${S ? `<div class="vssp" style="--sc:${S.col}"><span class="spi">${S.icon}</span><div><b>SPECIAL ROUND · ${esc(S.name)}</b><span>${esc(S.blurb)}</span></div></div>` : ''}
     ${(line => (line ? `<div class="vs-radio" style="--pc:${op.paint}"><span class="rd-who"><i></i>${esc(op.name)} on the radio</span><q>${esc(line)}</q></div>` : ''))(rivalRadio(cfg.round))}</div></div>`;
   $('#ovVS').hidden = false;

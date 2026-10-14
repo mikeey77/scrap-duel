@@ -750,7 +750,7 @@ function drawFx(c) {
       c.arc(f.x, f.y, f.r * (0.5 + t), 0, 7);
       c.fill();
     } else if (f.k === 'smoke') {
-      c.fillStyle = `rgba(80,74,68,${Math.min(0.6, t * 0.55)})`;
+      c.fillStyle = `rgba(${f.col || '80,74,68'},${Math.min(0.6, t * (f.col ? 0.4 : 0.55))})`;
       c.beginPath();
       c.arc(f.x, f.y, f.r * (2 - t), 0, 7);
       c.fill();

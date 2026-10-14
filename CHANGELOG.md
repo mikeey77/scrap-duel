@@ -2,6 +2,24 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.1.0 · Know Your Ground · 2026-10-14
+
+**Every arena has its own floor**
+
+- **Sand, mud, snow, ice, grass, dirt, tiles, steel, wood, carpet, rock and asphalt.** Each floor changes your speed and grip.
+- **Tyres matter.** Off-road tyres and tracks float over sand and mud, spiked tyres bite on ice and snow, and slicks are fastest on asphalt but sink in sand. Hover pads ignore the floor.
+- **The garage window shows the next floor** and how your current tyres do on it. The VS screen names the best tyres for the arena.
+- **The beach has three zones**: firm wet sand by the water, soft sand in the middle and a fast wooden boardwalk.
+- **Bots pick tyres that suit the arena.**
+- Loose floors kick up sand, snow or mud behind your wheels, and leave tracks in the matching colour.
+
+**Arenas look the part**
+
+- **New arena: Grand Chessboard.** A giant board with white and black pieces. The kings do not move for anyone. It replaces the second, duplicate ice rink.
+- **Boardwalk Beach**: towels, parasols, sandcastles, lifebuoys, surfboards, coolers, palm trees, shells and footprints.
+- **Ice Rink**: hockey goals at both ends, pucks to slap around, corner bumpers and a penguin.
+- New props elsewhere: car wrecks in the junkyards and the car park, rotten logs in the swamp, cauldrons in the haunted house, cow skulls in the desert, AC units on the roof, giant mugs in the kitchen and penguins on the snow.
+
 ## 2.0.0 · The Big One · 2026-10-14
 
 **New ways to play**

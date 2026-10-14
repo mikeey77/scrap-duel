@@ -510,6 +510,15 @@ function drawWallExtra(c, s, theme) {
     for (let i = 0; i < n; i++) f(v ? s.x : s.x + i * 18, v ? s.y + i * 18 : s.y, i);
   };
   switch (theme) {
+    case 'chess':
+      c.fillStyle = '#4a2e18';
+      c.fillRect(s.x, s.y, s.w, s.h);
+      c.fillStyle = '#6a4426';
+      c.fillRect(s.x + 4, s.y + 4, s.w - 8, s.h - 8);
+      c.strokeStyle = '#c9a43a';
+      c.lineWidth = 1.5;
+      c.strokeRect(s.x + 7, s.y + 7, s.w - 14, s.h - 14);
+      break;
     case 'basalt':
       c.fillStyle = '#26201f';
       c.fillRect(s.x, s.y, s.w, s.h);

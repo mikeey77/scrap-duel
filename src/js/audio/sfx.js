@@ -323,7 +323,7 @@ const MUSIC_STYLES = {
   }
 };
 const MUSIC_BY_THEME = {
-  icerink: 'ice',
+  chess: 'lounge',
   ice: 'ice',
   frozenlot: 'ice',
   glacier: 'ice',

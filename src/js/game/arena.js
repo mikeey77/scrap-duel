@@ -159,6 +159,7 @@ function makeGround(th, kind) {
       g.stroke();
     }
   }
+  if (kind !== 'wait') dressGround(g, th);
   if (th.id === 'ice' && kind !== 'wait') {
     g.strokeStyle = 'rgba(226,80,74,.5)';
     g.lineWidth = 8;
@@ -176,7 +177,7 @@ function makeGround(th, kind) {
     g.beginPath();
     g.arc(AW / 2, AH / 2, 140, 0, 7);
     g.stroke();
-  } else if (kind !== 'wait') {
+  } else if (kind !== 'wait' && th.id !== 'chess') {
     g.strokeStyle = 'rgba(235,225,200,.12)';
     g.lineWidth = 6;
     g.setLineDash([26, 18]);
@@ -380,6 +381,7 @@ function genArena(kind, th) {
       }
     }
   };
+  for (const [k, x, y, a] of th.fixed || []) ob.push(mkObj(k, x, y, a));
   const nJ = 8 + Math.floor(Math.random() * 5);
   for (let i = 0; i < nJ; i++) place(pick(th.junk), 1);
   if (Math.random() < 0.5) place('barrel', 2);
@@ -394,7 +396,7 @@ function genArena(kind, th) {
   );
   zn.push(...zn2);
   const ob2 = ob.map(o => {
-    const n = mkObj(o.kind, AW - o.x, o.y, Math.PI - o.a);
+    const n = mkObj((th.mirror && th.mirror[o.kind]) || o.kind, AW - o.x, o.y, Math.PI - o.a);
     return n;
   });
   ob.push(...ob2);

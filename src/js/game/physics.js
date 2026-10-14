@@ -3,6 +3,15 @@
 function zoneAt(x, y, kind) {
   return B.zones.find(z => z.kind === kind && inZone(x, y, z));
 }
+const SF_CACHE = new WeakMap();
+const SURF_MARK = {
+  ice: 'rgba(140,170,190,.08)',
+  snow: 'rgba(150,170,195,.16)',
+  sand: 'rgba(140,105,55,.13)',
+  mud: 'rgba(35,24,10,.16)',
+  grass: 'rgba(40,60,20,.1)',
+  carpet: 'rgba(60,30,70,.07)'
+};
 function drive(v, dt) {
   const C = v.c,
     s = Math.sin(v.a),
@@ -11,8 +20,12 @@ function drive(v, dt) {
     fy = -c,
     rx = c,
     ry = s;
-  const ground = v.iceT > B.time ? Math.min(B.grip, 0.3) : B.grip; // ice patches
-  const grip = C.hoverMode ? 1 : C.studs ? Math.max(ground, 0.9) : ground;
+  // the floor: each tyre class gets its own speed and grip on this surface (see data/surfaces.js)
+  const S = surfaceAt(v) || SURFACES.asphalt;
+  let sf = SF_CACHE.get(C);
+  if (!sf || sf.s !== S) SF_CACHE.set(C, (sf = { s: S, ...surfaceFit(C.tyreW, S) }));
+  const ground = (v.iceT > B.time ? Math.min(B.grip, 0.3) : B.grip) * sf.grip; // ice patches
+  const grip = C.hoverMode ? 1 : C.studs ? Math.max(ground, 0.9) : Math.min(1.2, ground);
   let trac = C.trac * grip,
     latF = C.latF * grip;
   const air = v.z > 0,
@@ -27,8 +40,8 @@ function drive(v, dt) {
       return z && !(z.own === v.idx && v.aura.ownSlick);
     };
     if (slick('oil')) {
-      trac *= C.studs ? 0.8 : 0.3;
-      latF *= C.studs ? 0.8 : 0.25;
+      trac *= C.studs ? 0.8 : 0.3 + 0.35 * sf.off;
+      latF *= C.studs ? 0.8 : 0.25 + 0.35 * sf.off;
     }
     if (slick('glue')) {
       trac *= 0.35;
@@ -45,10 +58,14 @@ function drive(v, dt) {
   }
   const rush = buffOf(v, 'speed') ? 1.5 : 1;
   if (!air && !flipped && !v.anchored && !chute) {
-    const acc = C.accel * (trac / (C.trac || 1)) * rush;
+    const acc = C.accel * (trac / (C.trac || 1)) * rush * (C.hoverMode ? 1 : sf.spd);
     fv += v.throttle * acc * dt * (v.throttle < 0 ? 0.65 : 1);
     if (C.strafe) lv += v.strafe * acc * 0.8 * dt;
-    const cap = C.topCap * (rush > 1 ? 1.35 : 1) * (zoneAt(v.x, v.y, 'glue') && !C.hoverMode ? 0.4 : 1);
+    const cap =
+      C.topCap *
+      (C.hoverMode ? 1 : sf.spd) *
+      (rush > 1 ? 1.35 : 1) *
+      (zoneAt(v.x, v.y, 'glue') && !C.hoverMode ? 0.4 : 1);
     if (Math.abs(fv) > cap) fv *= Math.exp(-4 * dt);
   }
   if (!air) {
@@ -109,7 +126,26 @@ function drive(v, dt) {
   const sp = Math.hypot(v.vx, v.vy);
   v.top = Math.max(v.top || 0, sp);
   if (sp > 35 && gx && !C.hoverMode && !air && !flipped) {
-    gx.fillStyle = B.theme.id === 'ice' ? 'rgba(140,170,190,.08)' : 'rgba(28,20,12,.07)';
+    const S = surfaceAt(v) || SURFACES.asphalt;
+    gx.fillStyle = SURF_MARK[B.kind === 'wait' ? '' : S.id] || 'rgba(28,20,12,.07)';
+    // loose floors kick up a spray behind the tyres
+    if (S.dust && B.kind !== 'wait' && Math.random() < dt * S.dust * Math.min(1, sp / 220) * 9) {
+      const I = v.insts.find(I => I.alive && I.m.drive);
+      if (I) {
+        const [px, py] = ipos(v, I);
+        fx({
+          k: 'smoke',
+          x: px,
+          y: py,
+          vx: -v.vx * 0.15 + rnd(-20, 20),
+          vy: -v.vy * 0.15 + rnd(-20, 20),
+          life: 0.5,
+          max: 0.5,
+          r: rnd(4, 7),
+          col: S.col
+        });
+      }
+    }
     for (const I of v.insts)
       if (I.alive && I.m.drive)
         for (const b of I.cells) {

@@ -250,7 +250,19 @@ function botBuild(P) {
   const ids = perim.map(e => e.id).sort((a, b) => BOT_PERIM.indexOf(a) - BOT_PERIM.indexOf(b));
   perim.sort((a, b) => a.y - b.y || Math.abs(a.x) - Math.abs(b.x));
   perim.forEach((e, i) => (e.id = ids[i]));
-  // mobility on the flanks
+  // mobility on the flanks; a bot that knows the arena picks tyres that suit its floor
+  const mob = BOT_MOB.filter(i => i !== 'track'),
+    nth = typeof G !== 'undefined' && G.nextTheme != null ? THEMES[G.nextTheme] : null;
+  if (nth) {
+    const S = surfaceOf(nth),
+      sc = id => {
+        const ty = MOD[id] && tyreOf(MOD[id]);
+        if (!ty) return 1;
+        const f = surfaceFit({ [ty]: 1 }, S);
+        return Math.round(f.spd * f.grip * 10) / 10;
+      };
+    mob.sort((a, b) => sc(b) - sc(a));
+  }
   const rows = [];
   for (let y = -bh; y <= bh; y++) rows.push(y);
   rows.sort((a, b) => Math.abs(b) - Math.abs(a));
@@ -262,12 +274,7 @@ function botBuild(P) {
         base.set(key(x, y), { id: 'track', rot: 0, x, y });
         continue;
       }
-      putB(
-        BOT_MOB.filter(i => i !== 'track'),
-        0,
-        x,
-        y
-      );
+      putB(mob, 0, x, y);
     }
   // front row
   const fy = -bh - 1,

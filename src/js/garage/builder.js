@@ -190,6 +190,7 @@ function calc(items, tn) {
     turnB = 0,
     monster = 0,
     studs = 0;
+  const tyreW = {};
   for (const it of items) {
     mass += it.mass;
     cx += it.x * it.mass;
@@ -215,6 +216,8 @@ function calc(items, tn) {
       if (m.hover) hover++;
       if (d.slide) slide++;
       if (m.monster) monster++;
+      const ty = tyreOf(m);
+      if (ty) tyreW[ty] = (tyreW[ty] || 0) + d.p;
     }
     if (m.steer) steer += 0.22 * Math.min(1, Math.abs(it.y - cy) / 2.5);
   }
@@ -247,7 +250,8 @@ function calc(items, tn) {
     cx,
     cy,
     monster: monster > 0,
-    studs: drv > 0 && studs * 2 >= drv
+    studs: drv > 0 && studs * 2 >= drv,
+    tyreW
   };
 }
 function auraOf(ids) {
@@ -377,6 +381,7 @@ function statLine(m) {
   if (m.wpn && m.wpn.rng) a.push(`range ${Math.round(wstat(m.id).rng)}`);
   if (m.drive) a.push(`drive ${m.drive.p}`);
   if (m.dir) a.push('directional');
+  if (tyreOf(m)) a.push(`${TYRE_NAME[tyreOf(m)]}: ${TYRE_TIP[tyreOf(m)]}`);
   return a.join(' · ');
 }
 const SOCKET = ['', '○', '⬢'];
