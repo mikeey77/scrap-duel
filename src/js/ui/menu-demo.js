@@ -28,7 +28,9 @@ function demoCar(idx, special) {
 }
 function demoStart() {
   if (inMatch() && G.phase !== 'menu' && G.phase !== 'intro') return;
-  const ti = Math.floor(Math.random() * THEMES.length),
+  // dark arenas look like an empty screen behind the menu, so the pit only uses lit ones
+  const lit = THEMES.map((t, i) => i).filter(i => !THEMES[i].dark),
+    ti = pick(lit),
     special = Math.random() < 0.45 ? pick(Object.keys(SPECIALS)) : null;
   B = newB({ net: null, me: 0, theme: THEMES[ti], t: 90, demo: true, seq: 'count' });
   const a = demoCar(0, special),

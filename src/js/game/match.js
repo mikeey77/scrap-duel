@@ -313,6 +313,11 @@ function hideOverlays() {
     $(id).hidden = true;
 }
 function startMatch(mode, sched, format = chosenFormat, rounds) {
+  if (G.league && !G.leagueStarting) {
+    // leaving a league match early: it does not count, and the normal difficulty comes back
+    G.diff = G.league.prevDiff;
+    G.league = null;
+  }
   if (G.run) {
     G.diff = G.run.prevDiff;
     G.run = null;
@@ -1167,6 +1172,8 @@ function showFinal() {
     store('sd.record', rec);
   }
   const spoils = matchSpoils(won, tot.w);
+  const inLeague = !!G.league,
+    leagueHtml = leagueResult(won, tie, s);
   // streaks against the bot: offer an easier (or harder) bot after three in a row
   let nudge = '';
   if (G.mode === 'solo' && !G.run) {
@@ -1202,14 +1209,20 @@ function showFinal() {
         ? `<p class="small">MVP part of the match: <b>${esc(mvp[0])}</b> with ${mvp[1].toLocaleString()} damage.</p>`
         : '';
     })()}
-    ${progressHtml(prog)}${spoilsHtml(spoils)}
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
+    ${leagueHtml}${progressHtml(prog)}${spoilsHtml(spoils)}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${inLeague ? '<button class="btn" id="btnLeague">Back to the championship</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
     ${nudge}
     ${G.mode === 'mp' ? `<p class="series">Tonight: <b>${G.series.w}–${G.series.l}</b> ${G.mpCoop ? 'together with' : 'against'} ${esc(G.oppName)}${!G.mpCoop && h2hLine(G.oppName) ? ` · ${h2hLine(G.oppName)}` : ''}</p>` : ''}`;
   $('#ovResult').hidden = false;
   sfx(won ? 'win' : 'lose');
   const a = $('#btnAgain');
   if (a) a.addEventListener('click', () => startMatch('solo', null, G.format));
+  const lg = $('#btnLeague');
+  if (lg)
+    lg.addEventListener('click', () => {
+      store('sd.menuTab', 'league');
+      showMenu();
+    });
   const ez = $('#btnEasier'),
     hd = $('#btnHarder');
   const changeDiff = d => {

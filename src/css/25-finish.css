@@ -523,3 +523,76 @@ body {
     transform: translateY(10px) scale(0.98);
   }
 }
+
+/* ---------- championship ---------- */
+.lg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 6px 0;
+}
+.lg-table th {
+  font: 700 11px var(--f-display);
+  color: var(--muted);
+  text-align: left;
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--line);
+}
+.lg-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.lg-table td:nth-child(n + 3),
+.lg-table th:nth-child(n + 3) {
+  text-align: right;
+}
+.lg-table tr.top td:first-child {
+  color: #ffd257;
+  font-weight: 700;
+}
+.lg-table tr.me td {
+  background: rgba(255, 210, 87, 0.08);
+  font-weight: 700;
+}
+.lg-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 7px;
+  border-radius: 2px;
+  vertical-align: 0;
+}
+.lg-cup {
+  font: 700 10px var(--f-display);
+  color: #241400;
+  background: #ffd257;
+  padding: 1px 6px;
+  margin-left: 4px;
+}
+.lg-next {
+  margin: 6px 0;
+}
+.lg-card {
+  margin: 10px 0;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-left: 3px solid #ffd257;
+}
+.lg-card h3 {
+  margin: 2px 0 6px;
+  font: 700 22px var(--f-display);
+}
+.lg-card.champ {
+  border-color: #ffd257;
+  box-shadow: 0 0 30px -10px #ffd257;
+}
+.lg-card.champ h3 {
+  color: #ffd257;
+}
+.lg-prize {
+  font: 700 15px var(--f-display);
+}
+.lg-menu .lg-table {
+  max-width: 100%;
+}

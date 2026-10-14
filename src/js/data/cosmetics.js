@@ -69,6 +69,7 @@ const COSMETICS = {
   title: [
     { id: 'rookie', name: 'Rookie', desc: 'Everybody starts somewhere.' },
     { id: 'scrapper', name: 'Scrapper', desc: 'Won a round.', unlock: { ach: 'first_win' } },
+    { id: 'champ', name: 'League Champion', desc: 'Won a Championship season.', unlock: { ach: 'league' } },
     { id: 'grease', name: 'Grease Monkey', desc: 'Reached Scrap Cred level 11.', unlock: { lvl: 11 } },
     { id: 'duckthief', name: 'Duck Thief', desc: 'Won a Golden Duck Heist.', unlock: { ach: 'duck' } },
     { id: 'pianomover', name: 'Piano Mover', desc: 'Won Piano Push.', unlock: { ach: 'piano' } },
@@ -110,6 +111,7 @@ const COSMETICS = {
 };
 const ACHIEVEMENTS = {
   boss_slayer: { name: 'Boss Slayer', desc: 'Beat a boss in the Scrap Gauntlet.' },
+  league: { name: 'League Champion', desc: 'Win a Championship season.' },
   wave10: { name: 'Marathon', desc: 'Reach wave 10 in the Scrap Gauntlet.' },
   wave25: { name: 'Unkillable', desc: 'Reach wave 25 in the Scrap Gauntlet.' },
   first_win: { name: 'First Blood', desc: 'Win a round.' },

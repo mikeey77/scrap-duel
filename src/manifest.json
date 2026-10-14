@@ -67,6 +67,7 @@
     "js/game/replay.js",
     "js/game/match.js",
     "js/game/gauntlet.js",
+    "js/game/league.js",
     "js/game/gear.js",
     "js/game/bosses.js",
     "js/game/brawl.js",

@@ -2049,4 +2049,29 @@ test('portals send you to their mirrored twin, ice takes your grip, boost pads p
   assert(v.vx > before + 40, 'boost pad pushes');
 });
 
+test('championship: five matchdays, a table, a final and a champion', () => {
+  const { api: a } = runtime();
+  a.setGear({ bolts: 0, items: [], next: 1 });
+  a.newSeason();
+  const L = a.getLeague();
+  assert.equal(L.rivals.length, 5);
+  for (let d = 0; d < 5; d++) {
+    a.playLeague();
+    assert(a.G.league && a.G.league.opp === L.rivals[d].name, 'playing the right rival');
+    assert.equal(a.G.oppName, L.rivals[d].name);
+    const html = a.leagueResult(true, false, [5, 1]);
+    assert(html.includes('lg-'), 'a league card for the result screen');
+  }
+  assert.equal(L.table.__me.pts, 15, 'five wins, fifteen points');
+  const others = Object.entries(L.table).filter(([k]) => k !== '__me');
+  assert(others.every(([, r]) => r.p === 5), 'every rival plays every matchday');
+  assert(L.final && !L.final.done, 'into the final');
+  a.playLeague();
+  assert(a.G.league.final, 'the final is on');
+  a.leagueResult(true, false, [4, 2]);
+  assert.equal(L.champion, '__me');
+  assert(a.PROG().ach.includes('league'), 'champion achievement');
+  assert(a.GEAR().bolts >= 300, 'prize money');
+});
+
 console.log(`\n${passed} regression tests passed.`);
