@@ -179,6 +179,7 @@ function carFromCfg(c, i) {
   v.diff = c.diff;
   v.look = { ...DEFAULT_STYLE, ...(c.look || {}) };
   applyCarMods(v, c);
+  applyDailyRule(v);
   return v;
 }
 function carsFromCfg(cfg) {
@@ -313,6 +314,12 @@ function hideOverlays() {
     $(id).hidden = true;
 }
 function startMatch(mode, sched, format = chosenFormat, rounds) {
+  if (G.daily && !G.dailyStarting) {
+    // leaving the daily challenge early: back to normal randomness and difficulty
+    dailyRestoreRandom();
+    G.diff = G.daily.prevDiff;
+    G.daily = null;
+  }
   if (G.league && !G.leagueStarting) {
     // leaving a league match early: it does not count, and the normal difficulty comes back
     G.diff = G.league.prevDiff;
@@ -773,6 +780,7 @@ function setButtons() {
     });
 }
 function pickTheme() {
+  if (G.daily) return G.daily.theme;
   let ti;
   do ti = Math.floor(Math.random() * THEMES.length);
   while (ti === G.lastTheme && THEMES.length > 1);
@@ -1175,7 +1183,8 @@ function showFinal() {
   }
   const spoils = matchSpoils(won, tot.w);
   const inLeague = !!G.league,
-    leagueHtml = leagueResult(won, tie, s);
+    leagueHtml = leagueResult(won, tie, s) + dailyResult(won, s, tot),
+    inDaily = !leagueHtml.includes('lg-table') && leagueHtml.includes('daily');
   // streaks against the bot: offer an easier (or harder) bot after three in a row
   let nudge = '';
   if (G.mode === 'solo' && !G.run) {
@@ -1212,13 +1221,15 @@ function showFinal() {
         : '';
     })()}
     ${leagueHtml}${progressHtml(prog)}${spoilsHtml(spoils)}
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${inLeague ? '<button class="btn" id="btnLeague">Back to the league</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${inLeague ? '<button class="btn" id="btnLeague">Back to the league</button>' : inDaily ? '<button class="btn" id="btnDaily">Try again</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
     ${nudge}
     ${G.mode === 'mp' ? `<p class="series">Tonight: <b>${G.series.w}–${G.series.l}</b> ${G.mpCoop ? 'together with' : 'against'} ${esc(G.oppName)}${!G.mpCoop && h2hLine(G.oppName) ? ` · ${h2hLine(G.oppName)}` : ''}</p>` : ''}`;
   $('#ovResult').hidden = false;
   sfx(won ? 'win' : 'lose');
   const a = $('#btnAgain');
   if (a) a.addEventListener('click', () => startMatch('solo', null, G.format));
+  const dl = $('#btnDaily');
+  if (dl) dl.addEventListener('click', () => playDaily());
   const lg = $('#btnLeague');
   if (lg)
     lg.addEventListener('click', () => {

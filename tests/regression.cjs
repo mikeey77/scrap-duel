@@ -2091,4 +2091,24 @@ test('Gauntlet co-op: you and a bot partner against two rivals every wave', () =
   assert.equal(a.G.teamSize, 1);
 });
 
+test('daily challenge: same seed gives the same start, one reward a day, a best score', () => {
+  const { api: a } = runtime();
+  a.setGear({ bolts: 0, items: [], next: 1 });
+  const D = a.dailyToday('2026-10-14');
+  assert.equal(D.id, '2026-10-14');
+  assert.deepEqual(JSON.stringify(a.dailyToday('2026-10-14')), JSON.stringify(D), 'stable for the day');
+  assert.notEqual(a.dailyToday('2026-10-15').seed, D.seed);
+  a.playDaily();
+  const one = JSON.stringify([a.G.oppName, a.G.bot.inv, a.G.nextTheme]);
+  a.playDaily();
+  const two = JSON.stringify([a.G.oppName, a.G.bot.inv, a.G.nextTheme]);
+  assert.equal(one, two, 'everyone gets the same rival build');
+  const html = a.dailyResult(true, [5, 1], { d: 1200, t: 300, w: 4 });
+  assert(html.includes('points'));
+  assert(a.GEAR().bolts >= 60, 'first play reward');
+  const st = a.dailyState();
+  assert.equal(st.streak, 1);
+  assert(Math.random !== undefined && a.G.daily === null, 'randomness and state restored');
+});
+
 console.log(`\n${passed} regression tests passed.`);

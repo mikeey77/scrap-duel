@@ -665,3 +665,11 @@ body {
   color: var(--muted);
   margin: 0 4px;
 }
+.dl-rule {
+  margin: 2px 0 4px;
+  font: 700 24px var(--f-display);
+  color: #c89bff;
+}
+.lg-card.daily {
+  border-left-color: #b06bff;
+}

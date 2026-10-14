@@ -7,6 +7,7 @@ const MENU_MODES = [
     col: '#3fe0a0',
     line: 'Fight a bot. Draft a car round by round, or bring a finished one.'
   },
+  { id: 'daily', name: 'Daily', col: '#b06bff', line: 'Same seed for everyone today, plus one odd rule.' },
   { id: 'league', name: 'League', col: '#ffd257', line: 'A season against five rivals. Top the table, win the final.' },
   { id: 'run', name: 'Scrap Gauntlet', col: '#ff5c7a', line: 'Endless waves, three hearts, a boss every fifth wave.' },
   { id: 'online', name: 'Online', col: '#5be7ff', line: 'Play a friend with a room code, 1v1 or 2v2.' }
@@ -25,6 +26,7 @@ const TAGLINES = [
 let menuMode = null;
 // small line icons for the mode tiles
 const MODE_ICONS = {
+  daily: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M10 15l2 2 3-4"/>',
   league: '<path d="M7 4h10v4a5 5 0 0 1-10 0V4ZM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M10 17h4"/>',
   solo: '<path d="M5 19 19 5M14 5h5v5M5 5l14 14M5 14v5h5"/>',
   run: '<path d="M12 3c-4.4 0-8 3.2-8 7.3 0 2.4 1.2 4.3 3 5.5V19h10v-3.2c1.8-1.2 3-3.1 3-5.5C20 6.2 16.4 3 12 3Z"/><circle cx="9" cy="11" r="1.6"/><circle cx="15" cy="11" r="1.6"/><path d="M10 19v2M14 19v2"/>',
@@ -34,6 +36,11 @@ function showMenu() {
   hideOverlays();
   if (G.phase === 'review') closeGarageReport();
   const resume = inMatch();
+  if (!resume && G.daily) {
+    dailyRestoreRandom();
+    G.diff = G.daily.prevDiff;
+    G.daily = null;
+  }
   if (!resume) {
     G.phase = 'menu';
     updateHUD();
@@ -76,7 +83,9 @@ function showMenu() {
         ? `${G.quickTeams === 2 ? '2v2' : '1v1'} · ${G.quickFmt === 'brawl' ? 'Brawl' : 'Draft'} · ${DIFF[G.diff].name}`
         : id === 'online'
           ? 'Peer to peer'
-          : id === 'league'
+          : id === 'daily'
+            ? (st => (st.best[dailyId()] != null ? `Best today ${st.best[dailyId()]}` : dailyToday().rule.name))(dailyState())
+            : id === 'league'
             ? (L => (!L ? 'No season yet' : L.champion ? `Season ${L.season} done` : `Season ${L.season} · day ${Math.min(L.day + 1, LEAGUE_DAYS)}/${LEAGUE_DAYS}`))(loadLeague())
             : `${MODS.length} parts`;
   $('#ovMenu').classList.toggle('live', false);
@@ -221,6 +230,7 @@ function menuOpts() {
       'f'
     )}</div><div class="hg-o"><span class="mlab">Difficulty</span>${diff}</div><div class="hg-o"><span class="mlab">Length</span>${rounds}</div><p class="small" id="fmtText">${G.quickFmt === 'brawl' ? `Bring one finished car worth up to ${BRAWL_BUDGET} coins: a saved blueprint or a ready-made one. No drafting, no shop.` : 'Start with a cockpit, draft a part every round, shop and outbuild the bot.'}</p><button class="btn hg-go2" id="mPlay">${G.quickFmt === 'brawl' ? 'Start a Brawl' : 'Play vs bot'}</button>`,
     league: leagueMenuHtml(),
+    daily: dailyMenuHtml(),
     run: `<div class="hg-o"><span class="mlab">Teams</span>${seg(
       'runSeg',
       [
@@ -235,6 +245,12 @@ function menuOpts() {
   el.style.setProperty('--rc', m.col);
   el.innerHTML = body;
   if (m.id === 'league') leagueMenuWire(menuOpts);
+  if ($('#dlPlay'))
+    $('#dlPlay').onclick = () => {
+      sfx('ui');
+      G.started = true;
+      playDaily();
+    };
   $$('#diffSeg button').forEach(b =>
     b.addEventListener('click', () => {
       G.diff = +b.dataset.i;
@@ -603,6 +619,10 @@ if (window.__SD_TEST__)
     loadoutSets,
     applySets,
     bossTick,
+    playDaily,
+    dailyToday,
+    dailyResult,
+    dailyState,
     newSeason,
     playLeague,
     leagueResult,
