@@ -389,7 +389,11 @@ const themeById = id => THEMES.find(t => t.id === id);
     grip: 1,
     junk: ['pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'rook', 'knight', 'bishop', 'queen'],
     mirror: Object.fromEntries(Object.keys(CHESS).map(k => [k, 'b' + k])),
-    fixed: [['king', 150, AH / 2 - 160, 0]],
+    fixed: [
+      ['king', 150, AH / 2 - 160, 0],
+      ['pawn', 440, 330, 0],
+      ['pawn', 440, AH - 330, 0]
+    ],
     ramps: 0,
     oil: 0,
     spikes: 0,

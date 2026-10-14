@@ -54,10 +54,10 @@
       <main>
         <button id="reviewBack" class="btn review-return" hidden>Back to round report</button>
         <section id="build">
-          <aside class="panel" aria-label="Parts bin and shop">
+          <aside class="panel" aria-label="My parts and shop">
             <div class="phead">
               <div class="tabs" role="tablist">
-                <button id="tabBin" aria-pressed="true">Parts bin</button
+                <button id="tabBin" aria-pressed="true">My parts</button
                 ><button id="tabShop" aria-pressed="false">Shop</button>
               </div>
               <span class="label" id="binCount"></span>
@@ -75,7 +75,8 @@
             <div id="bayHint"></div>
             <div id="bayIntel" aria-live="polite">
               <div class="intel win" title="The arena of the next round">
-                <canvas id="winCv" width="190" height="84"></canvas><span id="winLbl">Next arena</span><span id="winSurf" hidden></span>
+                <canvas id="winCv" width="190" height="84"></canvas><span id="winLbl">Next arena</span
+                ><span id="winSurf" hidden></span>
               </div>
               <div class="intel rival" id="rivalIntel"></div>
             </div>
@@ -94,7 +95,11 @@
             <div class="carpad" role="group" aria-label="Move the whole car">
               <span class="cp-lbl">Whole car</span>
               <div class="cp-grid">
-                <button id="mvTurn" title="Turn the whole car a quarter turn (weapons keep facing forward)" aria-label="Turn whole car">
+                <button
+                  id="mvTurn"
+                  title="Turn the whole car a quarter turn (weapons keep facing forward)"
+                  aria-label="Turn whole car"
+                >
                   <svg viewBox="0 0 16 16">
                     <path
                       d="M12.5 8A4.5 4.5 0 1 1 8 3.5h3M9.5 1.5l2 2-2 2"
@@ -107,8 +112,14 @@
                 <button id="mvUp" title="Move the car up (↑)" aria-label="Move car up">
                   <svg viewBox="0 0 16 16"><path d="M8 3l5 6H3z" fill="currentColor" /></svg>
                 </button>
-                <button id="mvFlip" title="Swap the left and right side of the whole car" aria-label="Swap left and right">
-                  <svg viewBox="0 0 16 16"><path d="M2 5h10l-2.5-2.5M14 11H4l2.5 2.5" stroke="currentColor" stroke-width="1.7" fill="none" /></svg>
+                <button
+                  id="mvFlip"
+                  title="Swap the left and right side of the whole car"
+                  aria-label="Swap left and right"
+                >
+                  <svg viewBox="0 0 16 16">
+                    <path d="M2 5h10l-2.5-2.5M14 11H4l2.5 2.5" stroke="currentColor" stroke-width="1.7" fill="none" />
+                  </svg>
                 </button>
                 <button id="mvLeft" title="Move the car left (←)" aria-label="Move car left">
                   <svg viewBox="0 0 16 16"><path d="M3 8l6-5v10z" fill="currentColor" /></svg>
@@ -128,7 +139,13 @@
                 </button>
                 <span></span>
               </div>
-              <button id="mvCopy" class="cp-copy" title="Copy the left half of the car to the right half (uses parts from your bin)">Copy left → right</button>
+              <button
+                id="mvCopy"
+                class="cp-copy"
+                title="Copy the left half of the car to the right half (uses spares from My parts)"
+              >
+                Copy left → right
+              </button>
             </div>
             <div class="toolbar" role="toolbar" aria-label="Builder tools">
               <button data-tool="place" aria-pressed="true" title="Place (B)">
@@ -168,7 +185,12 @@
                 >Turn next
               </button>
               <span class="sep"></span>
-              <button id="btnMirror" class="icon-only" title="Mirror mode: every part you place also appears on the other side (M)" aria-label="Mirror mode">
+              <button
+                id="btnMirror"
+                class="icon-only"
+                title="Mirror mode: every part you place also appears on the other side (M)"
+                aria-label="Mirror mode"
+              >
                 <svg viewBox="0 0 16 16">
                   <path d="M8 1v14" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2" fill="none" />
                   <path d="M6 4L1 8l5 4zM10 4l5 4-5 4z" fill="currentColor" />
@@ -238,8 +260,8 @@
             </div>
             <div class="pfoot">
               <div class="autorow">
-                <button class="btn ghost" id="btnAuto" title="Keeps your car and bolts the parts from your bin onto it">
-                  Add bin parts to my car
+                <button class="btn ghost" id="btnAuto" title="Keeps your car and bolts the parts from My parts onto it">
+                  Add loose parts to my car
                 </button>
                 <button
                   class="btn ghost"
@@ -249,7 +271,7 @@
                   Build a car for me
                 </button>
               </div>
-              <button class="btn ghost" id="btnClear" title="Takes every part off the car and back into the bin">
+              <button class="btn ghost" id="btnClear" title="Takes every part off the car and back into My parts">
                 Empty the car
               </button>
               <button class="btn" id="btnReady">Ready · to the arena</button>
@@ -299,13 +321,14 @@
           </dd>
           <dt>Your stuff</dt>
           <dd>
-            Everything you own lives in the Garage: gear you upgrade and put in your loadout (it is in your parts bin
-            from round 1), skins, stickers and titles. Blueprint Brawl lets you bring one finished car. In battle, T opens quick chat.
+            Everything you own lives in the Garage: gear you upgrade and put in your loadout (it is in My parts from
+            round 1), skins, stickers and titles. Blueprint Brawl lets you bring one finished car. In battle, T opens
+            quick chat.
           </dd>
         </dl>
         <p class="small">
-          Pick 5, 10 or 25 rounds. Each round is worth one point; the final round is worth two. Fight a bot 1v1 or 2v2 with a
-          bot partner, play a friend online (1v1 or 2v2), or survive the Scrap Gauntlet.
+          Pick 5, 10 or 25 rounds. Each round is worth one point; the final round is worth two. Fight a bot 1v1 or 2v2
+          with a bot partner, play a friend online (1v1 or 2v2), or survive the Scrap Gauntlet.
         </p>
         <button class="btn" id="btnStart">Back to the menu</button>
       </div>

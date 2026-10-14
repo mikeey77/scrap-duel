@@ -50,7 +50,7 @@ function hqCarHtml() {
     <div class="hq-paint" role="group" aria-label="Paint colour">${PAINTS.map(p => `<button style="background:${p}" data-paint="${p}" aria-pressed="${G.paint === p}" title="Paint"></button>`).join('')}</div>
     ${setPanelHtml()}
     <div class="hq-lo"><span class="label">Loadout · ${GEAR.loadout.length}/${slots}</span>
-      <p class="small">In your parts bin from round 1 of every Duel against bots and every Gauntlet run.</p>${lo}${hqSetsHtml()}</div>
+      <p class="small">In My parts from round 1 of every Duel against bots and every Gauntlet run.</p>${lo}${hqSetsHtml()}</div>
     <div class="hq-presets"><span class="label">Looks</span>${[0, 1, 2]
       .map(i => {
         const P = (PROG.presets || [])[i];

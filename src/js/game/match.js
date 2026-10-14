@@ -391,6 +391,7 @@ function garageEnter() {
 }
 function openBuild() {
   G.phase = 'build';
+  G.leftTab = 'bin'; // coming back to the garage always lands on My parts
   B = null;
   $('#arena').hidden = true;
   if (!$('#ovDraft') || $('#ovDraft').hidden) garageEnter();

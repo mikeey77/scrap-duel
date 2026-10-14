@@ -500,7 +500,11 @@ function gambleResult(prize, again) {
     $('#ovCrate').hidden = true;
     crateBusy = false;
     if (m) G.sel = m.id;
+    // back in the garage on My parts, where the new part is waiting
+    G.leftTab = 'bin';
     refreshUI();
+    renderLeft();
+    swapIn($('#leftBody'), 'swap-list');
   };
   $('#cAgain').onclick = () => {
     crateBusy = false;

@@ -13,7 +13,7 @@ const MENU_MODES = [
   { id: 'online', name: 'Friends', col: '#5be7ff', line: 'Online with a room code, or on this PC with a controller.' }
 ];
 const TAGLINES = [
-  'Tip: loadout gear in the Garage is in your parts bin from round 1.',
+  'Tip: loadout gear in the Garage is in My parts from round 1.',
   "Tip: two stickers from your skin's set turn on a set bonus.",
   'Tip: hinges and rams follow right click, or a key you give them with the Keys tool (G).',
   'Tip: in a Brawl you can rearrange your car between rounds.',
@@ -854,6 +854,10 @@ if (window.__SD_TEST__)
     JUNKDRAW,
     drawModule,
     setAnim: a => (ANIM = a),
+    bpCellClient: (x, y) => {
+      const r = bp.getBoundingClientRect();
+      return [r.left + cpx(x) + cell / 2, r.top + cpy(y) + cell / 2];
+    },
     partMotion,
     kickOf,
     fireWeapons: (v, dt) => weapons(v, dt),

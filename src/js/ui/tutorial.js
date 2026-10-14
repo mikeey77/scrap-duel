@@ -6,7 +6,7 @@ const TIPS = {
   ],
   build: [
     'Garage',
-    'Pick a part in the bin and click the bay to bolt it on. Wheels and blades go on the base layer; guns go on top of support blocks. Short on time? Hit Auto-place.'
+    'Pick a part in My parts and click the bay to bolt it on. Wheels and blades go on the base layer; guns go on top of support blocks. Short on time? Hit Auto-place.'
   ],
   special: [
     'Special round ahead',

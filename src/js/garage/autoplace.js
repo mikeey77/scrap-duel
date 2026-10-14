@@ -114,7 +114,7 @@ function autoPlace(quiet) {
   if (!quiet)
     window.__toast(
       placed
-        ? `Bolted on ${placed} part${placed > 1 ? 's' : ''}: guns up front, wheels in pairs, armour where hits come in.${skipped.length ? ' Moving parts and beams stay in the bin for you to place.' : ''} Ctrl+Z undoes it.`
+        ? `Bolted on ${placed} part${placed > 1 ? 's' : ''}: guns up front, wheels in pairs, armour where hits come in.${skipped.length ? ' Moving parts and beams stay in My parts for you to place.' : ''} Ctrl+Z undoes it.`
         : skipped.length
           ? 'Only moving parts and beams are left: place those by hand where you want them to move.'
           : 'No safe spot left. Add supports (frames, girders) or expand the bay.',
@@ -216,10 +216,10 @@ function readyCheck() {
     rich = G.coins >= 80;
   if (G.skipReadyWarn || (!loose && !rich)) return enterWaitShow();
   const bits = [];
-  if (loose) bits.push(`<b>${loose} loose part${loose > 1 ? 's' : ''}</b> in your bin`);
+  if (loose) bits.push(`<b>${loose} loose part${loose > 1 ? 's' : ''}</b> in My parts`);
   if (rich) bits.push(`<b class="coin">${G.coins}</b> unspent coins`);
   $('#readyCard').innerHTML = `<span class="label">Before you roll out</span><h2>Forgetting something?</h2>
-    <p>You have ${bits.join(' and ')}. Parts in the bin don’t fight.</p>
+    <p>You have ${bits.join(' and ')}. Parts in My parts don’t fight.</p>
     <div class="rbtns">${loose ? '<button class="btn" id="rwAuto">Auto-place and go</button>' : ''}${rich ? '<button class="btn ghost" id="rwShop">Open the shop</button>' : ''}<button class="btn ghost" id="rwGo">Go anyway</button></div>
     <label class="small"><input type="checkbox" id="rwSkip"> Don’t ask again this match</label>`;
   $('#ovReady').hidden = false;

@@ -2,6 +2,14 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.1.4 · Turn It Around · 2026-10-14
+
+- **Parts visibly turn**: a part you turn on the car swings round instead of snapping.
+- **Turn next** now turns the picture in the inspector too, and tells you which way the next part will face (and how to turn one that is already on the car).
+- **"Parts bin" is now "My parts"**, everywhere.
+- **Back to the garage** (after a crate, or from the waiting arena) always lands on My parts.
+- The chessboard always has a pawn of each colour.
+
 ## 2.1.3 · Smooth Garage · 2026-10-14
 
 - **Fixed: the top bar was gone in the garage and in matches** after visiting the main menu, taking the coins, the round, Codex, Pause, Menu and the fullscreen button with it.

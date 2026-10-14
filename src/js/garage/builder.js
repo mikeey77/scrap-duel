@@ -537,6 +537,20 @@ function canPlaceTop(id, x, y, occ, rot = G.rot) {
   return null;
 }
 
+/** Parts turn with a quick swing instead of snapping, so you can see that they turned. */
+const turning = new Map();
+function turnAngle(e, top) {
+  const k = (top ? 't' : 'b') + key(e.x, e.y),
+    a = turning.get(k);
+  if (!a || a.to !== e.rot) return (e.rot * Math.PI) / 2;
+  const t = (performance.now() - a.t0) / 220;
+  if (t >= 1) {
+    turning.delete(k);
+    return (e.rot * Math.PI) / 2;
+  }
+  const d = ((e.rot - a.from + 4) % 4 === 3 ? -1 : (e.rot - a.from + 4) % 4) * (1 - Math.pow(1 - t, 3));
+  return ((a.from + d) * Math.PI) / 2;
+}
 function drawPiece(c, e, top, scale = 1) {
   if (top && G.layerView === 'base') return;
   const m = MOD[e.id],
@@ -562,7 +576,7 @@ function drawPiece(c, e, top, scale = 1) {
     c.shadowBlur = cell * 0.22;
   }
   const b = top ? baseAt(key(e.x, e.y)) : null;
-  drawModule(c, e.id, cell * (top ? 0.82 : 0.96), (e.rot * Math.PI) / 2, 'p', {
+  drawModule(c, e.id, cell * (top ? 0.82 : 0.96), e.ghost ? (e.rot * Math.PI) / 2 : turnAngle(e, top), 'p', {
     builder: 1,
     turret: top && b && b.id === 'ring',
     paint: G.paint,
@@ -1086,7 +1100,7 @@ function drawBP() {
         const err = canPlaceTop(G.sel, x, y, occ);
         c.save();
         c.globalAlpha = err ? 0.3 : 0.7;
-        drawPiece(c, { id: G.sel, rot: G.rot, x, y }, true);
+        drawPiece(c, { id: G.sel, rot: G.rot, x, y, ghost: 1 }, true);
         c.restore();
         drawHolo(c, G.sel, G.rot, x, y, !!err);
         c.strokeStyle = err ? '#e2504a' : '#7fe0ff';
@@ -1099,7 +1113,7 @@ function drawBP() {
           const err = canPlaceBase(G.sel, G.rot, x, y, occ);
           c.save();
           c.globalAlpha = err ? 0.3 : 0.65;
-          drawPiece(c, { id: G.sel, rot: G.rot, x, y }, false);
+          drawPiece(c, { id: G.sel, rot: G.rot, x, y, ghost: 1 }, false);
           c.restore();
           drawHolo(c, G.sel, G.rot, x, y, !!err);
           c.strokeStyle = err ? '#e2504a' : '#f2b705';
@@ -1380,12 +1394,12 @@ function hintFor() {
           })()
         : left(G.sel) > 0
           ? `${m.name}: ${left(G.sel)} available. Dots mark where it can attach.`
-          : `${m.name}: none left in your bin. Buy more in the Shop, or pick another part.`
+          : `${m.name}: none left in My parts. Buy more in the Shop, or pick another part.`
       : G.tool === 'keys'
         ? 'Click a hinge, rotator or ram to put it on key 1–9 (right-click counts down). Without a key it follows right click.'
         : G.tool === 'rotate'
           ? 'Click a placed part to turn it 90°. Equipment on top turns first.'
-          : 'Click a part to put it back in the bin. Top modules come off first.';
+          : 'Click a part to put it back in My parts. Top modules come off first.';
   const [x, y] = hover,
     k = key(x, y);
   if (!G.ws.has(k)) return 'Outside the bay. Buy or draft an expansion to build here.';
@@ -1512,6 +1526,7 @@ function actCore(x, y, mode, quiet) {
         toast(err);
         return;
       }
+      turning.set('t' + k, { from: t.rot, to: next, t0: performance.now() });
       t.rot = next;
       pops.set('t' + k, performance.now());
       refreshUI();
@@ -1537,6 +1552,7 @@ function actCore(x, y, mode, quiet) {
       return;
     }
     G.base = nd;
+    turning.set('b' + own, { from: e.rot, to: n.rot, t0: performance.now() });
     pops.set('b' + own, performance.now());
   } else if (mode === 'remove') {
     const t = G.layerView === 'base' ? null : topAt(k);
@@ -1724,7 +1740,7 @@ function copyLeftToRight() {
     placed
       ? `Copied ${placed} part${placed > 1 ? 's' : ''} to the right${short ? `. ${short} more need parts from the shop` : ''}`
       : short
-        ? `Nothing copied: the bin has no spare parts for the right side`
+        ? `Nothing copied: My parts has no spares for the right side`
         : 'Nothing to copy: the right side already matches or is blocked',
     placed > 0
   );
@@ -2095,10 +2111,23 @@ function setTool(t) {
 }
 $$('.toolbar [data-tool]').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
 function turnBrush(d) {
+  const was = G.rot;
   G.rot = (G.rot + d + 4) % 4;
   $('#rotIcon').style.transform = `rotate(${G.rot * 90}deg)`;
   drawBP();
   renderInspect();
+  const img = $('#inspect .art img');
+  if (img && img.animate && SETTINGS.motion !== false)
+    img.animate([{ transform: `rotate(${was * 90}deg)` }, { transform: `rotate(${was * 90 + d * 90}deg)` }], {
+      duration: 240,
+      easing: 'cubic-bezier(.2,.8,.2,1)'
+    });
+  if (G.sel && MOD[G.sel])
+    toast(
+      `Next ${MOD[G.sel].name} faces ${['forward', 'right', 'back', 'left'][G.rot]}.` +
+        (G._turnHint ? '' : ' To turn one already on the car: Turn part, then click it.')
+    );
+  G._turnHint = 1;
 }
 $('#btnRot').addEventListener('click', () => turnBrush(1));
 
@@ -2365,7 +2394,7 @@ function renderInspect() {
     inspected = G.sel;
   }
   $('#inspect').innerHTML =
-    `<div class="art" style="--rc:${col}"><img alt="" src="${iconURL(m.id)}"></div><div><span class="tag" style="color:${col}">${RAR[m.rar].name} · ${CATNAME[m.cat]}</span><h4>${esc(m.name)}</h4><p>${esc(m.desc)}</p><p class="con">− ${esc(m.con)}</p>
+    `<div class="art" style="--rc:${col}"><img alt="" src="${iconURL(m.id)}" style="transform:rotate(${G.rot * 90}deg)"></div><div><span class="tag" style="color:${col}">${RAR[m.rar].name} · ${CATNAME[m.cat]}</span><h4>${esc(m.name)}</h4><p>${esc(m.desc)}</p><p class="con">− ${esc(m.con)}</p>
    <div class="tags">${socketBadge(m)}${cellCount(m) > 1 ? footprintHTML(m) : ''}${m.tags.map(t => `<span class="btag">${TAGS[t]}</span>`).join('')}${m.dir ? `<span class="btag" title="Next placement faces this way (R)">${'▲▶▼◀'[G.rot]}</span>` : ''}</div></div>
    <div class="stl">${statChips(m)}</div>
    <div class="trade"><span class="small">${left(m.id)} available · worth <span class="coin">${m.price}</span></span><span class="grow"></span>${G.found.has(m.id) && m.id !== 'cockpit' ? `<button class="buy" id="iBuy" ${G.coins < m.price ? 'disabled' : ''}>Buy +1</button><button class="buy" id="iSell" ${left(m.id) <= 0 ? 'disabled' : ''}>Sell 1 · ${Math.floor(m.price / 2)}</button>` : ''}</div>`;
@@ -2409,7 +2438,7 @@ function refreshUI() {
       .reduce((a, id) => a + left(id), 0),
     au = $('#btnAuto');
   if (au) {
-    au.textContent = nLoose ? `Add ${nLoose} bin part${nLoose > 1 ? 's' : ''} to my car` : 'Bin is empty';
+    au.textContent = nLoose ? `Add ${nLoose} loose part${nLoose > 1 ? 's' : ''} to my car` : 'All parts are on the car';
     au.disabled = !nLoose;
   }
   const kb = $('[data-tool="keys"]');
