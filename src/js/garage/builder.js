@@ -1787,6 +1787,7 @@ function renderPaints() {
 function store(k, v) {
   try {
     localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+    SAVE.mark();
   } catch (e) {}
 }
 function load(k) {

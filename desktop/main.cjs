@@ -7,6 +7,48 @@ const { pathToFileURL } = require('node:url');
 
 const SITE = path.join(__dirname, '..', 'site');
 const STATE = () => path.join(app.getPath('userData'), 'window.json');
+const SAVE_FILE = () => path.join(app.getPath('userData'), 'save.json');
+const LOG_FILE = () => path.join(app.getPath('userData'), 'errors.log');
+
+/* ---------- save file: save.json plus three rotating back-ups (save.1.json is the newest) ---------- */
+let lastBackup = 0;
+function readSave() {
+  for (const f of [SAVE_FILE(), ...[1, 2, 3].map(i => SAVE_FILE().replace('.json', `.${i}.json`))])
+    try {
+      const d = JSON.parse(fs.readFileSync(f, 'utf8'));
+      if (d && d.keys) return d;
+    } catch (e) {}
+  return null;
+}
+function writeSave(data) {
+  if (!data || typeof data !== 'object' || !data.keys) return false;
+  const file = SAVE_FILE();
+  try {
+    // keep a back-up every ten minutes of play, so a bad write can always be rolled back
+    if (fs.existsSync(file) && Date.now() - lastBackup > 10 * 60 * 1000) {
+      for (let i = 3; i > 1; i--) {
+        const from = file.replace('.json', `.${i - 1}.json`);
+        if (fs.existsSync(from)) fs.copyFileSync(from, file.replace('.json', `.${i}.json`));
+      }
+      fs.copyFileSync(file, file.replace('.json', '.1.json'));
+      lastBackup = Date.now();
+    }
+    const tmp = file + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(data));
+    fs.renameSync(tmp, file);
+    return true;
+  } catch (e) {
+    logError('save failed: ' + e.message);
+    return false;
+  }
+}
+function logError(text) {
+  try {
+    const f = LOG_FILE();
+    if (fs.existsSync(f) && fs.statSync(f).size > 512 * 1024) fs.renameSync(f, f + '.old');
+    fs.appendFileSync(f, `[${new Date().toISOString()}] v${app.getVersion()} ${text}\n`);
+  } catch (e) {}
+}
 
 // Use the graphics card for canvas drawing wherever possible, also on GPUs Chromium is cautious about.
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
@@ -71,6 +113,7 @@ function createWindow() {
   if (s.fullscreen) win.setFullScreen(true);
   win.once('ready-to-show', () => win.show());
   win.on('close', () => saveState(win));
+  win.webContents.on('render-process-gone', (_e, d) => logError('renderer gone: ' + d.reason));
   win.on('enter-full-screen', () => win.webContents.send('fullscreen', true));
   win.on('leave-full-screen', () => win.webContents.send('fullscreen', false));
   // F11 toggles fullscreen, Ctrl+Shift+I opens dev tools (handy for bug reports)
@@ -102,7 +145,7 @@ function smokeTest(win) {
   win.webContents.once('did-finish-load', () =>
     setTimeout(async () => {
       const info = await win.webContents.executeJavaScript(
-        `JSON.stringify({menu: !document.querySelector('#ovMenu').hidden, peer: !!window.Peer || 'lazy', desktop: !!window.desktop, font: document.fonts.check('16px "Chakra Petch"')})`
+        `JSON.stringify({menu: !document.querySelector('#ovMenu').hidden, peer: !!window.Peer || 'lazy', desktop: !!window.desktop, font: document.fonts.check('16px "Chakra Petch"'), name: localStorage.getItem('sd.name')})`
       );
       fs.writeFileSync(process.env.SD_SMOKE, (await win.webContents.capturePage()).toPNG());
       console.log('SMOKE', info, 'errors:', JSON.stringify(errors));
@@ -124,6 +167,12 @@ app.whenReady().then(() => {
     return w.isFullScreen();
   });
   ipcMain.handle('app:quit', () => app.quit());
+  ipcMain.on('save:read', e => (e.returnValue = readSave()));
+  ipcMain.on('save:write', (e, d) => (e.returnValue = writeSave(d)));
+  ipcMain.handle('save:write', (_e, d) => writeSave(d));
+  ipcMain.handle('save:open', () => shell.openPath(app.getPath('userData')));
+  ipcMain.handle('log:error', (_e, t) => logError(t));
+  ipcMain.handle('log:open', () => shell.openPath(fs.existsSync(LOG_FILE()) ? LOG_FILE() : app.getPath('userData')));
   createWindow();
   app.on('activate', () => BrowserWindow.getAllWindows().length === 0 && createWindow());
 });

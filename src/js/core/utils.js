@@ -1,4 +1,66 @@
 'use strict';
+/* ---------- the save file (desktop app) ----------
+   Everything the game remembers lives in localStorage keys starting with "sd.". In the desktop app those keys are
+   mirrored to save.json in the user's profile folder (with rotating back-ups), so clearing browser data or a
+   reinstall never loses progress. At start-up the newer of the two copies wins. */
+const SAVE = {
+  dirty: false,
+  t: 0,
+  collect() {
+    const o = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('sd.')) o[k] = localStorage.getItem(k);
+      }
+    } catch (e) {}
+    return o;
+  },
+  restore() {
+    try {
+      const d = window.desktop && window.desktop.readSave && window.desktop.readSave();
+      if (!d || typeof d !== 'object' || !d.keys) return;
+      const localAt = +(localStorage.getItem('sd._savedAt') || 0);
+      if ((d.savedAt || 0) <= localAt) return;
+      for (const [k, v] of Object.entries(d.keys)) if (k.startsWith('sd.') && typeof v === 'string') localStorage.setItem(k, v);
+    } catch (e) {}
+  },
+  mark() {
+    if (!window.desktop || !window.desktop.writeSave) return;
+    this.dirty = true;
+    clearTimeout(this.t);
+    this.t = setTimeout(() => this.flush(), 800);
+  },
+  flush(sync) {
+    if (!this.dirty || !window.desktop || !window.desktop.writeSave) return;
+    this.dirty = false;
+    const now = Date.now();
+    try {
+      localStorage.setItem('sd._savedAt', String(now));
+    } catch (e) {}
+    window.desktop.writeSave({ savedAt: now, version: typeof GAME_VERSION === 'string' ? GAME_VERSION : '', keys: this.collect() }, !!sync);
+  }
+};
+SAVE.restore();
+/** Errors go to errors.log in the desktop app (each distinct message once per session). */
+const reportError = (() => {
+  const seen = new Set();
+  return (msg, stack) => {
+    const key = String(msg).slice(0, 200);
+    if (seen.has(key) || seen.size > 50) return;
+    seen.add(key);
+    try {
+      if (window.desktop && window.desktop.logError) window.desktop.logError(`${msg}\n${stack || ''}`);
+    } catch (e) {}
+  };
+})();
+try {
+  addEventListener('error', e => reportError(e.message, e.error && e.error.stack));
+  addEventListener('unhandledrejection', e => reportError('promise: ' + (e.reason && e.reason.message), e.reason && e.reason.stack));
+} catch (e) {}
+try {
+  addEventListener('beforeunload', () => SAVE.flush(true));
+} catch (e) {}
 /** The OS "reduce motion" preference, read once and kept up to date (matchMedia per frame is slow). */
 const REDUCED = (() => {
   const st = { on: false };

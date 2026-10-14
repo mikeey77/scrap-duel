@@ -522,6 +522,7 @@ function loop(t) {
     }
   } catch (e) {
     console.error(e);
+    reportError(e.message, e.stack);
   }
   requestAnimationFrame(loop);
 }

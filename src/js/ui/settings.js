@@ -70,7 +70,7 @@ function openSettings(back) {
     ${toggle('setFps', 'Show frame rate (FPS)', SETTINGS.fps)}
     ${window.desktop ? `<button class="btn ghost sm" id="setFull" type="button">${window.desktop.isFullscreen ? 'Leave fullscreen' : 'Play fullscreen'} · F11</button>` : ''}
     <h3>Progress</h3>
-    <div class="rbtns"><button class="btn ghost sm" id="setTips">Show the tips again</button><button class="btn ghost sm warn" id="setReset">Reset level and unlocks</button></div></section>
+    <div class="rbtns"><button class="btn ghost sm" id="setTips">Show the tips again</button><button class="btn ghost sm warn" id="setReset">Reset level and unlocks</button>${window.desktop && window.desktop.openSaveFolder ? '<button class="btn ghost sm" id="setSaves">Open the save folder</button><button class="btn ghost sm" id="setLog">Report a problem (error log)</button>' : ''}</div></section>
     </div>
     <footer class="about"><b>SCRAP<i>DUEL</i></b><span>Version ${esc(GAME_VERSION)}</span><span>Made by Michael</span><span>Voices made with Kokoro TTS · Fonts: Chakra Petch and Barlow (SIL Open Font License)</span></footer>
     <button class="btn" id="setDone">Done</button>`;
@@ -108,6 +108,8 @@ function openSettings(back) {
         clearArenaInput();
       }
     });
+  if ($('#setSaves')) $('#setSaves').onclick = () => (SAVE.flush(), window.desktop.openSaveFolder());
+  if ($('#setLog')) $('#setLog').onclick = () => window.desktop.openLog();
   const full = $('#setFull');
   if (full)
     full.addEventListener('click', async () => {
