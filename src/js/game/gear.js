@@ -429,7 +429,14 @@ function applyGearFx(v, I, fx) {
     else if (key === 'ramIn') v.gRamIn = Math.min(0.6, (v.gRamIn || 0) + val);
     else if (key === 'knockRes') v.knockRes = Math.min(0.7, (v.knockRes || 0) + val);
     else if (key === 'hype') v.hypeK = (v.hypeK || 0) + val;
-    else if (W) {
+    else if (key === 'reach') v.reach = (v.reach || 0) + val;
+    else if (key === 'dmgAll') v.dmgOut = (v.dmgOut || 1) * val;
+    else if (key === 'rateAll') v.rateMul = (v.rateMul || 1) * val;
+    else if (['coinK', 'repairK', 'powerK', 'giftHeal'].includes(key)) {
+      // pickup perks share the sticker system (v.flair), merged in by applyFlair
+      v.gearFlair = v.gearFlair || {};
+      v.gearFlair[key] = (v.gearFlair[key] || 0) + val;
+    } else if (W) {
       // weapon tuning: these change this part's own weapon stats
       if (key === 'splash') W.splash = (W.splash || 0) * val;
       else if (key === 'rng' && W.rng) W.rng *= val;
@@ -477,7 +484,9 @@ function gearShots(v, I, n0, l0) {
     }
 }
 function applyFlair(v, fx) {
-  if (!fx) return;
+  if (!fx && !v.gearFlair) return;
+  fx = { res: {}, ...(fx || {}) };
+  for (const [k, n] of Object.entries(v.gearFlair || {})) fx[k] = (fx[k] || 0) + n;
   v.flair = fx;
   if (fx.speedK) speedMul(v, fx.speedK);
   if (fx.hpK)

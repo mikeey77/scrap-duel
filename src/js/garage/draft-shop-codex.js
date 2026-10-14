@@ -162,16 +162,16 @@ function optView(o) {
       q = g && g.q ? QUIRKS[g.q] : null;
     return {
       kind: g && g.lvl >= GEAR_MAX ? 'Legendary gear' : 'Personal gear',
-      img: `<img alt="" src="${iconURL(m.id, 184)}"><span class="x gearlv" style="color:${lvCol(g ? g.lvl : 1)}">Lv ${g ? g.lvl : 1}</span>`,
+      img: `<img alt="" src="${iconURL(m.id, 184)}"><span class="x gearlv" style="--lc:${lvCol(g ? g.lvl : 1)}">Lv ${g ? g.lvl : 1}</span>`,
       title: g ? gearName(g) : m.name,
-      body: `<p class="pro">+ ${Math.round(gearBonus(g || { id: o.id, lvl: 1 }) * 100)}% ${GEAR_KIND_TEXT[gearKind(o.id)]}</p>${
+      body: `${(b => (b > 0 ? `<p class="pro">+ ${Math.round(b * 100)}% ${GEAR_KIND_TEXT[gearKind(o.id)]}</p>` : `<p class="small">${esc(m.desc || '')}</p>`))(gearBonus(g || { id: o.id, lvl: 1 }))}${
         g
           ? gearActiveSpecials(g)
               .filter(Boolean)
               .map(S => `<p class="pro">★ ${esc(S.name)}: ${esc(S.text)}</p>`)
               .join('')
           : ''
-      }${q ? `<p class="pro">+ ${esc(q.name)}: ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p>` : ''}<p class="small">One copy. Upgrade it in the Garage.</p>`
+      }${q ? `<p class="pro">+ ${esc(q.name)}: ${esc(q.pro)}</p><p class="con">− ${esc(q.con)}</p>` : ''}<p class="small">Your own copy: it earns XP every match you play with it.</p>`
     };
   }
   if (o.type === 'ws') {
@@ -926,7 +926,7 @@ let codexTab = 'mods',
   codexQ = '';
 function openCodex() {
   $('#ovCodex').innerHTML =
-    `<div class="codex" role="dialog" aria-label="Codex"><header><h2>Codex</h2><div class="tabs"><button data-t="mods" aria-pressed="${codexTab === 'mods'}">Modules</button><button data-t="objs" aria-pressed="${codexTab === 'objs'}">Arena objects</button><button data-t="road" aria-pressed="${codexTab === 'road'}">Roadmap</button></div><div class="grow"></div><button class="btn ghost" id="cx">Close</button>
+    `<div class="codex" role="dialog" aria-label="Codex"><header><h2>Codex</h2><div class="tabs"><button data-t="mods" aria-pressed="${codexTab === 'mods'}">Modules</button><button data-t="objs" aria-pressed="${codexTab === 'objs'}">Arena objects</button></div><div class="grow"></div><button class="btn ghost" id="cx">Close</button>
    ${codexTab === 'mods' ? `${catalogFilters('codex', codexQ)}<div class="chips">${[{ id: 'all', name: 'All' }, ...CATS].map(c => `<button class="chip" data-c="${c.id}" aria-pressed="${codexCat === c.id}">${c.name}</button>`).join('')}</div>` : `<input id="cq" type="search" placeholder="Search this page" aria-label="Search this page" value="${esc(codexQ)}">`}</header><div class="cbody" id="cbody"></div></div>`;
   $('#ovCodex').hidden = false;
   renderCodex();

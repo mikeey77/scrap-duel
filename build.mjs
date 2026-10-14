@@ -12,6 +12,7 @@ const voiceIndex = fs.existsSync(new URL('index.json', voiceDir))
 const scripts =
   '(() => {\n' +
   `const VOICE_INDEX = ${JSON.stringify(voiceIndex)};\n` +
+  `const GAME_VERSION = ${JSON.stringify(JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version)};\n` +
   js.map(f => `/* ===== ${f} ===== */\n` + src(f).trimEnd()).join('\n') +
   '\n})();';
 const html = src('index.html')

@@ -50,7 +50,7 @@ function openSettings(back) {
   const c = $('#settingsCard');
   const toggle = (id, label, on) =>
     `<label class="tgl"><input type="checkbox" id="${id}" ${on ? 'checked' : ''}><span>${esc(label)}</span></label>`;
-  c.innerHTML = `<span class="label">Settings</span><h2>Settings</h2>
+  c.innerHTML = `<h2>Settings</h2>
     <div class="setgrid">
     <section><h3>Sound</h3>
     <label class="vol"><span>Volume</span><input type="range" id="setVol" min="0" max="1" step="0.05" value="${SETTINGS.vol}"><b id="setVolV">${Math.round(SETTINGS.vol * 100)}%</b></label>
@@ -68,9 +68,11 @@ function openSettings(back) {
     <section><h3>Performance</h3>
     ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
     ${toggle('setFps', 'Show frame rate (FPS)', SETTINGS.fps)}
+    ${window.desktop ? `<button class="btn ghost sm" id="setFull" type="button">${window.desktop.isFullscreen ? 'Leave fullscreen' : 'Play fullscreen'} · F11</button>` : ''}
     <h3>Progress</h3>
-    <div class="rbtns"><button class="btn ghost" id="setTips">Show tips again</button><button class="btn ghost" id="setReset">Reset level and unlocks</button></div></section>
+    <div class="rbtns"><button class="btn ghost sm" id="setTips">Show the tips again</button><button class="btn ghost sm warn" id="setReset">Reset level and unlocks</button></div></section>
     </div>
+    <footer class="about"><b>SCRAP<i>DUEL</i></b><span>Version ${esc(GAME_VERSION)}</span><span>Made by Michael</span><span>Voices made with Kokoro TTS · Fonts: Chakra Petch and Barlow (SIL Open Font License)</span></footer>
     <button class="btn" id="setDone">Done</button>`;
   $('#ovSettings').hidden = false;
   $('#setVol').addEventListener('input', e => {
@@ -105,6 +107,13 @@ function openSettings(back) {
         sizeArena();
         clearArenaInput();
       }
+    });
+  const full = $('#setFull');
+  if (full)
+    full.addEventListener('click', async () => {
+      await window.desktop.toggleFullscreen();
+      full.textContent = `${window.desktop.isFullscreen ? 'Leave fullscreen' : 'Play fullscreen'} · F11`;
+      sfx('ui');
     });
   $('#setTips').addEventListener('click', e => {
     seenTips = new Set();

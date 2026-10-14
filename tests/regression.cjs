@@ -1662,7 +1662,7 @@ test('gear specials: double tap, hot rounds, crits, armour repair, and the to-in
   assert.equal(s5.id, 'headshot');
   assert(s10 && !s10.tbd);
   const todo = a.gearToInvent();
-  assert(todo.length > 10 && todo.every(x => x.need5 || x.need10), 'gadgets are listed as still to invent');
+  assert.equal(todo.length, 0, 'every part has a level 5 and level 10 special: ' + todo.map(x => x.id).join());
   assert(!todo.some(x => x.id === 'mg'), 'the machine gun is done');
   for (let l = 1; l <= 10; l++) assert(/^#[0-9a-f]{6}$/.test(a.lvCol(l)), 'every level has a colour');
 });
@@ -1991,6 +1991,12 @@ test('gear 1.5 in battle: chips and sets change the car', () => {
   aa.applySets(set, ['leadstorm', 'bunker']);
   assert((gun(set).gRate || 1) > 1.1, 'Lead Storm speeds up guns');
   assert(set.total > plain.total * 1.09, 'Bunker adds HP');
+  // gadget level 10 perks reach the pickup system
+  const lucky = mk();
+  lucky.insts.push({ ...gun(lucky), id: 'horseshoe', W: null, m: aa.MOD.horseshoe });
+  aa.applyGear(lucky, [{ id: 'horseshoe', lvl: 10, q: null, c5: 'sp' }]);
+  aa.applyFlair(lucky, null);
+  assert(lucky.flair && lucky.flair.coinK >= 0.5, 'Four-Leaf Clover makes coins worth more');
 });
 
 console.log(`\n${passed} regression tests passed.`);

@@ -22,7 +22,8 @@
     "21-progression.css",
     "22-hangar.css",
     "23-alive.css",
-    "24-gear2.css"
+    "24-gear2.css",
+    "25-finish.css"
   ],
   "js": [
     "js/core/utils.js",
@@ -74,6 +75,7 @@
     "js/ui/settings.js",
     "js/ui/menu-demo.js",
     "js/ui/hangar-fx.js",
+    "js/ui/boot.js",
     "js/ui/menu.js"
   ]
 }

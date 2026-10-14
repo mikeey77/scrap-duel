@@ -555,6 +555,8 @@ refreshUI();
 // the site opens straight on the main menu; "How to play" is one click away there
 $('#ovIntro').hidden = true;
 showMenu();
+if (!window.__SD_TEST__ || (typeof location !== 'undefined' && /boot/.test(location.search + location.hash)))
+  bootScreen();
 requestAnimationFrame(loop);
 
 // Test hook: the headless test suite sets window.__SD_TEST__ before the page script runs.
@@ -572,6 +574,7 @@ if (window.__SD_TEST__)
     setProgress,
     loadoutSets,
     applySets,
+    applyFlair,
     gearFamily,
     DUP_XP,
     flairCfg,

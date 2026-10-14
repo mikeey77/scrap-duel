@@ -261,7 +261,10 @@ function gearSpecials(id) {
   const grp = GEAR_SPECIAL_GROUP[gearGroup(id)] || [null, null],
     own = GEAR_SPECIAL_PART[id] || [null, null],
     k = gearKind(id);
-  return [own[0] || grp[0] || null, own[1] || grp[1] || GEAR_PLACEHOLDER[k]];
+  return [
+    own[0] || grp[0] || null,
+    own[1] || (typeof GEAR_L10 !== 'undefined' && GEAR_L10[id]) || grp[1] || GEAR_PLACEHOLDER[k]
+  ];
 }
 const gearSteady = id => GEAR_STEADY[gearKind(id)];
 /** The two level-5 options [A, B]. A part with its own idea gets it as A and the group's idea as B. */
@@ -292,3 +295,140 @@ function gearToInvent() {
     })
     .filter(x => x.need5 || x.need10);
 }
+// Level 10 for the gadgets, chaos parts and drones: one legendary perk each, so nothing is left "to be invented".
+// These lean on car-wide effects (pickups, repairs, hype, armour) because the gadgets have no gun to tune.
+const GEAR_L10 = {
+  flipper: gsp('ironspring', 'Iron Spring', '+40% part HP, and your car takes 40% less knockback.', {
+    hp: 1.4,
+    knockRes: 0.4
+  }),
+  piston: gsp('haymaker', 'Haymaker', 'Your rams hit 40% harder.', { ram: 0.4 }),
+  springpad: gsp('trampoline', 'Trampoline Pro', 'You take 40% less ram damage, and +30% part HP.', {
+    ramIn: 0.4,
+    hp: 1.3
+  }),
+  oil: gsp('slickop', 'Slick Operator', '+6% top speed and 30% less knockback.', { speed: 0.06, knockRes: 0.3 }),
+  glue: gsp('adhesive', 'Industrial Adhesive', '+50% part HP, and it repairs 2% every second.', {
+    hp: 1.5,
+    regen: 0.02
+  }),
+  ball: gsp('derby', 'Demolition Derby', 'Your rams hit 50% harder.', { ram: 0.5 }),
+  catapult: gsp('bucket', 'Reinforced Bucket', '+40% part HP, and explosions do 40% less to it.', {
+    hp: 1.4,
+    res: { expl: 0.4 }
+  }),
+  tractor: gsp('gravitywell', 'Gravity Well', 'Pickup reach +60%.', { reach: 0.6 }),
+  vacuum: gsp('suction', 'Industrial Suction', 'Pickup reach +60%, and repair pickups heal 30% more.', {
+    reach: 0.6,
+    repairK: 0.3
+  }),
+  horn: gsp('stadiumhorn', 'Stadium Horn', 'The crowd goes wild: +80% hype.', { hype: 0.8 }),
+  disco: gsp('saturday', 'Saturday Night', '+100% hype, and crowd gifts you grab repair 8% of every part.', {
+    hype: 1,
+    giftHeal: 0.08
+  }),
+  drone: gsp('carrier', 'Drone Carrier', '+30% part HP, and it repairs 2% every second.', { hp: 1.3, regen: 0.02 }),
+  hive: gsp('queenbee', 'Queen Bee', '+40% part HP, and it repairs 2.5% every second.', { hp: 1.4, regen: 0.025 }),
+  ammorack: gsp('armouredrack', 'Armoured Rack', '+30% part HP, and explosions do 60% less to it. No more cook-offs.', {
+    hp: 1.3,
+    res: { expl: 0.6 }
+  }),
+  radar: gsp('earlywarning', 'Early Warning', 'You see it coming: 20% less ram damage and 20% less knockback.', {
+    ramIn: 0.2,
+    knockRes: 0.2
+  }),
+  coolant: gsp('cryoloop', 'Cryo Loop', 'Fire does 60% less to it, and it repairs 2% every second.', {
+    res: { fire: 0.6 },
+    regen: 0.02
+  }),
+  sensor: gsp('eagleeye', 'Eagle Eye', '+30% part HP, and energy does 40% less to it.', {
+    hp: 1.3,
+    res: { energy: 0.4 }
+  }),
+  pusher: gsp('bulldozer', 'Bulldozer', 'Your rams hit 40% harder, and you take 30% less from theirs.', {
+    ram: 0.4,
+    ramIn: 0.3
+  }),
+  selfright: gsp('gyro', 'Gyro Core', 'Your car takes 50% less knockback.', { knockRes: 0.5 }),
+  repairarm: gsp('pitcrew', 'Pit Crew', 'Repair pickups heal 50% more, and it repairs itself 2% every second.', {
+    repairK: 0.5,
+    regen: 0.02
+  }),
+  recycler: gsp('scrapbaron', 'Scrap Baron', 'Coin pickups are worth 40% more.', { coinK: 0.4 }),
+  jammer: gsp('ghostsignal', 'Ghost Signal', 'Energy does 50% less to it, and +5% top speed.', {
+    res: { energy: 0.5 },
+    speed: 0.05
+  }),
+  magnet: gsp('lodestone', 'Lodestone', 'Pickup reach +80%.', { reach: 0.8 }),
+  overclock: gsp('meltdown', 'Meltdown Mode', 'Every weapon on the car hits 8% harder.', { dmgAll: 1.08 }),
+  horseshoe: gsp('fourleaf', 'Four-Leaf Clover', 'Coin pickups are worth 50% more, and +40% hype.', {
+    coinK: 0.5,
+    hype: 0.4
+  }),
+  banana: gsp('slapstick', 'Slapstick', 'The crowd howls: +60% hype, and you take 30% less ram damage.', {
+    hype: 0.6,
+    ramIn: 0.3
+  }),
+  mines: gsp('minefield', 'Minefield Veteran', 'Explosions do 60% less to it, and it blows up when it breaks.', {
+    res: { expl: 0.6 },
+    blast: 1
+  }),
+  bombbay: gsp('carpetbomber', 'Carpet Bomber', '+30% part HP, and explosions do 50% less to it.', {
+    hp: 1.3,
+    res: { expl: 0.5 }
+  }),
+  wedge: gsp('skijump', 'Ski Jump', 'Your rams hit 30% harder, and 40% less knockback.', { ram: 0.3, knockRes: 0.4 }),
+  optics: gsp('sniperscalm', "Sniper's Calm", 'Every weapon on the car hits 6% harder.', { dmgAll: 1.06 }),
+  autoloader: gsp('beltfeed', 'Belt Feed', 'Every weapon on the car fires 8% faster.', { rateAll: 1.08 }),
+  capacitor: gsp('supercharged', 'Supercharged', 'Every weapon on the car hits 8% harder.', { dmgAll: 1.08 }),
+  flashbang: gsp('showstopper', 'Showstopper', '+80% hype, and energy does 30% less to it.', {
+    hype: 0.8,
+    res: { energy: 0.3 }
+  }),
+  coinmagnet: gsp('goldrush', 'Gold Rush', 'Coin pickups are worth 50% more, and pickup reach +50%.', {
+    coinK: 0.5,
+    reach: 0.5
+  }),
+  medic: gsp('fieldhospital', 'Field Hospital', 'Repair pickups heal 60% more, and it repairs 2% every second.', {
+    repairK: 0.6,
+    regen: 0.02
+  }),
+  cinderfan: gsp('firestorm', 'Firestorm', '+30% part HP, and fire does 60% less to it.', {
+    hp: 1.3,
+    res: { fire: 0.6 }
+  }),
+  frostbead: gsp('permafrost', 'Permafrost', 'Fire does 50% less to it, and +5% top speed.', {
+    res: { fire: 0.5 },
+    speed: 0.05
+  }),
+  snowblower: gsp('blizzard', 'Blizzard', '+30% part HP, and 30% less knockback.', { hp: 1.3, knockRes: 0.3 }),
+  pouch: gsp('deeppockets', 'Deep Pockets', 'Coin pickups are worth 40% more.', { coinK: 0.4 }),
+  prizebell: gsp('dingding', 'Ding Ding Ding', 'The crowd adores you: +100% hype.', { hype: 1 }),
+  basket: gsp('spree', 'Shopping Spree', 'Coin pickups +30% and pickup reach +40%.', { coinK: 0.3, reach: 0.4 }),
+  conveyor: gsp('assembly', 'Assembly Line', 'Every weapon on the car fires 6% faster.', { rateAll: 1.06 }),
+  hopper: gsp('armouredhopper', 'Armoured Hopper', '+50% part HP, and explosions do 30% less to it.', {
+    hp: 1.5,
+    res: { expl: 0.3 }
+  }),
+  patchbench: gsp('overtime', 'Overtime', 'Repair pickups heal 50% more, and it repairs 2.5% every second.', {
+    repairK: 0.5,
+    regen: 0.025
+  }),
+  salvageclaw: gsp('irongrip', 'Iron Grip', 'You take 30% less ram damage, and +30% part HP.', { ramIn: 0.3, hp: 1.3 }),
+  collectfork: gsp('pitchfork', 'Pitchfork', 'Your rams hit 30% harder, and coin pickups +20%.', {
+    ram: 0.3,
+    coinK: 0.2
+  }),
+  soap: gsp('squeaky', 'Squeaky Clean', '+5% top speed and +10% acceleration.', { speed: 0.05, accel: 1.1 }),
+  foambath: gsp('bubbleshield', 'Bubble Shield', 'Explosions and fire do 40% less to it.', {
+    res: { expl: 0.4, fire: 0.4 }
+  }),
+  lasso: gsp('rodeo', 'Rodeo Champ', '+60% hype, and pickup reach +40%.', { hype: 0.6, reach: 0.4 }),
+  towhook: gsp('hauler', 'Heavy Hauler', '40% less knockback, and +20% part HP.', { knockRes: 0.4, hp: 1.2 }),
+  yoyo: gsp('walkthedog', 'Walk the Dog', '+50% hype, and +30% part HP.', { hype: 0.5, hp: 1.3 }),
+  rescue: gsp('searchrescue', 'Search and Rescue', 'It repairs 3% of its HP every second.', { regen: 0.03 }),
+  towyoke: gsp('doubleteam', 'Double Team', 'Your rams hit 30% harder, and you take 20% less from theirs.', {
+    ram: 0.3,
+    ramIn: 0.2
+  })
+};

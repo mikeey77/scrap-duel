@@ -374,22 +374,22 @@ function oppHints(d) {
   for (const e of d.base.values()) for (const [x] of footprint(e.id, e.rot, e.x, e.y)) xs.push(x);
   const width = xs.length ? Math.max(...xs) - Math.min(...xs) + 1 : 0;
   const H = [
-    [mass > 45, 3, '🏋 Heavy vehicle'],
-    [mass < 18, 2, '🪶 Lightweight'],
-    [n('fire') >= 2, 3, '🔥 Lots of fire'],
-    [ms.filter(m => m.wpn).length >= 4, 3, '🔫 Bristling with guns'],
-    [ms.filter(m => m.mel).length >= 2, 3, '🗡 Spiky nose'],
-    [n('expl') >= 1, 2, '💥 Explosives on board'],
-    [width >= 7, 2, '↔ Very wide body'],
-    [ms.filter(m => m.drive).length >= 6, 2, '💨 Built for speed'],
-    [n('cold') >= 2, 2, '❄ Cold hands'],
-    [ms.some(m => m.odd), 2, '❓ Something weird…'],
-    [ms.filter(m => m.tags.includes('def')).length >= 6, 2, '🛡 Armoured up']
+    [mass > 45, 3, 'Heavy vehicle'],
+    [mass < 18, 2, 'Lightweight'],
+    [n('fire') >= 2, 3, 'Lots of fire'],
+    [ms.filter(m => m.wpn).length >= 4, 3, 'Bristling with guns'],
+    [ms.filter(m => m.mel).length >= 2, 3, 'Spiky nose'],
+    [n('expl') >= 1, 2, 'Explosives on board'],
+    [width >= 7, 2, 'Very wide body'],
+    [ms.filter(m => m.drive).length >= 6, 2, 'Built for speed'],
+    [n('cold') >= 2, 2, 'Cold hands'],
+    [ms.some(m => m.odd), 2, 'Something weird on board'],
+    [ms.filter(m => m.tags.includes('def')).length >= 6, 2, 'Armoured up']
   ]
     .filter(h => h[0])
     .sort((a, b) => b[1] - a[1])
     .map(h => h[2]);
-  return H.length ? H.slice(0, 2) : ['🤷 Hard to read'];
+  return H.length ? H.slice(0, 2) : ['Nothing stands out yet'];
 }
 function intelUI(force) {
   const box = $('#rivalIntel');
@@ -418,7 +418,7 @@ function intelUI(force) {
   if (packed)
     try {
       const d = unpackDesign(packed);
-      img = `<img class="shadow" alt="" src="${designURL(d, 90, '#000')}">`;
+      img = `<span class="holo"><img class="shadow" alt="" src="${designURL(d, 90, G.oppPaint || '#ff5c7a')}"></span>`;
       hints = oppHints(d);
     } catch (e) {}
   box.innerHTML = `<span class="ih">${badgeHTML(G.oppBadge, 16)} ${esc(G.oppName || 'Rival')}</span>${img}<ul>${hints.map(h => `<li>${esc(h)}</li>`).join('')}</ul>`;

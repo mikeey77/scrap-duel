@@ -102,11 +102,11 @@ function wbSockets(g) {
   const ch = g.ch || [];
   const socks = CHIP_SOCKETS.map((lv, i) => {
     if (!socketOpen(g, i))
-      return `<div class="sock locked" style="--lc:${lvCol(lv)}"><span>Opens at</span><b>Lv ${lv}</b></div>`;
+      return `<div class="csock locked" style="--lc:${lvCol(lv)}"><span>Opens at</span><b>Lv ${lv}</b></div>`;
     const k = ch[i];
     return k
-      ? `<button class="sock full${wbSock === i ? ' sel' : ''}" data-sock="${i}" style="--cc:${CHIPS[chipParse(k).c].col}">${chipIcon(k, 40)}<b>${esc(chipName(k))}</b><span>${esc(CHIPS[chipParse(k).c].text(chipParse(k).t))}</span></button>`
-      : `<button class="sock empty${wbSock === i ? ' sel' : ''}" data-sock="${i}"><i>+</i><span>Add a chip</span></button>`;
+      ? `<button class="csock full${wbSock === i ? ' sel' : ''}" data-sock="${i}" style="--cc:${CHIPS[chipParse(k).c].col}">${chipIcon(k, 40)}<b>${esc(chipName(k))}</b><span>${esc(CHIPS[chipParse(k).c].text(chipParse(k).t))}</span></button>`
+      : `<button class="csock empty${wbSock === i ? ' sel' : ''}" data-sock="${i}"><i>+</i><span>Add a chip</span></button>`;
   }).join('');
   let pick = '';
   if (wbSock != null && socketOpen(g, wbSock)) {

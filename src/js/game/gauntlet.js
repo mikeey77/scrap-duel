@@ -123,12 +123,12 @@ function applyCarMods(v, c) {
     v.dmgOut = c.boss.dmg;
   }
   if (c.gear) applyGear(v, c.gear);
-  if (c.flair) applyFlair(v, c.flair);
+  if (c.flair || v.gearFlair) applyFlair(v, c.flair);
   v.gearHeal = v.insts.some(I => I.gRegen);
   if (c.run) {
     v.dmgOut = (v.dmgOut || 1) * (1 + c.run.dmgOut);
     v.dmgIn = 1 - c.run.dmgIn;
-    v.rateMul = 1 + c.run.rate;
+    v.rateMul = (v.rateMul || 1) * (1 + c.run.rate); // keeps sticker and gear fire rate
     v.regen = c.run.regen;
     if (c.run.speed) {
       v.c.topCap *= 1 + c.run.speed;

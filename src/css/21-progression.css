@@ -239,8 +239,13 @@
   color: var(--muted);
 }
 .gearlv {
-  background: var(--hazard) !important;
-  color: var(--hazard-ink) !important;
+  background: var(--lc, var(--hazard)) !important;
+  color: #0a1020 !important;
+  padding: 2px 10px !important;
+  font: 700 16px var(--f-display) !important;
+  clip-path: var(--chamfer-s);
+  right: 10px !important;
+  bottom: 10px !important;
 }
 
 /* spec sheet */

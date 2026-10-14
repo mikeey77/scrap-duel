@@ -581,7 +581,7 @@ function drawPickup(c, p) {
       c.restore();
     }
     c.fillStyle = '#8a6a08';
-    c.font = '700 10px "JetBrains Mono", monospace';
+    c.font = '700 10px "Chakra Petch", sans-serif';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.fillText(p.val, 0, -10);
@@ -968,7 +968,7 @@ function drawArena() {
     }
   }
   drawRing(c);
-  c.font = '600 13px "JetBrains Mono", monospace';
+  c.font = '600 13px "Chakra Petch", sans-serif';
   c.textAlign = 'center';
   for (const n of SETTINGS.nums ? B.nums : []) {
     c.globalAlpha = Math.min(1, n.life * 1.5);
@@ -1062,7 +1062,7 @@ function drawArena() {
     c.strokeRect(0, 0, view.w, view.h);
   }
   if (B.demo) {
-    if (!hangarOn()) drawDemoHUD(c); // the hangar shows its own live scoreboard
+    // behind the menu the hangar has its own scoreboard; nothing should show through other screens either
   } else drawHUD(c);
 }
 /** Pulsing diamond over the rival's cockpit: the thing you are trying to destroy. */
@@ -1370,7 +1370,7 @@ function drawHUD(c) {
     c.fillStyle = '#bff';
     c.fillText(`${G.run ? 'Wave' : 'Round'} ${G.round} · ${B.theme.name}`, W / 2, H * 0.78);
   }
-  if (B.seq === 'out') {
+  if (B.seq === 'out' && $('#ovVS').hidden) {
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.font = '600 18px "Barlow Semi Condensed", sans-serif';
