@@ -2,6 +2,15 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 1.6.0 · Finishing Touches · 2026-10-14
+
+- **Start-up screen**: the logo is welded together while the game loads. Any key skips it.
+- **Every part is complete**: the 53 gadgets, chaos parts and drones that still had a placeholder now have a real level 10 special, such as Four-Leaf Clover (coins worth 50% more), Pit Crew and Meltdown Mode.
+- **Motion everywhere**: tabs and categories slide in, the gear you pick drops onto its stage, a chosen draft card jumps while the others fall away, rewards arrive line by line with bars that fill up, a level-up glows, and rows and cards lift when you point at them.
+- **Settings**: the version and credits, a fullscreen button, and a cleaner layout.
+- **Cleaner screens**: numbers no longer use a code font, the socket badges on draft cards and in the inspector are fixed, the rival in the garage is now a red scanner hologram instead of a black blob, and the arena line no longer overlaps the VS screen. The codex filters line up and its developer roadmap tab is gone.
+- Fixed: in the Gauntlet, relic fire-rate bonuses no longer wipe out sticker and gear fire rate.
+
 ## 1.5.0 · Live from the Pit · 2026-10-12
 
 - **A living main menu**: two bots fight live in the pit behind the menu, with a live scoreboard in the main card. Your car turns on a pedestal under a swaying work light while a welder throws sparks, and the PIT FM board carries the casters' banter and tips. Performance mode turns the glass blur off.
