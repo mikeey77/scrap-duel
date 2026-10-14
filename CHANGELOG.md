@@ -2,6 +2,10 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.1.2 · No More Black Boxes · 2026-10-14
+
+- Fixed: wheels, spikes, rams and other parts that do not fill their cell sat on a black square in battle. The dark outline and the shadow now follow only the solid parts of the chassis.
+
 ## 2.1.1 · Parts That Move · 2026-10-14
 
 - **Every weapon now moves when it fires.** Gun barrels kick back with a muzzle flash, the minigun barrels spin as they spool up, and rocket pods, mortars, launchers and the odd weapons (tuba, piano, toaster…) pop with a puff of smoke. Flamethrowers, water cannons and beams shudder while they fire.

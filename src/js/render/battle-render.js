@@ -63,6 +63,27 @@ function partMotion(v) {
     I.pour = !!((I.beam && I.beam.length) || (W && (W.kind === 'flame' || W.kind === 'water') && v.fire && !I.blocked));
   }
 }
+/* Parts that do not fill their cell (wheels, spikes, round guns…) must not get the dark hull plate
+   behind them, or they sit in a black box. Measured once per part from its own art. */
+const ART_COVER = {};
+function solidPart(m) {
+  if (ART_COVER[m.id] !== undefined) return ART_COVER[m.id];
+  let cover = 1;
+  try {
+    const s = 32,
+      n = 6,
+      cv = document.createElement('canvas');
+    cv.width = cv.height = s * n;
+    const g = cv.getContext('2d');
+    g.translate((s * n) / 2, (s * n) / 2);
+    drawModule(g, m.id, s, 0, 'p', { builder: 1 });
+    const d = g.getImageData(0, 0, s * n, s * n).data;
+    let on = 0;
+    for (let i = 3; i < d.length; i += 4) if (d[i] > 160) on++;
+    if (d.length >= s * n * s * n * 4) cover = on / (cellCount(m) * s * s);
+  } catch (e) {}
+  return (ART_COVER[m.id] = cover > 0.82);
+}
 function kickOf(I) {
   if (I.pour) return 0.35 + Math.sin(ANIM * 70) * 0.2;
   return I.kickT !== undefined ? Math.max(0, 1 - (ANIM - I.kickT) / 0.14) : 0;
@@ -81,7 +102,7 @@ function drawVehicle(c, v, alpha) {
   c.globalAlpha = alpha;
   c.fillStyle = 'rgba(20,12,4,.3)';
   for (const b of v.blocks) {
-    if (!b.inst.alive) continue;
+    if (!b.inst.alive || !solidPart(b.inst.m)) continue;
     const [x, y] = bpos(v, b);
     c.save();
     c.translate(x + sh, y + sh);
@@ -128,7 +149,7 @@ function drawVehicle(c, v, alpha) {
     ]) {
       c.fillStyle = col;
       for (const I of alive) {
-        if (I.layer !== 'b') continue;
+        if (I.layer !== 'b' || !solidPart(I.m)) continue;
         const [x, y] = ipos(v, I);
         c.save();
         c.translate(x + dx, y + dy);
