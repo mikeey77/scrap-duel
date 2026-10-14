@@ -255,6 +255,8 @@ function openDraft(fresh = true) {
     sk.addEventListener('click', () => {
       addCoins(35);
       $('#ovDraft').hidden = true;
+      garageEnter();
+      garageEnter();
       openBuild();
     });
 }

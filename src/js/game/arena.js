@@ -70,6 +70,16 @@ $('#btnFS').onclick = () => {
   sfx('ui');
   toggleFullscreen();
 };
+/** Keep every fullscreen label in step with the window (browser fullscreen or the desktop window). */
+function fullscreenLabels() {
+  const on = !!(document.fullscreenElement || (window.desktop && window.desktop.isFullscreen));
+  $('#btnFS').setAttribute('aria-pressed', on);
+  $('#btnFS').title = on ? 'Leave fullscreen (F11)' : 'Fullscreen (F11)';
+  const m = $('#mFull');
+  if (m) m.textContent = on ? 'Window' : 'Fullscreen';
+}
+addEventListener('desktop-fullscreen', fullscreenLabels);
+document.addEventListener('fullscreenchange', fullscreenLabels);
 document.addEventListener('fullscreenchange', () => {
   $('#btnFS').setAttribute('aria-pressed', !!document.fullscreenElement);
   presentationKey = '';

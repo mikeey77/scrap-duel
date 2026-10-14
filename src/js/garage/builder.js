@@ -965,13 +965,14 @@ function drawBP() {
   ]) {
     c.fillStyle = col;
     for (const e of G.base.values())
-      for (const [a, b] of footprint(e.id, e.rot, e.x, e.y))
-        c.fillRect(
-          cpx(a) + dx - pad + cell * 0.02,
-          cpy(b) + dy - pad + cell * 0.02,
-          cell * 0.96 + pad * 2,
-          cell * 0.96 + pad * 2
-        );
+      if (solidPart(MOD[e.id]))
+        for (const [a, b] of footprint(e.id, e.rot, e.x, e.y))
+          c.fillRect(
+            cpx(a) + dx - pad + cell * 0.02,
+            cpy(b) + dy - pad + cell * 0.02,
+            cell * 0.96 + pad * 2,
+            cell * 0.96 + pad * 2
+          );
   }
   for (const [k, e] of G.base) {
     const pt = pops.get('b' + k);
@@ -2105,10 +2106,12 @@ $('#btnRot').addEventListener('click', () => turnBrush(1));
 $('#tabBin').addEventListener('click', () => {
   G.leftTab = 'bin';
   renderLeft();
+  swapIn($('#leftBody'), 'swap-list');
 });
 $('#tabShop').addEventListener('click', () => {
   G.leftTab = 'shop';
   renderLeft();
+  swapIn($('#leftBody'), 'swap-list');
 });
 function renderLeft() {
   $('#tabBin').setAttribute('aria-pressed', G.leftTab === 'bin');
@@ -2242,6 +2245,7 @@ function renderBin() {
     b.addEventListener('click', () => {
       G.binCat = b.dataset.cat;
       renderBin();
+      swapIn($('#leftBody .bin'), 'swap-list');
     })
   );
   $$('#leftBody .tile').forEach(b =>
@@ -2351,9 +2355,15 @@ function sell(id) {
 }
 
 /* =================== INSPECTOR =================== */
+let inspected = null;
 function renderInspect() {
   const m = MOD[G.sel],
     col = RAR[m.rar].col;
+  if (inspected !== G.sel) {
+    // a new part slides into the inspector; refreshes of the same part stay still
+    if (inspected !== null) requestAnimationFrame(() => swapIn($('#inspect'), 'swap-insp'));
+    inspected = G.sel;
+  }
   $('#inspect').innerHTML =
     `<div class="art" style="--rc:${col}"><img alt="" src="${iconURL(m.id)}"></div><div><span class="tag" style="color:${col}">${RAR[m.rar].name} · ${CATNAME[m.cat]}</span><h4>${esc(m.name)}</h4><p>${esc(m.desc)}</p><p class="con">− ${esc(m.con)}</p>
    <div class="tags">${socketBadge(m)}${cellCount(m) > 1 ? footprintHTML(m) : ''}${m.tags.map(t => `<span class="btag">${TAGS[t]}</span>`).join('')}${m.dir ? `<span class="btag" title="Next placement faces this way (R)">${'▲▶▼◀'[G.rot]}</span>` : ''}</div></div>

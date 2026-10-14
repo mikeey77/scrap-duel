@@ -7,7 +7,7 @@ const hangarOn = () => {
 };
 const calmMotion = () => {
   try {
-    return document.body.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return document.body.classList.contains('reduced-motion');
   } catch (e) {
     return true; // no real page (tests): skip the motion
   }

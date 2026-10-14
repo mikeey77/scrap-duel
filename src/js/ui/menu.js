@@ -102,7 +102,7 @@ function showMenu() {
       <div class="hg-prof">${badgeHTML(G.style.badge, 40)}
         <div><input id="mName" class="hg-name" maxlength="16" value="${esc(G.name)}" aria-label="Your name"><span class="small">${esc(titleName(G.style.title))}</span></div>
         ${walletHtml()}</div>
-      <nav class="hg-sys" aria-label="System"><button class="mlink" id="mHow">How to play</button><button class="mlink" id="mCodex">Codex</button><button class="mlink" id="mSettings">Settings</button><button class="mlink" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button>${window.desktop ? '<button class="mlink" id="mQuit">Quit</button>' : ''}</nav>
+      <nav class="hg-sys" aria-label="System"><button class="mlink" id="mHow">How to play</button><button class="mlink" id="mCodex">Codex</button><button class="mlink" id="mSettings">Settings</button><button class="mlink" id="mSound">${MUTE ? 'Sound off' : 'Sound on'}</button><button class="mlink" id="mFull" title="Fullscreen (F11)">${document.fullscreenElement || (window.desktop && window.desktop.isFullscreen) ? 'Window' : 'Fullscreen'}</button>${window.desktop ? '<button class="mlink" id="mQuit">Quit</button>' : ''}</nav>
     </header>
     <main class="hg-main">
       <section class="hg-car" aria-label="Your car">
@@ -178,6 +178,10 @@ function showMenu() {
     store('sd.mute', MUTE ? 1 : 0);
     e.currentTarget.textContent = MUTE ? 'Sound off' : 'Sound on';
     sfx('ui');
+  });
+  on('mFull', () => {
+    sfx('ui');
+    toggleFullscreen();
   });
   on('mHow', () => {
     $('#ovMenu').hidden = true;

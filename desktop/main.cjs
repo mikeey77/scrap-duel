@@ -55,6 +55,9 @@ app.commandLine.appendSwitch('ignore-gpu-blocklist');
 app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-zero-copy');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
+// Windows' "animation effects" switch (often off on laptops) would turn off every transition in the game.
+// The game has its own Interface animations setting, so that one decides, not the OS.
+app.commandLine.appendSwitch('force-prefers-no-reduced-motion');
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -110,10 +113,11 @@ function createWindow() {
   });
   win.setMenuBarVisibility(false);
   if (s.maximized) win.maximize();
-  if (s.fullscreen) win.setFullScreen(true);
+  if (s.fullscreen !== false) win.setFullScreen(true); // a game starts fullscreen; F11 or the ⛶ button leaves it
   win.once('ready-to-show', () => win.show());
   win.on('close', () => saveState(win));
   win.webContents.on('render-process-gone', (_e, d) => logError('renderer gone: ' + d.reason));
+  win.webContents.on('did-finish-load', () => win.webContents.send('fullscreen', win.isFullScreen()));
   win.on('enter-full-screen', () => win.webContents.send('fullscreen', true));
   win.on('leave-full-screen', () => win.webContents.send('fullscreen', false));
   // F11 toggles fullscreen, Ctrl+Shift+I opens dev tools (handy for bug reports)
@@ -145,10 +149,10 @@ function smokeTest(win) {
   win.webContents.once('did-finish-load', () =>
     setTimeout(async () => {
       const info = await win.webContents.executeJavaScript(
-        `JSON.stringify({menu: !document.querySelector('#ovMenu').hidden, peer: !!window.Peer || 'lazy', desktop: !!window.desktop, font: document.fonts.check('16px "Chakra Petch"'), name: localStorage.getItem('sd.name')})`
+        `JSON.stringify({menu: !document.querySelector('#ovMenu').hidden, peer: !!window.Peer || 'lazy', desktop: !!window.desktop, font: document.fonts.check('16px "Chakra Petch"'), name: localStorage.getItem('sd.name'), full: !!(window.desktop && window.desktop.isFullscreen), reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, mFull: (document.querySelector('#mFull')||{}).textContent})`
       );
       fs.writeFileSync(process.env.SD_SMOKE, (await win.webContents.capturePage()).toPNG());
-      console.log('SMOKE', info, 'errors:', JSON.stringify(errors));
+      console.log('SMOKE', info, 'win-full:', win.isFullScreen(), 'errors:', JSON.stringify(errors));
       app.quit();
     }, 2500)
   );
@@ -165,6 +169,10 @@ app.whenReady().then(() => {
     const w = BrowserWindow.fromWebContents(e.sender);
     w.setFullScreen(!w.isFullScreen());
     return w.isFullScreen();
+  });
+  ipcMain.on('fullscreen:get', e => {
+    const w = BrowserWindow.fromWebContents(e.sender);
+    e.returnValue = !!(w && w.isFullScreen());
   });
   ipcMain.handle('app:quit', () => app.quit());
   ipcMain.on('save:read', e => (e.returnValue = readSave()));

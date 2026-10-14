@@ -67,16 +67,12 @@ try {
 try {
   addEventListener('beforeunload', () => SAVE.flush(true));
 } catch (e) {}
-/** The OS "reduce motion" preference, read once and kept up to date (matchMedia per frame is slow). */
-const REDUCED = (() => {
-  const st = { on: false };
-  try {
-    const mq = matchMedia('(prefers-reduced-motion: reduce)');
-    st.on = mq.matches;
-    mq.addEventListener && mq.addEventListener('change', e => (st.on = e.matches));
-  } catch (e) {}
-  return st;
-})();
+/** Reduced motion is the player's own choice (Settings → Interface animations), not the OS switch. */
+const REDUCED = {
+  get on() {
+    return typeof SETTINGS !== 'undefined' && SETTINGS.motion === false;
+  }
+};
 // Shared helpers: DOM shortcuts, math, grid keys, weighted random.
 const $ = s => document.querySelector(s),
   $$ = s => [...document.querySelectorAll(s)];

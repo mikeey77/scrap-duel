@@ -7,6 +7,10 @@ ipcRenderer.on('fullscreen', (_e, v) => {
 });
 contextBridge.exposeInMainWorld('desktop', {
   get isFullscreen() {
+    // ask the window itself: start-up fullscreen happens before the page can hear the event
+    try {
+      full = ipcRenderer.sendSync('fullscreen:get');
+    } catch (e) {}
     return full;
   },
   toggleFullscreen: () => ipcRenderer.invoke('fullscreen:toggle').then(v => (full = v)),

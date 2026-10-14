@@ -771,3 +771,105 @@ body.photo #ac {
   color: #f2b705;
   font-weight: 600;
 }
+
+/* ---------- screen transitions (2.1.3) ----------
+   The garage assembles itself when you enter it: side panels slide in, the bay rises.
+   Lists re-deal their cards on a tab change, the inspector slides a new part in. */
+@keyframes scr-left {
+  from {
+    opacity: 0;
+    transform: translateX(-34px);
+  }
+}
+@keyframes scr-right {
+  from {
+    opacity: 0;
+    transform: translateX(34px);
+  }
+}
+@keyframes scr-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.985);
+  }
+}
+@keyframes scr-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes scr-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+@keyframes card-deal {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+}
+@keyframes insp-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+body:not(.reduced-motion) #build.enter > aside.panel:first-child {
+  animation: scr-left 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+body:not(.reduced-motion) #build.enter > aside.panel:last-child {
+  animation: scr-right 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) 0.05s both;
+}
+body:not(.reduced-motion) #build.enter > #bay {
+  animation: scr-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s both;
+}
+body:not(.reduced-motion) #arena:not([hidden]) {
+  animation: scr-fade 0.4s ease-out both;
+}
+body:not(.reduced-motion) #hud {
+  animation: scr-drop 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+body:not(.reduced-motion) .swap-list .tilewrap,
+body:not(.reduced-motion) #build.enter .bin .tilewrap,
+body:not(.reduced-motion) .swap-list .srow {
+  animation: card-deal 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+body:not(.reduced-motion) :is(.swap-list, #build.enter .bin) .tilewrap:nth-child(2),
+body:not(.reduced-motion) .swap-list .srow:nth-child(2) {
+  animation-delay: 0.03s;
+}
+body:not(.reduced-motion) :is(.swap-list, #build.enter .bin) .tilewrap:nth-child(3),
+body:not(.reduced-motion) .swap-list .srow:nth-child(3) {
+  animation-delay: 0.06s;
+}
+body:not(.reduced-motion) :is(.swap-list, #build.enter .bin) .tilewrap:nth-child(4),
+body:not(.reduced-motion) .swap-list .srow:nth-child(4) {
+  animation-delay: 0.09s;
+}
+body:not(.reduced-motion) :is(.swap-list, #build.enter .bin) .tilewrap:nth-child(5),
+body:not(.reduced-motion) .swap-list .srow:nth-child(5) {
+  animation-delay: 0.12s;
+}
+body:not(.reduced-motion) :is(.swap-list, #build.enter .bin) .tilewrap:nth-child(6),
+body:not(.reduced-motion) .swap-list .srow:nth-child(6) {
+  animation-delay: 0.15s;
+}
+body:not(.reduced-motion) :is(.swap-list, #build.enter .bin) .tilewrap:nth-child(n + 7),
+body:not(.reduced-motion) .swap-list .srow:nth-child(n + 7) {
+  animation-delay: 0.18s;
+}
+body:not(.reduced-motion) #inspect.swap-insp > * {
+  animation: insp-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+body:not(.reduced-motion) #inspect.swap-insp > :nth-child(2) {
+  animation-delay: 0.04s;
+}
+body:not(.reduced-motion) #inspect.swap-insp > :nth-child(3) {
+  animation-delay: 0.08s;
+}
+/* stat bars glide to their new value instead of jumping */
+#build .meter > b {
+  transition: width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}

@@ -2,6 +2,14 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.1.3 · Smooth Garage · 2026-10-14
+
+- **Fixed: the top bar was gone in the garage and in matches** after visiting the main menu, taking the coins, the round, Codex, Pause, Menu and the fullscreen button with it.
+- **Fullscreen**: the game now starts fullscreen. There is a Fullscreen/Window switch in the main menu, the ⛶ button in the top bar is back, and F11 still works.
+- **Animations always on unless you turn them off**: Windows' "animation effects" switch (often off on laptops) used to strip almost every transition from the game. Now only Settings → Interface animations decides.
+- **New transitions**: the garage assembles itself when you enter it (panels slide in, the bay rises, your parts are dealt), the parts list re-deals when you switch category or tab, and the inspector slides each new part in.
+- Fixed: wheels, spikes and other open parts no longer sit on black squares in the garage either.
+
 ## 2.1.2 · No More Black Boxes · 2026-10-14
 
 - Fixed: wheels, spikes, rams and other parts that do not fill their cell sat on a black square in battle. The dark outline and the shadow now follow only the solid parts of the chassis.

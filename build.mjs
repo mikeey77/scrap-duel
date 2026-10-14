@@ -3,7 +3,15 @@
 import fs from 'node:fs';
 const src = p => fs.readFileSync(new URL('./src/' + p, import.meta.url), 'utf8');
 const { css, js } = JSON.parse(src('manifest.json'));
-const styles = css.map(f => src('css/' + f).trimEnd()).join('\n');
+// Motion follows the game's own "Interface animations" setting (body.reduced-motion), not the OS switch:
+// Windows laptops often have animation effects off, which would silently strip every transition.
+const styles =
+  css
+    .map(f => src('css/' + f).trimEnd())
+    .join('\n')
+    .replaceAll('@media (prefers-reduced-motion: no-preference)', '@media all')
+    .replaceAll('@media (prefers-reduced-motion: reduce)', '@media not all') +
+  '\nbody.reduced-motion *,body.reduced-motion *::before,body.reduced-motion *::after{transition:none!important;animation:none!important}';
 // recorded voice lines (tools/make-voices.mjs): their lengths go into the bundle, the clips next to it
 const voiceDir = new URL('./assets/voice/', import.meta.url);
 const voiceIndex = fs.existsSync(new URL('index.json', voiceDir))

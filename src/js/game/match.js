@@ -377,10 +377,23 @@ function startMatch(mode, sched, format = chosenFormat, rounds) {
     showTip('draft');
   }
 }
+/** The garage assembles itself: side panels slide in, the bay rises, the parts are dealt. */
+function garageEnter() {
+  const el = $('#build');
+  if (!el || (el.classList && el.classList.contains === undefined)) return;
+  try {
+    el.classList.remove('enter');
+    void el.offsetWidth;
+    el.classList.add('enter');
+    clearTimeout(el._enterT);
+    el._enterT = setTimeout(() => el.classList.remove('enter'), 900);
+  } catch (e) {}
+}
 function openBuild() {
   G.phase = 'build';
   B = null;
   $('#arena').hidden = true;
+  if (!$('#ovDraft') || $('#ovDraft').hidden) garageEnter();
   $('#build').hidden = false;
   if (G.meReady && G.mode === 'mp') Net.send({ t: 'unready' });
   G.meReady = false;
