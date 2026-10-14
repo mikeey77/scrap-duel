@@ -1,4 +1,4 @@
-// Championship: a season against five fixed rivals. Every matchday you play one of them over five rounds;
+// League (championship): a season against five fixed rivals. Every matchday you play one of them over five rounds;
 // the other rivals play each other off-screen. Three points for a win, one for a draw. After five matchdays
 // the top two meet in the final. A season is saved as you go, so you can stop between matchdays.
 const LEAGUE_DAYS = 5;
@@ -143,7 +143,7 @@ function leagueResult(won, tie, s) {
       }
     }
     if (!html)
-      html = `<div class="lg-card"><span class="label">Championship · season ${LEAGUE.season} · matchday ${LEAGUE.day}/${LEAGUE_DAYS}</span>
+      html = `<div class="lg-card"><span class="label">League · season ${LEAGUE.season} · matchday ${LEAGUE.day}/${LEAGUE_DAYS}</span>
         ${leagueTableHtml(true)}<p class="small">Also today: ${day.join(' · ')}</p>
         ${LEAGUE.final && !LEAGUE.final.done ? `<p class="lg-next">You made the final against <b>${esc(LEAGUE.final.opp)}</b>.</p>` : `<p class="lg-next">Next: <b>${esc(leagueOpp().name)}</b></p>`}</div>`;
   }
@@ -164,7 +164,7 @@ function leagueSeasonEnd() {
     chip = ` and a <b>${esc(chipName(k))}</b> chip`;
   }
   LEAGUE.prize = { bolts, champ };
-  return `<div class="lg-card ${champ ? 'champ' : ''}"><span class="label">Championship · season ${LEAGUE.season} is over</span>
+  return `<div class="lg-card ${champ ? 'champ' : ''}"><span class="label">League · season ${LEAGUE.season} is over</span>
     <h3>${champ ? 'Champions!' : `${esc(leagueName(LEAGUE.champion))} takes the title`}</h3>
     <p>${champ ? 'You won the final. The trophy is yours, the confetti is everyone\'s.' : LEAGUE.final && LEAGUE.final.sim ? `Final: ${esc(LEAGUE.final.sim)}. You finished ${pos}${['st', 'nd', 'rd'][pos - 1] || 'th'}.` : 'So close. You lost the final.'}</p>
     <p class="lg-prize"><i class="boltico" aria-hidden="true"></i> +${bolts} bolts${chip}</p>

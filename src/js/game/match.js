@@ -1210,7 +1210,7 @@ function showFinal() {
         : '';
     })()}
     ${leagueHtml}${progressHtml(prog)}${spoilsHtml(spoils)}
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${inLeague ? '<button class="btn" id="btnLeague">Back to the championship</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${G.bestReplay ? '<button class="btn ghost" id="btnBest">▶ Best moment</button>' : ''}${inLeague ? '<button class="btn" id="btnLeague">Back to the league</button>' : G.mode === 'solo' ? '<button class="btn" id="btnAgain">Rematch</button>' : G.mode === 'mp' ? (Net.role === 'host' ? '<button class="btn" id="btnMpAgain">Rematch</button>' : '<span class="small">The host can start a rematch.</span>') : ''}<button class="btn ghost" id="btnStyle2">Garage</button><button class="btn ghost" id="btnHome">Main menu</button></div>
     ${nudge}
     ${G.mode === 'mp' ? `<p class="series">Tonight: <b>${G.series.w}–${G.series.l}</b> ${G.mpCoop ? 'together with' : 'against'} ${esc(G.oppName)}${!G.mpCoop && h2hLine(G.oppName) ? ` · ${h2hLine(G.oppName)}` : ''}</p>` : ''}`;
   $('#ovResult').hidden = false;
