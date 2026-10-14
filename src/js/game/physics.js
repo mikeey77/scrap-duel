@@ -11,7 +11,8 @@ function drive(v, dt) {
     fy = -c,
     rx = c,
     ry = s;
-  const grip = C.hoverMode ? 1 : C.studs ? Math.max(B.grip, 0.9) : B.grip;
+  const ground = v.iceT > B.time ? Math.min(B.grip, 0.3) : B.grip; // ice patches
+  const grip = C.hoverMode ? 1 : C.studs ? Math.max(ground, 0.9) : ground;
   let trac = C.trac * grip,
     latF = C.latF * grip;
   const air = v.z > 0,

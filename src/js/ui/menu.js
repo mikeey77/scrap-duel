@@ -580,6 +580,8 @@ if (window.__SD_TEST__)
     loadoutSets,
     applySets,
     bossTick,
+    gimmickCar,
+    AW: () => AW,
     drawBossWorld,
     BOSSES,
     applyFlair,

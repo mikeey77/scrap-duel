@@ -14,6 +14,9 @@ function gimmickZone(kind, x, y) {
       h = v ? 220 : 64;
     return { kind, x: x - w / 2, y: y - h / 2, w, h, ang: v ? pick([Math.PI / 2, -Math.PI / 2]) : pick([0, Math.PI]) };
   }
+  if (kind === 'portal') return { kind, x, y, r: 36, seed: Math.random() * 6 };
+  if (kind === 'ice') return { kind, x, y, r: rnd(80, 115), seed: Math.random() * 9 };
+  if (kind === 'boost') return { kind, x, y, r: 34, seed: Math.random() * 6 };
   if (kind === 'vent') return { kind, x: x - 45, y: y - 45, w: 90, h: 90, ang: pick([0, Math.PI / 2, -Math.PI / 2]) };
   return { kind: 'oil', x, y, r: 60 };
 }
@@ -60,6 +63,37 @@ function gimmickCar(v, dt) {
           v.vy *= Math.exp(-2.4 * dt);
           if (Math.random() < dt * 4)
             fx({ k: 'smoke', x: v.x + rnd(-15, 15), y: v.y, vx: 0, vy: -10, life: 0.5, max: 0.6, r: 4 });
+        }
+        break;
+      case 'portal':
+        if (inZone(v.x, v.y, z) && !(v.portT >= B.time)) {
+          // portals come in mirrored pairs: step in on one side, come out on the other
+          const p = B.zones.find(o => o !== z && o.kind === 'portal' && Math.abs(o.x - (AW - z.x)) < 3 && Math.abs(o.y - z.y) < 3);
+          if (p) {
+            const sp = Math.hypot(v.vx, v.vy) || 1;
+            fx({ k: 'flash', x: v.x, y: v.y, life: 0.25, max: 0.25, r: 60, col: '#b06bff' });
+            v.x = p.x + (v.vx / sp) * (p.r + 18);
+            v.y = p.y + (v.vy / sp) * (p.r + 18);
+            v.portT = B.time + 1.4;
+            fx({ k: 'flash', x: v.x, y: v.y, life: 0.25, max: 0.25, r: 60, col: '#b06bff' });
+            sfx('tele', v.x, v.y);
+          }
+        }
+        break;
+      case 'ice':
+        if (inZone(v.x, v.y, z) && !v.c.hoverMode) v.iceT = B.time + 0.15;
+        break;
+      case 'boost':
+        if (inZone(v.x, v.y, z)) {
+          const sp = Math.hypot(v.vx, v.vy);
+          if (sp > 30) {
+            v.vx += (v.vx / sp) * 1500 * dt;
+            v.vy += (v.vy / sp) * 1500 * dt;
+            if (!(v.boostPadT >= B.time)) {
+              v.boostPadT = B.time + 0.8;
+              sfx('boost', v.x, v.y);
+            }
+          }
         }
         break;
       case 'bumper': {
@@ -120,6 +154,56 @@ function drawGimmickZone(c, z) {
   const t = gt(),
     A = typeof ANIM === 'number' ? ANIM : 0;
   switch (z.kind) {
+    case 'portal': {
+      const k = (A * 0.8 + z.seed) % 1;
+      circ(c, z.x, z.y, z.r + 6, 'rgba(20,8,40,.75)');
+      const g = c.createRadialGradient(z.x, z.y, 2, z.x, z.y, z.r);
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(0.35, '#d7a6ff');
+      g.addColorStop(1, 'rgba(120,40,220,.2)');
+      circ(c, z.x, z.y, z.r, g);
+      c.save();
+      c.strokeStyle = 'rgba(214,166,255,.9)';
+      c.lineWidth = 2;
+      for (let i = 0; i < 3; i++) {
+        c.beginPath();
+        c.arc(z.x, z.y, z.r * (((k + i / 3) % 1) * 0.9 + 0.1), 0, Math.PI * 2);
+        c.stroke();
+      }
+      c.restore();
+      return true;
+    }
+    case 'ice': {
+      circ(c, z.x, z.y, z.r, 'rgba(140,205,250,.42)', 'rgba(70,150,215,.85)', 2.5);
+      c.save();
+      c.strokeStyle = 'rgba(255,255,255,.8)';
+      c.lineWidth = 1.5;
+      for (let i = 0; i < 5; i++) {
+        const a = z.seed + i * 1.3;
+        c.beginPath();
+        c.moveTo(z.x + Math.cos(a) * z.r * 0.2, z.y + Math.sin(a) * z.r * 0.2);
+        c.lineTo(z.x + Math.cos(a + 0.4) * z.r * 0.8, z.y + Math.sin(a + 0.4) * z.r * 0.8);
+        c.stroke();
+      }
+      c.restore();
+      return true;
+    }
+    case 'boost': {
+      circ(c, z.x, z.y, z.r, 'rgba(10,30,20,.8)', '#3fe0a0', 3);
+      c.save();
+      c.fillStyle = '#3fe0a0';
+      const k = (A * 2 + z.seed) % 1;
+      for (let i = 0; i < 3; i++) {
+        c.globalAlpha = 0.35 + 0.65 * (((k + i / 3) % 1));
+        const r = z.r * (0.25 + 0.22 * i);
+        c.beginPath();
+        c.arc(z.x, z.y, r, 0, Math.PI * 2);
+        c.arc(z.x, z.y, r - 3, 0, Math.PI * 2, true);
+        c.fill();
+      }
+      c.restore();
+      return true;
+    }
     case 'lava': {
       const p = 0.85 + Math.sin(A * 2 + z.seed) * 0.15;
       circ(c, z.x, z.y, z.r + 8, 'rgba(30,14,10,.85)');

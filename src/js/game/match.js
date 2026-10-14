@@ -19,7 +19,13 @@ const THEME_BLURB = {
   factory: 'Conveyor belts move everything. Including you.',
   pinball: 'Bumpers launch you back. TILT does not exist here.',
   kitchen: 'Stove plates heat up in turns. Spills on the floor.',
-  swamp: 'Mud slows you to a crawl. The ducks think it is hilarious.'
+  swamp: 'Mud slows you to a crawl. The ducks think it is hilarious.',
+  crusheryard: 'A portal links both ends of the yard. Drive in, come out behind them.',
+  frozenlot: 'Black ice in the parking bays. Brake early, or do not.',
+  neonstrip: 'Lights low, boost rings everywhere. Go fast, then go faster.',
+  warpzone: 'Two pairs of portals. Nobody here knows which way is forward.',
+  funfair: 'Bumpers, boost rings and trampolines. The prize is not dying.',
+  glacier: 'Ice fields and a cold wind. Light cars go skiing.'
 };
 
 /* ---------- arena state ---------- */

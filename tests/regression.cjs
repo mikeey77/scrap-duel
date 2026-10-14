@@ -1306,10 +1306,10 @@ test('badges sanitize, rivals give hints and the match ends with fun awards', ()
   );
   for (const k of ['plain', 'frost', 'fire', 'magnet']) assert(a.CRATE_THEMES[k].name);
 });
-test('all twenty arenas generate, run their gimmicks and stay finite', () => {
+test('all twenty-six arenas generate, run their gimmicks and stay finite', () => {
   const r = runtime(),
     a = r.api;
-  assert.equal(a.THEMES.length, 20);
+  assert.equal(a.THEMES.length, 26);
   a.startMatch('solo');
   a.openBuild();
   for (let ti = 0; ti < a.THEMES.length; ti++) {
@@ -2022,6 +2022,31 @@ test('every Gauntlet boss gimmick runs, telegraphs first and can hurt you', () =
     const c = { save() {}, restore() {}, beginPath() {}, arc() {}, fill() {}, stroke() {}, moveTo() {}, lineTo() {}, setLineDash() {}, createRadialGradient: () => ({ addColorStop() {} }) };
     aa.drawBossWorld(c);
   }
+});
+
+test('portals send you to their mirrored twin, ice takes your grip, boost pads push', () => {
+  const { aa } = arenaRuntime(),
+    b = aa.getB(),
+    v = b.cars[0];
+  b.seq = 'play';
+  const W = aa.AW();
+  b.zones.push({ kind: 'portal', x: 400, y: 500, r: 36 }, { kind: 'portal', x: W - 400, y: 500, r: 36 });
+  v.x = 400;
+  v.y = 500;
+  v.vx = 100;
+  v.vy = 0;
+  aa.gimmickCar(v, 0.05);
+  assert(v.x > 1000, 'came out on the other side: ' + v.x);
+  b.zones.length = 0;
+  b.zones.push({ kind: 'ice', x: v.x, y: v.y, r: 100 });
+  aa.gimmickCar(v, 0.05);
+  assert(v.iceT > b.time, 'standing on ice');
+  b.zones.length = 0;
+  b.zones.push({ kind: 'boost', x: v.x, y: v.y, r: 40 });
+  v.vx = 100;
+  const before = v.vx;
+  aa.gimmickCar(v, 0.05);
+  assert(v.vx > before + 40, 'boost pad pushes');
 });
 
 console.log(`\n${passed} regression tests passed.`);
