@@ -15,12 +15,15 @@ const RUN_RELICS = {
   magnet: { icon: '🧲', name: 'Coupon Magnet', desc: 'Start every wave with 40 bonus coins.', bonus: 40 },
   insurance: { icon: '📄', name: 'Dodgy Insurance', desc: 'The first loss after a boss costs no heart.', shield: 1 }
 };
+// Every boss has a gimmick (js/game/bosses.js) on top of its three phases.
 const BOSSES = [
   {
     name: 'Mega Mauler',
     style: 'rammer',
     likes: ['melee', 'pinball', 'flip'],
     paint: '#e2504a',
+    gim: 'charge',
+    hint: 'Charges at you. Sidestep when the red line shows.',
     taunt: 'I eat bumpers for breakfast.'
   },
   {
@@ -28,6 +31,8 @@ const BOSSES = [
     style: 'gunner',
     likes: ['gun', 'def'],
     paint: '#c58bff',
+    gim: 'shield',
+    hint: 'Raises a shield now and then. Save your big shots for when it drops.',
     taunt: 'Back in my day we built cars out of WALLS.'
   },
   {
@@ -35,6 +40,8 @@ const BOSSES = [
     style: 'rammer',
     likes: ['melee', 'hook'],
     paint: '#ff8a3a',
+    gim: 'magnet',
+    hint: 'Its magnet drags you towards the blades. Drive away when it hums.',
     taunt: 'Your warranty ends here.'
   },
   {
@@ -42,6 +49,8 @@ const BOSSES = [
     style: 'gunner',
     likes: ['expl', 'gun'],
     paint: '#4ea1ff',
+    gim: 'barrage',
+    hint: 'Calls in artillery. Leave the red circles.',
     taunt: 'For science! Mostly explosions.'
   },
   {
@@ -49,6 +58,8 @@ const BOSSES = [
     style: 'gunner',
     likes: ['fire', 'gun'],
     paint: '#ff5c7a',
+    gim: 'pyro',
+    hint: 'Leaves burning puddles behind. Do not chase her through them.',
     taunt: 'It is getting hot in here. Because of me.'
   },
   {
@@ -56,7 +67,63 @@ const BOSSES = [
     style: 'rammer',
     likes: ['def', 'melee'],
     paint: '#8a8f96',
+    gim: 'quake',
+    hint: 'Slams the ground. Keep your distance when the ring grows.',
     taunt: 'I am 90% concrete and 10% attitude.'
+  },
+  {
+    name: 'Ghost Rider Gus',
+    style: 'gunner',
+    likes: ['gun', 'speed'],
+    paint: '#9fb4c8',
+    gim: 'ghost',
+    hint: 'Invisible until he shoots or gets hit. Watch for the muzzle flash.',
+    taunt: 'Boo. That is it. That is the taunt.'
+  },
+  {
+    name: 'The Tower',
+    style: 'gunner',
+    likes: ['def', 'gun'],
+    paint: '#5fd38a',
+    gim: 'regen',
+    hint: 'Repairs itself when nobody hits it. Keep the pressure on.',
+    taunt: 'I have been standing here since 1987.'
+  },
+  {
+    name: 'Mirror Max',
+    style: 'gunner',
+    likes: ['gun'],
+    paint: '#ffffff',
+    gim: 'mirror',
+    hint: 'Drives a copy of YOUR car. Know your own weak spot.',
+    taunt: 'Nice car. I made one just like it.'
+  },
+  {
+    name: 'Minefield Mona',
+    style: 'gunner',
+    likes: ['expl', 'trap'],
+    paint: '#ffd257',
+    gim: 'mines',
+    hint: 'Scatters mines. They blink before they go off.',
+    taunt: 'Watch your step. Actually, do not. It is funnier.'
+  },
+  {
+    name: 'Hurricane Harriet',
+    style: 'rammer',
+    likes: ['melee', 'speed'],
+    paint: '#5be7ff',
+    gim: 'storm',
+    hint: 'Throws junk across the arena. Keep moving.',
+    taunt: 'Forecast: 100% chance of couches.'
+  },
+  {
+    name: 'The Press',
+    style: 'rammer',
+    likes: ['def', 'melee'],
+    paint: '#ff9a3a',
+    gim: 'enrage',
+    hint: 'Hits harder the more damaged it is. Finish it fast.',
+    taunt: 'Pressure? I AM the pressure.'
   }
 ];
 const isBossWave = w => w % 5 === 0;
@@ -82,6 +149,7 @@ function setupWaveBot() {
   if (boss) {
     const B_ = BOSSES[(w / 5 - 1) % BOSSES.length];
     Object.assign(bot, { name: B_.name, style: B_.style, likes: B_.likes, paint: B_.paint, say: [B_.taunt] });
+    R.bossDef = B_;
   }
   bot.coins += 40 * (w - 1) + (boss ? 220 + 60 * (w / 5) : 0);
   for (let i = 1; i < w + (boss ? 2 : 0); i++) {
@@ -95,7 +163,9 @@ function setupWaveBot() {
   G.oppPaint = bot.paint === G.paint ? PAINTS.find(p => p !== G.paint) : bot.paint;
   G.oppLook = randomLook(boss ? 2 : G.diff);
   G.oppBadge = G.oppLook.badge;
-  R.boss = boss ? { hp: 1.5 + 0.35 * (w / 5), dmg: 1.08 + 0.07 * (w / 5) } : null;
+  R.boss = boss
+    ? { hp: 1.5 + 0.35 * (w / 5), dmg: 1.08 + 0.07 * (w / 5), gim: R.bossDef.gim, name: R.bossDef.name }
+    : null;
   if (R.relics.includes('magnet')) addCoins(RUN_RELICS.magnet.bonus);
 }
 /** Extra fields for the bot's battle config: boss multipliers. */
@@ -120,6 +190,7 @@ function applyCarMods(v, c) {
   }
   if (c.boss) {
     v.boss = true;
+    v.bossGim = c.boss.gim || null;
     v.dmgOut = c.boss.dmg;
   }
   if (c.gear) applyGear(v, c.gear);
@@ -176,7 +247,7 @@ function runNextUpHTML() {
   const w = G.run.wave + 1,
     boss = isBossWave(w),
     toBoss = 5 - (w % 5);
-  return `<div class="nextup${boss ? ' sp' : ''}" style="--sc:${boss ? '#ff5c7a' : '#5be7ff'}"><span class="nu-ico">${boss ? '☠' : w}</span><div><span class="label">Next up · wave ${w}</span><b>${boss ? 'BOSS: ' + esc(BOSSES[(w / 5 - 1) % BOSSES.length].name) : 'A new rival'}</b><span class="small">${boss ? 'A beefed-up car with extra armour and damage. Beat it for a heart and a relic.' : `Boss in ${toBoss} wave${toBoss > 1 ? 's' : ''}.`}</span></div></div>`;
+  return `<div class="nextup${boss ? ' sp' : ''}" style="--sc:${boss ? '#ff5c7a' : '#5be7ff'}"><span class="nu-ico">${boss ? '☠' : w}</span><div><span class="label">Next up · wave ${w}</span><b>${boss ? 'BOSS: ' + esc(BOSSES[(w / 5 - 1) % BOSSES.length].name) : 'A new rival'}</b><span class="small">${boss ? `${esc(BOSSES[(w / 5 - 1) % BOSSES.length].hint)} Beat it for a heart and a relic.` : `Boss in ${toBoss} wave${toBoss > 1 ? 's' : ''}.`}</span></div></div>`;
 }
 function updateRunHUD() {
   const w = G.round,

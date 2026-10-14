@@ -638,7 +638,7 @@ function drawTele(c, v, t, out) {
 function carAlpha(v) {
   if (B.seq === 'in') return clamp(B.seqT / 1.1, 0, 1);
   if (B.seq === 'out') return 1 - clamp(B.seqT / 1.2, 0, 1);
-  return 1;
+  return v.ghostA ?? 1; // Ghost Rider Gus fades out between shots
 }
 function drawShots(c) {
   for (const sh of B.shots) {
@@ -940,6 +940,7 @@ function drawArena() {
     circ(c, b.x, b.y, 6, '#3f6a3a', '#7fdc5a', 2);
     if (Math.sin(ANIM * (20 - b.t * 8)) > 0) circ(c, b.x, b.y, 2.5, '#ff4d4d');
   }
+  drawBossWorld(c);
   const order = [...B.cars].sort((a, b) => a.z - b.z);
   for (const v of order) {
     const va = carAlpha(v);

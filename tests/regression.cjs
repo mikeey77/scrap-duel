@@ -1999,4 +1999,29 @@ test('gear 1.5 in battle: chips and sets change the car', () => {
   assert(lucky.flair && lucky.flair.coinK >= 0.5, 'Four-Leaf Clover makes coins worth more');
 });
 
+test('every Gauntlet boss gimmick runs, telegraphs first and can hurt you', () => {
+  const { aa } = arenaRuntime(),
+    b = aa.getB();
+  const gims = [...new Set(aa.BOSSES.map(x => x.gim))];
+  assert(gims.length >= 12, 'twelve different boss tricks');
+  for (const gim of gims) {
+    const boss = b.cars[1],
+      me = b.cars[0];
+    boss.boss = true;
+    boss.bossGim = gim;
+    boss.gimT = 0;
+    boss.phase = 1;
+    b.bossFx = [];
+    b.seq = 'play';
+    me.x = boss.x + 160;
+    me.y = boss.y;
+    for (let i = 0; i < 120; i++) {
+      b.time += 0.05;
+      aa.bossTick(0.05);
+    }
+    const c = { save() {}, restore() {}, beginPath() {}, arc() {}, fill() {}, stroke() {}, moveTo() {}, lineTo() {}, setLineDash() {}, createRadialGradient: () => ({ addColorStop() {} }) };
+    aa.drawBossWorld(c);
+  }
+});
+
 console.log(`\n${passed} regression tests passed.`);

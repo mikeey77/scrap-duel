@@ -940,6 +940,7 @@ function killText(v) {
 function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   if (!I.alive || v.dead || amt <= 0 || B.seq === 'in' || B.seq === 'count' || v.spawnT > 0) return;
   if (att != null && att !== v.idx && B.cars[att] && teamOf(B.cars[att]) === teamOf(v)) return; // no friendly fire
+  v.lastHitT = B.time;
   amt = planHurt(v, I, amt, type);
   if (amt <= 0) return;
   v.lastHurt = B.time;

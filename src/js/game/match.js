@@ -664,7 +664,8 @@ function prepareBot() {
   G.botReadyAt = performance.now() + rnd(700, 1800);
 }
 const botCarCfg = () => ({
-  design: packDesign(G.botDesign),
+  // Mirror Max drives a copy of your own car
+  design: packDesign(G.run && G.run.boss && G.run.boss.gim === 'mirror' && G.base.size > 1 ? myDesign() : G.botDesign),
   tune: [...G.bot.tune],
   name: G.bot.name,
   paint: G.oppPaint,
