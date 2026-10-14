@@ -185,7 +185,8 @@ function carFromCfg(c, i) {
 function carsFromCfg(cfg) {
   return cfg.cars.map((c, i) => {
     const v = carFromCfg(c, i);
-    v.ctrl = cfg.net === 'client' ? null : i === cfg.me ? 'local' : c.ctrl === 'bot' ? 'bot' : 'remote';
+    v.ctrl =
+      cfg.net === 'client' ? null : i === cfg.me ? 'local' : c.ctrl === 'bot' || c.ctrl === 'local2' ? c.ctrl : 'remote';
     return v;
   });
 }
@@ -314,6 +315,7 @@ function hideOverlays() {
     $(id).hidden = true;
 }
 function startMatch(mode, sched, format = chosenFormat, rounds) {
+  if (!G.local2Starting) G.local2 = false;
   if (G.daily && !G.dailyStarting) {
     // leaving the daily challenge early: back to normal randomness and difficulty
     dailyRestoreRandom();
@@ -687,7 +689,7 @@ const botCarCfg = () => ({
   tune: [...G.bot.tune],
   name: G.bot.name,
   paint: G.oppPaint,
-  ctrl: 'bot',
+  ctrl: G.local2 ? 'local2' : 'bot',
   style: G.bot.style,
   diff: G.diff,
   look: G.oppLook,
@@ -893,6 +895,11 @@ function setEndBanner() {
   const w = B.win,
     points = B.points ?? roundPoints(G.round),
     loss = 2 + G.round;
+  if (G.local2 && w != null) {
+    // a local duel has no "you": name the winner
+    B.banner = { text: w === 0 ? 'PLAYER 1 WINS' : 'PLAYER 2 WINS', col: w === 0 ? G.paint : G.oppPaint, t: 0, sub: `+${points} point${points > 1 ? 's' : ''}` };
+    return;
+  }
   B.banner =
     w == null
       ? { text: 'DRAW', col: '#ece8df', t: 0, sub: 'No points this round' }
@@ -1166,11 +1173,11 @@ function showFinal() {
     tie = G.format === 'lives' ? G.lives[0] === G.lives[1] : s[0] === s[1];
   const prog = progressMatch({ won });
   if (G.mode === 'mp' && !G.mpCoop) h2hRecord(G.oppName, won, tie);
-  if (G.mode === 'solo' && !G.run && G.teamSize !== 2) rivalRecord(G.oppName, won, tie);
+  if (G.mode === 'solo' && !G.run && G.teamSize !== 2 && !G.local2) rivalRecord(G.oppName, won, tie);
   // new achievements: team wins and beating a Hard bot
   if (won && G.teamSize === 2) grantAch('road1');
   if (won && G.mode === 'solo' && !G.run && G.diff === 2) grantAch('road3');
-  if (G.mode === 'solo' && !G.run && !tie) {
+  if (G.mode === 'solo' && !G.run && !tie && !G.local2) {
     const rec = (() => {
       try {
         return { w: 0, l: 0, ...JSON.parse(load('sd.record') || '{}') };

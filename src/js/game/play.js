@@ -159,7 +159,7 @@ function readLocal() {
   if (mouse.sx !== undefined) [mouse.x, mouse.y] = toWorld(mouse.sx, mouse.sy);
   i.aimX = mouse.x;
   i.aimY = mouse.y;
-  padBattle(i, v);
+  if (!G.local2) padBattle(i, v); // in a local duel the controller belongs to player 2
   return i;
 }
 function applyInput(v, i) {
@@ -661,7 +661,9 @@ function simulate(dt) {
     const i =
       v.ctrl === 'local'
         ? readLocal()
-        : v.ctrl === 'bot'
+        : v.ctrl === 'local2'
+          ? readPad2(v)
+          : v.ctrl === 'bot'
           ? botThink(v, dt)
           : v.ctrl === 'remote'
             ? takeRemote()

@@ -2111,4 +2111,22 @@ test('daily challenge: same seed gives the same start, one reward a day, a best 
   assert(Math.random !== undefined && a.G.daily === null, 'randomness and state restored');
 });
 
+test('local duel: player 2 drives with the controller, player 1 keeps keyboard and mouse', () => {
+  const { rr, api: a } = runtime();
+  a.startLocalDuel('Gun Wagon');
+  assert(a.G.local2 && a.G.oppName === 'Player 2');
+  a.openBuild();
+  a.prepareBot();
+  const cfg = a.makeCfg(a.botCarCfg());
+  assert.equal(cfg.cars[1].ctrl, 'local2');
+  a.toBattle({ ...cfg, me: 0, net: null });
+  const b = a.getB();
+  assert.equal(b.cars[1].ctrl, 'local2');
+  b.seq = 'play';
+  const i = a.readPad2(b.cars[1]);
+  assert(Number.isFinite(i.aimX) && i.th === 0, 'no controller: player 2 waits');
+  a.startMatch('solo');
+  assert(!a.G.local2, 'a normal match turns local mode off');
+});
+
 console.log(`\n${passed} regression tests passed.`);

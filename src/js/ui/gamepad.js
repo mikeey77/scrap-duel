@@ -256,3 +256,29 @@ addEventListener(
   },
   true
 );
+
+/* ---------- local duel: player 2 on the controller ---------- */
+/** Player 2's input: everything from the controller, the right stick aims (or straight ahead). */
+function readPad2(v) {
+  const i = { th: 0, st: 0, sf: 0, boost: false, aimX: v.x + Math.sin(v.a) * 400, aimY: v.y - Math.cos(v.a) * 400, fire: false, rmb: false, drop: false, gr: 0, edges: new Set() };
+  if (B.seq !== 'play') return i;
+  padBattle(i, v);
+  return i;
+}
+/** Starts a local duel: Blueprint Brawl, five rounds, player 2 on the controller with a ready-made car. */
+function startLocalDuel(p2Type) {
+  const keepR = G.rounds;
+  G.teamSize = 1;
+  G.rounds = 5;
+  G.local2Starting = true;
+  startMatch('solo', null, 'brawl');
+  G.local2Starting = false;
+  G.local2 = true;
+  G.rounds = keepR;
+  const t = BRAWL_TYPES.find(x => x.name === p2Type) || pick(BRAWL_TYPES);
+  Object.assign(G.bot, { name: 'Player 2', style: t.style, say: ['Controller connected. Mercy disconnected.'] });
+  G.oppName = 'Player 2';
+  G.botDesign = brawlDesign(t, 2);
+  G.brawlBotReady = true;
+  if (!PAD.on) toast('Player 2: press any button on the controller.', true);
+}

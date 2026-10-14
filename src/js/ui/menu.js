@@ -10,7 +10,7 @@ const MENU_MODES = [
   { id: 'daily', name: 'Daily', col: '#b06bff', line: 'Same seed for everyone today, plus one odd rule.' },
   { id: 'league', name: 'League', col: '#ffd257', line: 'A season against five rivals. Top the table, win the final.' },
   { id: 'run', name: 'Scrap Gauntlet', col: '#ff5c7a', line: 'Endless waves, three hearts, a boss every fifth wave.' },
-  { id: 'online', name: 'Online', col: '#5be7ff', line: 'Play a friend with a room code, 1v1 or 2v2.' }
+  { id: 'online', name: 'Friends', col: '#5be7ff', line: 'Online with a room code, or on this PC with a controller.' }
 ];
 const TAGLINES = [
   'Tip: loadout gear in the Garage is in your parts bin from round 1.',
@@ -82,7 +82,7 @@ function showMenu() {
       : id === 'solo'
         ? `${G.quickTeams === 2 ? '2v2' : '1v1'} · ${G.quickFmt === 'brawl' ? 'Brawl' : 'Draft'} · ${DIFF[G.diff].name}`
         : id === 'online'
-          ? 'Peer to peer'
+          ? 'Online or local'
           : id === 'daily'
             ? (st => (st.best[dailyId()] != null ? `Best today ${st.best[dailyId()]}` : dailyToday().rule.name))(dailyState())
             : id === 'league'
@@ -240,11 +240,19 @@ function menuOpts() {
       G.runTeams === 2 ? 2 : 1,
       'rt'
     )}</div>${G.runTeams === 2 ? `<div class="hg-o"><span class="mlab">Your partner</span>${seg('partnerSeg', PARTNER_STYLES, G.partnerStyle, 'p')}</div>` : ''}<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.${G.runTeams === 2 ? ' With a partner, every wave brings two rivals.' : ''}</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
-    online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>`
+    online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
+      <div class="hg-o local2"><span class="mlab">On this PC</span><p class="small">Player 1 on keyboard and mouse, player 2 on a controller. Both bring a finished car, five rounds.${PAD.on ? ' Controller ready.' : ''}</p>
+      <div class="mrow"><select id="p2Car" aria-label="Player 2's car">${BRAWL_TYPES.map(t => `<option>${esc(t.name)}</option>`).join('')}</select><button class="btn ghost" id="mLocal">Local duel</button></div></div>`
   }[m.id];
   el.style.setProperty('--rc', m.col);
   el.innerHTML = body;
   if (m.id === 'league') leagueMenuWire(menuOpts);
+  if ($('#mLocal'))
+    $('#mLocal').onclick = () => {
+      sfx('ui');
+      G.started = true;
+      startLocalDuel($('#p2Car').value);
+    };
   if ($('#dlPlay'))
     $('#dlPlay').onclick = () => {
       sfx('ui');
@@ -619,6 +627,8 @@ if (window.__SD_TEST__)
     loadoutSets,
     applySets,
     bossTick,
+    startLocalDuel,
+    readPad2,
     playDaily,
     dailyToday,
     dailyResult,
