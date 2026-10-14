@@ -392,10 +392,14 @@ function drawModuleArt(c, id, s, ang, team, st) {
       } else {
         c.strokeStyle = '#36383c';
         c.lineWidth = s * (big ? 0.1 : 0.06);
+        const step = h * 0.26,
+          off = ((((st.roll || 0) * 0.5) % step) + step) % step;
         c.beginPath();
-        for (let i = -3; i <= 3; i++) {
-          c.moveTo(-h * tw * 0.75, i * h * 0.26);
-          c.lineTo(h * tw * 0.75, i * h * 0.26);
+        for (let i = -4; i <= 3; i++) {
+          const y = i * step + off;
+          if (Math.abs(y) > h * 0.86) continue;
+          c.moveTo(-h * tw * 0.75, y);
+          c.lineTo(h * tw * 0.75, y);
         }
         c.stroke();
       }
@@ -430,7 +434,9 @@ function drawModuleArt(c, id, s, ang, team, st) {
       c.strokeStyle = '#3d4045';
       c.lineWidth = s * 0.07;
       c.beginPath();
-      for (let y = -len / 2 + h * 0.2; y < len / 2; y += h * 0.24) {
+      const tstep = h * 0.24,
+        toff = ((((st.roll || 0) * 0.5) % tstep) + tstep) % tstep;
+      for (let y = -len / 2 + h * 0.08 + toff; y < len / 2 - h * 0.05; y += tstep) {
         c.moveTo(-h * 0.68, y);
         c.lineTo(h * 0.68, y);
       }
@@ -718,13 +724,21 @@ function drawModuleArt(c, id, s, ang, team, st) {
       const n = A.b || 1,
         w = (A.w || 0.1) * s,
         len = (A.l || 1.2) * h,
-        gap = w + s * 0.05;
+        gap = w + s * 0.05,
+        kick = st.kick || 0;
+      // barrels slide back when a shot goes off; the housing stays put
+      c.save();
+      c.translate(0, kick * h * 0.32);
       if (A.v === 'mini') {
         rr(c, -h * 0.3, -len, h * 0.6, len, h * 0.15);
         c.fillStyle = '#1c2024';
         c.fill();
-        for (let i = -1; i <= 1; i++)
-          line(c, [i * h * 0.16, -len * 0.95, i * h * 0.16, -h * 0.15], '#4a5056', s * 0.03);
+        // the barrel cluster turns as it spools up
+        const ph = ((ANIM * 14 * (st.rev || 0)) % 1) * h * 0.16;
+        for (let i = -2; i <= 1; i++) {
+          const x = i * h * 0.16 + ph;
+          if (Math.abs(x) <= h * 0.2) line(c, [x, -len * 0.95, x, -h * 0.15], '#4a5056', s * 0.03);
+        }
         c.fillStyle = '#5d656c';
         c.fillRect(-h * 0.34, -len, h * 0.68, h * 0.18);
       } else if (A.v === 'flare') {
@@ -748,6 +762,28 @@ function drawModuleArt(c, id, s, ang, team, st) {
         c.fillStyle = '#262b30';
         c.fillRect(-w * 0.9, -len - h * 0.05, w * 1.8, h * 0.25);
       }
+      if (kick > 0.45 && !st.builder && !st.pour) {
+        // muzzle flash: a short star at every barrel tip
+        const fl = (kick - 0.45) / 0.55,
+          hot = A.v === 'ice' ? '#e6faff' : A.h === 'lens' ? '#bff' : '#ffe08a';
+        c.save();
+        c.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < n; i++) {
+          const x = (i - (n - 1) / 2) * gap;
+          c.fillStyle = hot;
+          c.globalAlpha = fl;
+          c.beginPath();
+          for (let k = 0; k < 10; k++) {
+            const r = (k % 2 ? 0.18 : 0.5) * h * (0.8 + fl * 0.6),
+              a = (k / 10) * Math.PI * 2;
+            c.lineTo(x + Math.cos(a) * r, -len - h * 0.25 + Math.sin(a) * r);
+          }
+          c.closePath();
+          c.fill();
+        }
+        c.restore();
+      }
+      c.restore();
       if (A.v === 'rail') {
         c.fillStyle = `rgba(120,200,255,${0.3 + (st.charge || 0) * 0.7})`;
         c.fillRect(-gap / 2 + w / 2, -len, gap - w, len);

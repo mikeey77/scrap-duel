@@ -1,8 +1,76 @@
 // Battle rendering: cars, objects, zones, projectiles, effects and HUD.
 /* =================== RENDER =================== */
+/* ---------- part motion: every part reacts when it is used ----------
+   Detected from state changes so it also works on online clients: a cooldown that jumps up,
+   a rocket burst that ticks down, a dropper that fires, a car-wide ability that goes on cooldown. */
+const CM_IDS = new Set(['smoke', 'decoy', 'flare', 'emp', 'flashbang', 'jammer']);
+const FLASHLESS = new Set(['rocket', 'homing', 'lob', 'bounce', 'sticky', 'harpoon', 'tesla', 'arc']);
+function partMotion(v) {
+  const now = ANIM;
+  // wheel roll: distance driven along the car's nose, so treads turn with the car (works from snapshots too)
+  if (v._rx !== undefined) {
+    const dx = v.x - v._rx,
+      dy = v.y - v._ry;
+    if (Math.abs(dx) + Math.abs(dy) < 80) v._roll = (v._roll || 0) + dx * Math.sin(v.a) - dy * Math.cos(v.a);
+  }
+  v._rx = v.x;
+  v._ry = v.y;
+  const carKick = (k, test) => {
+    const val = v[k] || 0;
+    if (v['_p' + k] !== undefined && val > v['_p' + k] + 0.05)
+      for (const I of v.insts) if (I.alive && test(I)) I.kickT = now;
+    v['_p' + k] = val;
+  };
+  carKick('cmCd', I => CM_IDS.has(I.id));
+  carKick('hornCd', I => I.m.horn || I.id === 'airhorn');
+  carKick('blinkCd', I => I.m.blink || I.id === 'blink');
+  for (const I of v.insts) {
+    if (!I.alive) continue;
+    let fired = false;
+    // (the first frame only records: nothing "fires" just because the round started)
+    if (I._pcd !== undefined && I.cd > I._pcd + 0.02) fired = true;
+    I._pcd = I.cd || 0;
+    if (I._pb !== undefined && I.burst < I._pb) fired = true;
+    I._pb = I.burst || 0;
+    if (I._psp !== undefined && I.sp > I._psp + 0.05) fired = true;
+    I._psp = I.sp || 0;
+    if (I._ppc !== undefined && I.planCd > I._ppc + 0.05) fired = true;
+    I._ppc = I.planCd || 0;
+    if (fired) {
+      I.kickT = now;
+      const W = I.W;
+      if (I.m.wpn && (!W || FLASHLESS.has(W.kind) || I.m.plan) && !SETTINGS.perf) {
+        const [px, py] = ipos(v, I),
+          a = I.ta !== undefined ? I.ta : v.a - Math.PI / 2 + ((I.rot || 0) * Math.PI) / 2,
+          mx = px + Math.cos(a) * S * 0.8,
+          my = py + Math.sin(a) * S * 0.8;
+        fx({ k: 'flash', x: mx, y: my, life: 0.07, max: 0.07, r: 8, col: W && W.dt === 'energy' ? '#bff' : null });
+        for (let i = 0; i < 3; i++)
+          fx({
+            k: 'smoke',
+            x: mx,
+            y: my,
+            vx: Math.cos(a) * 40 + rnd(-25, 25),
+            vy: Math.sin(a) * 40 + rnd(-25, 25),
+            life: 0.45,
+            max: 0.45,
+            r: rnd(3, 5)
+          });
+      }
+    }
+    // continuous weapons shudder while they pour out fire, water or a beam
+    const W = I.W;
+    I.pour = !!((I.beam && I.beam.length) || (W && (W.kind === 'flame' || W.kind === 'water') && v.fire && !I.blocked));
+  }
+}
+function kickOf(I) {
+  if (I.pour) return 0.35 + Math.sin(ANIM * 70) * 0.2;
+  return I.kickT !== undefined ? Math.max(0, 1 - (ANIM - I.kickT) / 0.14) : 0;
+}
 function drawVehicle(c, v, alpha) {
   const alive = v.insts.filter(I => I.alive);
   if (!alive.length) return;
+  partMotion(v);
   const lift = 1 + v.z / 260,
     sh = 4 + v.z * 0.45 + (v.c.hoverMode ? 8 : 0),
     team = v.idx === B.me ? 'p' : 'e';
@@ -108,7 +176,17 @@ function drawVehicle(c, v, alpha) {
           glowDisc(c, S * (0.8 + Math.sin(ANIM * 4) * 0.1), I.m.glow || RAR[I.m.rar].col);
           c.restore();
         }
+        const kick = kickOf(I),
+          pop = kick > 0 && !(I.m.art && I.m.art.k === 'gun') && !I.m.drive;
+        if (pop) {
+          c.save();
+          c.scale(1 + 0.13 * kick, 1 + 0.13 * kick);
+        }
         drawModule(c, I.id, layer === 't' ? S * 0.84 : S, rotA, team, {
+          kick,
+          rev: I.spin || 0,
+          pour: I.pour,
+          roll: v._roll || 0,
           paint: v.paint,
           ...(I.id === 'cockpit' ? cockpitFace(v) : null),
           turret: I.turret,
@@ -125,6 +203,7 @@ function drawVehicle(c, v, alpha) {
           active: I.active,
           spin: isJoint(I.id) && jtype(I) === 'rotator' ? I.s : 0
         });
+        if (pop) c.restore();
         if (layer === 'b' && look.livery !== 'factory' && liveryPart(I.id))
           drawLivery(c, look.livery, v.paint, I.gcx, I.gcy, S, liveryCtx(v.grid, I.gcx, I.gcy, v.minGy));
         if (layer === 'b' && look.stickers && look.stickers.length) {

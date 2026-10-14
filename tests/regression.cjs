@@ -2192,7 +2192,10 @@ test('arena floors: every arena has a surface, tyres feel it (off-road wins on s
   assert.equal(a.tyreOf(a.MOD.studded), 'spiked');
   assert.equal(a.tyreOf(a.MOD.track), 'track');
   assert.equal(a.tyreOf(a.MOD.slick), 'slick');
-  const C = a.calc([{ m: a.MOD.monster, mass: 2.5, x: 0, y: 0 }, { m: a.MOD.slick, mass: 1, x: 1, y: 0 }]);
+  const C = a.calc([
+    { m: a.MOD.monster, mass: 2.5, x: 0, y: 0 },
+    { m: a.MOD.slick, mass: 1, x: 1, y: 0 }
+  ]);
   assert(C.tyreW.offroad === 9 && C.tyreW.slick === 7, 'tyre mix by drive power');
 });
 
@@ -2206,11 +2209,63 @@ test('themed arenas: the beach has umbrellas and palms, the chessboard has both 
   const kinds = id => a.genArena('battle', T(id)).ob.map(o => o.kind);
   const beach = kinds('beach');
   assert(beach.filter(k => k === 'palm').length === 4, 'two palms each side');
-  assert(beach.some(k => /umbrella|sandcastle|lifebuoy|surfboard|cooler/.test(k)), 'beach junk');
+  assert(
+    beach.some(k => /umbrella|sandcastle|lifebuoy|surfboard|cooler/.test(k)),
+    'beach junk'
+  );
   const ch = kinds('chess');
   assert(ch.includes('king') && ch.includes('bking'), 'a white and a black king');
   assert(ch.some(k => k === 'pawn') && ch.some(k => k === 'bpawn'), 'pawns on both sides');
   assert(kinds('ice').filter(k => k === 'goal').length === 2, 'a goal at each end');
+});
+
+test('every weapon visibly reacts when it fires: recoil, a pop, or a shudder while it pours', () => {
+  const { api: a } = runtime();
+  a.startMatch('solo');
+  a.openBuild();
+  a.toBattle({ ...a.makeCfg(a.myCarCfg()), me: 0, net: null });
+  const B = a.getB();
+  B.seq = 'play';
+  const target = B.cars[1];
+  const quiet = [];
+  for (const m of a.MODS.filter(m => m.wpn)) {
+    const base = new Map(),
+      top = new Map();
+    base.set('0,0', { id: 'cockpit', x: 0, y: 0, rot: 0 });
+    base.set('0,1', { id: 'wheel', x: 0, y: 1, rot: 0 });
+    for (let x = 1; x <= 3; x++) for (let y = -2; y <= 1; y++) base.set(x + ',' + y, { id: 'girder', x, y, rot: 0 });
+    if (m.layer === 't') top.set('1,0', { id: m.id, x: 1, y: 0, rot: 0 });
+    else {
+      for (const [x, y] of a.footprint(m.id, 0, 1, 0)) base.delete(x + ',' + y);
+      base.set('1,0', { id: m.id, x: 1, y: 0, rot: 0 });
+    }
+    let v;
+    try {
+      v = a.makeCar({ base, top }, 0, 900, 600, 0, { tune: [], name: 'W', paint: '#fff' });
+    } catch (e) {
+      quiet.push(m.id + ' (no car: ' + e.message + ')');
+      continue;
+    }
+    B.cars = [v, target];
+    target.x = 900;
+    target.y = 520;
+    v.aimX = target.x;
+    v.aimY = target.y;
+    v.fire = true;
+    v.rmb = true;
+    let moved = false;
+    for (let i = 0; i < 160 && !moved; i++) {
+      B.time += 1 / 30;
+      a.setAnim(B.time);
+      try {
+        a.fireWeapons(v, 1 / 30);
+      } catch (e) {}
+      a.partMotion(v);
+      moved = v.insts.some(I => I.W && a.kickOf(I) > 0);
+    }
+    if (!moved) quiet.push(m.id + (v.insts.some(I => I.id === m.id) ? '' : ' (not on the test car)'));
+  }
+  assert.deepEqual(quiet, [], 'weapons without a firing animation');
 });
 
 console.log(`\n${passed} regression tests passed.`);
