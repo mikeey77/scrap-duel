@@ -673,3 +673,47 @@ body {
 .lg-card.daily {
   border-left-color: #b06bff;
 }
+
+/* ---------- photo mode ---------- */
+body.photo :is(#hud, #abtns, #waitcard, .ctlhint, #toast) {
+  visibility: hidden !important;
+}
+body.photo #ac {
+  cursor: grab;
+}
+#photoBar {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(8, 13, 26, 0.9);
+  border: 1px solid var(--line-2);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+.pb-t {
+  font: 700 14px var(--f-display);
+  color: var(--hazard);
+}
+.pb-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #fff;
+  pointer-events: none;
+  animation: pbflash 0.4s ease-out forwards;
+}
+@keyframes pbflash {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0;
+  }
+}

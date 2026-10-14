@@ -1052,11 +1052,11 @@ function drawArena() {
     c.fillStyle = `rgba(255,255,255,${Math.min(0.92, v.blind * 0.5)})`;
     c.fillRect(0, 0, view.w, view.h);
   }
-  if (v && !B.demo) drawHitArrows(c, v, s);
+  if (v && !B.demo && !B.photo) drawHitArrows(c, v, s);
   if (B.special === 'night') drawNight(c, s);
   drawGimmickOverlay(c, s);
   drawVignette(c);
-  if (v && !B.demo && !B.replay) lowHealth(c, v);
+  if (v && !B.demo && !B.replay && !B.photo) lowHealth(c, v);
   if (B.ring && v && !v.dead && Math.hypot(v.x - AW / 2, v.y - AH / 2) > B.ring.r) {
     c.strokeStyle = `rgba(255,80,40,${0.35 + Math.sin(ANIM * 10) * 0.2})`;
     c.lineWidth = 14;
@@ -1064,7 +1064,7 @@ function drawArena() {
   }
   if (B.demo) {
     // behind the menu the hangar has its own scoreboard; nothing should show through other screens either
-  } else drawHUD(c);
+  } else if (!B.photo) drawHUD(c);
 }
 /** Pulsing diamond over the rival's cockpit: the thing you are trying to destroy. */
 function drawCockpitMarker(c) {

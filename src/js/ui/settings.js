@@ -170,6 +170,7 @@ function togglePause(force) {
       ${G.phase === 'wait' ? '<button class="btn ghost" id="pGarage"><i>⚒</i>Back to garage</button>' : ''}
       <button class="btn ghost" id="pSettings"><i>⚙</i>Settings</button>
       <button class="btn ghost" id="pControls"><i>⌨</i>Controls</button>
+      ${canPhoto() ? '<button class="btn ghost" id="pPhoto"><i>▣</i>Photo mode · F2</button>' : ''}
       <button class="btn ghost" id="pFull"><i>⛶</i>${document.fullscreenElement || (window.desktop && window.desktop.isFullscreen) ? 'Exit fullscreen' : 'Fullscreen'}</button>
       ${forfeit ? '<button class="btn ghost warn" id="pForfeit"><i>⚑</i>Forfeit round</button>' : ''}
       <button class="btn ghost quit" id="pMenu"><i>⏏</i>Main menu</button>
@@ -186,6 +187,7 @@ function togglePause(force) {
       togglePause(false);
     });
   $('#pControls').addEventListener('click', () => ($('#pExtra').innerHTML = controlsHtml()));
+  if ($('#pPhoto')) $('#pPhoto').addEventListener('click', openPhoto);
   $('#pSettings').addEventListener('click', () => {
     $('#ovPause').hidden = true;
     openSettings(() => ($('#ovPause').hidden = false));

@@ -79,6 +79,7 @@
     "js/ui/hangar-fx.js",
     "js/ui/boot.js",
     "js/ui/gamepad.js",
+    "js/ui/photo.js",
     "js/ui/menu.js"
   ]
 }
