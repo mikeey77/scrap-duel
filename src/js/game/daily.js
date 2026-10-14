@@ -1,8 +1,20 @@
 // Daily challenge: one seed per calendar day. Everyone who plays today gets the same arena, the same rival, the
 // same drafts and the same odd rule, over five rounds. Your best score of the day is kept, plus a streak of days.
 const DAILY_RULES = [
-  { id: 'glass', name: 'Glass Cannons', text: 'Every part has half its HP, and every weapon hits twice as hard.', hp: 0.5, dmg: 2 },
-  { id: 'heavy', name: 'Heavy Metal', text: 'Every part has 60% more HP, but cars are 15% slower.', hp: 1.6, speed: -0.15 },
+  {
+    id: 'glass',
+    name: 'Glass Cannons',
+    text: 'Every part has half its HP, and every weapon hits twice as hard.',
+    hp: 0.5,
+    dmg: 2
+  },
+  {
+    id: 'heavy',
+    name: 'Heavy Metal',
+    text: 'Every part has 60% more HP, but cars are 15% slower.',
+    hp: 1.6,
+    speed: -0.15
+  },
   { id: 'speed', name: 'Speed Demons', text: 'Every car is 40% faster. Steering is your problem.', speed: 0.4 },
   { id: 'trigger', name: 'Trigger Happy', text: 'Every weapon fires 50% faster.', rate: 1.5 },
   { id: 'bumper', name: 'Bumper Cars', text: 'Rams hit 150% harder, guns 40% softer.', ram: 1.5, dmg: 0.6 },
@@ -63,7 +75,13 @@ function playDaily() {
   G.dailyStarting = false;
   G.rounds = keepR;
   G.daily = { ...D, prevDiff };
-  Object.assign(G.bot, { name: D.rival.name, style: D.rival.style, likes: D.rival.likes, paint: D.rival.paint, say: D.rival.say });
+  Object.assign(G.bot, {
+    name: D.rival.name,
+    style: D.rival.style,
+    likes: D.rival.likes,
+    paint: D.rival.paint,
+    say: D.rival.say
+  });
   G.oppName = D.rival.name;
   G.oppPaint = D.rival.paint === G.paint ? PAINTS.find(p => p !== G.paint) : D.rival.paint;
   if (D.rule.coins) {
@@ -109,6 +127,8 @@ function dailyResult(won, s, tot) {
     y.setDate(y.getDate() - 1);
     st.streak = st.last === dailyId(y) ? st.streak + 1 : 1;
     st.last = D.id;
+    if (st.streak >= 3) grantAch('daily3');
+    if (st.streak >= 7) grantAch('daily7');
     addBolts(60 + 10 * Math.min(st.streak, 7));
     addChip(rollChip());
   }
@@ -128,5 +148,5 @@ function dailyMenuHtml() {
   return `<div class="dl-menu"><span class="label">Today · ${esc(D.id)}</span>
     <h3 class="dl-rule">${esc(D.rule.name)}</h3><p>${esc(D.rule.text)}</p>
     <p class="small">Five rounds against <b>${esc(D.rival.name)}</b> in <b>${esc(THEMES[D.theme].name)}</b>. Same drafts for everyone today. ${best != null ? `Your best: <b>${best.toLocaleString()}</b>.` : 'First play of the day gives bolts and a mod chip.'}${st.streak ? ` Streak: ${st.streak} day${st.streak > 1 ? 's' : ''}.` : ''}</p>
-    <button class="btn hg-go2" id="dlPlay">${best != null ? 'Try to beat it' : 'Play today\'s challenge'}</button></div>`;
+    <button class="btn hg-go2" id="dlPlay">${best != null ? 'Try to beat it' : "Play today's challenge"}</button></div>`;
 }

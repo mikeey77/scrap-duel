@@ -97,6 +97,7 @@ function gearUpgrade(g) {
   GEAR.bolts -= c;
   g.xp -= gearNeed(g.lvl);
   g.lvl++;
+  if (g.lvl >= GEAR_MAX) grantAch('legend');
   if (g.lvl === 3 && !g.q) g.qo = quirkOffers(g);
   saveGear();
   return true;
@@ -206,6 +207,7 @@ function chipFuse(k) {
   addChip(k, -3);
   const up = chipKey(p.c, p.t + 1);
   addChip(up, 1);
+  if (p.t + 1 === 3) grantAch('chip3');
   return up;
 }
 /** A random chip: mostly Mk I, now and then better. */
@@ -223,6 +225,7 @@ function gearReforge(g) {
   if (!canReforge(g) || GEAR.bolts < REFORGE_COST) return false;
   GEAR.bolts -= REFORGE_COST;
   g.s = (g.s || 0) + 1;
+  grantAch('reforged');
   g.lvl = 1;
   g.xp = 0;
   delete g.c5;

@@ -229,6 +229,12 @@ function runWaveDone(iWon, draw) {
     R.cleared = R.wave;
     if (R.boss) {
       R.bosses++;
+      try {
+        const beaten = new Set(JSON.parse(load('sd.bossesBeaten') || '[]'));
+        beaten.add(R.boss.name || G.oppName);
+        store('sd.bossesBeaten', [...beaten]);
+        if (beaten.size >= 6) grantAch('bosses6');
+      } catch (e) {}
       R.hearts = Math.min(RUN_HEARTS + 2, R.hearts + 1);
       text = `Boss down! +1 heart and a relic. ${pick(['The crowd goes wild.', 'Someone call a tow truck.', 'That one will need a new chassis.'])}`;
       grantAch('boss_slayer');
@@ -385,6 +391,8 @@ function showRunOver() {
     record = reached > best;
   if (record) store('sd.runBest', reached);
   const prog = grant(20 + R.cleared * 12 + R.bosses * 40, []);
+  contractsUpdate({ wave: reached, rounds: R.cleared });
+  if (G.teamSize === 2 && reached >= 10) grantAch('buddy');
   const spoils = matchSpoils(R.cleared >= 5, 0, {
     rounds: R.wave,
     bolts: R.cleared * 8 + R.bosses * 30 - 20,

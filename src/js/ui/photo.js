@@ -74,6 +74,7 @@ function savePhoto() {
     a.click();
     a.remove();
     toast('Photo saved', true);
+    grantAch('photo');
     sfx('coin');
     flashScreen();
   } catch (e) {

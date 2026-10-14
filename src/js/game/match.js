@@ -186,7 +186,13 @@ function carsFromCfg(cfg) {
   return cfg.cars.map((c, i) => {
     const v = carFromCfg(c, i);
     v.ctrl =
-      cfg.net === 'client' ? null : i === cfg.me ? 'local' : c.ctrl === 'bot' || c.ctrl === 'local2' ? c.ctrl : 'remote';
+      cfg.net === 'client'
+        ? null
+        : i === cfg.me
+          ? 'local'
+          : c.ctrl === 'bot' || c.ctrl === 'local2'
+            ? c.ctrl
+            : 'remote';
     return v;
   });
 }
@@ -844,7 +850,26 @@ function showVS(cfg, done) {
     S ? 3400 : 2600
   );
 }
+/** Remembers every arena you fought in (for World Tour). */
+function noteArena(ti) {
+  try {
+    const seen = new Set(JSON.parse(load('sd.arenas') || '[]'));
+    seen.add(THEMES[ti].id);
+    store('sd.arenas', [...seen]);
+    if (THEMES.every(t => seen.has(t.id))) grantAch('tour');
+  } catch (e) {}
+}
 function toBattle(cfg) {
+  if (cfg && cfg.theme != null && THEMES[cfg.theme] && G.mode !== undefined) noteArena(cfg.theme);
+  if (
+    cfg &&
+    cfg.cars &&
+    cfg.cars[cfg.me] &&
+    cfg.cars[cfg.me].flair &&
+    cfg.cars[cfg.me].flair.sets &&
+    cfg.cars[cfg.me].flair.sets.length
+  )
+    grantAch('fullset');
   G.scars = null; // a fresh round: the repair bay has done its job
   try {
     const opI = 1 - (cfg.me % 2);
@@ -897,7 +922,12 @@ function setEndBanner() {
     loss = 2 + G.round;
   if (G.local2 && w != null) {
     // a local duel has no "you": name the winner
-    B.banner = { text: w === 0 ? 'PLAYER 1 WINS' : 'PLAYER 2 WINS', col: w === 0 ? G.paint : G.oppPaint, t: 0, sub: `+${points} point${points > 1 ? 's' : ''}` };
+    B.banner = {
+      text: w === 0 ? 'PLAYER 1 WINS' : 'PLAYER 2 WINS',
+      col: w === 0 ? G.paint : G.oppPaint,
+      t: 0,
+      sub: `+${points} point${points > 1 ? 's' : ''}`
+    };
     return;
   }
   B.banner =
@@ -1173,6 +1203,7 @@ function showFinal() {
     tie = G.format === 'lives' ? G.lives[0] === G.lives[1] : s[0] === s[1];
   const prog = progressMatch({ won });
   if (G.mode === 'mp' && !G.mpCoop) h2hRecord(G.oppName, won, tie);
+  if (G.local2) grantAch('couch');
   if (G.mode === 'solo' && !G.run && G.teamSize !== 2 && !G.local2) rivalRecord(G.oppName, won, tie);
   // new achievements: team wins and beating a Hard bot
   if (won && G.teamSize === 2) grantAch('road1');
@@ -1189,6 +1220,14 @@ function showFinal() {
     store('sd.record', rec);
   }
   const spoils = matchSpoils(won, tot.w);
+  const wasDaily = !!G.daily,
+    wasLeague = !!G.league;
+  if (G.mode === 'solo' && !G.local2 && !G.run)
+    contractsUpdate({
+      ...contractsFromMatch(won, tot),
+      ...(wasDaily ? { daily: 1 } : {}),
+      ...(wasLeague && won ? { league: 1 } : {})
+    });
   const inLeague = !!G.league,
     leagueHtml = leagueResult(won, tie, s) + dailyResult(won, s, tot),
     inDaily = !leagueHtml.includes('lg-table') && leagueHtml.includes('daily');

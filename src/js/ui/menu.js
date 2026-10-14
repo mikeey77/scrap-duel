@@ -84,10 +84,17 @@ function showMenu() {
         : id === 'online'
           ? 'Online or local'
           : id === 'daily'
-            ? (st => (st.best[dailyId()] != null ? `Best today ${st.best[dailyId()]}` : dailyToday().rule.name))(dailyState())
+            ? (st => (st.best[dailyId()] != null ? `Best today ${st.best[dailyId()]}` : dailyToday().rule.name))(
+                dailyState()
+              )
             : id === 'league'
-            ? (L => (!L ? 'No season yet' : L.champion ? `Season ${L.season} done` : `Season ${L.season} · day ${Math.min(L.day + 1, LEAGUE_DAYS)}/${LEAGUE_DAYS}`))(loadLeague())
-            : `${MODS.length} parts`;
+              ? (L =>
+                  !L
+                    ? 'No season yet'
+                    : L.champion
+                      ? `Season ${L.season} done`
+                      : `Season ${L.season} · day ${Math.min(L.day + 1, LEAGUE_DAYS)}/${LEAGUE_DAYS}`)(loadLeague())
+              : `${MODS.length} parts`;
   $('#ovMenu').classList.toggle('live', false);
   $('#ovMenu').innerHTML = `<div class="hangar${resume ? ' resume' : ''}">
     <header class="hg-top">
@@ -103,6 +110,7 @@ function showMenu() {
         <div class="hg-carinfo">
           <div class="hg-chips">${set ? `<span class="settag" style="--sc:${STICKER_SETS[set].col}">${esc(STICKER_SETS[set].name)} set on</span>` : ''}${lo.map(g => `<span class="hg-chip"><img alt="" src="${iconURL(g.id, 32)}">${esc(gearName(g))}</span>`).join('')}${lo.length ? '' : '<span class="small">No gear in your loadout yet.</span>'}</div>
           <button class="btn ghost" id="mGarage">Garage · gear, skins, stickers</button>
+          ${resume ? '' : contractsHtml()}
         </div>
       </section>
       <section class="hg-play">
@@ -627,6 +635,8 @@ if (window.__SD_TEST__)
     loadoutSets,
     applySets,
     bossTick,
+    contractsToday,
+    contractsUpdate,
     startLocalDuel,
     readPad2,
     playDaily,

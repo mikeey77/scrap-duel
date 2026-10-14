@@ -68,7 +68,9 @@ function gimmickCar(v, dt) {
       case 'portal':
         if (inZone(v.x, v.y, z) && !(v.portT >= B.time)) {
           // portals come in mirrored pairs: step in on one side, come out on the other
-          const p = B.zones.find(o => o !== z && o.kind === 'portal' && Math.abs(o.x - (AW - z.x)) < 3 && Math.abs(o.y - z.y) < 3);
+          const p = B.zones.find(
+            o => o !== z && o.kind === 'portal' && Math.abs(o.x - (AW - z.x)) < 3 && Math.abs(o.y - z.y) < 3
+          );
           if (p) {
             const sp = Math.hypot(v.vx, v.vy) || 1;
             fx({ k: 'flash', x: v.x, y: v.y, life: 0.25, max: 0.25, r: 60, col: '#b06bff' });
@@ -194,7 +196,7 @@ function drawGimmickZone(c, z) {
       c.fillStyle = '#3fe0a0';
       const k = (A * 2 + z.seed) % 1;
       for (let i = 0; i < 3; i++) {
-        c.globalAlpha = 0.35 + 0.65 * (((k + i / 3) % 1));
+        c.globalAlpha = 0.35 + 0.65 * ((k + i / 3) % 1);
         const r = z.r * (0.25 + 0.22 * i);
         c.beginPath();
         c.arc(z.x, z.y, r, 0, Math.PI * 2);

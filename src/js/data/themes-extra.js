@@ -194,8 +194,7 @@ THEMES.push(
     tramp: 1,
     pads: 0,
     extra: { mud: 3 }
-  }
-,
+  },
   {
     id: 'crusheryard',
     name: 'Crusher Yard',

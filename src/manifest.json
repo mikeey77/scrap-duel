@@ -69,6 +69,7 @@
     "js/game/gauntlet.js",
     "js/game/league.js",
     "js/game/daily.js",
+    "js/game/contracts.js",
     "js/game/gear.js",
     "js/game/bosses.js",
     "js/game/brawl.js",

@@ -260,7 +260,19 @@ addEventListener(
 /* ---------- local duel: player 2 on the controller ---------- */
 /** Player 2's input: everything from the controller, the right stick aims (or straight ahead). */
 function readPad2(v) {
-  const i = { th: 0, st: 0, sf: 0, boost: false, aimX: v.x + Math.sin(v.a) * 400, aimY: v.y - Math.cos(v.a) * 400, fire: false, rmb: false, drop: false, gr: 0, edges: new Set() };
+  const i = {
+    th: 0,
+    st: 0,
+    sf: 0,
+    boost: false,
+    aimX: v.x + Math.sin(v.a) * 400,
+    aimY: v.y - Math.cos(v.a) * 400,
+    fire: false,
+    rmb: false,
+    drop: false,
+    gr: 0,
+    edges: new Set()
+  };
   if (B.seq !== 'play') return i;
   padBattle(i, v);
   return i;

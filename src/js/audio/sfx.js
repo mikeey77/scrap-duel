@@ -168,15 +168,27 @@ const BattleMusic = {
           finale = B && G.round === ROUNDS && !G.run,
           intense = lastSecs || danger || finale;
         const k = S.kick;
-        if (k === 'four' ? n % 4 === 0 : k === 'half' ? n % 8 === 0 : k === 'gallop' ? n % 4 === 0 || n % 16 === 10 : k === 'soft' ? n % 16 === 0 : n % 8 === 0)
+        if (
+          k === 'four'
+            ? n % 4 === 0
+            : k === 'half'
+              ? n % 8 === 0
+              : k === 'gallop'
+                ? n % 4 === 0 || n % 16 === 10
+                : k === 'soft'
+                  ? n % 16 === 0
+                  : n % 8 === 0
+        )
           this.drum(t);
         if (k !== 'soft' && n % 8 === 4) this.drum(t, true);
         if ((S.hat || intense) && n % 2 === 1) this.hat(t, intense ? 0.05 : 0.03);
         const bassStep = S.offbeat ? n % 4 === 2 : true;
-        if (bassStep) this.note(root * (n % 4 === 3 && !S.offbeat ? 2 : 1), t, S.bassLen || 0.12, S.bassVol || 0.12, S.bass);
+        if (bassStep)
+          this.note(root * (n % 4 === 3 && !S.offbeat ? 2 : 1), t, S.bassLen || 0.12, S.bassVol || 0.12, S.bass);
         this.note(root * 2 * S.arp[n % S.arp.length], t, 0.15, intense ? S.leadVol * 1.6 : S.leadVol, S.lead);
         if (S.bell && n % 8 === 6) this.note(root * 4 * S.arp[(n >> 3) % S.arp.length], t, 0.5, 0.03, 'sine');
-        if (n % 16 === 0) for (const ratio of S.pad || [1, 1.189, 1.5]) this.note(root * ratio, t, 1.4, S.padVol ?? 0.025, 'triangle');
+        if (n % 16 === 0)
+          for (const ratio of S.pad || [1, 1.189, 1.5]) this.note(root * ratio, t, 1.4, S.padVol ?? 0.025, 'triangle');
         const bpm = S.bpm[intense ? 1 : 0] + (finale ? 8 : 0);
         this.next += 60 / bpm / 4;
       }
@@ -208,24 +220,131 @@ const BattleMusic = {
 /* Music styles: every arena picks the one that fits its mood. All of it is generated live, so it costs no
    download, and each style changes up when the round gets tense. */
 const MUSIC_STYLES = {
-  metal: { bpm: [128, 144], roots: [110, 87.31, 130.81, 98], arp: [1, 1.5, 2, 2.378], lead: 'sawtooth', bass: 'square', kick: 'four', leadVol: 0.045 },
-  ice: { bpm: [112, 126], roots: [146.83, 123.47, 110, 130.81], arp: [1, 1.5, 2, 3], lead: 'triangle', bass: 'sine', kick: 'half', bell: 1, leadVol: 0.05, bassVol: 0.14 },
-  lava: { bpm: [136, 152], roots: [82.41, 87.31, 73.42, 98], arp: [1, 1.189, 1.5, 2], lead: 'sawtooth', bass: 'sawtooth', kick: 'four', hat: 1, leadVol: 0.05, bassVol: 0.1 },
-  neon: { bpm: [120, 134], roots: [110, 98, 87.31, 98], arp: [1, 1.26, 1.5, 2, 1.5, 1.26], lead: 'square', bass: 'sawtooth', kick: 'four', offbeat: 1, hat: 1, leadVol: 0.035, bassVol: 0.13, bassLen: 0.2 },
-  toy: { bpm: [132, 148], roots: [130.81, 174.61, 196, 130.81], arp: [1, 1.26, 1.5, 2], lead: 'square', bass: 'triangle', kick: 'boomchick', bell: 1, leadVol: 0.035, pad: [1, 1.26, 1.5] },
-  spooky: { bpm: [96, 112], roots: [110, 103.83, 98, 92.5], arp: [1, 1.189, 1.414, 2], lead: 'triangle', bass: 'sine', kick: 'half', leadVol: 0.05, pad: [1, 1.189, 1.414], padVol: 0.035 },
-  desert: { bpm: [116, 128], roots: [110, 98, 87.31, 82.41], arp: [1, 1.5, 2, 1.5], lead: 'triangle', bass: 'square', kick: 'gallop', leadVol: 0.05, pad: [1, 1.26, 1.5] },
-  surf: { bpm: [140, 156], roots: [146.83, 146.83, 196, 220], arp: [1, 1.26, 1.5, 1.26], lead: 'square', bass: 'triangle', kick: 'four', hat: 1, leadVol: 0.035, pad: [1, 1.26, 1.5] },
-  lounge: { bpm: [92, 92], roots: [130.81, 110, 146.83, 98], arp: [1, 1.26, 1.5, 1.89], lead: 'triangle', bass: 'sine', kick: 'soft', leadVol: 0.03, bassVol: 0.09, bassLen: 0.3, offbeat: 1, pad: [1, 1.26, 1.5, 1.89], padVol: 0.03 }
+  metal: {
+    bpm: [128, 144],
+    roots: [110, 87.31, 130.81, 98],
+    arp: [1, 1.5, 2, 2.378],
+    lead: 'sawtooth',
+    bass: 'square',
+    kick: 'four',
+    leadVol: 0.045
+  },
+  ice: {
+    bpm: [112, 126],
+    roots: [146.83, 123.47, 110, 130.81],
+    arp: [1, 1.5, 2, 3],
+    lead: 'triangle',
+    bass: 'sine',
+    kick: 'half',
+    bell: 1,
+    leadVol: 0.05,
+    bassVol: 0.14
+  },
+  lava: {
+    bpm: [136, 152],
+    roots: [82.41, 87.31, 73.42, 98],
+    arp: [1, 1.189, 1.5, 2],
+    lead: 'sawtooth',
+    bass: 'sawtooth',
+    kick: 'four',
+    hat: 1,
+    leadVol: 0.05,
+    bassVol: 0.1
+  },
+  neon: {
+    bpm: [120, 134],
+    roots: [110, 98, 87.31, 98],
+    arp: [1, 1.26, 1.5, 2, 1.5, 1.26],
+    lead: 'square',
+    bass: 'sawtooth',
+    kick: 'four',
+    offbeat: 1,
+    hat: 1,
+    leadVol: 0.035,
+    bassVol: 0.13,
+    bassLen: 0.2
+  },
+  toy: {
+    bpm: [132, 148],
+    roots: [130.81, 174.61, 196, 130.81],
+    arp: [1, 1.26, 1.5, 2],
+    lead: 'square',
+    bass: 'triangle',
+    kick: 'boomchick',
+    bell: 1,
+    leadVol: 0.035,
+    pad: [1, 1.26, 1.5]
+  },
+  spooky: {
+    bpm: [96, 112],
+    roots: [110, 103.83, 98, 92.5],
+    arp: [1, 1.189, 1.414, 2],
+    lead: 'triangle',
+    bass: 'sine',
+    kick: 'half',
+    leadVol: 0.05,
+    pad: [1, 1.189, 1.414],
+    padVol: 0.035
+  },
+  desert: {
+    bpm: [116, 128],
+    roots: [110, 98, 87.31, 82.41],
+    arp: [1, 1.5, 2, 1.5],
+    lead: 'triangle',
+    bass: 'square',
+    kick: 'gallop',
+    leadVol: 0.05,
+    pad: [1, 1.26, 1.5]
+  },
+  surf: {
+    bpm: [140, 156],
+    roots: [146.83, 146.83, 196, 220],
+    arp: [1, 1.26, 1.5, 1.26],
+    lead: 'square',
+    bass: 'triangle',
+    kick: 'four',
+    hat: 1,
+    leadVol: 0.035,
+    pad: [1, 1.26, 1.5]
+  },
+  lounge: {
+    bpm: [92, 92],
+    roots: [130.81, 110, 146.83, 98],
+    arp: [1, 1.26, 1.5, 1.89],
+    lead: 'triangle',
+    bass: 'sine',
+    kick: 'soft',
+    leadVol: 0.03,
+    bassVol: 0.09,
+    bassLen: 0.3,
+    offbeat: 1,
+    pad: [1, 1.26, 1.5, 1.89],
+    padVol: 0.03
+  }
 };
 const MUSIC_BY_THEME = {
-  icerink: 'ice', ice: 'ice', frozenlot: 'ice', glacier: 'ice',
-  volcano: 'lava', kitchen: 'lava', scrapfactory: 'lava',
-  pinball: 'neon', neonstrip: 'neon', space: 'neon', warpzone: 'neon', stormroof: 'neon',
-  toyroom: 'toy', funfair: 'toy', backyard: 'toy',
-  haunted: 'spooky', swamp: 'spooky',
-  desert: 'desert', construction: 'desert',
-  beach: 'surf', carwash: 'surf', market: 'surf'
+  icerink: 'ice',
+  ice: 'ice',
+  frozenlot: 'ice',
+  glacier: 'ice',
+  volcano: 'lava',
+  kitchen: 'lava',
+  scrapfactory: 'lava',
+  pinball: 'neon',
+  neonstrip: 'neon',
+  space: 'neon',
+  warpzone: 'neon',
+  stormroof: 'neon',
+  toyroom: 'toy',
+  funfair: 'toy',
+  backyard: 'toy',
+  haunted: 'spooky',
+  swamp: 'spooky',
+  desert: 'desert',
+  construction: 'desert',
+  beach: 'surf',
+  carwash: 'surf',
+  market: 'surf'
 };
 const musicStyleFor = th => MUSIC_BY_THEME[(th && th.id) || ''] || 'metal';
 

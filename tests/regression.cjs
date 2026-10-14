@@ -2019,7 +2019,18 @@ test('every Gauntlet boss gimmick runs, telegraphs first and can hurt you', () =
       b.time += 0.05;
       aa.bossTick(0.05);
     }
-    const c = { save() {}, restore() {}, beginPath() {}, arc() {}, fill() {}, stroke() {}, moveTo() {}, lineTo() {}, setLineDash() {}, createRadialGradient: () => ({ addColorStop() {} }) };
+    const c = {
+      save() {},
+      restore() {},
+      beginPath() {},
+      arc() {},
+      fill() {},
+      stroke() {},
+      moveTo() {},
+      lineTo() {},
+      setLineDash() {},
+      createRadialGradient: () => ({ addColorStop() {} })
+    };
     aa.drawBossWorld(c);
   }
 });
@@ -2064,7 +2075,10 @@ test('championship: five matchdays, a table, a final and a champion', () => {
   }
   assert.equal(L.table.__me.pts, 15, 'five wins, fifteen points');
   const others = Object.entries(L.table).filter(([k]) => k !== '__me');
-  assert(others.every(([, r]) => r.p === 5), 'every rival plays every matchday');
+  assert(
+    others.every(([, r]) => r.p === 5),
+    'every rival plays every matchday'
+  );
   assert(L.final && !L.final.done, 'into the final');
   a.playLeague();
   assert(a.G.league.final, 'the final is on');
@@ -2127,6 +2141,38 @@ test('local duel: player 2 drives with the controller, player 1 keeps keyboard a
   assert(Number.isFinite(i.aimX) && i.th === 0, 'no controller: player 2 waits');
   a.startMatch('solo');
   assert(!a.G.local2, 'a normal match turns local mode off');
+});
+
+test('workshop contracts: three a day, progress adds up, pay out once, all three earn the Shift Done achievement', () => {
+  const { api: a } = runtime();
+  a.setGear({ bolts: 0, items: [], next: 1 });
+  const { list } = a.contractsToday();
+  assert.equal(list.length, 3);
+  assert.equal(new Set(list.map(c => c.id)).size, 3, 'three different jobs');
+  const all = {
+    win: 1,
+    rounds: 4,
+    dmg: 3000,
+    winGuns: 1,
+    winMelee: 1,
+    winNoGun: 1,
+    wave: 7,
+    league: 1,
+    daily: 1,
+    win2v2: 1,
+    winHard: 1,
+    winClean: 1,
+    winBrawl: 1
+  };
+  a.contractsUpdate(all);
+  a.contractsUpdate(all);
+  const st = a.contractsToday().st;
+  assert.equal(st.done.length, 3, 'two big matches finish every contract');
+  const bolts = a.GEAR().bolts;
+  assert(bolts > 0);
+  a.contractsUpdate(all);
+  assert.equal(a.GEAR().bolts, bolts, 'paid once');
+  assert(a.PROG().ach.includes('shift'));
 });
 
 console.log(`\n${passed} regression tests passed.`);

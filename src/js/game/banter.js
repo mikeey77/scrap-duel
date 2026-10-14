@@ -158,7 +158,11 @@ function rivalRadio(round) {
   if (G.mode !== 'solo' || G.teamSize === 2 || !G.oppName) return '';
   if (G.run && G.run.boss && G.run.bossDef) return G.run.bossDef.taunt;
   const r = rivalBook()[G.oppName] || { w: 0, l: 0 },
-    fill = s => s.replace(/\{me\}/g, G.name).replace(/\{w\}/g, r.w).replace(/\{l\}/g, r.l);
+    fill = s =>
+      s
+        .replace(/\{me\}/g, G.name)
+        .replace(/\{w\}/g, r.w)
+        .replace(/\{l\}/g, r.l);
   let set;
   if (round > 1) {
     const d = G.score[1] - G.score[0];

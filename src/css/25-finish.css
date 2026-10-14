@@ -717,3 +717,45 @@ body.photo #ac {
     opacity: 0;
   }
 }
+
+/* ---------- workshop contracts ---------- */
+.ct-box {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 300px;
+  padding: 10px 12px;
+  background: rgba(8, 13, 26, 0.78);
+  border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.ct {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 10px;
+  align-items: center;
+  font-size: 13px;
+}
+.ct b {
+  font: 700 13px var(--f-display);
+  color: var(--hazard);
+  white-space: nowrap;
+}
+.ct.done span {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.ct.done b {
+  color: var(--ok);
+}
+.ct-bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.ct-bar i {
+  display: block;
+  height: 100%;
+  background: var(--hazard);
+}

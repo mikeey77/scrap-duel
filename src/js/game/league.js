@@ -136,7 +136,10 @@ function leagueResult(won, tie, s) {
       if (fin) LEAGUE.final = { opp: fin, done: false };
       else {
         // you missed the final: the top two play it out
-        const [a, b] = simMatch(LEAGUE.rivals.find(r => r.name === s2[0].k), LEAGUE.rivals.find(r => r.name === s2[1].k));
+        const [a, b] = simMatch(
+          LEAGUE.rivals.find(r => r.name === s2[0].k),
+          LEAGUE.rivals.find(r => r.name === s2[1].k)
+        );
         LEAGUE.final = { opp: null, done: true, sim: `${s2[0].k} ${a}–${b} ${s2[1].k}` };
         LEAGUE.champion = a >= b ? s2[0].k : s2[1].k;
         html = leagueSeasonEnd();
@@ -159,6 +162,9 @@ function leagueSeasonEnd() {
   let chip = '';
   if (champ) {
     grantAch('league');
+    const titles = +(load('sd.leagueTitles') || 0) + 1;
+    store('sd.leagueTitles', titles);
+    if (titles >= 3) grantAch('dynasty');
     const k = chipKey(pick(CHIP_IDS), 3);
     addChip(k);
     chip = ` and a <b>${esc(chipName(k))}</b> chip`;
@@ -166,7 +172,7 @@ function leagueSeasonEnd() {
   LEAGUE.prize = { bolts, champ };
   return `<div class="lg-card ${champ ? 'champ' : ''}"><span class="label">League · season ${LEAGUE.season} is over</span>
     <h3>${champ ? 'Champions!' : `${esc(leagueName(LEAGUE.champion))} takes the title`}</h3>
-    <p>${champ ? 'You won the final. The trophy is yours, the confetti is everyone\'s.' : LEAGUE.final && LEAGUE.final.sim ? `Final: ${esc(LEAGUE.final.sim)}. You finished ${pos}${['st', 'nd', 'rd'][pos - 1] || 'th'}.` : 'So close. You lost the final.'}</p>
+    <p>${champ ? "You won the final. The trophy is yours, the confetti is everyone's." : LEAGUE.final && LEAGUE.final.sim ? `Final: ${esc(LEAGUE.final.sim)}. You finished ${pos}${['st', 'nd', 'rd'][pos - 1] || 'th'}.` : 'So close. You lost the final.'}</p>
     <p class="lg-prize"><i class="boltico" aria-hidden="true"></i> +${bolts} bolts${chip}</p>
     ${leagueTableHtml(true)}</div>`;
 }

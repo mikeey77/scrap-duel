@@ -130,7 +130,15 @@ function bossGimmick(v, dt) {
     if (ready()) {
       v.gimT = 9;
       for (let i = 0; i < 2 + rage; i++)
-        L.push({ k: 'strike', x: foe.x + foe.vx * 0.8 + rnd(-140, 140), y: foe.y + foe.vy * 0.8 + rnd(-140, 140), r: 80, t: 1.3 + i * 0.15, max: 1.3 + i * 0.15, own: v.idx });
+        L.push({
+          k: 'strike',
+          x: foe.x + foe.vx * 0.8 + rnd(-140, 140),
+          y: foe.y + foe.vy * 0.8 + rnd(-140, 140),
+          r: 80,
+          t: 1.3 + i * 0.15,
+          max: 1.3 + i * 0.15,
+          own: v.idx
+        });
       txt(v.x, v.y - 40, 'INCOMING!', '#4ea1ff', 0.9);
       sfx('alarm', foe.x, foe.y);
     }
@@ -138,7 +146,15 @@ function bossGimmick(v, dt) {
     v.dropT = (v.dropT || 0) - dt;
     if (v.dropT <= 0 && Math.hypot(v.vx, v.vy) > 60) {
       v.dropT = 0.9 / rage;
-      L.push({ k: 'fire', x: v.x - (v.vx / (Math.hypot(v.vx, v.vy) || 1)) * v.rad, y: v.y - (v.vy / (Math.hypot(v.vx, v.vy) || 1)) * v.rad, r: 42, t: 6, max: 6, own: v.idx });
+      L.push({
+        k: 'fire',
+        x: v.x - (v.vx / (Math.hypot(v.vx, v.vy) || 1)) * v.rad,
+        y: v.y - (v.vy / (Math.hypot(v.vx, v.vy) || 1)) * v.rad,
+        r: 42,
+        t: 6,
+        max: 6,
+        own: v.idx
+      });
     }
   } else if (gim === 'quake') {
     if (ready()) {
@@ -158,7 +174,16 @@ function bossGimmick(v, dt) {
       for (let i = 0; i < 2 + rage; i++) {
         const a = Math.random() * Math.PI * 2,
           r = rnd(120, 260);
-        L.push({ k: 'mine', x: clamp(foe.x + Math.cos(a) * r, 60, AW - 60), y: clamp(foe.y + Math.sin(a) * r, 60, AH - 60), r: 70, t: 14, max: 14, arm: 1, own: v.idx });
+        L.push({
+          k: 'mine',
+          x: clamp(foe.x + Math.cos(a) * r, 60, AW - 60),
+          y: clamp(foe.y + Math.sin(a) * r, 60, AH - 60),
+          r: 70,
+          t: 14,
+          max: 14,
+          arm: 1,
+          own: v.idx
+        });
       }
       txt(v.x, v.y - 40, 'MINES!', '#ffd257', 0.8);
     }
@@ -170,7 +195,12 @@ function bossGimmick(v, dt) {
           x = side === 0 ? 40 : side === 1 ? AW - 40 : rnd(80, AW - 80),
           y = side === 2 ? 40 : side === 3 ? AH - 40 : rnd(80, AH - 80);
         try {
-          const o = mkObj(pick(['couch', 'piano', 'fridge', 'tire', 'barrel'].filter(k => JUNK[k] || PROPS[k])), x, y, 0);
+          const o = mkObj(
+            pick(['couch', 'piano', 'fridge', 'tire', 'barrel'].filter(k => JUNK[k] || PROPS[k])),
+            x,
+            y,
+            0
+          );
           const tx = foe.x - x,
             ty = foe.y - y,
             td = Math.hypot(tx, ty) || 1;
@@ -204,11 +234,17 @@ function bossGimmick(v, dt) {
         c.vx += (qx / qd) * 760;
         c.vy += (qy / qd) * 760;
         const parts = c.insts.filter(I => I.alive && I.id !== 'cockpit');
-        for (let i = 0; i < 3 && parts.length; i++) hurtInst(c, pick(parts), 26, 'kin', undefined, undefined, undefined, undefined, f.own);
+        for (let i = 0; i < 3 && parts.length; i++)
+          hurtInst(c, pick(parts), 26, 'kin', undefined, undefined, undefined, undefined, f.own);
       }
     } else if (f.k === 'fire') {
       for (const c of B.cars)
-        if (!c.dead && teamOf(c) !== teamOf(B.cars[f.own] || c) && Math.hypot(c.x - f.x, c.y - f.y) < f.r && Math.random() < dt * 3) {
+        if (
+          !c.dead &&
+          teamOf(c) !== teamOf(B.cars[f.own] || c) &&
+          Math.hypot(c.x - f.x, c.y - f.y) < f.r &&
+          Math.random() < dt * 3
+        ) {
           const parts = c.insts.filter(I => I.alive && I.layer === 'b');
           if (parts.length) hurtInst(c, pick(parts), 6, 'fire', undefined, undefined, undefined, undefined, f.own);
         }

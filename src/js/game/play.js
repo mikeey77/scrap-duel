@@ -664,10 +664,10 @@ function simulate(dt) {
         : v.ctrl === 'local2'
           ? readPad2(v)
           : v.ctrl === 'bot'
-          ? botThink(v, dt)
-          : v.ctrl === 'remote'
-            ? takeRemote()
-            : ZERO_IN;
+            ? botThink(v, dt)
+            : v.ctrl === 'remote'
+              ? takeRemote()
+              : ZERO_IN;
     applyInput(v, i);
   }
   for (const v of B.cars) {
