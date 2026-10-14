@@ -218,3 +218,212 @@ body {
     background-position: 51px 0;
   }
 }
+
+/* ---------- motion audit (1.6): every action gets an answer ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* new content after a tab or mode switch slides up into place */
+  body:not(.reduced-motion) .swap:is(.hq-pane, #cbody, #hgOpts) > * {
+    animation: fin-up 0.32s cubic-bezier(0.2, 1, 0.4, 1) both;
+  }
+  body:not(.reduced-motion) .swap:is(.hq-pane, #cbody, #hgOpts) > *:nth-child(2) {
+    animation-delay: 0.04s;
+  }
+  body:not(.reduced-motion) .swap:is(.hq-pane, #cbody, #hgOpts) > *:nth-child(3) {
+    animation-delay: 0.08s;
+  }
+  /* picking another gear piece: it drops onto the stage and the ring spins up */
+  body:not(.reduced-motion) .wbx-stage.swap .wbx-part {
+    animation: fin-drop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  }
+  body:not(.reduced-motion) .wbx-stage.swap .wbx-ring {
+    animation:
+      fin-ring 0.6s cubic-bezier(0.2, 1, 0.3, 1) both,
+      wbx-spin 40s 0.6s linear infinite;
+  }
+  body:not(.reduced-motion) .wbx-stage.swap .wbx-lv b {
+    animation: num-bump 0.45s 0.15s cubic-bezier(0.3, 1.8, 0.5, 1);
+  }
+  /* things you just picked pop */
+  body:not(.reduced-motion) .popped {
+    animation: fin-pop 0.42s cubic-bezier(0.3, 1.8, 0.5, 1);
+  }
+  body:not(.reduced-motion) .fab-out.popped img {
+    animation: fin-reveal 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+  /* rows and cards answer the pointer */
+  body:not(.reduced-motion)
+    :is(
+      .wb-row,
+      .centry,
+      .stitem,
+      .fab-card,
+      .chipcell,
+      .lo-slot.on,
+      .relic,
+      .spc.pickme,
+      .chipbtn,
+      .csock:is(.empty, .full)
+    ) {
+    transition:
+      transform 0.16s cubic-bezier(0.3, 1.5, 0.5, 1),
+      border-color 0.15s,
+      background-color 0.15s,
+      box-shadow 0.18s;
+  }
+  body:not(.reduced-motion)
+    :is(
+      .wb-row,
+      .centry,
+      .stitem,
+      .fab-card,
+      .lo-slot.on,
+      .relic,
+      .spc.pickme,
+      .chipbtn,
+      .csock:is(.empty, .full)
+    ):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.9);
+  }
+  body:not(.reduced-motion)
+    :is(.wb-row, .centry, .stitem, .fab-card, .lo-slot.on, .relic, .spc.pickme, .chipbtn):active {
+    transform: translateY(0) scale(0.98);
+  }
+  body:not(.reduced-motion) .hq-paint button {
+    transition: transform 0.15s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  body:not(.reduced-motion) .hq-paint button:hover {
+    transform: scale(1.12);
+  }
+  /* bars fill up instead of appearing full */
+  body:not(.reduced-motion) :is(.spoils .xpbar2 i, .prog .xpbar i, .sp-x .xpbar2 i, .wbx-xp .xpbar2 i) {
+    animation: fin-fill 0.9s 0.25s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  }
+  /* rewards arrive one line at a time */
+  body:not(.reduced-motion) :is(.prog > div, .spoils > div) {
+    animation: fin-up 0.4s cubic-bezier(0.2, 1, 0.4, 1) both;
+  }
+  body:not(.reduced-motion) :is(.prog > div, .spoils > div):nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  body:not(.reduced-motion) :is(.prog > div, .spoils > div):nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  body:not(.reduced-motion) :is(.prog > div, .spoils > div):nth-child(4) {
+    animation-delay: 0.3s;
+  }
+  body:not(.reduced-motion) :is(.prog > div, .spoils > div):nth-child(5) {
+    animation-delay: 0.4s;
+  }
+  body:not(.reduced-motion) :is(.prog > div, .spoils > div):nth-child(n + 6) {
+    animation-delay: 0.5s;
+  }
+  body:not(.reduced-motion) .lvup {
+    animation: fin-glow 1.4s ease-in-out infinite;
+  }
+  body:not(.reduced-motion) .spoils .sp-g {
+    position: relative;
+    overflow: hidden;
+  }
+  body:not(.reduced-motion) .spoils .sp-g::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.25) 50%, transparent 65%);
+    animation: fin-shine 1.2s 0.8s ease-out both;
+    pointer-events: none;
+  }
+  /* draft: the card you take jumps, the others fall away */
+  body:not(.reduced-motion) #ovDraft .opt.taken {
+    animation: fin-take 0.32s cubic-bezier(0.3, 1.4, 0.5, 1) forwards;
+    z-index: 2;
+  }
+  body:not(.reduced-motion) #ovDraft .opt.passed {
+    animation: fin-pass 0.3s ease-in forwards;
+  }
+}
+.lvup {
+  font-style: normal;
+  font-weight: 700;
+  color: #ffd257;
+}
+.prog.up {
+  box-shadow:
+    0 0 0 1px rgba(255, 210, 87, 0.5),
+    0 0 24px -6px rgba(255, 210, 87, 0.5);
+}
+@keyframes fin-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes fin-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.7) rotate(-12deg);
+  }
+}
+@keyframes fin-ring {
+  from {
+    opacity: 0;
+    transform: rotate(-120deg) scale(0.8);
+  }
+}
+@keyframes fin-pop {
+  40% {
+    transform: scale(1.12);
+    filter: brightness(1.3);
+  }
+}
+@keyframes fin-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-200deg);
+    filter: brightness(3);
+  }
+  70% {
+    filter: brightness(1.6);
+  }
+}
+@keyframes fin-fill {
+  from {
+    width: 0;
+  }
+}
+@keyframes fin-glow {
+  50% {
+    text-shadow: 0 0 12px rgba(255, 210, 87, 0.9);
+  }
+}
+@keyframes fin-shine {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(120%);
+  }
+}
+@keyframes fin-take {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-22px) scale(1.06);
+    box-shadow:
+      0 0 0 2px var(--hazard),
+      0 0 50px -6px var(--hazard);
+  }
+}
+@keyframes fin-pass {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    transform: translateY(40px) rotate(4deg);
+    opacity: 0;
+  }
+}

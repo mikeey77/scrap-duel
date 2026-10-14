@@ -107,6 +107,7 @@ function toastCard(title, html) {
   }
   ov.innerHTML = `<div class="card infocard"><h2>${esc(title)}</h2>${html}<button class="btn" id="infoDone">Got it</button></div>`;
   ov.hidden = false;
+  swapIn(ov, 'entering');
   $('#infoDone').onclick = () => {
     ov.hidden = true;
     sfx('ui');
@@ -233,7 +234,20 @@ function renderHQ() {
   hqWire();
 }
 let hqLevelUp = null; // the piece that just levelled up flashes once
+let hqSeen = { tab: null, sel: null },
+  hqPop = null; // a selector that should pop once after the next render
 function hqWire() {
+  const pane = $('#ovWork .hq-pane');
+  if (pane && hqSeen.tab !== hqTab) swapIn(pane);
+  if (hqTab === 'gear' && hqSeen.sel !== wbSel && hqSeen.tab === hqTab) {
+    const st = $('#ovWork .wbx-stage');
+    if (st) swapIn(st);
+  }
+  hqSeen = { tab: hqTab, sel: wbSel };
+  if (hqPop) {
+    $$('#ovWork ' + hqPop).forEach(el => swapIn(el, 'popped'));
+    hqPop = null;
+  }
   if (hqLevelUp) {
     const el = $('#ovWork .wb-detail');
     if (el) el.classList.add('levelup');
@@ -256,6 +270,7 @@ function hqWire() {
   });
   on('[data-paint]', b => {
     G.paint = b.dataset.paint;
+    hqPop = `[data-paint="${G.paint}"], .hq-carimg img`;
     store('sd.paint', G.paint);
     if (typeof renderPaints === 'function' && $('#paints')) renderPaints();
     rerender('place');
@@ -332,8 +347,10 @@ function hqWire() {
     rerender('ui');
   });
   on('[data-chip]', b => {
-    if (gearSocket(g, wbSock, b.dataset.chip))
+    if (gearSocket(g, wbSock, b.dataset.chip)) {
       toast(`${chipName(b.dataset.chip)} plugged into ${MOD[g.id].name}`, true);
+      hqPop = `[data-sock="${wbSock}"]`;
+    }
     wbSock = null;
     rerender('place');
   });
@@ -396,6 +413,7 @@ function hqWire() {
   on('[data-fab]', b => {
     const made = fabricate(b.dataset.fab);
     if (made) {
+      hqPop = '.fab-out';
       hqFabLast = made;
       wbSel = made.u;
       sfx('reveal');
@@ -410,6 +428,7 @@ function hqWire() {
   // looks
   on('.stitem', b => {
     const tab = hqTab;
+    hqPop = `.stitem[data-id="${b.dataset.id}"], .hq-carimg img`;
     if (tab === 'stickers') {
       const st = STICKER[b.dataset.id];
       if (!stickerUnlocked(st)) return sfx('remove');

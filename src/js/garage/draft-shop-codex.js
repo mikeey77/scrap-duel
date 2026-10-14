@@ -227,7 +227,19 @@ function openDraft(fresh = true) {
     setTimeout(() => sfx('legend'), 500);
   }
   opts.forEach((o, i) => setTimeout(() => sfx('flip'), 220 * i + 100));
-  $$('#ovDraft .opt').forEach(b => b.addEventListener('click', () => takeOption(opts[+b.dataset.i])));
+  $$('#ovDraft .opt').forEach(b =>
+    b.addEventListener('click', () => {
+      if ($('#ovDraft').classList.contains('picking')) return;
+      if (calmMotion()) return takeOption(opts[+b.dataset.i]);
+      $('#ovDraft').classList.add('picking');
+      b.classList.add('taken');
+      $$('#ovDraft .opt').forEach(x => x !== b && x.classList.add('passed'));
+      setTimeout(() => {
+        $('#ovDraft').classList.remove('picking');
+        takeOption(opts[+b.dataset.i]);
+      }, 320);
+    })
+  );
   $('#btnReroll').addEventListener('click', () => {
     if (G.coins < cost) return;
     sfx('ui');
@@ -941,6 +953,7 @@ function openCodex() {
     b.addEventListener('click', () => {
       codexTab = b.dataset.t;
       openCodex();
+      swapIn($('#cbody'));
     })
   );
   $$('#ovCodex .chip').forEach(b =>
@@ -948,6 +961,7 @@ function openCodex() {
       codexCat = b.dataset.c;
       $$('#ovCodex .chip').forEach(x => x.setAttribute('aria-pressed', x.dataset.c === codexCat));
       renderCodex();
+      swapIn($('#cbody'));
     })
   );
 }

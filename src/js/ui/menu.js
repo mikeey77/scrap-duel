@@ -177,6 +177,7 @@ const menuLeave = () => {
 function menuOpts() {
   const el = $('#hgOpts');
   if (!el) return;
+  swapIn(el);
   const m = MENU_MODES.find(x => x.id === menuMode),
     seg = (id, items, cur, attr) =>
       `<div class="seg" id="${id}">${items.map(([v, n]) => `<button data-${attr}="${v}" aria-pressed="${v === cur}">${n}</button>`).join('')}</div>`;

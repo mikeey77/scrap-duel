@@ -5,8 +5,13 @@ const hangarOn = () => {
   const m = $('#ovMenu');
   return m && !m.hidden && m.querySelector('.hangar:not(.resume)');
 };
-const calmMotion = () =>
-  document.body.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+const calmMotion = () => {
+  try {
+    return document.body.classList.contains('reduced-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch (e) {
+    return true; // no real page (tests): skip the motion
+  }
+};
 /** One frame of the hangar effects. */
 function hangarFxTick(dt) {
   if (!hangarOn()) return;
@@ -101,4 +106,13 @@ function hangarTicker(text) {
   const el = $('#hgTick');
   if (!el) return;
   el.innerHTML = `<span>${esc(text)}</span>`; // one line at a time, sliding in like a stadium board
+}
+/** Replays a short "arrive" animation on an element (tab content, a selection, a pick). */
+function swapIn(el, cls = 'swap') {
+  if (!el || calmMotion()) return;
+  el.classList.remove(cls);
+  void el.offsetWidth; // restart the animation
+  el.classList.add(cls);
+  clearTimeout(el._swapT);
+  el._swapT = setTimeout(() => el.classList.remove(cls), 700);
 }

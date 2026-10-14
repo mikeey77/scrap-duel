@@ -669,6 +669,7 @@ function showWalletHelp() {
     </dl>
     <button class="btn" id="wlDone">Got it</button></div>`;
   ov.hidden = false;
+  swapIn(ov, 'entering');
   $('#wlDone').onclick = () => {
     ov.hidden = true;
     store('sd.walletSeen', '1');
