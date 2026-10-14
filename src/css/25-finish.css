@@ -596,3 +596,72 @@ body {
 .lg-menu .lg-table {
   max-width: 100%;
 }
+
+/* ---------- rival radio and album ---------- */
+.vs-radio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: rgba(5, 9, 18, 0.7);
+  border: 1px solid color-mix(in srgb, var(--pc) 55%, transparent);
+  max-width: 560px;
+}
+.rd-who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 11px var(--f-display);
+  color: var(--pc);
+}
+.rd-who i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pc);
+  box-shadow: 0 0 8px var(--pc);
+}
+.vs-radio q {
+  font-size: 16px;
+  font-style: italic;
+  quotes: '“' '”';
+}
+@media (prefers-reduced-motion: no-preference) {
+  body:not(.reduced-motion) .vs-radio {
+    animation: fin-up 0.45s 0.5s cubic-bezier(0.2, 1, 0.4, 1) both;
+  }
+  body:not(.reduced-motion) .rd-who i {
+    animation: lvblink 0.8s steps(2) infinite;
+  }
+}
+.rv-album {
+  margin-top: 14px;
+}
+.rv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+.rv {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--pc);
+}
+.rv b {
+  font: 700 14px var(--f-display);
+}
+.rv-score {
+  font: 700 22px var(--f-display);
+}
+.rv-score i {
+  font-style: normal;
+  color: var(--muted);
+  margin: 0 4px;
+}

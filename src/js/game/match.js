@@ -822,7 +822,8 @@ function showVS(cfg, done) {
     <div class="mid">VS</div>
     <div class="side r"><img src="${img(op)}" alt="${esc(op.name)}'s car"><span class="nm" style="color:${op.paint}">${esc(op.name)}</span><span class="ttl">${title(op)}</span><span class="small">${G.score[1]} points</span></div>
     <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">${G.run ? `Scrap Gauntlet · wave ${cfg.round}${G.run.boss ? ' · BOSS' : ''}` : `Round ${cfg.round} of ${ROUNDS} · ${stakeLine(cfg.round)}`}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span>
-    ${S ? `<div class="vssp" style="--sc:${S.col}"><span class="spi">${S.icon}</span><div><b>SPECIAL ROUND · ${esc(S.name)}</b><span>${esc(S.blurb)}</span></div></div>` : ''}</div></div>`;
+    ${S ? `<div class="vssp" style="--sc:${S.col}"><span class="spi">${S.icon}</span><div><b>SPECIAL ROUND · ${esc(S.name)}</b><span>${esc(S.blurb)}</span></div></div>` : ''}
+    ${(line => (line ? `<div class="vs-radio" style="--pc:${op.paint}"><span class="rd-who"><i></i>${esc(op.name)} on the radio</span><q>${esc(line)}</q></div>` : ''))(rivalRadio(cfg.round))}</div></div>`;
   $('#ovVS').hidden = false;
   sfx('vs');
   setTimeout(
@@ -1157,6 +1158,7 @@ function showFinal() {
     tie = G.format === 'lives' ? G.lives[0] === G.lives[1] : s[0] === s[1];
   const prog = progressMatch({ won });
   if (G.mode === 'mp' && !G.mpCoop) h2hRecord(G.oppName, won, tie);
+  if (G.mode === 'solo' && !G.run && G.teamSize !== 2) rivalRecord(G.oppName, won, tie);
   // new achievements: team wins and beating a Hard bot
   if (won && G.teamSize === 2) grantAch('road1');
   if (won && G.mode === 'solo' && !G.run && G.diff === 2) grantAch('road3');

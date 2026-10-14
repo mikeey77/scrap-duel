@@ -198,8 +198,20 @@ function hqLookHtml(tab) {
       : '';
   return `${hint}<div class="stgrid">${grid}</div>`;
 }
+function hqRivalsHtml() {
+  const book = Object.entries(rivalBook()).sort((a, b) => b[1].w + b[1].l - (a[1].w + a[1].l));
+  if (!book.length) return '';
+  return `<div class="rv-album"><span class="label">Rivals · ${book.length}</span><div class="rv-grid">${book
+    .map(([name, r]) => {
+      const bot = BOTS.find(b => b.name === name),
+        col = bot ? bot.paint : '#9aa3ab',
+        mood = r.w > r.l ? 'You own this one' : r.l > r.w ? 'Has your number' : 'Dead even';
+      return `<div class="rv" style="--pc:${col}"><b>${esc(name)}</b><span class="rv-score">${r.w}<i>–</i>${r.l}</span><span class="small">${mood}</span></div>`;
+    })
+    .join('')}</div></div>`;
+}
 function hqProfileHtml() {
-  return `<div class="hq-prof">${badgeEditorHTML()}
+  return `<div class="hq-prof">${badgeEditorHTML()}${hqRivalsHtml()}
     <div><span class="label">Achievements · ${PROG.ach.length}/${Object.keys(ACHIEVEMENTS).length}</span><div class="achlist2">${Object.entries(
       ACHIEVEMENTS
     )

@@ -100,3 +100,72 @@ function stepBubbles(dt) {
   for (const b of B.bubbles) b.t -= dt;
   B.bubbles = B.bubbles.filter(b => b.t > 0);
 }
+
+/* ---------- rivals remember you ----------
+   Every bot keeps your head-to-head record (sd.rivalbook). On the VS screen it radios in with a line that fits:
+   a first meeting, a grudge, revenge, or the score in this match. */
+function rivalBook() {
+  try {
+    return JSON.parse(load('sd.rivalbook') || '{}') || {};
+  } catch (e) {
+    return {};
+  }
+}
+function rivalRecord(name, won, tie) {
+  if (!name) return;
+  const book = rivalBook(),
+    r = (book[name] = book[name] || { w: 0, l: 0, d: 0 });
+  if (tie) r.d++;
+  else if (won) r.w++;
+  else r.l++;
+  r.last = tie ? 'd' : won ? 'w' : 'l';
+  r.at = Date.now();
+  store('sd.rivalbook', book);
+}
+const RADIO = {
+  first: [
+    'First time, {me}? Try not to cry when it is over.',
+    'Fresh meat. Nice bumper. I am keeping it.',
+    'Never heard of you, {me}. After today, nobody will.'
+  ],
+  meLead: [
+    '{me} again. You got lucky {w} times. Luck runs out.',
+    'I studied your car all week, {me}. I have notes. Mean ones.',
+    '{w} to {l}? I have been sandbagging. Obviously.'
+  ],
+  themLead: [
+    'Back for more, {me}? That makes it {l} to {w} for me.',
+    'There is a {me}-shaped dent on my trophy shelf.',
+    'Ah, {me}. My favourite source of spare parts.'
+  ],
+  revenge: [
+    'Last time you went home in a bucket, {me}.',
+    'You want revenge? Take a number.',
+    'I have your old hubcap on my wall, {me}.'
+  ],
+  owed: [
+    'You beat me last time. I have not slept since.',
+    'Remember last time? I do. Every night.',
+    'Rematch, {me}. And this time I read the manual.'
+  ],
+  ahead: ['Score check: me. Just me.', 'Keep this up and I will name a part after you.'],
+  behind: ['That was a warm-up. This one counts.', 'Fine. Now I am angry.'],
+  even: ['All square. Not for long.', 'Tied. I hate ties. Ties are for suits.'],
+  final: ['Final round, double points, double tears.', 'Last round. Make it pretty for the replay.']
+};
+/** The rival's line for the VS screen, or '' in team and online matches. */
+function rivalRadio(round) {
+  if (G.mode !== 'solo' || G.teamSize === 2 || !G.oppName) return '';
+  if (G.run && G.run.boss && G.run.bossDef) return G.run.bossDef.taunt;
+  const r = rivalBook()[G.oppName] || { w: 0, l: 0 },
+    fill = s => s.replace(/\{me\}/g, G.name).replace(/\{w\}/g, r.w).replace(/\{l\}/g, r.l);
+  let set;
+  if (round > 1) {
+    const d = G.score[1] - G.score[0];
+    set = round === ROUNDS ? RADIO.final : d > 0 ? RADIO.ahead : d < 0 ? RADIO.behind : RADIO.even;
+  } else if (!r.w && !r.l) set = RADIO.first;
+  else if (r.last === 'l') set = RADIO.revenge;
+  else if (r.last === 'w') set = Math.random() < 0.5 ? RADIO.owed : r.w > r.l ? RADIO.meLead : RADIO.themLead;
+  else set = r.w >= r.l ? RADIO.meLead : RADIO.themLead;
+  return fill(pick(set));
+}
