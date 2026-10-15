@@ -15,7 +15,7 @@ const MENU_MODES = [
     id: 'world',
     name: 'Open world',
     col: '#9be15d',
-    line: 'Test mode: drive a big generated map, wreck raiders, find camps.'
+    line: 'A huge map to explore: loot buildings, take missions, wreck raiders. Alone or with a friend.'
   }
 ];
 const TAGLINES = [
@@ -89,7 +89,10 @@ function showMenu() {
     lo = GEAR.loadout.map(gearById).filter(Boolean);
   const stat = id =>
     id === 'world'
-      ? 'Test · beta'
+      ? (sv =>
+          sv
+            ? `${sv.done} missions · ${Object.values(sv.inv).reduce((a, b) => a + b, 0)} parts`
+            : 'New · alone or co-op')(owSaved())
       : id === 'run'
         ? runBest()
           ? `Best: wave ${runBest()}`
@@ -268,7 +271,7 @@ function menuOpts() {
       'rt'
     )}</div>${G.runTeams === 2 ? `<div class="hg-o"><span class="mlab">Your partner</span>${seg('partnerSeg', PARTNER_STYLES, G.partnerStyle, 'p')}</div>` : ''}<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.${G.runTeams === 2 ? ' With a partner, every wave brings two rivals.' : ''}</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
     world:
-      (sv => `<p class="small">Test mode: one big map built from every arena. Loot buildings for parts, rebuild your car at camps, take missions, wreck raiders and bosses. To play together: Friends → Host a room → Open world.</p>
+      (sv => `<p class="small">One big map built from every arena, with day and night. Loot buildings for parts, rebuild your car at camps, take missions, wreck raiders and bosses. To play together: Friends → Host a room → Open world.</p>
       ${owCarPicker('owCar')}
       <div class="mrow">${sv ? `<button class="btn hg-go2" id="owCont">Continue · ${sv.done} missions, ${Object.values(sv.inv).reduce((a, b) => a + b, 0)} parts</button>` : ''}<button class="btn ${sv ? 'ghost' : 'hg-go2'}" id="owPlay">${sv ? 'New world' : 'Enter the open world'}</button></div>`)(
         owSaved()
@@ -431,7 +434,7 @@ const LOBBY_PRESETS = [
   {
     id: 'world',
     name: 'Open world',
-    line: 'Explore together: loot buildings, take missions, wreck raiders. (test)',
+    line: 'Explore together: loot buildings, take missions, wreck raiders.',
     world: true
   }
 ];

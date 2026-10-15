@@ -1,4 +1,4 @@
-// Open world (test mode): one big generated map made of the arena themes.
+// Open world: one big generated map made of the arena themes.
 // The world is cut into 1000×1000 chunks. A chunk is generated from the world seed the first time you come
 // near it (props, ruins, ramps, pickups, its own ground picture) and parked again when you drive away, so only
 // the area around you is simulated. Biomes are Voronoi regions: cold in the north, hot in the south, towns

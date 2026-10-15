@@ -11,31 +11,31 @@
     <meta name="theme-color" content="#0b1324" />
     <meta property="og:title" content="Scrap Duel" />
     <meta property="og:description" content="Build a battle car from scrap. Then wreck someone else's." />
-    <meta property="og:image" content="/img/battle.webp" />
-    <link rel="icon" href="/img/icon.svg" type="image/svg+xml" />
-    <link rel="preload" href="/fonts/chakra-petch-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <meta property="og:image" content="img/battle.webp" />
+    <link rel="icon" href="img/icon.svg" type="image/svg+xml" />
+    <link rel="preload" href="fonts/chakra-petch-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
     <style>
       @font-face {
         font-family: 'Chakra Petch';
-        src: url('/fonts/chakra-petch-latin-700-normal.woff2') format('woff2');
+        src: url('fonts/chakra-petch-latin-700-normal.woff2') format('woff2');
         font-weight: 700;
         font-display: swap;
       }
       @font-face {
         font-family: 'Barlow Semi Condensed';
-        src: url('/fonts/barlow-semi-condensed-latin-400-normal.woff2') format('woff2');
+        src: url('fonts/barlow-semi-condensed-latin-400-normal.woff2') format('woff2');
         font-weight: 400;
         font-display: swap;
       }
       @font-face {
         font-family: 'Barlow Semi Condensed';
-        src: url('/fonts/barlow-semi-condensed-latin-500-normal.woff2') format('woff2');
+        src: url('fonts/barlow-semi-condensed-latin-500-normal.woff2') format('woff2');
         font-weight: 500;
         font-display: swap;
       }
       @font-face {
         font-family: 'Barlow Semi Condensed';
-        src: url('/fonts/barlow-semi-condensed-latin-600-normal.woff2') format('woff2');
+        src: url('fonts/barlow-semi-condensed-latin-600-normal.woff2') format('woff2');
         font-weight: 600;
         font-display: swap;
       }
@@ -443,6 +443,65 @@
         }
       }
 
+      /* open world */
+      .world .head {
+        max-width: 720px;
+      }
+      .world-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+        gap: 16px;
+      }
+      .world-grid .side {
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+      .world-grid .shot img {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+      }
+      .world-feats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 28px 40px;
+        margin: 48px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .world-feats li {
+        border-top: 2px solid var(--line);
+        padding-top: 14px;
+        color: var(--steel);
+      }
+      .world-feats b {
+        display: block;
+        margin-bottom: 4px;
+        font: 700 20px/1.2 var(--display);
+        color: var(--paper);
+      }
+      .world-feats li:nth-child(-n + 3) {
+        border-top-color: var(--amber);
+      }
+      @media (max-width: 900px) {
+        .world-grid {
+          grid-template-columns: 1fr;
+        }
+        .world-grid .side {
+          grid-template-columns: 1fr 1fr;
+        }
+        .world-feats {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 560px) {
+        .world-grid .side,
+        .world-feats {
+          grid-template-columns: 1fr;
+        }
+      }
+
       /* what's new */
       .news {
         display: grid;
@@ -606,8 +665,9 @@
   <body>
     <header class="top">
       <div class="wrap">
-        <a class="logo" href="#"><img src="/img/icon.svg" alt="" />SCRAP <b>DUEL</b></a>
+        <a class="logo" href="#"><img src="img/icon.svg" alt="" />SCRAP <b>DUEL</b></a>
         <nav aria-label="Sections">
+          <a href="#world">Open world</a>
           <a href="#how">How it plays</a>
           <a href="#modes">Modes</a>
           <a href="#new">What's new</a>
@@ -623,8 +683,8 @@
           <div>
             <h1>Build a battle car from scrap. Then wreck someone else's.</h1>
             <p class="lede">
-              Draft parts, bolt them onto a grid and drive what you made into a bot, a boss or a friend. Every round you
-              get new scrap and a chance to build something better.
+              Draft parts, bolt them onto a grid and drive what you made into a bot, a boss or a friend. Or take it out
+              into the open world and come back with a bootful of parts.
             </p>
             <div class="get">
               <a class="btn" href="{{SETUP_URL}}">
@@ -642,7 +702,7 @@
           <div>
             <div class="screen">
               <img
-                src="/img/battle.webp"
+                src="img/battle.webp"
                 width="1600"
                 height="1000"
                 alt="Two scrap cars fighting in a factory arena, with health bars and commentary"
@@ -653,6 +713,57 @@
       </div>
       <div class="hazard" role="presentation"></div>
 
+      <section id="world" class="world">
+        <div class="wrap">
+          <div class="head">
+            <h2>Then drive off the map</h2>
+            <p>
+              The open world stitches every arena into one huge map. Loot buildings for parts, rebuild your car at
+              camps, take jobs and wreck raiders, alone or with a friend. It saves where you left it.
+            </p>
+          </div>
+          <div class="world-grid">
+            <button class="shot" type="button" data-full="img/ow-night.webp">
+              <img
+                src="img/ow-night.webp"
+                loading="lazy"
+                width="1600"
+                height="1000"
+                alt="Night on the beach: headlights light up a raider camp around its fire"
+              />
+            </button>
+            <div class="side">
+              <button class="shot" type="button" data-full="img/ow-camp.webp">
+                <img
+                  src="img/ow-camp.webp"
+                  loading="lazy"
+                  width="1600"
+                  height="1000"
+                  alt="A camp's mission board and the list of camps you can travel to"
+                />
+              </button>
+              <button class="shot" type="button" data-full="img/ow-loot.webp">
+                <img
+                  src="img/ow-loot.webp"
+                  loading="lazy"
+                  width="1600"
+                  height="1000"
+                  alt="A looted building with rare parts glowing on the floor"
+                />
+              </button>
+            </div>
+          </div>
+          <ul class="world-feats">
+            <li><b>Loot</b>Break crates and safes in buildings. Parts hop out, rare ones send up a beam.</li>
+            <li><b>Field garage</b>At any camp, open the garage and rebuild with what you found.</li>
+            <li><b>Jobs</b>Deliveries, raider camps, road races and every fourth job a boss.</li>
+            <li><b>Raiders</b>Roaming gangs, armoured convoys and bounty hunters who come looking for you.</li>
+            <li><b>Day and night</b>At night more raiders are out and the crates hold better parts.</li>
+            <li><b>Co-op</b>Same map, same jobs, shared rewards: every find also drops a part for your friend.</li>
+          </ul>
+        </div>
+      </section>
+
       <section id="how">
         <div class="wrap">
           <div class="head">
@@ -661,9 +772,9 @@
           </div>
           <div class="flow">
             <figure>
-              <button class="shot" type="button" data-full="/img/draft.webp">
+              <button class="shot" type="button" data-full="img/draft.webp">
                 <img
-                  src="/img/draft.webp"
+                  src="img/draft.webp"
                   loading="lazy"
                   width="1600"
                   height="1000"
@@ -676,9 +787,9 @@
               </figcaption>
             </figure>
             <figure>
-              <button class="shot" type="button" data-full="/img/garage.webp">
+              <button class="shot" type="button" data-full="img/garage.webp">
                 <img
-                  src="/img/garage.webp"
+                  src="img/garage.webp"
                   loading="lazy"
                   width="1600"
                   height="1000"
@@ -691,9 +802,9 @@
               </figcaption>
             </figure>
             <figure>
-              <button class="shot" type="button" data-full="/img/battle-ice.webp">
+              <button class="shot" type="button" data-full="img/battle-ice.webp">
                 <img
-                  src="/img/battle-ice.webp"
+                  src="img/battle-ice.webp"
                   loading="lazy"
                   width="1600"
                   height="1000"
@@ -714,8 +825,8 @@
       <section id="modes">
         <div class="wrap">
           <div class="head">
-            <h2>Six ways to play</h2>
-            <p>Everything except online Friends matches works without an internet connection.</p>
+            <h2>Seven ways to play</h2>
+            <p>Everything except online matches works without an internet connection.</p>
           </div>
           <div class="modes">
             <ul class="modelist">
@@ -759,28 +870,34 @@
                 >
               </li>
               <li>
+                <b>Open world</b>
+                <span
+                  >One huge map to explore with loot, camps, jobs, raiders and bosses. Saves as you go.<em class="tag"
+                    >Alone or co-op</em
+                  ></span
+                >
+              </li>
+              <li>
                 <b>Friends</b>
                 <span
-                  >Online with a 4-letter room code (1v1 or 2v2), or a local duel on one PC with a controller.<em
-                    class="tag"
-                    >Online or couch</em
-                  ></span
+                  >Online with a 4-letter room code (1v1, 2v2 or the open world together), or a local duel on one PC
+                  with a controller.<em class="tag">Online or couch</em></span
                 >
               </li>
             </ul>
             <figure style="margin: 0">
-              <button class="shot" type="button" data-full="/img/team-battle.webp">
+              <button class="shot" type="button" data-full="img/team-battle.webp">
                 <img
-                  src="/img/team-battle.webp"
+                  src="img/team-battle.webp"
                   loading="lazy"
                   width="1600"
                   height="1000"
                   alt="A 2v2 battle on the ice rink: you and a bot partner against two bots"
                 />
               </button>
-              <button class="shot" type="button" data-full="/img/menu.webp" style="margin-top: 16px">
+              <button class="shot" type="button" data-full="img/menu.webp" style="margin-top: 16px">
                 <img
-                  src="/img/menu.webp"
+                  src="img/menu.webp"
                   loading="lazy"
                   width="1600"
                   height="1000"
@@ -800,9 +917,9 @@
       <section id="garage">
         <div class="wrap garage">
           <div>
-            <button class="shot" type="button" data-full="/img/garage-hq.webp">
+            <button class="shot" type="button" data-full="img/garage-hq.webp">
               <img
-                src="/img/garage-hq.webp"
+                src="img/garage-hq.webp"
                 loading="lazy"
                 width="1600"
                 height="1000"
