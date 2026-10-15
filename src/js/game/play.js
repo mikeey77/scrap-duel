@@ -636,6 +636,16 @@ function updateCam(rdt) {
       cam.tz = G.phase === 'wait' ? 1.3 : 1.15;
     }
   }
+  // trailer capture: a scripted camera (B.cinema.cam returns where to look)
+  if (B.cinema && B.cinema.cam) {
+    const o = B.cinema.cam(B, cam, rdt);
+    if (o) {
+      cam.tx = o.x;
+      cam.ty = o.y;
+      cam.tz = o.z;
+      if (o.snap) ((cam.x = o.x), (cam.y = o.y), (cam.z = o.z));
+    }
+  }
   // keep the camera inside the arena
   const k = 1 - Math.exp(-4 * rdt);
   cam.z += (cam.tz - cam.z) * k;

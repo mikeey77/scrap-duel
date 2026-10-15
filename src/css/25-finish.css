@@ -1125,3 +1125,14 @@ body.in-world #bayIntel {
 #cineFx[hidden] {
   display: none;
 }
+
+/* trailer capture: the arena fills the window, nothing on top but the big-moment layer */
+body.cinema :is(#hud, #abtns, #waitcard, .ctlhint, #toast, #owCampBtn, .comm, #commBox, #fpsMeter) {
+  visibility: hidden !important;
+}
+body.cinema #arena {
+  position: fixed !important;
+  inset: 0 !important;
+  border-radius: 0 !important;
+  z-index: 5;
+}

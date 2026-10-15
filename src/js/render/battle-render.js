@@ -1169,22 +1169,40 @@ function drawArena() {
     c.fillStyle = `rgba(255,255,255,${Math.min(0.92, v.blind * 0.5)})`;
     c.fillRect(0, 0, view.w, view.h);
   }
-  if (v && !B.demo && !B.photo) drawHitArrows(c, v, s);
+  if (v && !B.demo && !B.photo && !B.cinema) drawHitArrows(c, v, s);
   if (B.special === 'night') drawNight(c, s);
   if (B.ow) owSky(c, s);
   drawGimmickOverlay(c, s);
   drawVignette(c);
-  if (v && !B.demo && !B.replay && !B.photo) lowHealth(c, v);
+  if (v && !B.demo && !B.replay && !B.photo && !B.cinema) lowHealth(c, v);
   if (B.ring && v && !v.dead && Math.hypot(v.x - AW / 2, v.y - AH / 2) > B.ring.r) {
     c.strokeStyle = `rgba(255,80,40,${0.35 + Math.sin(ANIM * 10) * 0.2})`;
     c.lineWidth = 14;
     c.strokeRect(0, 0, view.w, view.h);
   }
+  if (!B.demo) cineMoments();
   if (B.demo) {
     // behind the menu the hangar has its own scoreboard; nothing should show through other screens either
+  } else if (B.cinema) {
+    // trailer capture: no HUD at all
   } else if (B.ow) {
     if (!B.photo) owHUD(c);
   } else if (!B.photo) drawHUD(c);
+}
+/** Countdown beats and banners go to the big-moment layer (also when the HUD is hidden). */
+function cineMoments() {
+  if (B.seq === 'count') {
+    // the beats themselves play on the big-moment layer
+    const n = B.seqT < 0.9 ? '3' : B.seqT < 1.8 ? '2' : B.seqT < 2.7 ? '1' : 'GO';
+    if (B._cnt !== n && !B.replay) {
+      B._cnt = n;
+      cineCount(n);
+    }
+  }
+  if (B.banner && !B.banner._c && !B.replay) {
+    B.banner._c = 1;
+    cineBanner(B.banner);
+  }
 }
 /** Pulsing diamond over the rival's cockpit: the thing you are trying to destroy. */
 function drawCockpitMarker(c) {
@@ -1446,14 +1464,6 @@ function drawHUD(c) {
       x += w + 6;
     }
   }
-  if (B.seq === 'count') {
-    // the beats themselves play on the big-moment layer
-    const n = B.seqT < 0.9 ? '3' : B.seqT < 1.8 ? '2' : B.seqT < 2.7 ? '1' : 'GO';
-    if (B._cnt !== n && !B.replay) {
-      B._cnt = n;
-      cineCount(n);
-    }
-  }
   if (B.seq === 'in' && G.phase === 'battle') {
     c.textAlign = 'center';
     c.textBaseline = 'middle';
@@ -1467,10 +1477,6 @@ function drawHUD(c) {
     c.font = '600 18px "Barlow Semi Condensed", sans-serif';
     c.fillStyle = '#bff';
     c.fillText('Locking coordinates…', W / 2, H * 0.78);
-  }
-  if (B.banner && !B.banner._c && !B.replay) {
-    B.banner._c = 1;
-    cineBanner(B.banner);
   }
   if (B.net === 'client' && B.lag > 1.5) {
     c.textAlign = 'center';

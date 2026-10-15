@@ -480,6 +480,21 @@ function owAttach(ch) {
   if (B.net !== 'client') B.pk.push(...ch.pk.filter(p => !OW.gone.has(p.uid)));
 }
 /** Ground pictures are painted one chunk per frame, nearest first, two chunks ahead of the camera. */
+/** Paint every chunk ground within r chunks of a spot right now (trailer capture and wide shots). */
+function owPrepaint(x, y, r = 3) {
+  const cx = Math.floor(x / OW_CH),
+    cy = Math.floor(y / OW_CH);
+  for (let j = -r; j <= r; j++)
+    for (let i = -r; i <= r; i++) {
+      const a = cx + i,
+        b = cy + j;
+      if (a < 0 || b < 0 || a >= OW_N || b >= OW_N) continue;
+      const k = owKey(a, b);
+      let ch = OW.chunks.get(k);
+      if (!ch) OW.chunks.set(k, (ch = owGenChunk(a, b)));
+      if (!ch.canvas) owGround(ch);
+    }
+}
 function owPaintAhead(x, y) {
   const cx = Math.floor(x / OW_CH),
     cy = Math.floor(y / OW_CH);
