@@ -44,10 +44,11 @@ function owFxStep(dt) {
   // the clock; the host's clock wins in co-op (it travels with the snapshot)
   const was = owIsNight();
   OW.clock = (OW.clock || OW_DAY * 0.12) + dt;
-  if (was !== owIsNight())
-    OW.toast = owIsNight()
-      ? { text: 'Night falls', sub: 'More raiders on the road, and the crates hold better parts', t: 0, col: '#8fb4ff' }
-      : { text: 'Morning', sub: 'The raiders crawl back to their camps', t: 0, col: '#ffd257' };
+  if (was !== owIsNight()) {
+    if (owIsNight())
+      cineTitle('Night falls', 'More raiders on the road, better parts in the crates', '#8fb4ff', 'info');
+    else cineTitle('Morning', 'The raiders crawl back to their camps', '#ffd257', 'info');
+  }
   // parts hopping out of a crate
   for (const p of B.pk) if (p.pop && (p.pop.t += dt) > 0.55) p.pop = null;
   // loot drifts toward you when you are close (the host moves it; the client sees it in the snapshot)

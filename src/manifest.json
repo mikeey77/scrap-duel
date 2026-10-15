@@ -58,6 +58,7 @@
     "js/game/objectives.js",
     "js/game/banter.js",
     "js/render/battle-render.js",
+    "js/render/cine.js",
     "js/game/play.js",
     "js/audio/sfx.js",
     "js/audio/voice.js",

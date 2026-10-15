@@ -972,10 +972,10 @@ function drawBP() {
       if (t >= 1) G.spin = null;
     }
   }
-  // one hull: a shadow and a dark outline behind every chassis cell, so the blocks read as one car
+  // one hull: a shadow and a steel-grey outline behind every chassis cell, so the blocks read as one car
   for (const [dx, dy, col, pad] of [
     [cell * 0.08, cell * 0.12, 'rgba(0,0,0,.3)', 0],
-    [0, 0, '#0a0d12', cell * 0.06]
+    [0, 0, '#2b3542', cell * 0.05]
   ]) {
     c.fillStyle = col;
     for (const e of G.base.values())

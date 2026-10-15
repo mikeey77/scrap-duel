@@ -2,6 +2,19 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.5.0 · Showtime · 2026-10-15
+
+**Every big moment now hits like one.**
+
+- **Entering an arena**: two hazard doors with the round and arena name on a lit plate, then they slam open in a burst of sparks.
+- **Countdown**: 3, 2, 1 stamp onto the screen, then **FIGHT!** explodes with light rays, a shockwave and a flash.
+- **Round won, round lost, wrecked, boss fight, wave cleared**: titles slam in letter by letter with colour ghosts, a shine, cinema bars, light rays, a shockwave and sparks. A win rains confetti; a loss glows red with embers.
+- **Victory and Defeat** at the end of a match get the full show, with a confetti storm for a win.
+- **Open world**: entering the world, mission complete, mission failed, bosses, raider camps, epic and legendary finds, nightfall and morning all get the same treatment.
+- **Best graphics by default**: full resolution, all effects and animations on. If the game runs slowly it now only suggests Performance mode instead of switching it on by itself, and older saves move back up to full quality once.
+- The garage outline behind the chassis is steel grey instead of black.
+- The main menu fits on shorter screens (720 to 840 pixels high): the open world button no longer hides under the radio ticker.
+
 ## 2.4.0 · Night Shift · 2026-10-15
 
 **Polish for the whole game, and the open world comes alive.**

@@ -11,10 +11,15 @@ const SETTINGS = {
   motion: true,
   crateSpin: true,
   perf: false,
-  fps: false
+  fps: false,
+  gfx: 2
 };
 try {
-  Object.assign(SETTINGS, JSON.parse(load('sd.settings') || '{}'));
+  const saved = JSON.parse(load('sd.settings') || '{}');
+  // 2.5: everything looks its best by default; older saves (where performance mode may have been
+  // switched on automatically) move up to full quality once
+  if ((saved.gfx || 0) < 2) Object.assign(saved, { perf: false, motion: true, crateSpin: true, shake: true, gfx: 2 });
+  Object.assign(SETTINGS, saved);
 } catch (e) {}
 const saveSettings = () => store('sd.settings', SETTINGS);
 function applyVolume() {

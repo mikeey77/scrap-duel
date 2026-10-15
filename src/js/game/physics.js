@@ -149,8 +149,7 @@ function drive(v, dt) {
       }
     }
     // sliding sideways on a hard floor: tyre smoke and darker marks
-    const drift =
-      !S.dust && S.id !== 'ice' && B.kind !== 'wait' && v.slip > 40 ? Math.min(1, (v.slip - 40) / 90) : 0;
+    const drift = !S.dust && S.id !== 'ice' && B.kind !== 'wait' && v.slip > 40 ? Math.min(1, (v.slip - 40) / 90) : 0;
     if (drift && Math.random() < dt * 22 * drift) {
       const I = pick(v.insts.filter(I => I.alive && I.m.drive));
       if (I) {

@@ -40,6 +40,7 @@ const MODE_ICONS = {
   world: '<path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20Z"/><path d="M9 4v13.5M15 6.5V20"/>'
 };
 function showMenu() {
+  cineClear();
   hideOverlays();
   if (G.phase === 'review') closeGarageReport();
   const resume = inMatch();
@@ -652,11 +653,9 @@ function autoPerf(dt) {
     return;
   AUTO_PERF.slow = dt > 0.025 ? AUTO_PERF.slow + dt : Math.max(0, AUTO_PERF.slow - dt * 0.5);
   if (AUTO_PERF.slow > 5) {
+    // full quality stays on; only a hint where to find the faster mode
     AUTO_PERF.done = true;
-    SETTINGS.perf = true;
-    saveSettings();
-    sizeArena();
-    toast('Switched to performance mode for smoother play. You can change this in Settings.', true);
+    toast('Running slowly? Settings → Performance mode makes it smoother.', true);
   }
 }
 function fpsTick(t) {

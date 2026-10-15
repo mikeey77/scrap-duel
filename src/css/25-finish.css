@@ -1112,3 +1112,16 @@ body:not(.reduced-motion) .owm.d3 .owic {
 body.in-world #bayIntel {
   display: none !important;
 }
+
+/* big moments layer: above every screen, never in the way of the mouse */
+#cineFx {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9000;
+}
+#cineFx[hidden] {
+  display: none;
+}

@@ -587,6 +587,7 @@ function startWorld(design, label, opt = {}) {
     mission: null
   };
   OW.camps = owCamps();
+  cineDoors('Open world', opt.net ? 'Together' : S ? 'Welcome back' : 'A new world');
   const c0 = OW.camps.reduce((a, b) =>
     Math.hypot(b.x - AW / 2, b.y - AH / 2) < Math.hypot(a.x - AW / 2, a.y - AH / 2) ? b : a
   );
@@ -873,7 +874,14 @@ const RAIDER_LINES = [
   'Rev it, boys!'
 ];
 const HUNTER_LINES = ['There you are.', 'Nothing personal. It pays well.', 'Your bounty just went up. For me.'];
-const WRECK_LINES = ['I will be back!', 'My mum built that!', 'Worth it.', 'Ow, my bolts.', 'Tell the boss…', 'Not again!'];
+const WRECK_LINES = [
+  'I will be back!',
+  'My mum built that!',
+  'Worth it.',
+  'Ow, my bolts.',
+  'Tell the boss…',
+  'Not again!'
+];
 /** A raider is wrecked: scrap for whoever did it, maybe a repair kit or a part on the ground. */
 function owRaiderDown(v) {
   if (B.net === 'client') return;

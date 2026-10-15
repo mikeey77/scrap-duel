@@ -296,7 +296,7 @@ function owGotPart(id, mine, x, y) {
   if (x == null && me) ((x = me.x), (y = me.y - 30));
   if (x != null) OW.fly.push({ id, x, y, t: mine ? 0 : -0.3 });
   if (m.rar >= 3) {
-    OW.toast = { text: `${RAR[m.rar].name} find`, sub: m.name, t: 0, col: RAR[m.rar].col };
+    cineTitle(`${RAR[m.rar].name} find`, m.name, RAR[m.rar].col, 'win', { confetti: m.rar >= 4 ? 160 : 70, dur: 2.2 });
     sfx('legend');
     if (me) owConfetti(me.x, me.y, m.rar >= 4 ? 90 : 45);
   }
@@ -619,7 +619,7 @@ function owStartMission(m, camp) {
   if (B.net === 'client') return Net.send({ t: 'owaccept', m, camp: { i: camp.i, j: camp.j } });
   OW.mission = { ...m, camp: { i: camp.i, j: camp.j }, t: 0, step: 0, spawned: false, carrying: false };
   if (m.type === 'fetch') OW.mission.cargo = { x: clamp(m.from.x, 500, AW - 500), y: clamp(m.from.y, 500, AH - 500) };
-  OW.toast = { text: m.title, sub: m.text, t: 0 };
+  cineTitle(m.title, m.text, '#5be7ff', 'info');
   sfx('vs');
 }
 function owEndMission(won) {
@@ -635,13 +635,16 @@ function owEndMission(won) {
         c.coins += M.reward;
         if (M.part) owGivePart(c.idx, owRollPart(c.x, c.y, M.diff >= 3 ? 2.5 : 0.8 + M.diff * 0.3), true, c.x, c.y);
       }
-    OW.toast = { text: 'Mission done', sub: `+${M.reward} scrap${M.part ? ' and a part' : ''}`, t: 0, col: '#5cc38f' };
+    OW.toast = null;
+    cineTitle('Mission complete', `+${M.reward} scrap${M.part ? ' and a part' : ''}`, '#5cc38f', 'win', {
+      confetti: 140
+    });
     sfx('win');
     if (me) {
       txt(me.x, me.y - 50, `+${M.reward} SCRAP`, '#ffd257', 1.6);
       owParty(me);
     }
-  } else OW.toast = { text: 'Mission failed', sub: M.title, t: 0, col: '#ff8268' };
+  } else cineTitle('Mission failed', M.title, '#ff8268', 'lose');
   if (!B.net) owSave();
 }
 /** Confetti, a coin fountain and a kick of the camera when a mission is done. */
@@ -711,11 +714,8 @@ function owMissionTick(dt) {
           M.foes.push(v.idx);
         }
       }
-      OW.toast = {
-        text: M.type === 'boss' ? 'BOSS' : 'Raider camp',
-        sub: M.type === 'boss' ? B.cars[M.foes[0]]?.name || '' : `${n} raiders`,
-        t: 0
-      };
+      if (M.type === 'boss') cineTitle('Boss', B.cars[M.foes[0]]?.name || '', '#ff5c7a', 'boss');
+      else cineTitle('Raider camp', `${n} raiders`, '#ff8268', 'info');
       sfx(M.type === 'boss' ? 'vs' : 'alarm');
     }
     if (M.spawned && M.foes.every(i => !B.cars[i] || B.cars[i].dead || !B.cars[i].mission)) owEndMission(true);

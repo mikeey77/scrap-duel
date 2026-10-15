@@ -229,13 +229,19 @@ function owApplySnap(S) {
   if (!was && X.m) OW.toast = { text: X.m.title, sub: X.m.text, t: 0 };
   else if (was && !X.m) {
     const won = X.dn > OW.done;
-    OW.toast = { text: won ? 'Mission done' : 'Mission over', sub: was.title, t: 0, col: won ? '#5cc38f' : '#ff8268' };
+    if (won) cineTitle('Mission complete', was.title, '#5cc38f', 'win', { confetti: 140 });
+    else cineTitle('Mission over', was.title, '#ff8268', 'lose');
     const me = myCar();
     if (won && me) owParty(me);
   }
   if (X.ck != null && Math.abs((OW.clock || 0) - X.ck) > 2) OW.clock = X.ck;
   if (X.m && was && X.m.foes && !was.foes)
-    OW.toast = { text: X.m.type === 'boss' ? 'BOSS' : 'Raider camp', sub: 'Here they come', t: 0 };
+    cineTitle(
+      X.m.type === 'boss' ? 'Boss' : 'Raider camp',
+      'Here they come',
+      X.m.type === 'boss' ? '#ff5c7a' : '#ff8268',
+      X.m.type === 'boss' ? 'boss' : 'info'
+    );
   OW.done = X.dn;
   OW.wrecked = X.wr;
   X.gc.forEach((g, i) => {

@@ -939,6 +939,7 @@ function toBattle(cfg) {
   cam.z = cam.tz = 1.8;
   setButtons();
   sfx('tele');
+  cineDoors(`${G.run ? 'WAVE' : 'ROUND'} ${G.round}`, B.theme.name);
   setTimeout(() => B && !B.demo && G.phase === 'battle' && Announcer.round(G.round), 350);
   const bossCar = B.cars.find(c => c.boss);
   if (bossCar) {
@@ -969,7 +970,7 @@ function setEndBanner() {
       ? { text: 'DRAW', col: '#ece8df', t: 0, sub: 'No points this round' }
       : w === myTeam()
         ? {
-            text: 'ROUND WON',
+            text: G.run ? 'WAVE CLEARED' : 'ROUND WON',
             col: '#5cc38f',
             t: 0,
             sub:
@@ -978,7 +979,7 @@ function setEndBanner() {
                 : `+${points} point${points > 1 ? 's' : ''}`
           }
         : {
-            text: 'ROUND LOST',
+            text: G.run ? 'WAVE LOST' : 'ROUND LOST',
             col: '#e2504a',
             t: 0,
             sub: G.format === 'lives' ? `You lose ${loss} lives` : `${B.cars[w].name} takes ${points}`
@@ -1306,6 +1307,8 @@ function showFinal() {
     ${G.mode === 'mp' ? `<p class="series">Tonight: <b>${G.series.w}–${G.series.l}</b> ${G.mpCoop ? 'together with' : 'against'} ${esc(G.oppName)}${!G.mpCoop && h2hLine(G.oppName) ? ` · ${h2hLine(G.oppName)}` : ''}</p>` : ''}`;
   $('#ovResult').hidden = false;
   sfx(won ? 'win' : 'lose');
+  if (won) cineTitle('VICTORY', `${G.name} wins the match`, '#ffd257', 'win', { confetti: 280, dur: 3 });
+  else cineTitle('DEFEAT', `${G.oppName} takes the match`, '#e2504a', 'lose', { dur: 2.8 });
   const a = $('#btnAgain');
   if (a) a.addEventListener('click', () => startMatch('solo', null, G.format));
   const dl = $('#btnDaily');

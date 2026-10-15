@@ -1447,19 +1447,12 @@ function drawHUD(c) {
     }
   }
   if (B.seq === 'count') {
+    // the beats themselves play on the big-moment layer
     const n = B.seqT < 0.9 ? '3' : B.seqT < 1.8 ? '2' : B.seqT < 2.7 ? '1' : 'GO';
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    const sc = n === 'GO' ? 1.15 + (B.seqT - 2.7) * 0.5 : 1.35 - Math.min(1, (B.seqT % 0.9) / 0.25) * 0.35;
-    c.save();
-    c.translate(W / 2, H / 2);
-    c.scale(sc, sc);
-    c.font = `700 ${Math.min(110, W * 0.16)}px "Chakra Petch", Impact, sans-serif`;
-    c.fillStyle = 'rgba(0,0,0,.35)';
-    c.fillText(n, 4, 4);
-    c.fillStyle = '#f2b705';
-    c.fillText(n, 0, 0);
-    c.restore();
+    if (B._cnt !== n && !B.replay) {
+      B._cnt = n;
+      cineCount(n);
+    }
   }
   if (B.seq === 'in' && G.phase === 'battle') {
     c.textAlign = 'center';
@@ -1475,26 +1468,9 @@ function drawHUD(c) {
     c.fillStyle = '#bff';
     c.fillText('Locking coordinates…', W / 2, H * 0.78);
   }
-  if (B.banner) {
-    const t = B.banner.t,
-      sc = t < 0.25 ? 3 - 8 * t : 1;
-    c.save();
-    c.translate(W / 2, H / 2);
-    c.scale(sc, sc);
-    c.globalAlpha = Math.min(1, t * 4);
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.font = `700 ${Math.min(84, W * 0.11)}px "Chakra Petch", Impact, sans-serif`;
-    c.fillStyle = 'rgba(0,0,0,.5)';
-    c.fillText(B.banner.text, 5, 5);
-    c.fillStyle = B.banner.col;
-    c.fillText(B.banner.text, 0, 0);
-    if (B.banner.sub) {
-      c.font = '600 18px "Barlow Semi Condensed", sans-serif';
-      c.fillStyle = '#ece8df';
-      c.fillText(B.banner.sub, 0, Math.min(60, W * 0.08));
-    }
-    c.restore();
+  if (B.banner && !B.banner._c && !B.replay) {
+    B.banner._c = 1;
+    cineBanner(B.banner);
   }
   if (B.net === 'client' && B.lag > 1.5) {
     c.textAlign = 'center';
