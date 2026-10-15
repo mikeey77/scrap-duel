@@ -1019,8 +1019,92 @@ body:not(.reduced-motion) #owCampBtn:not([hidden]) {
   margin-top: 10px;
   color: #8fa3bd;
 }
+/* camp: the card drops in, the jobs are dealt one by one */
+body:not(.reduced-motion) #ovCamp:not([hidden]) .owcamp {
+  animation: camp-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+body:not(.reduced-motion) #ovCamp:not([hidden]) .owm[data-m],
+body:not(.reduced-motion) #ovCamp:not([hidden]) .owgo {
+  animation: card-deal 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(0.08s + var(--i, 0) * 0.07s);
+}
+@keyframes camp-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+}
+.owm {
+  position: relative;
+}
+.owm .owic {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-style: normal;
+  font-size: 18px;
+  opacity: 0.85;
+}
+.owm.d1 {
+  border-color: rgba(242, 183, 5, 0.3);
+}
+.owm.d2 {
+  border-color: rgba(255, 128, 104, 0.35);
+}
+.owm.d3 {
+  border-color: rgba(255, 92, 122, 0.6);
+  background: linear-gradient(160deg, rgba(80, 16, 32, 0.6), rgba(10, 16, 32, 0.8));
+}
+body:not(.reduced-motion) .owm.d3 .owic {
+  animation: boss-throb 1.2s ease-in-out infinite;
+}
+@keyframes boss-throb {
+  50% {
+    transform: scale(1.25);
+  }
+}
+.owm:active,
+.owgo:active {
+  transform: translateY(0) scale(0.98);
+}
+.owtravel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 6px 0 12px;
+}
+.owgo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  text-align: left;
+  background: rgba(10, 16, 32, 0.6);
+  border: 1px solid rgba(242, 183, 5, 0.2);
+  color: #dfe9f5;
+  cursor: pointer;
+  clip-path: var(--chamfer-s);
+  transition:
+    border-color 0.15s,
+    transform 0.15s,
+    background 0.15s;
+}
+.owgo:hover {
+  border-color: #f2b705;
+  background: rgba(40, 32, 8, 0.6);
+  transform: translateY(-2px);
+}
+.owgo b {
+  font-family: var(--f-display);
+  font-size: 13px;
+}
+.owgo span {
+  font-size: 11px;
+  color: #8fa3bd;
+}
 @media (max-width: 700px) {
-  .owboard {
+  .owboard,
+  .owtravel {
     grid-template-columns: 1fr;
   }
 }

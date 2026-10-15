@@ -71,6 +71,7 @@
     "js/game/world.js",
     "js/game/world-play.js",
     "js/game/world-net.js",
+    "js/game/world-fx.js",
     "js/game/gauntlet.js",
     "js/game/league.js",
     "js/game/daily.js",

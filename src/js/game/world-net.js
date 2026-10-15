@@ -82,14 +82,17 @@ function owRecv(d) {
         if (camp) owStartMission(d.m, camp);
       }
       return true;
+    case 'owtravel':
+      if (B && B.ow && B.net === 'host' && B.cars[1]) {
+        const camp = OW.camps.find(c => c.i === d.i && c.j === d.j && c.seen);
+        if (camp && !owCanTravel(B.cars[1])) owTravel(B.cars[1], camp);
+      }
+      return true;
     case 'owabandon':
       if (B && B.ow && B.net === 'host') owEndMission(false);
       return true;
     case 'owpart':
-      if (B && B.ow && OW) {
-        OW.inv[d.id] = (OW.inv[d.id] || 0) + 1;
-        owNote(`${d.mine ? '' : 'Shared find: '}${MOD[d.id].name} → My parts`, RAR[MOD[d.id].rar].col);
-      }
+      if (B && B.ow && OW) owGotPart(d.id, d.mine);
       return true;
   }
   return false;
@@ -177,6 +180,7 @@ function owSnapExtra() {
       p.val || 0
     ]),
     m: OW.mission,
+    ck: Math.round(OW.clock || 0),
     dn: OW.done,
     wr: OW.wrecked,
     gc: B.cars.map(c => (c && c.gone ? 1 : 0))
@@ -223,7 +227,13 @@ function owApplySnap(S) {
   OW.mission = X.m;
   // the host's mission news, as big text here too
   if (!was && X.m) OW.toast = { text: X.m.title, sub: X.m.text, t: 0 };
-  else if (was && !X.m) OW.toast = { text: X.dn > OW.done ? 'Mission done' : 'Mission over', sub: was.title, t: 0 };
+  else if (was && !X.m) {
+    const won = X.dn > OW.done;
+    OW.toast = { text: won ? 'Mission done' : 'Mission over', sub: was.title, t: 0, col: won ? '#5cc38f' : '#ff8268' };
+    const me = myCar();
+    if (won && me) owParty(me);
+  }
+  if (X.ck != null && Math.abs((OW.clock || 0) - X.ck) > 2) OW.clock = X.ck;
   if (X.m && was && X.m.foes && !was.foes)
     OW.toast = { text: X.m.type === 'boss' ? 'BOSS' : 'Raider camp', sub: 'Here they come', t: 0 };
   OW.done = X.dn;

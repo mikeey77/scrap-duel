@@ -581,6 +581,8 @@ function startWorld(design, label, opt = {}) {
     respawn: {},
     homes: {},
     notes: [],
+    fly: [],
+    clock: S && S.clock != null ? S.clock : undefined,
     mission: null
   };
   OW.camps = owCamps();
@@ -729,6 +731,7 @@ function owStep(dt) {
       OW.toast = { text: 'Camp', sub: 'Repaired. You respawn here now. Enter: missions and garage.', t: 0 };
     }
   }
+  owFxStep(dt);
   owCampUI();
   if (!host) return;
   // camps: repair, set the respawn point (for each player)
@@ -802,10 +805,10 @@ function owRaiders(dt, players) {
   const me = pick(live),
     far = Math.hypot(me.x - OW.home0.x, me.y - OW.home0.y),
     diff = far > 7000 ? 2 : far > 3000 ? 1 : 0,
-    cap = 1 + diff + players.length,
+    cap = 1 + diff + players.length + (owIsNight() ? 1 : 0),
     n = B.cars.filter(c => c && !c.player && !c.dead).length;
   if (OW.spawnT > 0 || n >= cap) return;
-  OW.spawnT = rnd(5, 10);
+  OW.spawnT = owIsNight() ? rnd(3.5, 7) : rnd(5, 10);
   // never right next to a camp: those are safe
   if (OW.camps.some(c => Math.hypot(c.x - me.x, c.y - me.y) < 500)) return;
   for (let t = 0; t < 20; t++) {
@@ -865,9 +868,10 @@ function owRaiderDown(v) {
     const n = v.boss ? 3 : v.convoy ? 3 : 1;
     for (let i = 0; i < n; i++)
       owDropPart(
-        v.x + rnd(-30, 30),
-        v.y + rnd(-30, 30),
-        owRollPart(v.x, v.y, v.boss ? 2.5 : v.convoy || v.hunter ? 1 : 0)
+        v.x + rnd(-80, 80),
+        v.y + rnd(-80, 80),
+        owRollPart(v.x, v.y, v.boss ? 2.5 : v.convoy || v.hunter ? 1 : 0),
+        v
       );
   }
 }
@@ -998,61 +1002,100 @@ function owHUD(c) {
   c.lineWidth = 1;
   c.strokeRect(mx - 0.5, my - 0.5, M + 1, M + 1);
   c.restore();
-  // status, top left
+  // status, top left: where you are, how your car is doing, what you have
   const integ = v.dead ? 0 : integrity(v);
   c.save();
-  c.fillStyle = 'rgba(6,10,20,.8)';
-  c.fillRect(18, 18, 270, 96);
+  owPanel(c, 18, 18, 280, 100, B.theme.ground ? B.theme.ground[0] : '#5be7ff');
   c.fillStyle = '#dfe9f5';
   c.font = '700 20px "Chakra Petch", sans-serif';
   c.textAlign = 'left';
-  c.fillText(B.theme.name, 30, 44);
+  c.fillText(B.theme.name, 32, 44);
+  owDrawClock(c, 278, 38);
   c.font = '500 13px "Barlow Semi Condensed", sans-serif';
   c.fillStyle = '#8fa3bd';
   const home = Math.round(Math.hypot(OW.home.x - v.x, OW.home.y - v.y) / S);
-  c.fillText(`${(B.surf || SURFACES.asphalt).name} · camp ${home} m · ${OW.label}`, 30, 63);
+  c.fillText(`${(B.surf || SURFACES.asphalt).name} · camp ${home} m · ${OW.label}`, 32, 63);
   c.fillStyle = 'rgba(255,255,255,.12)';
-  c.fillRect(30, 74, 246, 10);
+  c.fillRect(32, 74, 250, 9);
+  OW.hpShown = OW.hpShown == null ? integ : OW.hpShown + (integ - OW.hpShown) * 0.08;
+  if (OW.hpShown > integ) {
+    // the part you just lost lingers a moment in white
+    c.fillStyle = 'rgba(255,255,255,.55)';
+    c.fillRect(32, 74, 250 * OW.hpShown, 9);
+  }
   c.fillStyle = integ > 0.5 ? '#5cc38f' : integ > 0.25 ? '#f2b705' : '#e2504a';
-  c.fillRect(30, 74, 246 * integ, 10);
-  c.fillStyle = '#ffd257';
+  c.fillRect(32, 74, 250 * integ, 9);
+  const nParts = Object.values(OW.inv).reduce((a, b) => a + b, 0),
+    pul = OW.pulse || 0;
   c.font = '600 14px "Barlow Semi Condensed", sans-serif';
-  c.fillText(
-    `Scrap ${OW.scrap}  ·  My parts ${Object.values(OW.inv).reduce((a, b) => a + b, 0)}  ·  Wrecked ${OW.wrecked}`,
-    30,
-    104
-  );
+  c.fillStyle = OW.shown < OW.scrap - 0.5 ? '#fff3c4' : '#ffd257';
+  const t1 = `Scrap ${Math.round(OW.shown == null ? OW.scrap : OW.shown)}`;
+  c.fillText(t1, 32, 106);
+  let px = 32 + c.measureText(t1).width + 14;
+  c.save();
+  c.translate(px, 101);
+  c.scale(1 + pul * 0.35, 1 + pul * 0.35);
+  c.fillStyle = pul > 0.05 ? '#ffffff' : '#ffd257';
+  const t2 = `My parts ${nParts}`;
+  c.fillText(t2, 0, 5);
   c.restore();
-  // the mission, under the status box
+  const flyX = px + c.measureText(t2).width / 2;
+  px += c.measureText(t2).width + 14;
+  c.fillStyle = '#ffd257';
+  c.fillText(`Wrecked ${OW.wrecked}`, px, 106);
+  c.restore();
+  // the mission, under the status box, with a bar for how far along it is
   const MS = OW.mission,
     tg2 = owMissionTarget();
   if (MS) {
     c.save();
-    c.fillStyle = 'rgba(6,10,20,.8)';
-    c.fillRect(18, 120, 270, 50);
+    owPanel(c, 18, 124, 280, 62, '#5be7ff');
     c.fillStyle = '#5be7ff';
     c.font = '700 14px "Chakra Petch", sans-serif';
     c.textAlign = 'left';
-    c.fillText(MS.title, 30, 140);
+    c.fillText(MS.title, 32, 144);
     c.fillStyle = '#b6c8e0';
     c.font = '500 13px "Barlow Semi Condensed", sans-serif';
     const extra = MS.type === 'race' ? ` · ${Math.max(0, Math.ceil(MS.time - MS.t))} s` : '';
-    c.fillText(tg2 ? `${tg2.label} · ${Math.round(Math.hypot(tg2.x - v.x, tg2.y - v.y) / S)} m${extra}` : '', 30, 159);
+    c.fillText(tg2 ? `${tg2.label} · ${Math.round(Math.hypot(tg2.x - v.x, tg2.y - v.y) / S)} m${extra}` : '', 32, 162);
+    let prog = 0,
+      pcol = '#5be7ff';
+    if (MS.type === 'race') {
+      prog = Math.max(0, 1 - MS.t / MS.time);
+      pcol = prog < 0.25 ? '#e2504a' : '#5be7ff';
+      for (let i = 0; i < MS.pts.length; i++) {
+        c.fillStyle = i < MS.step ? '#5be7ff' : 'rgba(255,255,255,.2)';
+        c.beginPath();
+        c.arc(222 + i * 13, 140, 4, 0, 7);
+        c.fill();
+      }
+    } else if (MS.type === 'fetch') prog = MS.carrying !== false ? 0.5 : 0.1;
+    else if (MS.foes) {
+      const left = MS.foes.filter(i => B.cars[i] && !B.cars[i].dead).length;
+      prog = 1 - left / MS.foes.length;
+      pcol = '#ff8268';
+    }
+    c.fillStyle = 'rgba(255,255,255,.1)';
+    c.fillRect(32, 172, 250, 5);
+    c.fillStyle = pcol;
+    c.fillRect(32, 172, 250 * prog, 5);
     c.restore();
   }
-  // notes: finds and events, bottom left
+  // notes: finds and events, bottom left; they slide in
   c.save();
   c.textAlign = 'left';
   c.font = '600 14px "Barlow Semi Condensed", sans-serif';
   OW.notes.forEach((n, i) => {
-    c.globalAlpha = Math.min(1, (6 - n.t) * 1.5, n.t * 4);
-    c.fillStyle = 'rgba(6,10,20,.75)';
-    const w = c.measureText(n.text).width + 20;
-    c.fillRect(18, H - 60 - (OW.notes.length - 1 - i) * 28, w, 24);
+    c.globalAlpha = Math.max(0, Math.min(1, (6 - n.t) * 1.5, n.t * 4));
+    const dx = -Math.max(0, 1 - n.t * 5) * 40,
+      w = c.measureText(n.text).width + 24,
+      yy = H - 60 - (OW.notes.length - 1 - i) * 30;
+    owPanel(c, 18 + dx, yy, w, 25, n.col);
     c.fillStyle = n.col;
-    c.fillText(n.text, 28, H - 43 - (OW.notes.length - 1 - i) * 28);
+    c.fillText(n.text, 30 + dx, yy + 17);
   });
   c.restore();
+  owDrawFly(c, flyX, 101);
   // an arrow to the mission target and to your friend when they are off screen
   const sc0 = view.sc * cam.z,
     arrows = [];
@@ -1105,19 +1148,27 @@ function owHUD(c) {
     c.fill();
     c.restore();
   }
-  // big place names when you enter a biome or reach a camp
+  // big place names and news: pops in, a line grows under it, fades out
   const T = OW.toast;
   if (T && T.t < 3.2) {
-    const a = Math.min(1, T.t * 3, (3.2 - T.t) * 2);
+    const a = Math.min(1, T.t * 3, (3.2 - T.t) * 2),
+      pop = 1 + Math.max(0, 0.25 - T.t) * 0.6;
     c.save();
     c.globalAlpha = a;
     c.textAlign = 'center';
-    c.fillStyle = '#ffffff';
+    c.translate(W / 2, H * 0.2);
+    c.scale(pop, pop);
     c.font = `700 ${Math.round(Math.min(46, W * 0.035))}px "Chakra Petch", sans-serif`;
-    c.fillText(T.text.toUpperCase(), W / 2, H * 0.2 + (1 - a) * 10);
+    c.fillStyle = 'rgba(0,0,0,.45)';
+    c.fillText(T.text.toUpperCase(), 2, 3);
+    c.fillStyle = T.col || '#ffffff';
+    c.fillText(T.text.toUpperCase(), 0, 0);
+    const lw = Math.min(1, T.t * 2.5) * Math.min(340, c.measureText(T.text.toUpperCase()).width + 40);
+    c.fillStyle = T.col || '#5be7ff';
+    c.fillRect(-lw / 2, 12, lw, 3);
     c.font = '500 16px "Barlow Semi Condensed", sans-serif';
-    c.fillStyle = '#b6c8e0';
-    c.fillText(T.sub, W / 2, H * 0.2 + 28);
+    c.fillStyle = '#d5e0ee';
+    c.fillText(T.sub, 0, 36);
     c.restore();
   }
   if (v.dead) {
@@ -1127,6 +1178,10 @@ function owHUD(c) {
     c.font = '700 28px "Chakra Petch", sans-serif';
     c.fillText('WRECKED · back to your camp in a moment', W / 2, H / 2 + 80);
     c.restore();
+  }
+  if (OW.fade > 0) {
+    c.fillStyle = `rgba(6,10,20,${Math.min(1, OW.fade * 1.4)})`;
+    c.fillRect(0, 0, W, H);
   }
 }
 

@@ -840,10 +840,11 @@ function stepFx(dt) {
     if (f.vx !== undefined) {
       f.x += f.vx * dt;
       f.y += f.vy * dt;
-      const kk = f.k === 'smoke' ? 1.2 : f.k === 'coin' || f.k === 'water' ? 0 : 4;
+      const kk = f.k === 'smoke' ? 1.2 : f.k === 'coin' || f.k === 'water' ? 0 : f.k === 'conf' ? 1.6 : 4;
       f.vx *= Math.exp(-kk * dt);
       f.vy *= Math.exp(-kk * dt);
       if (f.k === 'coin' || f.k === 'water') f.vy += 500 * dt;
+      else if (f.k === 'conf') f.vy += 240 * dt;
     }
     if (f.k === 'text') f.y -= 30 * dt;
   }

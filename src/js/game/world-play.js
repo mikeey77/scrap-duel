@@ -229,7 +229,7 @@ const OW_LOOT = () => MODS.filter(m => m.id !== 'cockpit' && !m.boss && !m.hidde
 /** A part for a crate: rarer the further you are from the start, and better from safes and bosses. */
 function owRollPart(x, y, bonus = 0) {
   const far = OW ? Math.hypot(x - OW.home0.x, y - OW.home0.y) / 1000 : 0,
-    lvl = Math.min(4, far / 3 + bonus),
+    lvl = Math.min(4, far / 3 + bonus + (owIsNight() ? 0.6 : 0)),
     roll = Math.random() * 10 + lvl * 1.6;
   const rar = roll > 13 ? 4 : roll > 10.5 ? 3 : roll > 7.5 ? 2 : roll > 4 ? 1 : 0;
   const pool = OW_LOOT();
@@ -244,15 +244,28 @@ function owRollPart(x, y, bonus = 0) {
 }
 function owLootDrop(o, att) {
   const n = o.d.loot === 2 ? 2 : 1;
-  for (let i = 0; i < n; i++)
-    owDropPart(o.x + rnd(-14, 14), o.y + rnd(-14, 14), owRollPart(o.x, o.y, o.d.loot === 2 ? 1.2 : 0));
+  owCrateBurst(o);
+  for (let i = 0; i < n; i++) {
+    const a = rnd(0, Math.PI * 2),
+      r = rnd(45, 80);
+    owDropPart(o.x + Math.cos(a) * r, o.y + Math.sin(a) * r, owRollPart(o.x, o.y, o.d.loot === 2 ? 1.2 : 0), o);
+  }
   if (Math.random() < 0.5)
     B.pk.push({ kind: 'coins', x: o.x + rnd(-20, 20), y: o.y + rnd(-20, 20), val: 10, cd: 0, uid: owUid() });
   if (OW.mission) owMissionEvent('loot', o);
 }
 const owUid = () => (OW.uidc = (OW.uidc || 5e8) + 1);
-function owDropPart(x, y, id) {
-  B.pk.push({ kind: 'part', id, x, y, cd: 0, uid: owUid() });
+/** A part on the ground; with `from` it hops there out of a crate or wreck first. */
+function owDropPart(x, y, id, from) {
+  B.pk.push({
+    kind: 'part',
+    id,
+    x: clamp(x, 60, AW - 60),
+    y: clamp(y, 60, AH - 60),
+    cd: from ? 0.55 : 0,
+    uid: owUid(),
+    pop: from ? { x: from.x, y: from.y, t: 0 } : null
+  });
 }
 /** A part pickup: it goes into My parts of whoever drove over it; your friend gets one too. */
 function owTakePart(v, p) {
@@ -261,7 +274,8 @@ function owTakePart(v, p) {
   const m = MOD[p.id];
   txt(p.x, p.y - 22, `+ ${m.name.toUpperCase()}`, RAR[m.rar].col, 1.4);
   sfx('coin', p.x, p.y);
-  owGivePart(v.idx, p.id, true);
+  owSpark(p.x, p.y, 8, RAR[m.rar].col);
+  owGivePart(v.idx, p.id, true, p.x, p.y);
   // co-op: the other player gets a part of the same rarity, so nobody has to fight over crates
   for (const c of B.cars)
     if (c !== v && c.player && !c.dead) {
@@ -269,11 +283,23 @@ function owTakePart(v, p) {
       owGivePart(c.idx, pick(same.length ? same : OW_LOOT()).id, false);
     }
 }
-function owGivePart(idx, id, mine) {
-  if (idx === B.me) {
-    OW.inv[id] = (OW.inv[id] || 0) + 1;
-    owNote(`${mine ? '' : 'Shared find: '}${MOD[id].name} → My parts`, RAR[MOD[id].rar].col);
-  } else if (B.net === 'host') Net.send({ t: 'owpart', id, mine });
+function owGivePart(idx, id, mine, x, y) {
+  if (idx === B.me) owGotPart(id, mine, x, y);
+  else if (B.net === 'host') Net.send({ t: 'owpart', id, mine });
+}
+/** A part lands in My parts on this computer: it flies into the HUD, and big finds get a moment. */
+function owGotPart(id, mine, x, y) {
+  const m = MOD[id],
+    me = myCar();
+  OW.inv[id] = (OW.inv[id] || 0) + 1;
+  owNote(`${mine ? '' : 'Shared find: '}${m.name} → My parts`, RAR[m.rar].col);
+  if (x == null && me) ((x = me.x), (y = me.y - 30));
+  if (x != null) OW.fly.push({ id, x, y, t: mine ? 0 : -0.3 });
+  if (m.rar >= 3) {
+    OW.toast = { text: `${RAR[m.rar].name} find`, sub: m.name, t: 0, col: RAR[m.rar].col };
+    sfx('legend');
+    if (me) owConfetti(me.x, me.y, m.rar >= 4 ? 90 : 45);
+  }
 }
 function owNote(text, col) {
   OW.notes = OW.notes || [];
@@ -286,21 +312,6 @@ function owIconImg(id) {
   const im = new Image();
   im.src = iconURL(id, 64);
   return (_owIcon[id] = im);
-}
-function drawPartPickup(c, p) {
-  if (p.gone) return;
-  const m = MOD[p.id];
-  if (!m) return;
-  const bob = Math.sin(ANIM * 3 + p.x) * 3;
-  c.save();
-  c.translate(p.x, p.y + bob);
-  c.globalCompositeOperation = 'lighter';
-  glowDisc(c, 30 + Math.sin(ANIM * 4) * 4, RAR[m.rar].col);
-  c.globalCompositeOperation = 'source-over';
-  circ(c, 0, 0, 17, 'rgba(10,14,24,.85)', RAR[m.rar].col, 2);
-  const im = owIconImg(p.id);
-  if (im.complete) c.drawImage(im, -14, -14, 28, 28);
-  c.restore();
 }
 
 /* ---------- camp menu: missions, garage, save ---------- */
@@ -371,10 +382,11 @@ function owRenderCamp(camp) {
         : `<span class="mlab">Mission board</span><div class="owboard">${board
             .map(
               (m, i) =>
-                `<button class="owm" data-m="${i}"><b>${esc(m.title)}</b><span>${esc(m.text)}</span><em>${m.reward} scrap${m.part ? ' + a part' : ''} · ${['easy', 'medium', 'hard', 'boss'][m.diff]}</em></button>`
+                `<button class="owm d${m.diff}" data-m="${i}" style="--i:${i}"><i class="owic">${{ fetch: '📦', clear: '⚔', race: '🏁', boss: '☠' }[m.type]}</i><b>${esc(m.title)}</b><span>${esc(m.text)}</span><em>${m.reward} scrap${m.part ? ' + a part' : ''} · ${['easy', 'medium', 'hard', 'boss'][m.diff]}</em></button>`
             )
             .join('')}</div>`
     }
+    ${owTravelHTML(camp)}
     <div class="owrow"><button class="btn" id="owGarage">Garage · ${loose} loose part${loose === 1 ? '' : 's'}</button><button class="btn ghost" id="owClose">Back on the road <span class="kbd">Enter</span></button></div>
     <p class="small owstat">Scrap ${OW.scrap} · missions done ${OW.done} · raiders wrecked ${OW.wrecked}</p>`;
   $$('#owCampCard [data-m]').forEach(b =>
@@ -389,9 +401,36 @@ function owRenderCamp(camp) {
       owEndMission(false);
       owRenderCamp(camp);
     };
+  $$('#owCampCard [data-go]').forEach(b =>
+    b.addEventListener('click', () => {
+      const [i, j] = b.dataset.go.split(',').map(Number),
+        to = OW.camps.find(c => c.i === i && c.j === j),
+        v = myCar(),
+        why = owCanTravel(v);
+      if (why) return toast(why);
+      owCloseCamp();
+      owTravel(v, to);
+    })
+  );
   $('#owGarage').onclick = () => owOpenGarage();
   $('#owClose').onclick = () => owCloseCamp();
   if (!B.net) owSave();
+}
+
+/** Other camps you have found: drive there in an instant. */
+function owTravelHTML(camp) {
+  const list = OW.camps
+    .filter(c => c.seen && c !== camp)
+    .map(c => [c, Math.hypot(c.x - camp.x, c.y - camp.y)])
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, 6);
+  if (!list.length) return '';
+  return `<span class="mlab">Travel to a camp you found</span><div class="owtravel">${list
+    .map(
+      ([c, d], i) =>
+        `<button class="owgo" data-go="${c.i},${c.j}" style="--i:${i}"><b>Camp ${c.i + 1}-${c.j + 1}</b><span>${esc(owThemeAt(c.x, c.y).name)} · ${Math.round(d / S)} m</span></button>`
+    )
+    .join('')}</div>`;
 }
 
 /* ---------- garage in the field ---------- */
@@ -594,13 +633,25 @@ function owEndMission(won) {
     for (const c of B.cars)
       if (c.player && !c.dead) {
         c.coins += M.reward;
-        if (M.part) owGivePart(c.idx, owRollPart(c.x, c.y, M.diff >= 3 ? 2.5 : 0.8 + M.diff * 0.3), true);
+        if (M.part) owGivePart(c.idx, owRollPart(c.x, c.y, M.diff >= 3 ? 2.5 : 0.8 + M.diff * 0.3), true, c.x, c.y);
       }
-    OW.toast = { text: 'Mission done', sub: `+${M.reward} scrap${M.part ? ' and a part' : ''}`, t: 0 };
+    OW.toast = { text: 'Mission done', sub: `+${M.reward} scrap${M.part ? ' and a part' : ''}`, t: 0, col: '#5cc38f' };
     sfx('win');
-    if (me) txt(me.x, me.y - 50, `+${M.reward} SCRAP`, '#ffd257', 1.6);
-  } else OW.toast = { text: 'Mission failed', sub: M.title, t: 0 };
+    if (me) {
+      txt(me.x, me.y - 50, `+${M.reward} SCRAP`, '#ffd257', 1.6);
+      owParty(me);
+    }
+  } else OW.toast = { text: 'Mission failed', sub: M.title, t: 0, col: '#ff8268' };
   if (!B.net) owSave();
+}
+/** Confetti, a coin fountain and a kick of the camera when a mission is done. */
+function owParty(me) {
+  owConfetti(me.x, me.y, 80);
+  for (let i = 0; i < 18; i++)
+    B.fx.push({ k: 'coin', x: me.x, y: me.y, vx: rnd(-160, 160), vy: rnd(-320, -120), life: rnd(0.8, 1.3), max: 1.3 });
+  B.fx.push({ k: 'ring', x: me.x, y: me.y, life: 0.7, max: 0.7, r: 140, col: '92,195,143' });
+  B.shake = Math.max(B.shake || 0, 6);
+  sfx('cheer');
 }
 function owMissionTarget() {
   const M = OW.mission;
@@ -673,6 +724,7 @@ function owMissionTick(dt) {
     const p = M.pts[M.step];
     if (p && near(p, 110)) {
       M.step++;
+      fx({ k: 'ring', x: p.x, y: p.y, life: 0.5, max: 0.5, r: 120, col: '91,231,255' });
       sfx('coin');
       if (M.step >= M.pts.length) owEndMission(true);
     }
@@ -816,6 +868,7 @@ function owSave() {
         wrecked: OW.wrecked,
         home: OW.home ? [OW.home.i, OW.home.j] : null,
         label: OW.label,
+        clock: Math.round(OW.clock || 0),
         camps: OW.camps.filter(c => c.seen).map(c => [c.i, c.j]),
         at: Date.now()
       })

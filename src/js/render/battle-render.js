@@ -883,6 +883,15 @@ function drawFx(c) {
       c.beginPath();
       c.arc(f.x, f.y, f.r * (1.6 - t), 0, 7);
       c.stroke();
+    } else if (f.k === 'conf') {
+      c.save();
+      c.translate(f.x, f.y);
+      c.rotate(f.a + ANIM * 9);
+      c.scale(1, Math.abs(Math.sin(ANIM * 8 + f.a)) + 0.15);
+      c.globalAlpha = Math.min(1, t * 2.5);
+      c.fillStyle = f.col;
+      c.fillRect(-f.r / 2, -f.r / 4, f.r, f.r / 2);
+      c.restore();
     } else if (f.k === 'chip') {
       c.save();
       c.translate(f.x, f.y);
@@ -1014,7 +1023,10 @@ function drawArena() {
   for (const z of B.zones) if (z.kind !== 'ramp' && z.kind !== 'tramp') drawZone(c, z);
   for (const z of B.zones) if (z.kind === 'ramp' || z.kind === 'tramp') drawZone(c, z);
   for (const p of B.pk || []) drawPickup(c, p);
-  if (B.ow) owDrawMarks(c);
+  if (B.ow) {
+    owDrawLife(c);
+    owDrawMarks(c);
+  }
   for (const st of B.st) drawStaticThemed(c, st, st.wall || B.theme.wall);
   for (const o of B.objs) if (o.z <= 0) drawObj(c, o);
   for (const db of B.debris) {
@@ -1159,6 +1171,7 @@ function drawArena() {
   }
   if (v && !B.demo && !B.photo) drawHitArrows(c, v, s);
   if (B.special === 'night') drawNight(c, s);
+  if (B.ow) owSky(c, s);
   drawGimmickOverlay(c, s);
   drawVignette(c);
   if (v && !B.demo && !B.replay && !B.photo) lowHealth(c, v);
@@ -1538,7 +1551,7 @@ function lowHealth(c, v) {
 }
 let nightCv = null;
 /** Night Shift: darkness everywhere except headlights, fires, explosions and pickups. */
-function drawNight(c, s, dark = 0.9, flash = 1) {
+function drawNight(c, s, dark = 0.9, flash = 1, extra = null) {
   const W = view.w,
     H = view.h,
     d = dprOf();
@@ -1588,6 +1601,7 @@ function drawNight(c, s, dark = 0.9, flash = 1) {
   for (const z of B.zones) if (z.kind === 'fire') light(z.x, z.y, z.r * 2, 0.7);
   for (const p of B.pk) if (p.cd <= 0) light(p.x, p.y, 70, 0.8);
   for (const sh of B.shots) if (sh.kind !== 'bullet') light(sh.x, sh.y, 60, 0.5);
+  if (extra) extra(light);
   c.drawImage(nightCv, 0, 0, W, H);
 }
 

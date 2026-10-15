@@ -2315,10 +2315,17 @@ test('open world: crates drop parts into My parts, camps offer missions, the wor
   const parts = B.pk.filter(p => p.kind === 'part');
   assert.equal(parts.length, 2, 'a safe drops two parts');
   a.owTakePart(me, parts[0]);
-  assert.equal(Object.values(O.inv).reduce((x, y) => x + y, 0), 1, 'picked part is in My parts');
+  assert.equal(
+    Object.values(O.inv).reduce((x, y) => x + y, 0),
+    1,
+    'picked part is in My parts'
+  );
   const board = a.owBoard(O.home);
   assert.equal(board.length, 3, 'three jobs on the board');
-  assert(board.every(m => m.title && m.reward), 'every job has a title and a reward');
+  assert(
+    board.every(m => m.title && m.reward),
+    'every job has a title and a reward'
+  );
   a.owStartMission(board[0], O.home);
   assert(O.mission && O.mission.type === board[0].type, 'mission started');
   a.owEndMission(false);
@@ -2331,7 +2338,11 @@ test('open world: crates drop parts into My parts, camps offer missions, the wor
   a.startWorld(d, 'again', { save: S });
   assert.equal(a.getOW().seed, seed, 'same world again');
   assert.equal(a.getOW().done, 2, 'progress kept');
-  assert.equal(Object.values(a.getOW().inv).reduce((x, y) => x + y, 0), 1, 'parts kept');
+  assert.equal(
+    Object.values(a.getOW().inv).reduce((x, y) => x + y, 0),
+    1,
+    'parts kept'
+  );
   a.leaveWorld();
 });
 
