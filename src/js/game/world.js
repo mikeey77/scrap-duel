@@ -830,6 +830,11 @@ function raiderThink(v, dt) {
   for (const p of B.cars) if (p && p.player && !p.dead) d = Math.min(d, Math.hypot(p.x - v.x, p.y - v.y));
   const hitByPlayer = v.lastBy && B.cars[v.lastBy.att] && B.cars[v.lastBy.att].player;
   if (d < 850 || (hitByPlayer && d < 2000)) v.aggro = true;
+  if (v.aggro && !v.said) {
+    // a raider tells you it has seen you
+    v.said = true;
+    if (Math.random() < 0.7) txt(v.x, v.y - v.rad - 26, pick(v.hunter ? HUNTER_LINES : RAIDER_LINES), '#ff9a84', 2);
+  }
   if (d > 1900 && !v.mission && !v.hunter) v.aggro = false;
   // camps are safe ground: raiders turn away from them
   const camp = OW.camps.find(c => Math.hypot(c.x - v.x, c.y - v.y) < 420);
@@ -857,10 +862,23 @@ function raiderThink(v, dt) {
     aimY: R.ty
   };
 }
+const RAIDER_LINES = [
+  'Fresh scrap!',
+  'Nice wheels. Mine now.',
+  'Toll road! Pay up!',
+  'Get it!',
+  'That one has shiny bits!',
+  'Out of my junkyard!',
+  'Dibs on the cockpit!',
+  'Rev it, boys!'
+];
+const HUNTER_LINES = ['There you are.', 'Nothing personal. It pays well.', 'Your bounty just went up. For me.'];
+const WRECK_LINES = ['I will be back!', 'My mum built that!', 'Worth it.', 'Ow, my bolts.', 'Tell the boss…', 'Not again!'];
 /** A raider is wrecked: scrap for whoever did it, maybe a repair kit or a part on the ground. */
 function owRaiderDown(v) {
   if (B.net === 'client') return;
   OW.wrecked++;
+  if (Math.random() < 0.45) txt(v.x, v.y - v.rad - 26, pick(WRECK_LINES), '#ece8df', 1.8);
   const by = v.lastBy && B.cars[v.lastBy.att],
     k = by && by.player && !by.dead ? by : B.cars.find(c => c.player && !c.dead);
   if (k) coinPop(v.x, v.y, 15 + v.diff * 15 + (v.hunter ? 60 : 0) + (v.boss ? 100 : 0), k);
