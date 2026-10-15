@@ -39,6 +39,7 @@ function srcList() {
   return a;
 }
 function newB(o) {
+  if (!o || !o.ow) leaveWorld();
   return Object.assign(
     {
       time: 0,

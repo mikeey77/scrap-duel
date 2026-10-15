@@ -528,6 +528,7 @@ function dressGround(g, th) {
 }
 /** Some floors change within an arena (the beach has wet sand and a boardwalk). */
 function surfaceAt(v) {
+  if (B.ow) return owOnRoad(v.x, v.y) ? SURFACES.asphalt : surfaceOf(owThemeAt(v.x, v.y));
   const S = B.surf;
   if (!B.theme || B.kind === 'wait') return S;
   if (B.theme.id === 'beach') {

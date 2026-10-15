@@ -10,7 +10,13 @@ const MENU_MODES = [
   { id: 'daily', name: 'Daily', col: '#b06bff', line: 'Same seed for everyone today, plus one odd rule.' },
   { id: 'league', name: 'League', col: '#ffd257', line: 'A season against five rivals. Top the table, win the final.' },
   { id: 'run', name: 'Scrap Gauntlet', col: '#ff5c7a', line: 'Endless waves, three hearts, a boss every fifth wave.' },
-  { id: 'online', name: 'Friends', col: '#5be7ff', line: 'Online with a room code, or on this PC with a controller.' }
+  { id: 'online', name: 'Friends', col: '#5be7ff', line: 'Online with a room code, or on this PC with a controller.' },
+  {
+    id: 'world',
+    name: 'Open world',
+    col: '#9be15d',
+    line: 'Test mode: drive a big generated map, wreck raiders, find camps.'
+  }
 ];
 const TAGLINES = [
   'Tip: loadout gear in the Garage is in My parts from round 1.',
@@ -30,7 +36,8 @@ const MODE_ICONS = {
   league: '<path d="M7 4h10v4a5 5 0 0 1-10 0V4ZM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M10 17h4"/>',
   solo: '<path d="M5 19 19 5M14 5h5v5M5 5l14 14M5 14v5h5"/>',
   run: '<path d="M12 3c-4.4 0-8 3.2-8 7.3 0 2.4 1.2 4.3 3 5.5V19h10v-3.2c1.8-1.2 3-3.1 3-5.5C20 6.2 16.4 3 12 3Z"/><circle cx="9" cy="11" r="1.6"/><circle cx="15" cy="11" r="1.6"/><path d="M10 19v2M14 19v2"/>',
-  online: '<path d="M12 13v8M8.5 9.5a5 5 0 0 1 7 0M5.6 6.6a9 9 0 0 1 12.8 0"/><circle cx="12" cy="12.5" r="1.4"/>'
+  online: '<path d="M12 13v8M8.5 9.5a5 5 0 0 1 7 0M5.6 6.6a9 9 0 0 1 12.8 0"/><circle cx="12" cy="12.5" r="1.4"/>',
+  world: '<path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20Z"/><path d="M9 4v13.5M15 6.5V20"/>'
 };
 function showMenu() {
   hideOverlays();
@@ -45,7 +52,13 @@ function showMenu() {
     G.phase = 'menu';
     updateHUD();
     if (!(B && B.demo)) demoStart(); // two bots fight behind the hangar
-  } else if (B && !B.demo && G.mode !== 'mp' && (G.phase === 'battle' || G.phase === 'wait') && !B.paused) {
+  } else if (
+    B &&
+    !B.demo &&
+    G.mode !== 'mp' &&
+    (G.phase === 'battle' || G.phase === 'wait' || G.phase === 'world') &&
+    !B.paused
+  ) {
     // solo: the bot must not keep shooting while you browse the menu
     B.paused = true;
     B.menuPaused = true;
@@ -75,26 +88,28 @@ function showMenu() {
   const set = activeSet(),
     lo = GEAR.loadout.map(gearById).filter(Boolean);
   const stat = id =>
-    id === 'run'
-      ? runBest()
-        ? `Best: wave ${runBest()}`
-        : 'No run yet'
-      : id === 'solo'
-        ? `${G.quickTeams === 2 ? '2v2' : '1v1'} · ${G.quickFmt === 'brawl' ? 'Brawl' : 'Draft'} · ${DIFF[G.diff].name}`
-        : id === 'online'
-          ? 'Online or local'
-          : id === 'daily'
-            ? (st => (st.best[dailyId()] != null ? `Best today ${st.best[dailyId()]}` : dailyToday().rule.name))(
-                dailyState()
-              )
-            : id === 'league'
-              ? (L =>
-                  !L
-                    ? 'No season yet'
-                    : L.champion
-                      ? `Season ${L.season} done`
-                      : `Season ${L.season} · day ${Math.min(L.day + 1, LEAGUE_DAYS)}/${LEAGUE_DAYS}`)(loadLeague())
-              : `${MODS.length} parts`;
+    id === 'world'
+      ? 'Test · beta'
+      : id === 'run'
+        ? runBest()
+          ? `Best: wave ${runBest()}`
+          : 'No run yet'
+        : id === 'solo'
+          ? `${G.quickTeams === 2 ? '2v2' : '1v1'} · ${G.quickFmt === 'brawl' ? 'Brawl' : 'Draft'} · ${DIFF[G.diff].name}`
+          : id === 'online'
+            ? 'Online or local'
+            : id === 'daily'
+              ? (st => (st.best[dailyId()] != null ? `Best today ${st.best[dailyId()]}` : dailyToday().rule.name))(
+                  dailyState()
+                )
+              : id === 'league'
+                ? (L =>
+                    !L
+                      ? 'No season yet'
+                      : L.champion
+                        ? `Season ${L.season} done`
+                        : `Season ${L.season} · day ${Math.min(L.day + 1, LEAGUE_DAYS)}/${LEAGUE_DAYS}`)(loadLeague())
+                : `${MODS.length} parts`;
   $('#ovMenu').classList.toggle('live', false);
   $('#ovMenu').innerHTML = `<div class="hangar${resume ? ' resume' : ''}">
     <header class="hg-top">
@@ -252,6 +267,9 @@ function menuOpts() {
       G.runTeams === 2 ? 2 : 1,
       'rt'
     )}</div>${G.runTeams === 2 ? `<div class="hg-o"><span class="mlab">Your partner</span>${seg('partnerSeg', PARTNER_STYLES, G.partnerStyle, 'p')}</div>` : ''}<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.${G.runTeams === 2 ? ' With a partner, every wave brings two rivals.' : ''}</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
+    world: `<p class="small">A test of a new mode: one big map stitched together from every arena, built fresh each time. Roads lead to camps where you repair and respawn. Raiders roam and come after you when you get close.</p>
+      <div class="hg-o"><span class="mlab">Your car</span><select id="owCar" aria-label="Car for the open world">${(G.base && G.base.size > 4 ? '<option value="mine">The car in your garage</option>' : '') + [...brawlSaved().map((b, i) => `<option value="bp${i}">${esc(b.name)}</option>`), ...BRAWL_TYPES.map((t, i) => `<option value="t${i}">${esc(t.name)}</option>`)].join('')}</select></div>
+      <button class="btn hg-go2" id="owPlay">Enter the open world</button>`,
     online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
       <div class="hg-o local2"><span class="mlab">On this PC</span><p class="small">Player 1 on keyboard and mouse, player 2 on a controller. Both bring a finished car, five rounds.${PAD.on ? ' Controller ready.' : ''}</p>
       <div class="mrow"><select id="p2Car" aria-label="Player 2's car">${BRAWL_TYPES.map(t => `<option>${esc(t.name)}</option>`).join('')}</select><button class="btn ghost" id="mLocal">Local duel</button></div></div>`
@@ -259,6 +277,21 @@ function menuOpts() {
   el.style.setProperty('--rc', m.col);
   el.innerHTML = body;
   if (m.id === 'league') leagueMenuWire(menuOpts);
+  if ($('#owPlay'))
+    $('#owPlay').onclick = () => {
+      sfx('ui');
+      menuLeave();
+      const v = $('#owCar').value;
+      let d, label;
+      if (v === 'mine') ((d = { base: new Map(G.base), top: new Map(G.top) }), (label = 'your car'));
+      else if (v.startsWith('bp')) ((d = brawlSaved()[+v.slice(2)].d), (label = 'blueprint'));
+      else {
+        const t = BRAWL_TYPES[+v.slice(1)];
+        d = brawlDesign(t, 1);
+        label = t.name;
+      }
+      startWorld(d, label);
+    };
   if ($('#mLocal'))
     $('#mLocal').onclick = () => {
       sfx('ui');
@@ -355,6 +388,57 @@ function menuOpts() {
     code.addEventListener('keydown', e => e.key === 'Enter' && join());
   }
 }
+/** One-click setups for a room. Everything else hides under "Change details". */
+const LOBBY_PRESETS = [
+  {
+    id: 'duel',
+    name: 'Duel',
+    line: 'You against your friend. Draft a car round by round.',
+    f: 'balanced',
+    r: 10,
+    ts: 1
+  },
+  {
+    id: 'brawl',
+    name: 'Quick brawl',
+    line: 'Bring a finished car. Five fast rounds, just driving.',
+    f: 'brawl',
+    r: 5,
+    ts: 1
+  },
+  {
+    id: 'coop',
+    name: 'Team up',
+    line: 'You two on one team against two bots.',
+    f: 'balanced',
+    r: 10,
+    ts: 2,
+    same: true
+  },
+  {
+    id: 'teams',
+    name: 'Team vs team',
+    line: 'Each of you with a bot partner, against each other.',
+    f: 'balanced',
+    r: 10,
+    ts: 2,
+    same: false
+  }
+];
+function lobbyPreset() {
+  const T = G.mpTeams || { host: 0, client: 1 },
+    ts = G.mpTeamSize === 2 ? 2 : 1,
+    f = G.mpFormat || 'balanced',
+    r = G.mpRounds || 10;
+  return LOBBY_PRESETS.find(
+    p => p.f === f && p.r === r && p.ts === ts && (ts === 1 || p.same === (T.host === T.client))
+  );
+}
+function lobbySummary() {
+  const T = G.mpTeams || { host: 0, client: 1 },
+    ts = G.mpTeamSize === 2 ? 2 : 1;
+  return `${MATCH_FORMATS[G.mpFormat || 'balanced'].name} · ${G.mpRounds || 10} rounds · ${ts === 2 ? (T.host === T.client ? '2 vs 2, you two together' : '2 vs 2, against each other') : '1 vs 1'}`;
+}
 function lobbyUI() {
   const n = Net,
     host = n.role === 'host',
@@ -367,39 +451,73 @@ function lobbyUI() {
       ? `<p>Connected to <b>${esc(G.oppName)}</b>.</p>`
       : host
         ? n.ready
-          ? '<p>Share this code with your friend. Waiting for them to join…</p>'
+          ? '<p>Send this code to your friend. Waiting for them to join…</p>'
           : '<p>Opening a room…</p>'
         : '<p>Connecting…</p>';
-  c.innerHTML = `<span class="label">${host ? 'Hosting' : 'Joining'} a room</span><h2>Multiplayer</h2>
-    <div class="code">${esc(n.code || '····')}</div>${st}
+  const cur = lobbyPreset();
+  c.innerHTML = `<span class="label">${host ? 'Your room' : 'Joining a room'}</span><h2>Play with a friend</h2>
+    <div class="lcode"><div class="code">${esc(n.code || '····')}</div>${host && n.code ? '<button class="btn ghost sm" id="lCopy">Copy code</button>' : ''}</div>${st}
     <div class="lstat"><span><span class="dot on"></span>${esc(G.name)}</span><span><span class="dot${n.connected ? ' on' : ''}"></span>${n.connected ? esc(G.oppName) : 'Friend'}</span></div>
     ${
       host
-        ? `<div class="seg rseg" id="lFormat" aria-label="Mode">${Object.entries(MATCH_FORMATS)
-            .map(
-              ([k, f]) =>
-                `<button data-f="${k}" aria-pressed="${k === (G.mpFormat || 'balanced')}" title="${esc(f.desc)}">${esc(f.name)}</button>`
-            )
-            .join('')}</div>
-          <div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div>`
-        : ''
+        ? `<div class="lpresets" role="radiogroup" aria-label="What to play">${LOBBY_PRESETS.map(p => `<button class="lpre" data-pre="${p.id}" role="radio" aria-checked="${cur === p}"><b>${esc(p.name)}</b><span>${esc(p.line)}</span></button>`).join('')}</div>
+      <details class="lmore"${cur ? '' : ' open'}><summary>Change details · ${esc(lobbySummary())}</summary>
+        <div class="hg-o"><span class="mlab">Mode</span><div class="seg rseg" id="lFormat" aria-label="Mode">${Object.entries(
+          MATCH_FORMATS
+        )
+          .map(
+            ([k, f]) =>
+              `<button data-f="${k}" aria-pressed="${k === (G.mpFormat || 'balanced')}" title="${esc(f.desc)}">${esc(f.name)}</button>`
+          )
+          .join('')}</div></div>
+        <div class="hg-o"><span class="mlab">Length</span><div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div></div>
+        ${lobbyTeamsHtml(host, n.connected)}
+      </details>`
+        : `<p class="lsum">The host picked: <b>${esc(lobbySummary())}</b></p>${G.mpTeamSize === 2 ? lobbyTeamsHtml(host, n.connected) : ''}`
     }
-    ${lobbyTeamsHtml(host, n.connected)}
     ${n.connected && h2hLine(G.oppName) ? `<p class="small">${h2hLine(G.oppName)}</p>` : ''}
-    <p class="small fairline">Online is fair play: your gear levels and sticker perks stay at home. Your skin, stickers and trail still show.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>Start match</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Cancel</button></div>`;
+    <p class="small fairline">Online is fair play: gear levels and sticker perks stay at home. Your skin, stickers and trail still show.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>${n.connected ? 'Start match' : 'Waiting for your friend…'}</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Leave room</button></div>`;
+  const keepOpen = () => {
+    const d = $('.lmore');
+    return d && d.open;
+  };
+  $$('[data-pre]').forEach(b =>
+    b.addEventListener('click', () => {
+      const p = LOBBY_PRESETS.find(x => x.id === b.dataset.pre);
+      G.mpFormat = p.f;
+      G.mpRounds = p.r;
+      G.mpTeamSize = p.ts;
+      G.mpTeams = p.ts === 2 ? (p.same ? { host: 0, client: 0 } : { host: 0, client: 1 }) : { host: 0, client: 1 };
+      Net.sendLobby();
+      sfx('ui');
+      lobbyUI();
+    })
+  );
+  const cp = $('#lCopy');
+  if (cp)
+    cp.addEventListener('click', () => {
+      try {
+        navigator.clipboard.writeText(n.code);
+        cp.textContent = 'Copied';
+      } catch (e) {}
+    });
   $$('#lFormat button').forEach(b =>
     b.addEventListener('click', () => {
       G.mpFormat = b.dataset.f;
-      $$('#lFormat button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      Net.sendLobby();
       sfx('ui');
+      lobbyUI();
+      if (!keepOpen() && $('.lmore')) $('.lmore').open = true;
     })
   );
   $$('#lRounds button').forEach(b =>
     b.addEventListener('click', () => {
       G.mpRounds = +b.dataset.n;
-      $$('#lRounds button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      Net.sendLobby();
       sfx('ui');
+      lobbyUI();
+      if ($('.lmore')) $('.lmore').open = true;
     })
   );
   $$('#lTeamSize button').forEach(b =>
@@ -409,6 +527,7 @@ function lobbyUI() {
       Net.sendLobby();
       sfx('ui');
       lobbyUI();
+      if ($('.lmore')) $('.lmore').open = true;
     })
   );
   $$('[data-side]').forEach(b =>
@@ -424,6 +543,7 @@ function lobbyUI() {
       }
       sfx('ui');
       lobbyUI();
+      if ($('.lmore')) $('.lmore').open = true;
     })
   );
   const s = $('#lStart');
@@ -453,7 +573,7 @@ function lobbyTeamsHtml(host, connected) {
     friendSide = host ? T.client : T.host;
   const sizeSeg = host
     ? `<div class="seg rseg" id="lTeamSize" aria-label="Teams"><button data-ts="1" aria-pressed="${size === 1}">1 vs 1</button><button data-ts="2" aria-pressed="${size === 2}">2 vs 2</button></div>`
-    : `<p class="small">${size === 2 ? 'The host picked 2 vs 2.' : 'The host picked 1 vs 1.'}</p>`;
+    : ''; // the friend already sees the host's choice in the summary line
   if (size !== 2) return sizeSeg;
   const side = (i, label, col) => {
     const members = [];
@@ -555,7 +675,7 @@ function loop(t) {
         demoTick(dt);
       }
       hangarFxTick(dt);
-    } else if ((G.phase === 'wait' || G.phase === 'battle') && B) {
+    } else if ((G.phase === 'wait' || G.phase === 'battle' || G.phase === 'world') && B) {
       if (
         B.menuPaused &&
         ['#ovMenu', '#ovCodex', '#ovSettings', '#ovStyle', '#ovIntro', '#ovPause'].every(id => $(id).hidden)
@@ -589,7 +709,7 @@ function loop(t) {
   requestAnimationFrame(loop);
 }
 addEventListener('resize', () => {
-  if (G.phase !== 'wait' && G.phase !== 'battle') sizeBP();
+  if (G.phase !== 'wait' && G.phase !== 'battle' && G.phase !== 'world') sizeBP();
   if (B) sizeArena();
 });
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => drawBP());
@@ -859,6 +979,14 @@ if (window.__SD_TEST__)
       return [r.left + cpx(x) + cell / 2, r.top + cpy(y) + cell / 2];
     },
     partMotion,
+    getOW: () => OW,
+    startWorld,
+    leaveWorld,
+    owGenChunk,
+    owThemeAt,
+    owGround,
+    getAW: () => [AW, AH],
+    stepArena,
     kickOf,
     fireWeapons: (v, dt) => weapons(v, dt),
     autoPlace,

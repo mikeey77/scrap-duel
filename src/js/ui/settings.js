@@ -149,7 +149,7 @@ function openSettings(back) {
 }
 
 /* ---------- pause ---------- */
-const canPause = () => B && !B.demo && !B.replay && (G.phase === 'battle' || G.phase === 'wait');
+const canPause = () => B && !B.demo && !B.replay && (G.phase === 'battle' || G.phase === 'wait' || G.phase === 'world');
 function togglePause(force) {
   if (!canPause()) return;
   const online = G.mode === 'mp';
@@ -206,6 +206,13 @@ function togglePause(force) {
     });
   $('#pMenu').addEventListener('click', () => {
     togglePause(false);
+    if (G.phase === 'world') {
+      // leaving the open world: nothing to resume
+      B = null;
+      leaveWorld();
+      G.phase = 'menu';
+      G.started = false;
+    }
     showMenu();
   });
 }

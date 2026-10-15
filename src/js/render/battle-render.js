@@ -1004,13 +1004,16 @@ function drawArena() {
   c.translate(view.w / 2 + sh, view.h / 2 + sh2);
   c.scale(s, s);
   c.translate(-cam.x, -cam.y);
-  drawStands(c);
-  c.drawImage(ground, 0, 0);
+  if (B.ow) owDrawGround(c);
+  else {
+    drawStands(c);
+    c.drawImage(ground, 0, 0);
+  }
   planAmbient(c);
   for (const z of B.zones) if (z.kind !== 'ramp' && z.kind !== 'tramp') drawZone(c, z);
   for (const z of B.zones) if (z.kind === 'ramp' || z.kind === 'tramp') drawZone(c, z);
   for (const p of B.pk || []) drawPickup(c, p);
-  for (const st of B.st) drawStaticThemed(c, st, B.theme.wall);
+  for (const st of B.st) drawStaticThemed(c, st, st.wall || B.theme.wall);
   for (const o of B.objs) if (o.z <= 0) drawObj(c, o);
   for (const db of B.debris) {
     c.save();
@@ -1116,7 +1119,7 @@ function drawArena() {
   // off-screen arrows: the objective, then the rival
   const op = objectivePos();
   if (op && !B.demo) edgeArrow(c, op.x, op.y, s, SPECIALS[B.special].col, SPECIALS[B.special].icon);
-  if (v && B.cars.length > 1 && !B.demo) {
+  if (v && B.cars.length > 1 && !B.demo && !B.ow) {
     const e = B.cars.find(x => x !== v);
     if (e && !e.dead) {
       const [ex, ey] = worldToScreen(e.x, e.y, s),
@@ -1164,6 +1167,8 @@ function drawArena() {
   }
   if (B.demo) {
     // behind the menu the hangar has its own scoreboard; nothing should show through other screens either
+  } else if (B.ow) {
+    if (!B.photo) owHUD(c);
   } else if (!B.photo) drawHUD(c);
 }
 /** Pulsing diamond over the rival's cockpit: the thing you are trying to destroy. */

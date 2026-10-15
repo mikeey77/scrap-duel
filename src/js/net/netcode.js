@@ -376,6 +376,9 @@ const Net = {
         if (this.role === 'client') {
           G.mpTeamSize = d.teamSize === 2 ? 2 : 1;
           G.mpTeams = { host: d.teams && d.teams.host ? 1 : 0, client: d.teams && d.teams.client ? 1 : 0 };
+          // what the host picked, so the friend sees the same summary
+          if (MATCH_FORMATS[d.format]) G.mpFormat = d.format;
+          if (ROUND_CHOICES.includes(d.rounds)) G.mpRounds = d.rounds;
           if (!$('#ovLobby').hidden) lobbyUI();
         }
         break;
@@ -461,7 +464,13 @@ const Net = {
   },
   sendLobby() {
     if (this.role === 'host')
-      this.send({ t: 'lobby', teamSize: G.mpTeamSize || 1, teams: G.mpTeams || { host: 0, client: 1 } });
+      this.send({
+        t: 'lobby',
+        teamSize: G.mpTeamSize || 1,
+        teams: G.mpTeams || { host: 0, client: 1 },
+        format: G.mpFormat || 'balanced',
+        rounds: G.mpRounds || 10
+      });
   },
   sendSnap(snap) {
     if (this.conn && this.conn.open) this.send(snap);

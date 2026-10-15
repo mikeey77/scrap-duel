@@ -2,9 +2,10 @@
 /* =================== ARENA CORE (two cars) =================== */
 const ac = $('#ac'),
   ax = ac.getContext('2d', { alpha: false });
-const AW = 2000,
-  AH = 1250,
-  WM = 22,
+// the arena size; the open world swaps in its own (much bigger) size while you are in it
+let AW = 2000,
+  AH = 1250;
+const WM = 22,
   S = 20;
 let B = null,
   view = { w: 0, h: 0, sc: 1, worldW: 0, worldH: 0 },
@@ -27,13 +28,18 @@ function sizeArena() {
   view.worldH = r.height;
   ac.width = Math.round(r.width * d);
   ac.height = Math.round(r.height * d);
-  view.sc = Math.min(view.worldW / AW, view.worldH / AH);
+  // the open world keeps the normal arena's zoom level, however big the map is
+  view.sc =
+    typeof OW !== 'undefined' && OW
+      ? Math.min(view.worldW / 2000, view.worldH / 1250)
+      : Math.min(view.worldW / AW, view.worldH / AH);
 }
 let presentationKey = '';
 function syncPresentation() {
-  const active = !!B && !B.demo && ['wait', 'battle', 'replay'].includes(G.phase);
+  const active = !!B && !B.demo && ['wait', 'battle', 'replay', 'world'].includes(G.phase);
   document.body.classList.toggle('reduced-motion', SETTINGS.motion === false);
   document.body.classList.toggle('arena-battle', active && G.phase === 'battle');
+  document.body.classList.toggle('in-world', active && G.phase === 'world');
   const key = active + ' ' + G.phase + ' ' + innerWidth + ' ' + innerHeight;
   if (key === presentationKey) return;
   presentationKey = key;
@@ -1122,6 +1128,11 @@ function startDeath(v) {
   v.dead = true;
   v.drones = [];
   if (B.seq === 'death' || B.seq === 'end') return;
+  // open world: a raider just blows apart and the world goes on
+  if (B.ow && v.idx !== B.me) {
+    owRaiderDown(v);
+    return teamWreck(v);
+  }
   // 2v2: while a teammate is still driving, the wreck just blows apart and the fight goes on
   if (teamAlive(teamOf(v))) return teamWreck(v);
   B.ts = 0.22;

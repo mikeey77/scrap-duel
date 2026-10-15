@@ -29,7 +29,7 @@ addEventListener('keydown', e => {
   if (e.target && (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable)) return;
   const code = mappedKey(e.code); // the player's own key bindings
   if (
-    (G.phase === 'wait' || G.phase === 'battle') &&
+    (G.phase === 'wait' || G.phase === 'battle' || G.phase === 'world') &&
     B &&
     !B.paused &&
     !Net.reconnecting &&
@@ -473,6 +473,12 @@ function stepArena(rdt) {
   updateCam(rdt);
   if (sim) simulate(dt);
   else clientStep(dt);
+  if (B.ow) {
+    owStep(dt);
+    stepFx(dt);
+    B.shake *= Math.exp(-8 * rdt);
+    return;
+  }
   if (sim && !B.demo && !B.replay) {
     bossTick(dt);
     stepGifts(dt);
@@ -508,8 +514,13 @@ function seqHost(rdt) {
   else if (B.seq === 'respawn') {
     if (B.seqT > 0.4) {
       const sp = B.sp[0],
-        c = makeCar(myDesign(), 0, sp[0], sp[1], sp[2], { tune: [...G.tune], name: G.name, paint: G.paint });
+        c = makeCar(B.ow ? OW.design : myDesign(), 0, sp[0], sp[1], sp[2], {
+          tune: [...G.tune],
+          name: G.name,
+          paint: G.paint
+        });
       c.ctrl = 'local';
+      c.team = 0;
       c.look = { ...G.style };
       B.cars[0] = c;
       B.seq = 'in';
@@ -593,7 +604,8 @@ function deathSeq(rdt) {
 function updateCam(rdt) {
   const v = myCar();
   if (!v) return;
-  if (B.seq === 'in' || B.seq === 'out') {
+  if (B.ow && B.seq === 'play' && !v.dead) owCam(v);
+  else if (B.seq === 'in' || B.seq === 'out') {
     cam.tx = v.x;
     cam.ty = v.y;
     cam.tz = 1.8;
@@ -665,9 +677,11 @@ function simulate(dt) {
           ? readPad2(v)
           : v.ctrl === 'bot'
             ? botThink(v, dt)
-            : v.ctrl === 'remote'
-              ? takeRemote()
-              : ZERO_IN;
+            : v.ctrl === 'raider'
+              ? raiderThink(v, dt)
+              : v.ctrl === 'remote'
+                ? takeRemote()
+                : ZERO_IN;
     applyInput(v, i);
   }
   for (const v of B.cars) {

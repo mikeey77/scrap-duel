@@ -130,7 +130,8 @@ const BattleMusic = {
       !MUTE &&
       SETTINGS.music > 0 &&
       !document.hidden &&
-      ((B && !B.demo && !B.replay && !B.paused && !Net.reconnecting && G.phase === 'battle') || garage);
+      ((B && !B.demo && !B.replay && !B.paused && !Net.reconnecting && (G.phase === 'battle' || G.phase === 'world')) ||
+        garage);
     if (!active) {
       if (this.timer) this.stop();
       return;
@@ -663,12 +664,15 @@ function playSfx(name, x, y) {
   if (lastS[name] && now - lastS[name] < (THROT[name] || 0.03)) return;
   lastS[name] = now;
   let v = 1;
-  if (x != null && y != null && B && (G.phase === 'battle' || G.phase === 'wait')) {
+  if (x != null && y != null && B && (G.phase === 'battle' || G.phase === 'wait' || G.phase === 'world')) {
     const d = Math.hypot(x - cam.x, y - cam.y);
     v = clamp(1.15 - d / 1500, 0.12, 1);
   }
   if (B && B.demo) v *= 0.2; // the menu battle is background noise
-  SND_PAN = x != null && B && (G.phase === 'battle' || G.phase === 'wait') ? clamp((x - cam.x) / 900, -0.8, 0.8) : 0;
+  SND_PAN =
+    x != null && B && (G.phase === 'battle' || G.phase === 'wait' || G.phase === 'world')
+      ? clamp((x - cam.x) / 900, -0.8, 0.8)
+      : 0;
   SND_PITCH = STEADY.has(name) ? 1 : 1 + (Math.random() - 0.5) * 0.09;
   try {
     SFX[name](v);

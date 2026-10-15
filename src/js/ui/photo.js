@@ -8,7 +8,7 @@ const PHOTO_FILTERS = [
   ['heat', 'Heatwave', 'hue-rotate(-25deg) saturate(1.8)'],
   ['night', 'Night Vision', 'grayscale(1) sepia(1) hue-rotate(60deg) saturate(3) brightness(0.9)']
 ];
-const canPhoto = () => B && !B.demo && !B.replay && G.mode !== 'mp' && (G.phase === 'battle' || G.phase === 'wait');
+const canPhoto = () => B && !B.demo && !B.replay && G.mode !== 'mp' && (G.phase === 'battle' || G.phase === 'wait' || G.phase === 'world');
 function openPhoto() {
   if (!canPhoto()) return;
   $('#ovPause').hidden = true;

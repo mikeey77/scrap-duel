@@ -2,6 +2,27 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.2.0 · Off the Map (test) · 2026-10-15
+
+**Open world (test mode)**: a new tile in the main menu.
+
+- One big map (20×20 km of arena, so to speak) stitched together from every arena theme, generated fresh each time from a seed.
+- **Biomes**: snow and ice in the north, desert, lava and beaches in the south, towns, yards and gardens in between, and now and then a chessboard, toy room or haunted house. Each biome has its own floor (and so its own grip and speed for your tyres), props, ramps, gimmicks and music.
+- **Roads** cross the map; asphalt is the fast way around. **Camps** sit on every crossing: drive onto one to repair fully and make it your respawn point.
+- **Raiders** roam the land and come after you when you get close or shoot them. Further from the start they get tougher. Wrecking one pays scrap, sometimes a repair kit.
+- **Minimap** with fog: it fills in as you explore. Big place names when you enter a biome.
+- Pick your car: the one in your garage, a saved blueprint or a ready-made one.
+- The world streams in around you in 1×1 km chunks, so only the area near you is simulated; what you wreck stays wrecked while you are nearby.
+
+**Online rooms are simpler**
+
+- Four one-click setups: Duel, Quick brawl, Team up, Team vs team. Mode, length and teams fold away under "Change details".
+- Your friend sees exactly what you picked, a Copy code button, and clearer buttons (Leave room, Waiting for your friend…).
+
+**Also**
+
+- The main menu shows the modes in a 3×2 grid.
+
 ## 2.1.4 · Turn It Around · 2026-10-14
 
 - **Parts visibly turn**: a part you turn on the car swings round instead of snapping.

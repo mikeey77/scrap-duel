@@ -2268,4 +2268,37 @@ test('every weapon visibly reacts when it fires: recoil, a pop, or a shudder whi
   assert.deepEqual(quiet, [], 'weapons without a firing animation');
 });
 
+test('open world: a big map streams in around you, chunks come back the same, leaving restores the arena', () => {
+  const { api: a } = runtime();
+  a.startMatch('solo');
+  a.openBuild();
+  const d = { base: new Map(a.G.base), top: new Map(a.G.top) };
+  a.startWorld(d, 'test');
+  const B = a.getB(),
+    O = a.getOW();
+  assert.equal(a.G.phase, 'world');
+  assert(a.getAW()[0] >= 20000, 'the world is big');
+  assert(B.objs.length > 20 && B.zones.length > 3, 'nearby chunks are loaded');
+  assert(O.camps.length >= 16 && O.home, 'camps on the road crossings');
+  const c1 = a.owGenChunk(3, 4),
+    c2 = a.owGenChunk(3, 4);
+  assert.equal(
+    JSON.stringify(c1.objs.map(o => [o.kind, Math.round(o.x), Math.round(o.y)])),
+    JSON.stringify(c2.objs.map(o => [o.kind, Math.round(o.x), Math.round(o.y)])),
+    'same seed, same chunk'
+  );
+  const north = new Set(),
+    south = new Set();
+  for (let x = 1000; x < 19000; x += 1500) {
+    north.add(a.owThemeAt(x, 1500).id);
+    south.add(a.owThemeAt(x, 18500).id);
+  }
+  assert(north.size > 1 && south.size > 1, 'more than one biome along an edge');
+  B.seq = 'play';
+  for (let i = 0; i < 30; i++) a.stepArena(1 / 30);
+  a.leaveWorld();
+  assert.equal(a.getAW().join(), '2000,1250', 'normal arena size again');
+  assert(!a.getOW());
+});
+
 console.log(`\n${passed} regression tests passed.`);
