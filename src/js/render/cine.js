@@ -206,10 +206,10 @@ const CINE_DRAW = {
   },
   /** The big title: letters slam in, light rays and a band behind it, a shine sweeps over it. */
   title(g, f, W, H) {
+    let size = Math.min(f.size || 110, W * (f.small ? 0.07 : 0.11));
     const t = f.t,
       dur = f.dur,
       text = f.text,
-      size = Math.min(f.size || 110, W * (f.small ? 0.07 : 0.11)),
       cx = W / 2,
       cy = H * (f.y || 0.42),
       out = Math.max(0, (t - (dur - 0.45)) / 0.45),
@@ -217,6 +217,12 @@ const CINE_DRAW = {
       stag = Math.min(0.05, 0.4 / Math.max(1, n));
     g.save();
     g.font = `700 ${size}px "Chakra Petch", Impact, sans-serif`;
+    // long titles shrink to fit the screen
+    const full = g.measureText(text).width;
+    if (full > W * 0.86) {
+      size *= (W * 0.86) / full;
+      g.font = `700 ${size}px "Chakra Petch", Impact, sans-serif`;
+    }
     g.textBaseline = 'middle';
     g.textAlign = 'left';
     const widths = [...text].map(ch => g.measureText(ch).width),
@@ -483,9 +489,10 @@ function cineTitle(text, sub, col, kind = 'info', opt = {}) {
   if (kind !== 'info' && !calm)
     CINE.fx.push({ k: 'rays', t: 0, dur: dur + 0.4, col, a: kind === 'lose' ? 0.18 : 0.32, z: 0 });
   if (kind !== 'info') CINE.fx.push({ k: 'bars', t: 0, dur: dur + 0.2, col, z: 1 });
+  if (kind === 'end') kind = 'win';
   if (kind === 'win') {
     CINE.fx.push({ k: 'vig', t: 0, dur: dur + 0.5, col: '#f2b705', a: 0.25, z: 0 });
-    setTimeout(() => cineConfetti(opt.confetti || 140), 250);
+    if (opt.confetti !== 0) setTimeout(() => cineConfetti(opt.confetti || 140), 250);
   } else if (kind === 'lose') {
     CINE.fx.push({ k: 'vig', t: 0, dur: dur + 0.6, col: '#b0182c', a: 0.55, z: 0 });
     setTimeout(() => cineEmbers(60), 200);

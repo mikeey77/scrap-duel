@@ -1016,6 +1016,8 @@ if (window.__SD_TEST__)
     partMotion,
     getOW: () => OW,
     owSaved,
+    cineTitle,
+    cineDoors,
     owBoard,
     owLootDrop,
     owTakePart,
