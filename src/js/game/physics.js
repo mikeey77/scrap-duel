@@ -75,6 +75,7 @@ function drive(v, dt) {
   }
   v.vx = fx_ * fv + rx * lv;
   v.vy = fy * fv + ry * lv;
+  v.slip = air || flipped || C.hoverMode ? 0 : Math.abs(lv);
   if (v.anchored) {
     v.vx *= Math.exp(-14 * dt);
     v.vy *= Math.exp(-14 * dt);
@@ -147,6 +148,27 @@ function drive(v, dt) {
         });
       }
     }
+    // sliding sideways on a hard floor: tyre smoke and darker marks
+    const drift =
+      !S.dust && S.id !== 'ice' && B.kind !== 'wait' && v.slip > 40 ? Math.min(1, (v.slip - 40) / 90) : 0;
+    if (drift && Math.random() < dt * 22 * drift) {
+      const I = pick(v.insts.filter(I => I.alive && I.m.drive));
+      if (I) {
+        const [px, py] = ipos(v, I);
+        fx({
+          k: 'smoke',
+          x: px,
+          y: py,
+          vx: -v.vx * 0.1 + rnd(-25, 25),
+          vy: -v.vy * 0.1 + rnd(-25, 25),
+          life: rnd(0.6, 1),
+          max: 1,
+          r: rnd(5, 9),
+          col: '215,215,220'
+        });
+      }
+    }
+    if (drift > 0.2) gx.fillStyle = `rgba(20,20,22,${0.08 + drift * 0.1})`;
     for (const I of v.insts)
       if (I.alive && I.m.drive)
         for (const b of I.cells) {

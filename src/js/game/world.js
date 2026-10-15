@@ -582,6 +582,7 @@ function startWorld(design, label, opt = {}) {
     homes: {},
     notes: [],
     fly: [],
+    fade: 1.2,
     clock: S && S.clock != null ? S.clock : undefined,
     mission: null
   };
