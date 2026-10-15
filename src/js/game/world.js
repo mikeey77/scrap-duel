@@ -269,55 +269,72 @@ function owGround(ch) {
   const g = cv.getContext('2d'),
     x0 = ch.cx * OW_CH,
     y0 = ch.cy * OW_CH,
-    B2 = 20,
-    PAD = 40;
+    B2 = 40,
+    PAD = 120;
   owSeeded(owHash(ch.cx, ch.cy, OW.seed ^ 0x9a1), () => {
-    // biome colours in blocks, drawn a little past the chunk edge and blurred, so borders are soft
-    // and neighbouring chunks meet without a seam
-    const big = document.createElement('canvas');
-    big.width = big.height = OW_CH + PAD * 2;
-    const bg = big.getContext('2d');
-    for (let y = -PAD; y < OW_CH + PAD; y += B2)
-      for (let x = -PAD; x < OW_CH + PAD; x += B2) {
-        const wx = x0 + x + B2 / 2,
-          wy = y0 + y + B2 / 2,
-          th = owThemeAt(wx, wy);
+    // biome colours as a tiny picture (one pixel per block, a bit past the chunk edge) that is
+    // stretched with smoothing: soft borders for free, and neighbouring chunks meet without a seam
+    const n = (OW_CH + PAD * 2) / B2,
+      small = document.createElement('canvas');
+    small.width = small.height = n;
+    const sg = small.getContext('2d'),
+      ths = new Array(n * n);
+    for (let j = 0; j < n; j++)
+      for (let i = 0; i < n; i++) {
+        const wx = x0 - PAD + i * B2 + B2 / 2,
+          wy = y0 - PAD + j * B2 + B2 / 2,
+          th = (ths[j * n + i] = owThemeAt(wx, wy));
         let col = th.ground[0];
         if (th.id === 'chess') col = (Math.floor(wx / 120) + Math.floor(wy / 120)) % 2 ? '#8a5a32' : '#e6d3ad';
         else if (th.id === 'kitchen' || th.id === 'market' || th.id === 'carwash')
           col = (Math.floor(wx / 60) + Math.floor(wy / 60)) % 2 ? th.ground[0] : mix(th.ground[0], 0.06);
-        bg.fillStyle = col;
-        bg.fillRect(x + PAD, y + PAD, B2 + 0.5, B2 + 0.5);
+        sg.fillStyle = col;
+        sg.fillRect(i, j, 1, 1);
       }
+    // soften on a small in-between picture (cheap), then stretch that over the chunk
+    const mid = document.createElement('canvas');
+    mid.width = mid.height = n * 4;
+    const mg = mid.getContext('2d');
+    mg.imageSmoothingEnabled = true;
     try {
-      g.filter = 'blur(12px)';
+      mg.filter = 'blur(3px)';
     } catch (e) {}
-    g.drawImage(big, -PAD, -PAD);
-    try {
-      g.filter = 'none';
-    } catch (e) {}
+    mg.drawImage(small, 0, 0, n * 4, n * 4);
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = 'low';
+    g.drawImage(mid, -PAD, -PAD, OW_CH + PAD * 2, OW_CH + PAD * 2);
+    const thAt = (x, y) =>
+      ths[clamp(Math.floor((y + PAD) / B2), 0, n - 1) * n + clamp(Math.floor((x + PAD) / B2), 0, n - 1)];
     // soft patches and grit in each block's own tint
     for (let i = 0; i < 30; i++) {
       const x = rnd(0, OW_CH),
         y = rnd(0, OW_CH),
-        th = owThemeAt(x0 + x, y0 + y);
+        th = thAt(x, y);
       g.fillStyle = `rgba(${Math.random() < 0.5 ? th.ground[1] : th.ground[2]},${rnd(0.04, 0.09)})`;
       g.beginPath();
       g.ellipse(x, y, rnd(40, 160), rnd(30, 110), rnd(0, 3), 0, 7);
       g.fill();
     }
-    for (let i = 0; i < 2600; i++) {
+    // grit: grouped per colour so the canvas changes fill style a few times instead of thousands
+    const grit = new Map();
+    for (let i = 0; i < 1300; i++) {
       const x = rnd(0, OW_CH),
         y = rnd(0, OW_CH),
-        th = owThemeAt(x0 + x, y0 + y);
-      g.fillStyle = `rgba(${Math.random() < 0.5 ? th.ground[1] : th.ground[2]},${rnd(0.08, 0.22)})`;
-      g.fillRect(x, y, rnd(1, 3), rnd(1, 3));
+        th = thAt(x, y),
+        key = `rgba(${Math.random() < 0.5 ? th.ground[1] : th.ground[2]},${[0.09, 0.15, 0.21][Math.floor(Math.random() * 3)]})`;
+      let L = grit.get(key);
+      if (!L) grit.set(key, (L = []));
+      L.push(x, y, rnd(1, 3), rnd(1, 3));
+    }
+    for (const [col, L] of grit) {
+      g.fillStyle = col;
+      for (let i = 0; i < L.length; i += 4) g.fillRect(L[i], L[i + 1], L[i + 2], L[i + 3]);
     }
     // a few details that say where you are
     for (let i = 0; i < 26; i++) {
       const x = rnd(0, OW_CH),
         y = rnd(0, OW_CH),
-        th = owThemeAt(x0 + x, y0 + y);
+        th = thAt(x, y);
       if (owRoadDist(x0 + x, y0 + y) < OW_ROADW + 10) continue;
       owDetail(g, th.id, x, y);
     }
