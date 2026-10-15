@@ -2,6 +2,22 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.4.0 · Night Shift · 2026-10-15
+
+**Polish for the whole game, and the open world comes alive.**
+
+- **Day and night** in the open world: dusk turns the sky orange, at night your headlights, camps and raider fires light the way. More raiders come out at night, and the crates hold better parts.
+- **Loot with a kick**: crates and safes burst into splinters, parts hop out and drift toward you, rare parts send up a beam of light you can spot from far away. What you pick up flies into your My parts counter.
+- **Travel between camps**: every camp you have found is on the camp menu; pick one and you are there (not with raiders on your tail or a crate on board).
+- **Missions feel like missions**: a progress bar and checkpoint pips on the HUD, a burst at every checkpoint, and confetti, a coin fountain and a cheer when you finish. Epic and legendary finds get their own moment.
+- **Camps that look lived-in**: a turning ring, a flag in the wind, a beacon and welding sparks. Raider camps have a fire you see from afar.
+- **Raiders talk**: they shout when they spot you and complain when you wreck them.
+- **Tyre smoke and skid marks** when you slide on hard floors, in every arena.
+- **Smoother driving in the open world**: new ground is painted three times faster, so entering new areas no longer stutters.
+- A tidier HUD in the open world: rounded panels, a sun and moon clock, a health bar that shows what you just lost, a scrap counter that counts up.
+- The open world is no longer marked as a test; the menu shows your missions and parts.
+- **Website**: a new open world section with screenshots, and the page now also opens straight from a folder.
+
 ## 2.3.0 · Scrap Roads · 2026-10-15
 
 **The open world, now with something to do (and someone to do it with).**
