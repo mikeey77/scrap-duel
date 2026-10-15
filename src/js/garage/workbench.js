@@ -23,27 +23,6 @@ const lvPips = g =>
   `<span class="lvpips" aria-label="Level ${g.lvl} of ${GEAR_MAX}">${Array.from({ length: GEAR_MAX }, (_, i) => `<i class="${i < g.lvl ? 'on' : ''}${i === 4 || i === 9 ? ' ms' : ''}" style="--lc:${lvCol(i + 1)}"></i>`).join('')}</span>`;
 const starTxt = g => (g.s ? `<i class="gstars" title="Reforged ${g.s}×">${'✦'.repeat(g.s)}</i>` : '');
 const lvBadge = g => `<em class="lvb" style="--lc:${lvCol(g.lvl)}">Lv ${g.lvl}${starTxt(g)}</em>`;
-/** Multipliers a gear piece gives at a level, mirroring applyGear (for the spec sheet). */
-function gearEffects(g) {
-  const k = gearKind(g.id),
-    b = gearBonus(g);
-  const e = { hp: k === 'hp' ? 1 + b : 1, dmg: k === 'dmg' ? 1 + b : 1, speed: k === 'speed' ? b : 0 };
-  const q = g.q;
-  if (q === 'overclock') e.dmg *= 1.2;
-  if (q === 'bulky') ((e.hp *= 1.35), (e.speed -= 0.03));
-  if (q === 'feather') ((e.hp *= 0.8), (e.speed += 0.03));
-  if (q === 'spiky' || q === 'tantrum') e.hp *= 0.9;
-  if (q === 'showoff') e.hp *= 0.85;
-  if (q === 'selfheal' || q === 'magnetic') e.speed -= 0.02;
-  for (const S of gearActiveSpecials({ ...g, c5: g.c5 || (g.lvl >= 5 ? 'sp' : null) })) {
-    if (!S) continue;
-    if (S.fx.dmg) e.dmg *= S.fx.dmg;
-    if (S.fx.rate) e.dmg *= S.fx.rate;
-    if (S.fx.hp) e.hp *= S.fx.hp;
-    if (S.fx.speed) e.speed += S.fx.speed;
-  }
-  return e;
-}
 const pct = v => `${v >= 0 ? '+' : '−'}${Math.abs(Math.round(v * 100))}%`;
 /** The level ring: ten segments in their level colours, the next one filling up with XP. */
 function wbRing(g) {

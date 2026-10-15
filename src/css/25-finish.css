@@ -954,7 +954,9 @@ body.in-world .demo-feed {
   bottom: 90px;
   transform: translateX(-50%);
   z-index: 40;
-  box-shadow: 0 0 0 2px rgba(242, 183, 5, 0.35), 0 8px 30px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 0 0 2px rgba(242, 183, 5, 0.35),
+    0 8px 30px rgba(0, 0, 0, 0.45);
 }
 body:not(.reduced-motion) #owCampBtn:not([hidden]) {
   animation: card-deal 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;

@@ -582,7 +582,6 @@ function owStartMission(m, camp) {
   if (m.type === 'fetch') OW.mission.cargo = { x: clamp(m.from.x, 500, AW - 500), y: clamp(m.from.y, 500, AH - 500) };
   OW.toast = { text: m.title, sub: m.text, t: 0 };
   sfx('vs');
-  owSendMission();
 }
 function owEndMission(won) {
   const M = OW.mission;
@@ -602,7 +601,6 @@ function owEndMission(won) {
     if (me) txt(me.x, me.y - 50, `+${M.reward} SCRAP`, '#ffd257', 1.6);
   } else OW.toast = { text: 'Mission failed', sub: M.title, t: 0 };
   if (!B.net) owSave();
-  owSendMission();
 }
 function owMissionTarget() {
   const M = OW.mission;

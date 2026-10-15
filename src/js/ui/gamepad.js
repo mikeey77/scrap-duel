@@ -170,7 +170,8 @@ function padBack() {
 /** Called every frame from the main loop. */
 function gamepadTick(dt) {
   if (!readPad() || !PAD.on) return;
-  const inBattle = B && !B.demo && (G.phase === 'battle' || G.phase === 'wait' || G.phase === 'world') && !arenaInputBlocked();
+  const inBattle =
+    B && !B.demo && (G.phase === 'battle' || G.phase === 'wait' || G.phase === 'world') && !arenaInputBlocked();
   if (padPressed(9)) dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape' }));
   if (inBattle) return;
   PAD.navT -= dt;

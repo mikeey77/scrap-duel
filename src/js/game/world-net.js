@@ -53,9 +53,6 @@ function owSendCar(v) {
     a: +v.a.toFixed(2)
   });
 }
-function owSendMission() {
-  // the mission travels with every snapshot; nothing extra needed
-}
 /** Called by Net.recv for the open-world messages. Returns true when it handled the message. */
 function owRecv(d) {
   switch (d.t) {

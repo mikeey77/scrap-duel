@@ -1238,29 +1238,6 @@ function drawHitArrows(c, v, s) {
     c.restore();
   }
 }
-/** Menu background battle: names, health and a LIVE badge only. */
-function drawDemoHUD(c) {
-  const W = view.w;
-  B.cars.forEach((v, i) => {
-    const pw = Math.min(220, W * 0.3);
-    bars(c, i ? W - 12 - pw : 12, view.h - 52, pw, [[v.name.toUpperCase(), v.dead ? 0 : integrity(v), v.paint]], !!i);
-  });
-  c.textAlign = 'right';
-  c.textBaseline = 'top';
-  c.font = '700 14px "Chakra Petch", Impact, sans-serif';
-  c.fillStyle = Math.sin(ANIM * 4) > 0 ? '#ff4d4d' : '#a33';
-  c.fillText('● LIVE', W - 16, 14);
-  if (B.banner) {
-    const t = B.banner.t;
-    c.save();
-    c.globalAlpha = Math.min(1, t * 3) * 0.85;
-    c.textAlign = 'right';
-    c.font = `700 ${Math.min(40, W * 0.05)}px "Chakra Petch", Impact, sans-serif`;
-    c.fillStyle = B.banner.col;
-    c.fillText(B.banner.text, W - 16, 38);
-    c.restore();
-  }
-}
 /** Stacked labelled bars. `inset` leaves room on the first row for the cockpit portrait. */
 function bars(c, x, y, w, rows, right, inset = 0) {
   c.fillStyle = 'rgba(14,18,28,.88)';

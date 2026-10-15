@@ -2301,4 +2301,38 @@ test('open world: a big map streams in around you, chunks come back the same, le
   assert(!a.getOW());
 });
 
+test('open world: crates drop parts into My parts, camps offer missions, the world saves and comes back', () => {
+  const { api: a } = runtime();
+  a.startMatch('solo');
+  a.openBuild();
+  const d = { base: new Map(a.G.base), top: new Map(a.G.top) };
+  a.startWorld(d, 'test');
+  const B = a.getB(),
+    O = a.getOW(),
+    me = B.cars[0];
+  B.pk.length = 0;
+  a.owLootDrop({ x: me.x, y: me.y, d: { loot: 2 } });
+  const parts = B.pk.filter(p => p.kind === 'part');
+  assert.equal(parts.length, 2, 'a safe drops two parts');
+  a.owTakePart(me, parts[0]);
+  assert.equal(Object.values(O.inv).reduce((x, y) => x + y, 0), 1, 'picked part is in My parts');
+  const board = a.owBoard(O.home);
+  assert.equal(board.length, 3, 'three jobs on the board');
+  assert(board.every(m => m.title && m.reward), 'every job has a title and a reward');
+  a.owStartMission(board[0], O.home);
+  assert(O.mission && O.mission.type === board[0].type, 'mission started');
+  a.owEndMission(false);
+  assert(!O.mission, 'giving up clears the mission');
+  O.done = 2;
+  const seed = O.seed;
+  a.leaveWorld();
+  const S = a.owSaved();
+  assert(S && S.seed === seed && S.done === 2, 'world saved on leaving');
+  a.startWorld(d, 'again', { save: S });
+  assert.equal(a.getOW().seed, seed, 'same world again');
+  assert.equal(a.getOW().done, 2, 'progress kept');
+  assert.equal(Object.values(a.getOW().inv).reduce((x, y) => x + y, 0), 1, 'parts kept');
+  a.leaveWorld();
+});
+
 console.log(`\n${passed} regression tests passed.`);
