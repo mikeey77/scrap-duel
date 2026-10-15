@@ -267,9 +267,12 @@ function menuOpts() {
       G.runTeams === 2 ? 2 : 1,
       'rt'
     )}</div>${G.runTeams === 2 ? `<div class="hg-o"><span class="mlab">Your partner</span>${seg('partnerSeg', PARTNER_STYLES, G.partnerStyle, 'p')}</div>` : ''}<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.${G.runTeams === 2 ? ' With a partner, every wave brings two rivals.' : ''}</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
-    world: `<p class="small">A test of a new mode: one big map stitched together from every arena, built fresh each time. Roads lead to camps where you repair and respawn. Raiders roam and come after you when you get close.</p>
-      <div class="hg-o"><span class="mlab">Your car</span><select id="owCar" aria-label="Car for the open world">${(G.base && G.base.size > 4 ? '<option value="mine">The car in your garage</option>' : '') + [...brawlSaved().map((b, i) => `<option value="bp${i}">${esc(b.name)}</option>`), ...BRAWL_TYPES.map((t, i) => `<option value="t${i}">${esc(t.name)}</option>`)].join('')}</select></div>
-      <button class="btn hg-go2" id="owPlay">Enter the open world</button>`,
+    world:
+      (sv => `<p class="small">Test mode: one big map built from every arena. Loot buildings for parts, rebuild your car at camps, take missions, wreck raiders and bosses. To play together: Friends → Host a room → Open world.</p>
+      ${owCarPicker('owCar')}
+      <div class="mrow">${sv ? `<button class="btn hg-go2" id="owCont">Continue · ${sv.done} missions, ${Object.values(sv.inv).reduce((a, b) => a + b, 0)} parts</button>` : ''}<button class="btn ${sv ? 'ghost' : 'hg-go2'}" id="owPlay">${sv ? 'New world' : 'Enter the open world'}</button></div>`)(
+        owSaved()
+      ),
     online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
       <div class="hg-o local2"><span class="mlab">On this PC</span><p class="small">Player 1 on keyboard and mouse, player 2 on a controller. Both bring a finished car, five rounds.${PAD.on ? ' Controller ready.' : ''}</p>
       <div class="mrow"><select id="p2Car" aria-label="Player 2's car">${BRAWL_TYPES.map(t => `<option>${esc(t.name)}</option>`).join('')}</select><button class="btn ghost" id="mLocal">Local duel</button></div></div>`
@@ -277,20 +280,21 @@ function menuOpts() {
   el.style.setProperty('--rc', m.col);
   el.innerHTML = body;
   if (m.id === 'league') leagueMenuWire(menuOpts);
+  if ($('#owCar')) $('#owCar').onchange = () => store('sd.owCar', $('#owCar').value);
   if ($('#owPlay'))
     $('#owPlay').onclick = () => {
       sfx('ui');
       menuLeave();
-      const v = $('#owCar').value;
-      let d, label;
-      if (v === 'mine') ((d = { base: new Map(G.base), top: new Map(G.top) }), (label = 'your car'));
-      else if (v.startsWith('bp')) ((d = brawlSaved()[+v.slice(2)].d), (label = 'blueprint'));
-      else {
-        const t = BRAWL_TYPES[+v.slice(1)];
-        d = brawlDesign(t, 1);
-        label = t.name;
-      }
+      store('sd.owCar', $('#owCar').value);
+      const [d, label] = owChosenDesign();
       startWorld(d, label);
+    };
+  if ($('#owCont'))
+    $('#owCont').onclick = () => {
+      sfx('ui');
+      menuLeave();
+      const sv = owSaved();
+      startWorld(unpackDesign(sv.design), sv.label, { save: sv });
     };
   if ($('#mLocal'))
     $('#mLocal').onclick = () => {
@@ -423,9 +427,16 @@ const LOBBY_PRESETS = [
     r: 10,
     ts: 2,
     same: false
+  },
+  {
+    id: 'world',
+    name: 'Open world',
+    line: 'Explore together: loot buildings, take missions, wreck raiders. (test)',
+    world: true
   }
 ];
 function lobbyPreset() {
+  if (G.mpWorld) return LOBBY_PRESETS.find(p => p.world);
   const T = G.mpTeams || { host: 0, client: 1 },
     ts = G.mpTeamSize === 2 ? 2 : 1,
     f = G.mpFormat || 'balanced',
@@ -435,6 +446,7 @@ function lobbyPreset() {
   );
 }
 function lobbySummary() {
+  if (G.mpWorld) return 'Open world together · each brings their own car';
   const T = G.mpTeams || { host: 0, client: 1 },
     ts = G.mpTeamSize === 2 ? 2 : 1;
   return `${MATCH_FORMATS[G.mpFormat || 'balanced'].name} · ${G.mpRounds || 10} rounds · ${ts === 2 ? (T.host === T.client ? '2 vs 2, you two together' : '2 vs 2, against each other') : '1 vs 1'}`;
@@ -461,7 +473,7 @@ function lobbyUI() {
     ${
       host
         ? `<div class="lpresets" role="radiogroup" aria-label="What to play">${LOBBY_PRESETS.map(p => `<button class="lpre" data-pre="${p.id}" role="radio" aria-checked="${cur === p}"><b>${esc(p.name)}</b><span>${esc(p.line)}</span></button>`).join('')}</div>
-      <details class="lmore"${cur ? '' : ' open'}><summary>Change details · ${esc(lobbySummary())}</summary>
+      ${G.mpWorld ? owCarPicker('lowCar') : ''}<details class="lmore"${cur ? '' : ' open'}${G.mpWorld ? ' hidden' : ''}><summary>Change details · ${esc(lobbySummary())}</summary>
         <div class="hg-o"><span class="mlab">Mode</span><div class="seg rseg" id="lFormat" aria-label="Mode">${Object.entries(
           MATCH_FORMATS
         )
@@ -473,11 +485,11 @@ function lobbyUI() {
         <div class="hg-o"><span class="mlab">Length</span><div class="seg rseg" id="lRounds" aria-label="Match length">${ROUND_CHOICES.map(r => `<button data-n="${r}" aria-pressed="${r === (G.mpRounds || 10)}">${r} rounds</button>`).join('')}</div></div>
         ${lobbyTeamsHtml(host, n.connected)}
       </details>`
-        : `<p class="lsum">The host picked: <b>${esc(lobbySummary())}</b></p>${G.mpTeamSize === 2 ? lobbyTeamsHtml(host, n.connected) : ''}`
+        : `<p class="lsum">The host picked: <b>${esc(lobbySummary())}</b></p>${G.mpWorld ? owCarPicker('lowCar') : G.mpTeamSize === 2 ? lobbyTeamsHtml(host, n.connected) : ''}`
     }
     ${n.connected && h2hLine(G.oppName) ? `<p class="small">${h2hLine(G.oppName)}</p>` : ''}
     <p class="small fairline">Online is fair play: gear levels and sticker perks stay at home. Your skin, stickers and trail still show.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>${n.connected ? 'Start match' : 'Waiting for your friend…'}</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Leave room</button></div>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${host ? `<button class="btn" id="lStart" ${n.connected ? '' : 'disabled'}>${n.connected ? (G.mpWorld ? 'Start together' : 'Start match') : 'Waiting for your friend…'}</button>` : n.connected ? '<span class="small">Waiting for the host to start…</span>' : ''}<button class="btn ghost" id="lCancel">Leave room</button></div>`;
   const keepOpen = () => {
     const d = $('.lmore');
     return d && d.open;
@@ -485,6 +497,12 @@ function lobbyUI() {
   $$('[data-pre]').forEach(b =>
     b.addEventListener('click', () => {
       const p = LOBBY_PRESETS.find(x => x.id === b.dataset.pre);
+      G.mpWorld = !!p.world;
+      if (p.world) {
+        Net.sendLobby();
+        sfx('ui');
+        return lobbyUI();
+      }
       G.mpFormat = p.f;
       G.mpRounds = p.r;
       G.mpTeamSize = p.ts;
@@ -494,6 +512,8 @@ function lobbyUI() {
       lobbyUI();
     })
   );
+  const lc = $('#lowCar');
+  if (lc) lc.onchange = () => store('sd.owCar', lc.value);
   const cp = $('#lCopy');
   if (cp)
     cp.addEventListener('click', () => {
@@ -550,6 +570,7 @@ function lobbyUI() {
   if (s)
     s.addEventListener('click', () => {
       if (!n.connected) return;
+      if (G.mpWorld) return owHostStart();
       const format = G.mpFormat || 'balanced';
       const rounds = setRounds(G.mpRounds || 10);
       const sched = makeSchedule(rounds),
@@ -692,11 +713,23 @@ function loop(t) {
       }
       if (!B.paused && !Net.reconnecting) stepArena(dt);
       if (B && B.cars.length) drawArena();
-      if (B && B.rec && G.phase === 'battle' && !B.paused && !Net.reconnecting) recTick(dt);
+      if (
+        B &&
+        B.rec &&
+        (G.phase === 'battle' || (G.phase === 'world' && B.net === 'host')) &&
+        !B.paused &&
+        !Net.reconnecting
+      )
+        recTick(dt);
       if (B && G.phase === 'wait' && Math.random() < 0.05) oppStatusUI();
     } else {
       ANIM += dt;
       hangarFxTick(dt);
+      // the open world keeps running while you rebuild at a camp (your friend is still out there)
+      if (G.owGarage && B && B.ow) {
+        stepArena(dt);
+        if (B.rec && B.net === 'host' && !Net.reconnecting) recTick(dt);
+      }
       if ((building() || G.phase === 'draft') && $('#ovCrate').hidden && builderBusy()) {
         bfxTick(dt);
         drawBP();
@@ -980,6 +1013,7 @@ if (window.__SD_TEST__)
     },
     partMotion,
     getOW: () => OW,
+    dmgObj,
     startWorld,
     leaveWorld,
     owGenChunk,
@@ -1020,3 +1054,14 @@ if (window.__SD_TEST__)
     setB: b => (B = b),
     getRP: () => RP
   };
+
+/** The car picker for the open world (menu tile and online room). */
+function owCarPicker(id) {
+  const cur = load('sd.owCar') || 't0';
+  const opts = [
+    ...(G.base && G.base.size > 4 ? [['mine', 'The car in your garage']] : []),
+    ...brawlSaved().map((b, i) => ['bp' + i, b.name]),
+    ...BRAWL_TYPES.map((t, i) => ['t' + i, t.name])
+  ];
+  return `<div class="hg-o"><span class="mlab">Your car</span><select id="${id}" aria-label="Your car for the open world">${opts.map(([v, n]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select></div>`;
+}

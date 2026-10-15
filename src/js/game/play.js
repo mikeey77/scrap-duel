@@ -672,16 +672,20 @@ function simulate(dt) {
   for (const v of B.cars) {
     const i =
       v.ctrl === 'local'
-        ? readLocal()
+        ? G.owGarage
+          ? ZERO_IN
+          : readLocal()
         : v.ctrl === 'local2'
           ? readPad2(v)
           : v.ctrl === 'bot'
             ? botThink(v, dt)
             : v.ctrl === 'raider'
               ? raiderThink(v, dt)
-              : v.ctrl === 'remote'
-                ? takeRemote()
-                : ZERO_IN;
+              : v.ctrl === 'convoy'
+                ? convoyThink(v, dt)
+                : v.ctrl === 'remote'
+                  ? takeRemote()
+                  : ZERO_IN;
     applyInput(v, i);
   }
   for (const v of B.cars) {

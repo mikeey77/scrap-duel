@@ -132,7 +132,7 @@ function owCamps() {
 /* ---------- chunks ---------- */
 const owKey = (cx, cy) => cx + ',' + cy;
 function owGenChunk(cx, cy) {
-  const ch = { cx, cy, k: owKey(cx, cy), objs: [], zones: [], st: [], pk: [], canvas: null };
+  const ch = { cx, cy, k: owKey(cx, cy), objs: [], zones: [], st: [], pk: [], canvas: null, bld: [], poi: null };
   const x0 = cx * OW_CH,
     y0 = cy * OW_CH,
     mid = owThemeAt(x0 + OW_CH / 2, y0 + OW_CH / 2),
@@ -158,8 +158,10 @@ function owGenChunk(cx, cy) {
       }
       return null;
     };
-    // ruins: a couple of wall pieces in the biome's own style
-    const nW = Math.floor(rnd(0, 3));
+    // buildings with loot first, then a raider camp, then loose ruins
+    owGenBuildings(ch, x0, y0, free, mid);
+    owGenPOI(ch, spot, x0, y0);
+    const nW = ch.bld.length ? 0 : Math.floor(rnd(0, 3));
     for (let i = 0; i < nW; i++) {
       const v = Math.random() < 0.5,
         len = rnd(140, 300),
@@ -253,7 +255,10 @@ function owGenChunk(cx, cy) {
   }
   for (const z of ch.zones) z.ow = ch.k;
   for (const s of ch.st) s.ow = ch.k;
-  for (const p of ch.pk) p.ow = ch.k;
+  // the same ids on every computer, so the host and a friend talk about the same crate
+  const base = 1e7 + (cy * OW_N + cx) * 400;
+  ch.objs.forEach((o, i) => ((o.uid = base + i), (o.ow = ch.k)));
+  ch.pk.forEach((p, i) => ((p.uid = base + 300 + i), (p.ow = ch.k)));
   return ch;
 }
 
@@ -317,6 +322,7 @@ function owGround(ch) {
       owDetail(g, th.id, x, y);
     }
   });
+  owDrawFloors(g, ch);
   // roads: asphalt, kerbs and a dashed centre line
   const step = 10;
   for (let k = 0; k < OW_ROADS; k++) {
@@ -450,10 +456,11 @@ const owMarks = {
 function owAttach(ch) {
   if (ch.on) return;
   ch.on = true;
-  B.objs.push(...ch.objs.filter(o => o.hp > 0));
+  // a client gets moving objects and pickups from the host; walls, zones and still props it builds itself
+  B.objs.push(...ch.objs.filter(o => o.hp > 0 && !o.dead && !OW.gone.has(o.uid)));
   B.zones.push(...ch.zones);
   B.st.push(...ch.st);
-  B.pk.push(...ch.pk);
+  if (B.net !== 'client') B.pk.push(...ch.pk.filter(p => !OW.gone.has(p.uid)));
 }
 /** Ground pictures are painted one chunk per frame, nearest first, two chunks ahead of the camera. */
 function owPaintAhead(x, y) {
@@ -482,103 +489,190 @@ function owDetach(ch) {
   ch.on = false;
   // objects that were pushed into another chunk stay with the chunk they started in
   ch.objs = B.objs.filter(o => o.ow === ch.k);
+  for (const o of ch.objs) OW.parked.add(o.uid);
   B.objs = B.objs.filter(o => o.ow !== ch.k);
   B.zones = B.zones.filter(z => z.ow !== ch.k);
   B.st = B.st.filter(s => s.ow !== ch.k);
-  B.pk = B.pk.filter(p => p.ow !== ch.k);
+  if (B.net !== 'client') {
+    ch.pk = B.pk.filter(p => p.ow === ch.k);
+    B.pk = B.pk.filter(p => p.ow !== ch.k);
+  }
 }
-function owStream(x, y) {
-  const cx = Math.floor(x / OW_CH),
-    cy = Math.floor(y / OW_CH);
-  for (let j = -1; j <= 1; j++)
-    for (let i = -1; i <= 1; i++) {
-      const a = cx + i,
-        b = cy + j;
-      if (a < 0 || b < 0 || a >= OW_N || b >= OW_N) continue;
-      const k = owKey(a, b);
-      let ch = OW.chunks.get(k);
-      if (!ch) OW.chunks.set(k, (ch = owGenChunk(a, b)));
-      owAttach(ch);
+/** Loads the chunks around every player and parks the ones nobody is near. */
+function owStream(points) {
+  const want = new Set();
+  for (const [x, y] of points) {
+    const cx = Math.floor(x / OW_CH),
+      cy = Math.floor(y / OW_CH);
+    for (let j = -1; j <= 1; j++)
+      for (let i = -1; i <= 1; i++) {
+        const a = cx + i,
+          b = cy + j;
+        if (a < 0 || b < 0 || a >= OW_N || b >= OW_N) continue;
+        want.add(owKey(a, b));
+      }
+  }
+  for (const k of want) {
+    let ch = OW.chunks.get(k);
+    if (!ch) {
+      const [a, b] = k.split(',').map(Number);
+      OW.chunks.set(k, (ch = owGenChunk(a, b)));
     }
-  // the map reveals a little further than what is loaded
-  for (let j = -2; j <= 2; j++) for (let i = -2; i <= 2; i++) OW.seen.add(owKey(cx + i, cy + j));
+    owAttach(ch);
+  }
+  const near = (ch, r) =>
+    points.some(
+      ([x, y]) => Math.max(Math.abs(ch.cx - Math.floor(x / OW_CH)), Math.abs(ch.cy - Math.floor(y / OW_CH))) <= r
+    );
   for (const ch of OW.chunks.values()) {
-    if (Math.max(Math.abs(ch.cx - cx), Math.abs(ch.cy - cy)) > 2) {
-      owDetach(ch);
-      // keep the pictures of a few recent chunks; regenerate the rest when you come back
-      if (Math.max(Math.abs(ch.cx - cx), Math.abs(ch.cy - cy)) > 4) ch.canvas = null;
-    }
+    if (!near(ch, 2)) owDetach(ch);
+    // keep the pictures of a few recent chunks; regenerate the rest when you come back
+    if (ch.canvas && !near(ch, 4)) ch.canvas = null;
   }
 }
 
 /* ---------- start and leave ---------- */
-function startWorld(design, label) {
+/** opt: seed (a shared or saved world), save (a saved game to continue), net ('host' or 'client'), friend. */
+function startWorld(design, label, opt = {}) {
   G.started = true;
-  G.mode = 'solo';
+  G.mode = opt.net ? 'mp' : 'solo';
   hideOverlays();
   $('#ovMenu').hidden = true;
   G.phase = 'world';
   AW = AH = OW_N * OW_CH;
-  const seed = (Date.now() & 0xffffff) ^ 0x5d;
+  const S = opt.save || null,
+    seed = S ? S.seed : opt.seed != null ? opt.seed : (Date.now() & 0xffffff) ^ 0x5d;
   OW = {
     seed,
+    net: opt.net || null,
     sites: new Map(),
     chunks: new Map(),
-    seen: new Set(),
+    seen: new Set(S ? S.seen : []),
+    gone: new Set(),
+    parked: new Set(),
     design,
     label,
-    scrap: 0,
+    scrap: S ? S.scrap : 0,
     lastCoins: 0,
-    wrecked: 0,
-    biome: null,
-    biomeT: 0,
+    wrecked: S ? S.wrecked : 0,
+    done: S ? S.done : 0,
+    inv: S ? { ...S.inv } : {},
     spawnT: 2,
     map: null,
     designs: {},
-    distMax: 0
+    players: opt.net ? 2 : 1,
+    respawn: {},
+    homes: {},
+    notes: [],
+    mission: null
   };
   OW.camps = owCamps();
-  const c = OW.camps.reduce((a, b) =>
+  const c0 = OW.camps.reduce((a, b) =>
     Math.hypot(b.x - AW / 2, b.y - AH / 2) < Math.hypot(a.x - AW / 2, a.y - AH / 2) ? b : a
   );
+  OW.home0 = { x: c0.x, y: c0.y };
+  if (S) for (const [i, j] of S.camps || []) OW.camps.find(c => c.i === i && c.j === j).seen = true;
+  const c = (S && S.home && OW.camps.find(x => x.i === S.home[0] && x.j === S.home[1])) || c0;
   c.seen = true;
-  OW.home0 = { x: c.x, y: c.y };
   OW.home = c;
+  OW.homes[0] = OW.homes[1] = c;
   updateHUD();
   $('#build').hidden = true;
   $('#arena').hidden = false;
   $('#waitcard').hidden = true;
   sizeArena();
-  B = newB({ net: null, me: 0, theme: owThemeAt(c.x, c.y), t: 0, ow: true, kind: 'world', noRing: true });
+  const me = opt.net === 'client' ? 1 : 0;
+  B = newB({
+    net: opt.net || null,
+    me,
+    theme: owThemeAt(c.x, c.y),
+    t: 0,
+    ow: true,
+    kind: 'world',
+    noRing: true,
+    remoteIn: null,
+    remoteEdges: new Set(),
+    rec: opt.net === 'host'
+  });
   B.kind = 'world';
   B.grip = B.theme.grip;
   B.surf = surfaceOf(B.theme);
   B.sp = [[c.x, c.y + 40, 0]];
   ground = null;
   gx = owMarks;
-  const v = makeCar(design, 0, c.x, c.y + 40, 0, { tune: [...(G.tune || [])], name: G.name, paint: G.paint });
-  v.ctrl = 'local';
-  v.team = 0;
-  v.look = { ...G.style };
-  B.cars = [v];
-  owStream(v.x, v.y);
-  for (let i = 0; i < 9; i++) owPaintAhead(v.x, v.y);
+  const mine = owPlayerCar(design, me, c, G.name, G.paint, 'local');
+  mine.look = { ...G.style };
+  B.cars =
+    me === 0
+      ? [mine]
+      : [
+          owPlayerCar(
+            opt.friend?.design || design,
+            0,
+            c,
+            opt.friend?.name || 'Host',
+            opt.friend?.paint || '#4ea1ff',
+            null
+          ),
+          mine
+        ];
+  if (opt.net === 'host')
+    B.cars[1] = owPlayerCar(
+      opt.friend?.design || design,
+      1,
+      c,
+      opt.friend?.name || G.oppName || 'Friend',
+      opt.friend?.paint || '#4ea1ff',
+      'remote'
+    );
+  OW.seen.add(owKey(Math.floor(c.x / OW_CH), Math.floor(c.y / OW_CH)));
+  owStream(B.cars.map(v => [v.x, v.y]));
+  for (let i = 0; i < 9; i++) owPaintAhead(mine.x, mine.y);
   owBuildMap();
-  cam.x = cam.tx = v.x;
-  cam.y = cam.ty = v.y;
+  cam.x = cam.tx = mine.x;
+  cam.y = cam.ty = mine.y;
   cam.z = cam.tz = 1.6;
   B.flash = 1;
   sfx('tele');
   setButtons();
-  OW.toast = { text: 'Open world · test', sub: 'Explore, wreck raiders, find camps. Esc for the menu.', t: 0 };
+  OW.toast = S
+    ? {
+        text: 'Welcome back',
+        sub: `${OW.done} missions done · ${Object.values(OW.inv).reduce((a, b) => a + b, 0)} parts in My parts`,
+        t: 0
+      }
+    : {
+        text: opt.net ? 'Open world · together' : 'Open world · test',
+        sub: 'Loot buildings, take missions at camps (Enter), wreck raiders.',
+        t: 0
+      };
+}
+/** A player's car at a camp (players get slots 0 and 1). */
+function owPlayerCar(design, idx, camp, name, paint, ctrl) {
+  const v = makeCar(design, idx, camp.x + (idx ? 70 : -30), camp.y + 40, 0, {
+    tune: ctrl === 'local' ? [...(G.tune || [])] : [],
+    name,
+    paint
+  });
+  v.ctrl = ctrl;
+  v.team = 0;
+  v.player = true;
+  v.design = design;
+  v.look = { ...DEFAULT_STYLE };
+  return v;
 }
 /** Back to normal arena size; called whenever a normal battle or the menu takes over. */
 function leaveWorld() {
   if (!OW) return;
+  if (!OW.net) owSave();
   OW = null;
   AW = 2000;
   AH = 1250;
   gx = null;
+  const b = $('#owCampBtn');
+  if (b) b.hidden = true;
+  const ov = $('#ovCamp');
+  if (ov) ov.hidden = true;
 }
 
 /* ---------- each frame ---------- */
@@ -586,8 +680,13 @@ function owStep(dt) {
   const v = myCar();
   if (!v) return;
   B.t += dt; // gimmicks (stoves, vents) run on the world clock
-  owStream(v.x, v.y);
+  const host = B.net !== 'client',
+    players = B.cars.filter(c => c && c.player);
+  owStream((host ? players : [v]).map(c => [c.x, c.y]));
   owPaintAhead(v.x + v.vx * 0.8, v.y + v.vy * 0.8);
+  const cx = Math.floor(v.x / OW_CH),
+    cy = Math.floor(v.y / OW_CH);
+  for (let j = -2; j <= 2; j++) for (let i = -2; i <= 2; i++) OW.seen.add(owKey(cx + i, cy + j));
   // coins picked up or earned count as scrap; a new car after a wreck starts at zero
   if (v.coins < OW.lastCoins) OW.lastCoins = 0;
   if (v.coins > OW.lastCoins) {
@@ -603,33 +702,62 @@ function owStep(dt) {
     OW.toast = { text: th.name, sub: `${surfaceOf(th).name} · ${(THEME_BLURB[th.id] || '').split('.')[0]}`, t: 0 };
   }
   if (OW.toast) OW.toast.t += dt;
-  // camps: repair, set the respawn point
+  for (const n of OW.notes) n.t += dt;
+  OW.notes = OW.notes.filter(n => n.t < 6);
   for (const c of OW.camps) {
     const d = Math.hypot(c.x - v.x, c.y - v.y);
     if (d < 1400) c.seen = true;
-    if (d < 110 && !v.dead && B.seq === 'play' && (OW.home !== c || integrity(v) < 0.995) && !(OW.campT > B.time)) {
-      OW.campT = B.time + 4;
+    if (!host && d < 110 && OW.home !== c) {
       OW.home = c;
-      B.sp = [[c.x, c.y + 40, 0]];
-      owRepair(v);
-      OW.toast = { text: 'Camp', sub: 'Repaired. You respawn here now.', t: 0 };
-      sfx('coin');
+      OW.toast = { text: 'Camp', sub: 'Repaired. You respawn here now. Enter: missions and garage.', t: 0 };
     }
   }
-  OW.distMax = Math.max(OW.distMax, Math.hypot(v.x - OW.home0.x, v.y - OW.home0.y));
-  owRaiders(dt, v);
-}
-/** Full repair: a fresh car of the same design at the same spot, keeping speed and scrap. */
-function owRepair(v) {
-  const n = makeCar(OW.design, 0, v.x, v.y, v.a, { tune: [...(G.tune || [])], name: G.name, paint: G.paint });
-  n.ctrl = 'local';
-  n.team = 0;
-  n.look = v.look;
-  n.vx = v.vx;
-  n.vy = v.vy;
-  n.coins = v.coins;
-  B.cars[0] = n;
-  spark(v.x, v.y, 18, '#5cc38f');
+  owCampUI();
+  if (!host) return;
+  // camps: repair, set the respawn point (for each player)
+  for (const p of players) {
+    if (p.dead || B.seq !== 'play') continue;
+    for (const c of OW.camps) {
+      if (Math.hypot(c.x - p.x, c.y - p.y) > 110) continue;
+      if (OW.homes[p.idx] === c && integrity(p) > 0.995) continue;
+      if ((OW.campT && OW.campT[p.idx]) > B.time) continue;
+      OW.campT = OW.campT || {};
+      OW.campT[p.idx] = B.time + 4;
+      OW.homes[p.idx] = c;
+      if (p.idx === B.me) {
+        OW.home = c;
+        OW.toast = { text: 'Camp', sub: 'Repaired. You respawn here now. Enter: missions and garage.', t: 0 };
+      }
+      owRebuild(p, p.design);
+      spark(p.x, p.y, 18, '#5cc38f');
+      sfx('repair', p.x, p.y);
+    }
+  }
+  // wrecked players come back at their camp after a few seconds
+  for (const p of players) {
+    if (!p.dead) continue;
+    OW.respawn[p.idx] = OW.respawn[p.idx] || B.time + 3.5;
+    if (B.time < OW.respawn[p.idx]) continue;
+    OW.respawn[p.idx] = 0;
+    const c = OW.homes[p.idx] || OW.home,
+      n = owRebuild(p, p.design);
+    n.x = c.x + (p.idx ? 60 : -40);
+    n.y = c.y + 40;
+    n.vx = n.vy = 0;
+    n.dead = false;
+    n.coins = 0;
+    if (p.idx === B.me) OW.lastCoins = 0;
+    sfx('tele', n.x, n.y);
+  }
+  owRaiders(dt, players);
+  owMissionTick(dt);
+  owWakePOIs(players.filter(p => !p.dead));
+  const lead = players.find(p => !p.dead);
+  if (lead) {
+    owConvoy(dt, lead);
+    owBounty(lead);
+  }
+  bossTick(dt);
 }
 
 /* ---------- raiders ---------- */
@@ -640,24 +768,27 @@ function owRaiderDesign(diff) {
   if (OW.designs[k].length < 2) OW.designs[k].push({ t, d: brawlDesign(t, diff) });
   return pick(OW.designs[k]);
 }
-function owRaiders(dt, me) {
+function owRaiders(dt, players) {
+  const live = players.filter(p => !p.dead);
+  const dist = v => Math.min(...players.map(p => Math.hypot(v.x - p.x, v.y - p.y)));
   // far-away raiders quietly leave; wrecks clear their slot after a while
   for (const v of B.cars) {
-    if (v === me || v.gone) continue;
-    if (!v.dead && Math.hypot(v.x - me.x, v.y - me.y) > 2800 && !v.aggro) {
+    if (!v || v.player || v.gone) continue;
+    if (!v.dead && dist(v) > 2800 && !v.aggro && !v.mission) {
       v.dead = true;
       v.gone = true;
     }
     if (v.dead && !v.gone && (v.deadT = (v.deadT || 0) + dt) > 4) v.gone = true;
   }
-  if (me.dead || B.seq !== 'play') return;
+  if (!live.length || B.seq !== 'play') return;
   OW.spawnT -= dt;
-  const far = Math.hypot(me.x - OW.home0.x, me.y - OW.home0.y),
+  const me = pick(live),
+    far = Math.hypot(me.x - OW.home0.x, me.y - OW.home0.y),
     diff = far > 7000 ? 2 : far > 3000 ? 1 : 0,
-    cap = 2 + diff,
-    live = B.cars.filter(c => c !== me && !c.dead).length;
-  if (OW.spawnT > 0 || live >= cap) return;
-  OW.spawnT = rnd(4, 9);
+    cap = 1 + diff + players.length,
+    n = B.cars.filter(c => c && !c.player && !c.dead).length;
+  if (OW.spawnT > 0 || n >= cap) return;
+  OW.spawnT = rnd(5, 10);
   // never right next to a camp: those are safe
   if (OW.camps.some(c => Math.hypot(c.x - me.x, c.y - me.y) < 500)) return;
   for (let t = 0; t < 20; t++) {
@@ -668,35 +799,27 @@ function owRaiders(dt, me) {
     if (x < 200 || y < 200 || x > AW - 200 || y > AH - 200) continue;
     if (B.st.some(s => circRectDist(x, y, s) < 90) || B.objs.some(o => Math.hypot(o.x - x, o.y - y) < o.r + 70))
       continue;
-    const { t: type, d } = owRaiderDesign(diff),
-      bot = pick(BOTS);
-    let idx = B.cars.findIndex(c => c.gone);
-    if (idx < 0) idx = B.cars.length;
-    const v = makeCar(d, idx, x, y, Math.atan2(me.y - y, me.x - x) + Math.PI / 2, {
-      tune: [],
-      name: bot.name,
-      paint: bot.paint
-    });
-    v.ctrl = 'raider';
-    v.team = 1;
-    v.style = type.style;
-    v.diff = diff;
-    v.look = { ...DEFAULT_STYLE };
-    v.raider = { tx: x, ty: y, t: 0 };
-    B.cars[idx] = v;
+    owSpawnRaider(x, y, diff, false);
     return;
   }
 }
-/** Raiders wander until you come close or shoot them, then fight like a normal bot. */
+/** Raiders wander until a player comes close or shoots them, then fight like a normal bot. */
 function raiderThink(v, dt) {
-  const me = myCar(),
-    d = me && !me.dead ? Math.hypot(me.x - v.x, me.y - v.y) : 1e9;
-  if (d < 850 || (v.lastBy && v.lastBy.att === B.me && d < 2000)) v.aggro = true;
-  if (d > 1900) v.aggro = false;
-  if (v.aggro) return botThink(v, dt);
+  let d = 1e9;
+  for (const p of B.cars) if (p && p.player && !p.dead) d = Math.min(d, Math.hypot(p.x - v.x, p.y - v.y));
+  const hitByPlayer = v.lastBy && B.cars[v.lastBy.att] && B.cars[v.lastBy.att].player;
+  if (d < 850 || (hitByPlayer && d < 2000)) v.aggro = true;
+  if (d > 1900 && !v.mission && !v.hunter) v.aggro = false;
+  // camps are safe ground: raiders turn away from them
+  const camp = OW.camps.find(c => Math.hypot(c.x - v.x, c.y - v.y) < 420);
+  if (v.aggro && !camp) return botThink(v, dt);
   const R = v.raider;
   R.t -= dt;
-  if (R.t <= 0 || Math.hypot(R.tx - v.x, R.ty - v.y) < 80) {
+  if (camp) {
+    R.tx = v.x + (v.x - camp.x);
+    R.ty = v.y + (v.y - camp.y);
+    R.t = 2;
+  } else if (R.t <= 0 || Math.hypot(R.tx - v.x, R.ty - v.y) < 80) {
     R.t = rnd(3, 7);
     R.tx = clamp(v.x + rnd(-600, 600), 300, AW - 300);
     R.ty = clamp(v.y + rnd(-600, 600), 300, AH - 300);
@@ -713,12 +836,23 @@ function raiderThink(v, dt) {
     aimY: R.ty
   };
 }
-/** A raider is wrecked: scrap for you, maybe a repair kit on the ground. */
+/** A raider is wrecked: scrap for whoever did it, maybe a repair kit or a part on the ground. */
 function owRaiderDown(v) {
-  const me = myCar();
+  if (B.net === 'client') return;
   OW.wrecked++;
-  if (me && !me.dead) coinPop(v.x, v.y, 15 + v.diff * 15, me);
-  if (Math.random() < 0.3) B.pk.push({ kind: 'repair', x: v.x, y: v.y, val: 0.3, cd: 0 });
+  const by = v.lastBy && B.cars[v.lastBy.att],
+    k = by && by.player && !by.dead ? by : B.cars.find(c => c.player && !c.dead);
+  if (k) coinPop(v.x, v.y, 15 + v.diff * 15 + (v.hunter ? 60 : 0) + (v.boss ? 100 : 0), k);
+  if (Math.random() < 0.3) B.pk.push({ kind: 'repair', x: v.x, y: v.y, val: 0.3, cd: 0, uid: owUid() });
+  if (v.convoy || v.hunter || v.boss || Math.random() < 0.25) {
+    const n = v.boss ? 3 : v.convoy ? 3 : 1;
+    for (let i = 0; i < n; i++)
+      owDropPart(
+        v.x + rnd(-30, 30),
+        v.y + rnd(-30, 30),
+        owRollPart(v.x, v.y, v.boss ? 2.5 : v.convoy || v.hunter ? 1 : 0)
+      );
+  }
 }
 
 /* ---------- camera ---------- */
@@ -795,12 +929,42 @@ function owHUD(c) {
     c.fillStyle = cp === OW.home ? '#3fe0a0' : '#f2b705';
     c.fillRect(mx + cp.x * k - 3, my + cp.y * k - 3, 6, 6);
   }
+  for (const ch of OW.chunks.values()) {
+    if (!OW.seen.has(ch.k)) continue;
+    c.fillStyle = 'rgba(220,226,232,.75)';
+    for (const b of ch.bld || []) c.fillRect(mx + b.x * k, my + b.y * k, Math.max(2, b.w * k), Math.max(2, b.h * k));
+    if (ch.poi) {
+      c.fillStyle = ch.poi.awake ? 'rgba(255,77,58,.5)' : '#ff4d3a';
+      c.beginPath();
+      c.moveTo(mx + ch.poi.x * k, my + ch.poi.y * k - 4);
+      c.lineTo(mx + ch.poi.x * k + 4, my + ch.poi.y * k + 3);
+      c.lineTo(mx + ch.poi.x * k - 4, my + ch.poi.y * k + 3);
+      c.fill();
+    }
+  }
   for (const r of B.cars) {
-    if (r === v || r.dead) continue;
-    c.fillStyle = r.aggro ? '#ff4d3a' : 'rgba(255,120,100,.7)';
+    if (!r || r === v || r.dead) continue;
+    if (r.player) {
+      c.fillStyle = r.paint;
+      c.beginPath();
+      c.arc(mx + r.x * k, my + r.y * k, 4, 0, 7);
+      c.fill();
+      c.strokeStyle = '#fff';
+      c.stroke();
+      continue;
+    }
+    c.fillStyle = r.convoy ? '#ffd257' : r.aggro ? '#ff4d3a' : 'rgba(255,120,100,.7)';
     c.beginPath();
-    c.arc(mx + r.x * k, my + r.y * k, 2.5, 0, 7);
+    c.arc(mx + r.x * k, my + r.y * k, r.boss || r.hunter ? 4 : 2.5, 0, 7);
     c.fill();
+  }
+  const tg = owMissionTarget();
+  if (tg) {
+    c.strokeStyle = '#5be7ff';
+    c.lineWidth = 2;
+    c.beginPath();
+    c.arc(mx + tg.x * k, my + tg.y * k, 5 + Math.sin(ANIM * 6), 0, 7);
+    c.stroke();
   }
   c.save();
   c.translate(mx + v.x * k, my + v.y * k);
@@ -836,12 +1000,76 @@ function owHUD(c) {
   c.fillRect(30, 74, 246 * integ, 10);
   c.fillStyle = '#ffd257';
   c.font = '600 14px "Barlow Semi Condensed", sans-serif';
-  c.fillText(`Scrap ${OW.scrap}  ·  Raiders wrecked ${OW.wrecked}`, 30, 104);
+  c.fillText(
+    `Scrap ${OW.scrap}  ·  My parts ${Object.values(OW.inv).reduce((a, b) => a + b, 0)}  ·  Wrecked ${OW.wrecked}`,
+    30,
+    104
+  );
   c.restore();
+  // the mission, under the status box
+  const MS = OW.mission,
+    tg2 = owMissionTarget();
+  if (MS) {
+    c.save();
+    c.fillStyle = 'rgba(6,10,20,.8)';
+    c.fillRect(18, 120, 270, 50);
+    c.fillStyle = '#5be7ff';
+    c.font = '700 14px "Chakra Petch", sans-serif';
+    c.textAlign = 'left';
+    c.fillText(MS.title, 30, 140);
+    c.fillStyle = '#b6c8e0';
+    c.font = '500 13px "Barlow Semi Condensed", sans-serif';
+    const extra = MS.type === 'race' ? ` · ${Math.max(0, Math.ceil(MS.time - MS.t))} s` : '';
+    c.fillText(tg2 ? `${tg2.label} · ${Math.round(Math.hypot(tg2.x - v.x, tg2.y - v.y) / S)} m${extra}` : '', 30, 159);
+    c.restore();
+  }
+  // notes: finds and events, bottom left
+  c.save();
+  c.textAlign = 'left';
+  c.font = '600 14px "Barlow Semi Condensed", sans-serif';
+  OW.notes.forEach((n, i) => {
+    c.globalAlpha = Math.min(1, (6 - n.t) * 1.5, n.t * 4);
+    c.fillStyle = 'rgba(6,10,20,.75)';
+    const w = c.measureText(n.text).width + 20;
+    c.fillRect(18, H - 60 - (OW.notes.length - 1 - i) * 28, w, 24);
+    c.fillStyle = n.col;
+    c.fillText(n.text, 28, H - 43 - (OW.notes.length - 1 - i) * 28);
+  });
+  c.restore();
+  // an arrow to the mission target and to your friend when they are off screen
+  const sc0 = view.sc * cam.z,
+    arrows = [];
+  if (tg2) arrows.push([tg2.x, tg2.y, '#5be7ff', tg2.label]);
+  for (const f of B.cars) if (f && f.player && f !== v && !f.dead) arrows.push([f.x, f.y, f.paint, f.name]);
+  for (const [x, y, col, label] of arrows) {
+    const [ex, ey] = worldToScreen(x, y, sc0);
+    if (ex > 0 && ey > 0 && ex < W && ey < H) continue;
+    const a = Math.atan2(ey - H / 2, ex - W / 2),
+      px = clamp(ex, 40, W - 40),
+      py = clamp(ey, 120, H - 40);
+    c.save();
+    c.translate(px, py);
+    c.rotate(a);
+    c.fillStyle = col;
+    c.beginPath();
+    c.moveTo(16, 0);
+    c.lineTo(-8, -11);
+    c.lineTo(-3, 0);
+    c.lineTo(-8, 11);
+    c.closePath();
+    c.fill();
+    c.restore();
+    c.save();
+    c.fillStyle = '#ece8df';
+    c.font = '700 11px "Barlow Semi Condensed", sans-serif';
+    c.textAlign = 'center';
+    c.fillText(`${label} · ${Math.round(Math.hypot(x - v.x, y - v.y) / S)} m`, px, py + 26);
+    c.restore();
+  }
   // arrows to raiders that are after you
   const s = view.sc * cam.z;
   for (const r of B.cars) {
-    if (r === v || r.dead || !r.aggro) continue;
+    if (!r || r === v || r.dead || !r.aggro || r.player) continue;
     const [ex, ey] = worldToScreen(r.x, r.y, s);
     if (ex > 0 && ey > 0 && ex < W && ey < H) continue;
     const a = Math.atan2(ey - H / 2, ex - W / 2),
@@ -880,7 +1108,57 @@ function owHUD(c) {
     c.textAlign = 'center';
     c.fillStyle = '#ff8268';
     c.font = '700 28px "Chakra Petch", sans-serif';
-    c.fillText('WRECKED · back to your camp', W / 2, H / 2 + 80);
+    c.fillText('WRECKED · back to your camp in a moment', W / 2, H / 2 + 80);
     c.restore();
+  }
+}
+
+/** Things in the world that belong to missions: the crate, checkpoints, the target area. */
+function owDrawMarks(c) {
+  const M = OW && OW.mission;
+  if (!M) return;
+  const pulse = 1 + Math.sin(ANIM * 4) * 0.06;
+  if (M.type === 'fetch') {
+    const p = M.cargo;
+    c.save();
+    c.translate(p.x, p.y - (M.carrying !== false ? 34 : 0));
+    JUNKDRAW.lootcrate(c, M.carrying !== false ? 11 : 16);
+    c.restore();
+    if (M.carrying === false) {
+      c.strokeStyle = 'rgba(91,231,255,.8)';
+      c.lineWidth = 4;
+      c.beginPath();
+      c.arc(p.x, p.y, 46 * pulse, 0, 7);
+      c.stroke();
+    } else {
+      c.strokeStyle = 'rgba(91,231,255,.6)';
+      c.lineWidth = 6;
+      c.setLineDash([20, 14]);
+      c.beginPath();
+      c.arc(M.dest.x, M.dest.y, 130 * pulse, 0, 7);
+      c.stroke();
+      c.setLineDash([]);
+    }
+  } else if (M.type === 'race') {
+    M.pts.forEach((p, i) => {
+      if (i < M.step) return;
+      c.strokeStyle = i === M.step ? '#5be7ff' : 'rgba(91,231,255,.3)';
+      c.lineWidth = i === M.step ? 8 : 4;
+      c.beginPath();
+      c.arc(p.x, p.y, i === M.step ? 100 * pulse : 90, 0, 7);
+      c.stroke();
+      c.fillStyle = 'rgba(91,231,255,.8)';
+      c.font = '700 28px "Chakra Petch", sans-serif';
+      c.textAlign = 'center';
+      c.fillText(String(i + 1), p.x, p.y + 10);
+    });
+  } else {
+    c.strokeStyle = M.type === 'boss' ? 'rgba(255,92,122,.6)' : 'rgba(255,128,104,.5)';
+    c.lineWidth = 6;
+    c.setLineDash([26, 18]);
+    c.beginPath();
+    c.arc(M.at.x, M.at.y, 260 * pulse, 0, 7);
+    c.stroke();
+    c.setLineDash([]);
   }
 }

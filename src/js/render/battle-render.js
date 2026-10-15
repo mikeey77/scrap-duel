@@ -638,6 +638,7 @@ function drawZone(c, z) {
 }
 function drawPickup(c, p) {
   if (p.kind === 'gift') return p.cd > 0 ? undefined : drawSalvage(c, p);
+  if (p.kind === 'part') return drawPartPickup(c, p);
   const ready = p.cd <= 0,
     bob = Math.sin(ANIM * 3 + p.x) * 3;
   c.save();
@@ -1013,6 +1014,7 @@ function drawArena() {
   for (const z of B.zones) if (z.kind !== 'ramp' && z.kind !== 'tramp') drawZone(c, z);
   for (const z of B.zones) if (z.kind === 'ramp' || z.kind === 'tramp') drawZone(c, z);
   for (const p of B.pk || []) drawPickup(c, p);
+  if (B.ow) owDrawMarks(c);
   for (const st of B.st) drawStaticThemed(c, st, st.wall || B.theme.wall);
   for (const o of B.objs) if (o.z <= 0) drawObj(c, o);
   for (const db of B.debris) {

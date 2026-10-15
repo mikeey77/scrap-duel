@@ -39,8 +39,8 @@ function syncPresentation() {
   const active = !!B && !B.demo && ['wait', 'battle', 'replay', 'world'].includes(G.phase);
   document.body.classList.toggle('reduced-motion', SETTINGS.motion === false);
   document.body.classList.toggle('arena-battle', active && G.phase === 'battle');
-  document.body.classList.toggle('in-world', active && G.phase === 'world');
-  const key = active + ' ' + G.phase + ' ' + innerWidth + ' ' + innerHeight;
+  document.body.classList.toggle('in-world', (active && G.phase === 'world') || !!G.owGarage);
+  const key = active + ' ' + G.phase + ' ' + innerWidth + ' ' + innerHeight + ' ' + !!G.owGarage;
   if (key === presentationKey) return;
   presentationKey = key;
   document.body.classList.toggle('in-arena', active);
@@ -870,6 +870,7 @@ function dmgObj(o, amt, type, att) {
   if (o.hp <= 0) {
     if (byCar && o.junk && byCar.aura.junkCoin) coinPop(o.x, o.y, 1, byCar);
     o.dead = true;
+    if (B.ow && o.d.loot && B.net !== 'client') owLootDrop(o, att);
     boom(o.x, o.y, o.target ? 1.6 : 0.6);
     const col =
       {
@@ -956,7 +957,7 @@ function killText(v) {
   ]);
 }
 function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
-  if (!I.alive || v.dead || amt <= 0 || B.seq === 'in' || B.seq === 'count' || v.spawnT > 0) return;
+  if (!I.alive || v.dead || v.inGarage || amt <= 0 || B.seq === 'in' || B.seq === 'count' || v.spawnT > 0) return;
   if (att != null && att !== v.idx && B.cars[att] && teamOf(B.cars[att]) === teamOf(v)) return; // no friendly fire
   v.lastHitT = B.time;
   amt = planHurt(v, I, amt, type);
@@ -1128,9 +1129,9 @@ function startDeath(v) {
   v.dead = true;
   v.drones = [];
   if (B.seq === 'death' || B.seq === 'end') return;
-  // open world: a raider just blows apart and the world goes on
-  if (B.ow && v.idx !== B.me) {
-    owRaiderDown(v);
+  // open world: every wreck just blows apart and the world goes on; players come back at their camp
+  if (B.ow) {
+    if (!v.player) owRaiderDown(v);
     return teamWreck(v);
   }
   // 2v2: while a teammate is still driving, the wreck just blows apart and the fight goes on

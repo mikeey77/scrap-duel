@@ -662,11 +662,15 @@ function stepCarHazards(v, dt) {
   const reach = (v.has.coinmag ? 3 : 1) * (1 + (v.reach || 0)),
     fl = v.flair || {};
   for (const p of B.pk || []) {
-    if (p.cd > 0) continue;
+    if (p.cd > 0 || (B.ow && !v.player)) continue;
     if (Math.hypot(p.x - v.x, p.y - v.y) < (v.rad * 0.6 + 22) * reach) {
       if (p.kind === 'gift') {
         p.cd = 1e9;
         crowdGiftTaken(v, p);
+        continue;
+      }
+      if (p.kind === 'part') {
+        owTakePart(v, p);
         continue;
       }
       p.cd = p.kind === 'power' ? POWER_RESPAWN : 25;

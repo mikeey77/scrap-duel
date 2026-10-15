@@ -69,6 +69,8 @@
     "js/game/replay.js",
     "js/game/match.js",
     "js/game/world.js",
+    "js/game/world-play.js",
+    "js/game/world-net.js",
     "js/game/gauntlet.js",
     "js/game/league.js",
     "js/game/daily.js",

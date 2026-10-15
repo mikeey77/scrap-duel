@@ -2525,7 +2525,7 @@ $('#btnClear').addEventListener('click', () => {
   refreshUI();
 });
 $('#btnReady').addEventListener('click', () => {
-  if (building()) readyCheck();
+  if (building()) G.owGarage ? owLeaveGarage() : readyCheck();
 });
 function updateHUD() {
   if (G.run) return updateRunHUD();

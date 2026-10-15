@@ -8,7 +8,7 @@ function recTick(dt) {
   if (B.recAcc < 1 / REC_HZ) return;
   B.recAcc = 0;
   const snap = snapshot();
-  if (B.tape.length < TAPE_MAX) B.tape.push(snap);
+  if (!B.ow && B.tape.length < TAPE_MAX) B.tape.push(snap);
   if (B.net === 'host') Net.sendSnap(snap);
 }
 

@@ -288,6 +288,7 @@ const Net = {
       } catch (e) {}
   },
   recv(d) {
+    if (d && typeof d.t === 'string' && d.t.startsWith('ow') && owRecv(d)) return;
     if (!d || typeof d.t !== 'string') return;
     switch (d.t) {
       case 'ping':
@@ -379,6 +380,7 @@ const Net = {
           // what the host picked, so the friend sees the same summary
           if (MATCH_FORMATS[d.format]) G.mpFormat = d.format;
           if (ROUND_CHOICES.includes(d.rounds)) G.mpRounds = d.rounds;
+          G.mpWorld = !!d.world;
           if (!$('#ovLobby').hidden) lobbyUI();
         }
         break;
@@ -469,7 +471,8 @@ const Net = {
         teamSize: G.mpTeamSize || 1,
         teams: G.mpTeams || { host: 0, client: 1 },
         format: G.mpFormat || 'balanced',
-        rounds: G.mpRounds || 10
+        rounds: G.mpRounds || 10,
+        world: !!G.mpWorld
       });
   },
   sendSnap(snap) {
@@ -477,7 +480,7 @@ const Net = {
   },
   tickClient() {
     if (this.reconnecting) return;
-    const i = readLocal();
+    const i = G.owGarage ? ZERO_IN : readLocal();
     for (const e of i.edges) this.inAcc.add(e);
     const now = performance.now();
     if (now - this.sendT < 33) return;
@@ -566,6 +569,7 @@ const Net = {
       return this.fail(reason);
     }
     B = null;
+    leaveWorld();
     G.phase = 'final';
     $('#arena').hidden = true;
     $('#build').hidden = false;
@@ -611,63 +615,84 @@ addEventListener('beforeunload', () => {
 /* ----- snapshots ----- */
 const r2 = n => Math.round(n * 100) / 100;
 function snapshot() {
+  const S = snapshotCore();
+  if (B.ow) {
+    const [o, od] = owSnapObjs();
+    S.o = o;
+    S.od = od;
+    S.ow = owSnapExtra();
+    S.pk = [];
+    S.plan = 0;
+    S.cds = 0;
+    S.c = S.c.map(c => c || 0);
+  }
+  return S;
+}
+function snapshotCore() {
   return {
     t: 'snap',
     T: r2(B.t),
     q: B.seq,
     di: B.deadIdx ?? -1,
     rg: B.ring ? Math.round(B.ring.r) : 0,
-    c: B.cars.map(v => [
-      r2(v.x),
-      r2(v.y),
-      r2(v.a),
-      Math.round(v.z),
-      Math.round(v.vx),
-      Math.round(v.vy),
-      r2(v.w),
-      r2(v.flip),
-      v.dead ? 1 : 0,
-      v.anchored ? 1 : 0,
-      r2(v.frozen),
-      v.insts.map(I =>
-        I.alive
-          ? [
-              Math.round(I.hp),
-              r2(I.ta),
-              I.charge > 0 ? r2(I.charge) : 0,
-              I.beam ? I.beam.map(b => [r2(b.a), Math.round(b.l)]) : 0,
-              I.sh !== undefined ? Math.round(I.sh) : 0,
-              (I.bon > 0 ? 1 : 0) |
-                (I.punch > 0 ? 2 : 0) |
-                (I.active ? 4 : 0) |
-                (I.burn > 0 ? 8 : 0) |
-                (I.hitT > 0 ? 16 : 0),
-              I.pa ? r2(I.pa) : 0,
-              I.tgt ? [Math.round(I.tgt.x), Math.round(I.tgt.y)] : 0
-            ]
-          : 0
-      ),
-      v.ball ? [Math.round(v.ball.x), Math.round(v.ball.y)] : 0,
-      v.tether
-        ? [v.tether.inst.n, Math.round((v.tether.car || v.tether.obj).x), Math.round((v.tether.car || v.tether.obj).y)]
-        : 0,
-      v.drones.map(d => [Math.round(d.x), Math.round(d.y)]),
-      v.stuck.map(s => [s.kind, s.id || 0, r2(s.gx), r2(s.gy), s.r, r2(s.a)]),
-      v.hopper.length,
-      v.glue,
-      r2(v.jumpCd),
-      r2(v.cmCd),
-      r2(v.blinkCd),
-      Math.round(v.dealt),
-      v.coins,
-      r2(v.blind),
-      r2(v.emp),
-      v.gen || 0,
-      r2(v.spawnT || 0),
-      v.buff ? v.buff.p : 0,
-      v.buff ? r2(v.buff.t) : 0,
-      jointSnap(v)
-    ]),
+    c: B.cars.map(
+      v =>
+        v && [
+          r2(v.x),
+          r2(v.y),
+          r2(v.a),
+          Math.round(v.z),
+          Math.round(v.vx),
+          Math.round(v.vy),
+          r2(v.w),
+          r2(v.flip),
+          v.dead ? 1 : 0,
+          v.anchored ? 1 : 0,
+          r2(v.frozen),
+          v.insts.map(I =>
+            I.alive
+              ? [
+                  Math.round(I.hp),
+                  r2(I.ta),
+                  I.charge > 0 ? r2(I.charge) : 0,
+                  I.beam ? I.beam.map(b => [r2(b.a), Math.round(b.l)]) : 0,
+                  I.sh !== undefined ? Math.round(I.sh) : 0,
+                  (I.bon > 0 ? 1 : 0) |
+                    (I.punch > 0 ? 2 : 0) |
+                    (I.active ? 4 : 0) |
+                    (I.burn > 0 ? 8 : 0) |
+                    (I.hitT > 0 ? 16 : 0),
+                  I.pa ? r2(I.pa) : 0,
+                  I.tgt ? [Math.round(I.tgt.x), Math.round(I.tgt.y)] : 0
+                ]
+              : 0
+          ),
+          v.ball ? [Math.round(v.ball.x), Math.round(v.ball.y)] : 0,
+          v.tether
+            ? [
+                v.tether.inst.n,
+                Math.round((v.tether.car || v.tether.obj).x),
+                Math.round((v.tether.car || v.tether.obj).y)
+              ]
+            : 0,
+          v.drones.map(d => [Math.round(d.x), Math.round(d.y)]),
+          v.stuck.map(s => [s.kind, s.id || 0, r2(s.gx), r2(s.gy), s.r, r2(s.a)]),
+          v.hopper.length,
+          v.glue,
+          r2(v.jumpCd),
+          r2(v.cmCd),
+          r2(v.blinkCd),
+          Math.round(v.dealt),
+          v.coins,
+          r2(v.blind),
+          r2(v.emp),
+          v.gen || 0,
+          r2(v.spawnT || 0),
+          v.buff ? v.buff.p : 0,
+          v.buff ? r2(v.buff.t) : 0,
+          jointSnap(v)
+        ]
+    ),
     sp: B.obj ? [r2(B.obj.score[0]), r2(B.obj.score[1]), B.obj.carrier, B.obj.owner ?? -1] : 0,
     ki: B.seq === 'death' ? B.killInfo || '' : 0,
     o: B.objs.map(o => [
@@ -735,28 +760,31 @@ function snapshot() {
     dc: B.decoys.map(d => [Math.round(d.x), Math.round(d.y), r2(d.a)]),
     bm: B.bombs.filter(b => b.x !== undefined).map(b => [Math.round(b.x), Math.round(b.y), r2(b.t)]),
     pk: B.pk.map(p => (p.kind === 'power' ? [r2(p.cd), p.p] : r2(p.cd))),
-    plan: B.cars.map(v => ({
-      cargo: v.cargo || 0,
-      earned: v.scrapEarned || 0,
-      damage: v.damageMap || {},
-      first: v.firstBreak || null,
-      links: (v.planLinks || []).map(l => ({ ...l, obj: l.obj?.uid })),
-      inst: v.insts.map(I => ({
-        cd: I.planCd || 0,
-        heat: I.heat || 0,
-        burst: I.planBurst || 0,
-        weight: I.weight || null,
-        deployed: !!I.deployed,
-        yoyo: I.yoyoUntil || 0,
-        ammo: !!I.ammoMode,
-        used: I.used || 0,
-        rescue: I.rescueUntil || 0
-      }))
-    })),
+    plan: B.cars.map(
+      v =>
+        v && {
+          cargo: v.cargo || 0,
+          earned: v.scrapEarned || 0,
+          damage: v.damageMap || {},
+          first: v.firstBreak || null,
+          links: (v.planLinks || []).map(l => ({ ...l, obj: l.obj?.uid })),
+          inst: v.insts.map(I => ({
+            cd: I.planCd || 0,
+            heat: I.heat || 0,
+            burst: I.planBurst || 0,
+            weight: I.weight || null,
+            deployed: !!I.deployed,
+            yoyo: I.yoyoUntil || 0,
+            ammo: !!I.ammoMode,
+            used: I.used || 0,
+            rescue: I.rescueUntil || 0
+          }))
+        }
+    ),
     seen: [...(B.scrapSeen || [])],
     clock: r2(B.time),
     cds: B.cars.map(v =>
-      v.insts.map(I => [
+      (v ? v.insts : []).map(I => [
         r2(Math.max(0, (I.bcd || 0) - B.time)),
         r2(Math.max(0, (I.pcd || 0) - B.time)),
         r2(Math.max(0, (I.ccd || 0) - B.time))
@@ -771,7 +799,7 @@ function applySnap(S, silent) {
   if (!B.replay && B.tape.length < 4000) B.tape.push(S);
   B.t = S.T;
   if (Number.isFinite(S.clock)) B.time = S.clock;
-  if (S.cds)
+  if (S.cds && !B.ow)
     S.cds.forEach((list, i) =>
       list.forEach((cd, n) => {
         const I = B.cars[i]?.insts[n];
@@ -798,7 +826,7 @@ function applySnap(S, silent) {
   B.ring = S.rg ? { r: S.rg } : null;
   S.c.forEach((d, i) => {
     let v = B.cars[i];
-    if (!v) return;
+    if (!v || !d) return;
     if ((d[25] || 0) !== (v.gen || 0) && B.cfg) {
       // the host respawned this car (objective rounds): rebuild it from its design
       v = B.cars[i] = carFromCfg(B.cfg.cars[i], i);
@@ -875,9 +903,10 @@ function applySnap(S, silent) {
     v.blind = d[23] || 0;
     v.emp = d[24] || 0;
   });
+  if (B.ow) owApplySnap(S);
   const map = new Map(B.objs.map(o => [o.uid, o])),
     next = [];
-  for (const [uid, kind, x, y, a, z, hp, max, fr, id, r, ha, hit] of S.o) {
+  for (const [uid, kind, x, y, a, z, hp, max, fr, id, r, ha, hit] of B.ow ? [] : S.o) {
     let o = map.get(uid);
     if (!o) {
       o =
@@ -925,7 +954,7 @@ function applySnap(S, silent) {
     if (hit) o.hitT = 0.1;
     next.push(o);
   }
-  B.objs = next;
+  if (!B.ow) B.objs = next;
   B.shots = S.s.map(([kind, x, y, vx, vy, own, life, max, ex]) => ({
     kind,
     x,
@@ -960,7 +989,7 @@ function applySnap(S, silent) {
   B.clouds = S.cl.map(([x, y, r, life, max]) => ({ x, y, r, life, max }));
   B.decoys = S.dc.map(([x, y, a]) => ({ x, y, a }));
   B.bombs = S.bm.map(([x, y, t]) => ({ x, y, t }));
-  S.pk.forEach((d, i) => {
+  (S.pk || []).forEach((d, i) => {
     if (!B.pk[i]) return;
     if (Array.isArray(d)) [B.pk[i].cd, B.pk[i].p] = d;
     else B.pk[i].cd = d;

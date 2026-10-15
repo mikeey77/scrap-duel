@@ -2,6 +2,17 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.3.0 · Scrap Roads · 2026-10-15
+
+**The open world, now with something to do (and someone to do it with).**
+
+- **Buildings to loot**: walled houses, sheds and shops with doors. Inside are loot crates and the odd heavy safe. Break them open: the parts you drive over go straight into **My parts**. Some buildings are guarded.
+- **Field garage**: at every camp, press *Enter* (or the camp button) to open the camp. *Garage* takes you into the builder with the parts you found; *Back to the world* drops you back where you were.
+- **Random encounters**: raider camps in the wild, slow armoured **convoys** with good loot, and **bounty hunters** who come for you after a few wrecks.
+- **Missions** on every camp's board: delivery runs, clearing a raider camp, road races, and every fourth job a **boss**. Rewards are scrap and rare parts.
+- **Play together**: in the online lobby pick *Open world*, choose your car and press *Start together*. You share the same map, crates, missions and rewards; every part one of you finds gives the other a part of the same rarity.
+- **Your world is saved**: leave whenever you like and pick *Continue* in the menu. Map, parts, car and missions come back.
+
 ## 2.2.0 · Off the Map (test) · 2026-10-15
 
 **Open world (test mode)**: a new tile in the main menu.

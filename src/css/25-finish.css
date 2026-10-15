@@ -946,3 +946,83 @@ body.in-world .demo-feed {
 .lsum {
   font-size: 14px;
 }
+
+/* ---------- open world: camp button and camp menu ---------- */
+#owCampBtn {
+  position: fixed;
+  left: 50%;
+  bottom: 90px;
+  transform: translateX(-50%);
+  z-index: 40;
+  box-shadow: 0 0 0 2px rgba(242, 183, 5, 0.35), 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+body:not(.reduced-motion) #owCampBtn:not([hidden]) {
+  animation: card-deal 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.owcamp {
+  width: min(720px, 94vw);
+  text-align: left;
+}
+.owboard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 6px 0 12px;
+}
+.owm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+  background: rgba(10, 16, 32, 0.75);
+  border: 1px solid rgba(91, 231, 255, 0.2);
+  color: #dfe9f5;
+  clip-path: var(--chamfer-s);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+.owm:hover {
+  border-color: #5be7ff;
+  transform: translateY(-2px);
+}
+.owm b {
+  font-family: var(--f-display);
+  font-size: 15px;
+}
+.owm span {
+  font-size: 12px;
+  color: #8fa3bd;
+  line-height: 1.35;
+}
+.owm em {
+  font-style: normal;
+  font-size: 12px;
+  color: #ffd257;
+  margin-top: auto;
+}
+.owm.cur {
+  cursor: default;
+  border-color: #5be7ff;
+  margin: 6px 0 12px;
+}
+.owrow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.owstat {
+  margin-top: 10px;
+  color: #8fa3bd;
+}
+@media (max-width: 700px) {
+  .owboard {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.in-world #bayIntel {
+  display: none !important;
+}
