@@ -46,7 +46,7 @@ const html = readFileSync(join(here, 'index.html'), 'utf8').replace(/\{\{(\w+)\}
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 writeFileSync(join(out, 'index.html'), html);
-for (const dir of ['img', 'fonts']) cpSync(join(here, dir), join(out, dir), { recursive: true });
+for (const dir of ['img', 'fonts', 'media']) cpSync(join(here, dir), join(out, dir), { recursive: true });
 
 // Short download links that always point at the newest release
 writeFileSync(
@@ -59,6 +59,8 @@ writeFileSync(
   join(out, '_headers'),
   [
     '/img/*',
+    '  Cache-Control: public, max-age=604800',
+    '/media/*',
     '  Cache-Control: public, max-age=604800',
     '/fonts/*',
     '  Cache-Control: public, max-age=31536000, immutable',

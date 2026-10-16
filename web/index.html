@@ -11,7 +11,8 @@
     <meta name="theme-color" content="#0b1324" />
     <meta property="og:title" content="Scrap Duel" />
     <meta property="og:description" content="Build a battle car from scrap. Then wreck someone else's." />
-    <meta property="og:image" content="img/battle.webp" />
+    <meta property="og:image" content="media/trailer-thumb.webp" />
+    <meta property="og:video" content="media/trailer.mp4" />
     <link rel="icon" href="img/icon.svg" type="image/svg+xml" />
     <link rel="preload" href="fonts/chakra-petch-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
     <style>
@@ -156,15 +157,160 @@
         }
       }
 
-      /* ---------- hero ---------- */
+      /* ---------- hero: live gameplay behind the headline ---------- */
       .hero {
         position: relative;
+        min-height: min(88vh, 860px);
+        display: flex;
+        align-items: center;
         padding: 72px 0 96px;
-        background:
-          radial-gradient(ellipse at 75% 40%, rgba(255, 180, 35, 0.08), transparent 60%),
-          repeating-linear-gradient(0deg, transparent 0 47px, rgba(91, 231, 255, 0.045) 47px 48px),
-          repeating-linear-gradient(90deg, transparent 0 47px, rgba(91, 231, 255, 0.045) 47px 48px);
+        background: #05080f;
         overflow: hidden;
+        isolation: isolate;
+      }
+      .hero .bgvid {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -2;
+        transform: scale(1.04);
+        filter: saturate(1.1);
+      }
+      .hero::before {
+        /* darkest behind the text, the fight still visible on the right */
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background:
+          linear-gradient(
+            90deg,
+            rgba(5, 8, 15, 0.94) 0%,
+            rgba(5, 8, 15, 0.82) 38%,
+            rgba(5, 8, 15, 0.45) 70%,
+            rgba(5, 8, 15, 0.6) 100%
+          ),
+          linear-gradient(0deg, var(--night) 0%, transparent 22%),
+          repeating-linear-gradient(0deg, transparent 0 3px, rgba(0, 0, 0, 0.18) 3px 4px);
+      }
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        padding: 6px 12px;
+        font: 600 15px var(--body);
+        color: var(--paper);
+        background: rgba(17, 28, 51, 0.7);
+        border: 1px solid var(--line);
+      }
+      .kicker .live {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #ff4d4d;
+        box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.6);
+        animation: live 1.6s infinite;
+      }
+      @keyframes live {
+        70% {
+          box-shadow: 0 0 0 9px rgba(255, 77, 77, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 77, 77, 0);
+        }
+      }
+      .trailer {
+        display: block;
+        width: 100%;
+        cursor: pointer;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+      }
+      .trailer img {
+        transition: filter 0.2s;
+        filter: brightness(0.82);
+      }
+      .trailer:hover img,
+      .trailer:focus-visible img {
+        filter: brightness(1);
+      }
+      .trailer .play {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 96px;
+        height: 96px;
+        margin: -58px 0 0 -48px;
+        display: grid;
+        place-items: center;
+        color: #1a1000;
+        background: var(--amber);
+        clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+        transition: transform 0.2s;
+      }
+      .trailer .play svg {
+        width: 46px;
+        height: 46px;
+        margin-left: 6px;
+      }
+      .trailer:hover .play {
+        transform: scale(1.08);
+      }
+      .trailer .tcap {
+        position: absolute;
+        left: 22px;
+        bottom: 20px;
+        padding: 6px 12px;
+        font: 700 18px var(--display);
+        background: rgba(5, 8, 15, 0.8);
+      }
+      .trailer .tcap b {
+        color: var(--amber);
+        margin-left: 6px;
+      }
+      #trailerBox {
+        width: min(1200px, 94vw);
+        padding: 0;
+        border: 1px solid var(--line);
+        background: #000;
+      }
+      #trailerBox::backdrop {
+        background: rgba(3, 5, 10, 0.88);
+      }
+      #trailerBox video {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #000;
+      }
+      #trailerBox form {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        z-index: 2;
+      }
+      #trailerBox form button {
+        font: 700 15px var(--display);
+        color: var(--paper);
+        background: rgba(5, 8, 15, 0.8);
+        border: 1px solid var(--line);
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .hero .bgvid {
+          display: none;
+        }
+        .hero {
+          background: #05080f url('media/hero-poster.webp') center / cover;
+        }
+        .kicker .live {
+          animation: none;
+        }
       }
       .hero .wrap {
         display: grid;
@@ -667,6 +813,7 @@
       <div class="wrap">
         <a class="logo" href="#"><img src="img/icon.svg" alt="" />SCRAP <b>DUEL</b></a>
         <nav aria-label="Sections">
+          <a href="#" data-trailer>Trailer</a>
           <a href="#world">Open world</a>
           <a href="#how">How it plays</a>
           <a href="#modes">Modes</a>
@@ -679,8 +826,23 @@
 
     <main>
       <div class="hero">
+        <video
+          class="bgvid"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="auto"
+          poster="media/hero-poster.webp"
+          aria-hidden="true"
+          tabindex="-1"
+        >
+          <source src="media/hero-loop.webm" type="video/webm" />
+          <source src="media/hero-loop.mp4" type="video/mp4" />
+        </video>
         <div class="wrap">
           <div>
+            <p class="kicker"><span class="live"></span>Version {{VERSION}} · free for Windows</p>
             <h1>Build a battle car from scrap. Then wreck someone else's.</h1>
             <p class="lede">
               Draft parts, bolt them onto a grid and drive what you made into a bot, a boss or a friend. Or take it out
@@ -694,20 +856,19 @@
                 Download for Windows
               </a>
               <p class="meta">
-                Version {{VERSION}} for Windows 10 and 11, free. Prefer no installer?
+                For Windows 10 and 11. Prefer no installer?
                 <a href="{{ZIP_URL}}">Get the zip</a>.
               </p>
             </div>
           </div>
           <div>
-            <div class="screen">
-              <img
-                src="img/battle.webp"
-                width="1600"
-                height="1000"
-                alt="Two scrap cars fighting in a factory arena, with health bars and commentary"
-              />
-            </div>
+            <button class="screen trailer" type="button" id="playTrailer" aria-label="Play the trailer, 35 seconds">
+              <img src="media/trailer-thumb.webp" width="1280" height="720" alt="" />
+              <span class="play" aria-hidden="true"
+                ><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" /></svg
+              ></span>
+              <span class="tcap">Watch the trailer <b>0:35</b></span>
+            </button>
           </div>
         </div>
       </div>
@@ -1002,6 +1163,13 @@
       </div>
     </footer>
 
+    <dialog id="trailerBox" aria-label="Scrap Duel trailer">
+      <form method="dialog"><button>Close</button></form>
+      <video controls playsinline preload="none" poster="media/trailer-thumb.webp">
+        <source src="media/trailer.webm" type="video/webm" />
+        <source src="media/trailer.mp4" type="video/mp4" />
+      </video>
+    </dialog>
     <dialog id="lightbox" aria-label="Screenshot">
       <form method="dialog"><button>Close</button></form>
       <img alt="" />
@@ -1019,6 +1187,27 @@
       box.addEventListener('click', e => {
         if (e.target === box) box.close();
       });
+      // the trailer: plays with sound in a dialog, stops when it closes
+      const tb = document.getElementById('trailerBox'),
+        tv = tb.querySelector('video');
+      document.querySelectorAll('#playTrailer, [data-trailer]').forEach(b =>
+        b.addEventListener('click', e => {
+          e.preventDefault();
+          tb.showModal();
+          tv.currentTime = 0;
+          tv.play().catch(() => {});
+        })
+      );
+      tb.addEventListener('close', () => tv.pause());
+      tb.addEventListener('click', e => {
+        if (e.target === tb) tb.close();
+      });
+      // the live background: off for people who prefer less motion, and paused while scrolled away
+      const bg = document.querySelector('.bgvid');
+      if (bg) {
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) bg.pause();
+        else new IntersectionObserver(([e]) => (e.isIntersecting ? bg.play().catch(() => {}) : bg.pause())).observe(bg);
+      }
     </script>
   </body>
 </html>
