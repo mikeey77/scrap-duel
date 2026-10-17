@@ -163,6 +163,16 @@ function showMenu() {
     G.name = nameIn.value.trim().slice(0, 16) || 'Player';
     store('sd.name', G.name);
   });
+  // your car on the pad opens the showroom
+  const pad = $('.hg-pad');
+  if (pad) {
+    pad.style.cursor = 'pointer';
+    pad.title = 'Showroom: your car on a turntable';
+    pad.addEventListener('click', () => {
+      const d = stylePreviewDesign();
+      if (d && d.base && d.base.size) openShowroom(d);
+    });
+  }
   $$('.hg-mode').forEach(b =>
     b.addEventListener('click', () => {
       menuMode = b.dataset.mode;

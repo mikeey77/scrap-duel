@@ -1830,27 +1830,33 @@ function load(k) {
   }
 }
 function renderSlots() {
-  $('#slots').innerHTML = [0, 1, 2]
-    .map(i => {
-      const raw = load('sd.bp' + i);
-      let img = '';
-      if (raw) {
-        try {
-          const d = JSON.parse(raw);
-          img = `<img alt="" src="${designURL({ base: new Map(d.base), top: new Map(d.top) }, 112, G.paint)}">`;
-        } catch (e) {}
-      }
-      return `<div class="slot">${img || '<span style="height:56px;display:grid;place-items:center">empty</span>'}<span>Slot ${i + 1}</span><div class="row"><button data-s="${i}">Save</button>${raw ? `<button data-l="${i}">Load</button>` : ''}</div></div>`;
-    })
-    .join('');
+  $('#slots').innerHTML = Array.from({ length: BP_SLOTS }, (_, i) => {
+    const bp = bpRead(i);
+    let img = '';
+    if (bp)
+      try {
+        img = `<img alt="" src="${designURL(bp.d, 112, G.paint)}">`;
+      } catch (e) {}
+    return `<div class="slot">${img || '<span class="slot-empty">empty</span>'}<input class="slot-name" data-n="${i}" maxlength="24" aria-label="Name of blueprint ${i + 1}" value="${esc(bp ? bp.name : `Slot ${i + 1}`)}" ${bp ? '' : 'disabled'}><div class="row"><button data-s="${i}">Save</button>${bp ? `<button data-l="${i}">Load</button><button data-c="${i}" title="Copy a code for this blueprint">Code</button>` : ''}</div></div>`;
+  }).join('');
   $$('#slots [data-s]').forEach(b =>
     b.addEventListener('click', () => {
-      store('sd.bp' + b.dataset.s, { base: [...G.base], top: [...G.top] });
-      toast(`Saved to slot ${+b.dataset.s + 1}`, true);
+      const i = +b.dataset.s,
+        old = bpRead(i);
+      bpWrite(i, { base: G.base, top: G.top }, old ? old.name : `Blueprint ${i + 1}`);
+      toast(`Saved to slot ${i + 1}`, true);
       renderSlots();
     })
   );
   $$('#slots [data-l]').forEach(b => b.addEventListener('click', () => loadBlueprint(+b.dataset.l)));
+  $$('#slots [data-c]').forEach(b => b.addEventListener('click', () => bpCopyCode(+b.dataset.c, b)));
+  $$('#slots .slot-name').forEach(inp =>
+    inp.addEventListener('change', () => {
+      const i = +inp.dataset.n,
+        bp = bpRead(i);
+      if (bp) bpWrite(i, bp.d, inp.value.trim() || `Blueprint ${i + 1}`);
+    })
+  );
 }
 /* ---------- blueprint codes: share a car as text ----------
    Format: "SD1." + base64url(deflate(JSON)) when the browser can compress, otherwise
@@ -2041,14 +2047,25 @@ function openBlueprintDialog(mode) {
 }
 $('#bpShare').onclick = () => building() && openBlueprintDialog('share');
 $('#bpImport').onclick = () => building() && openBlueprintDialog('import');
+$('#bpShow').onclick = () => {
+  refreshUI();
+  openShowroom();
+};
+addEventListener(
+  'keydown',
+  e => {
+    if (e.key === 'Escape' && SHOW.open) {
+      e.stopPropagation();
+      closeShowroom();
+    }
+  },
+  true
+);
 function loadBlueprint(i) {
   if (!building()) return;
-  let d;
-  try {
-    d = JSON.parse(load('sd.bp' + i));
-  } catch (e) {
-    return;
-  }
+  const bp = bpRead(i);
+  if (!bp) return;
+  const d = { base: [...bp.d.base], top: [...bp.d.top] };
   const need = {};
   for (const [, e] of [...d.base, ...d.top]) need[e.id] = (need[e.id] || 0) + 1;
   const miss = Object.entries(need)

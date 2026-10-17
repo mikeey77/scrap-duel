@@ -871,6 +871,7 @@ function dmgObj(o, amt, type, att) {
     if (byCar && o.junk && byCar.aura.junkCoin) coinPop(o.x, o.y, 1, byCar);
     o.dead = true;
     if (B.ow && o.d.loot && B.net !== 'client') owLootDrop(o, att);
+    if (o.salvage) wreckSalvage(o);
     boom(o.x, o.y, o.target ? 1.6 : 0.6);
     const col =
       {
@@ -1058,6 +1059,7 @@ function killInst(v, I, quiet) {
   if (I.id === 'ashtile' && !quiet) planZone(v, ...ipos(v, I), 'fire', 28, 3);
   if (I.id === 'cockpit' && (v.cargo || 0) > 0) planSpill(v, ...ipos(v, I));
   I.alive = false;
+  I.diedAt = B.time || 0;
   v.lost.push(I.id);
   if (I.gBurst && !quiet) gearBreak(v, I);
   const [x, y] = ipos(v, I);
@@ -1076,6 +1078,7 @@ function killInst(v, I, quiet) {
   const detach = J => {
     detachedCount++;
     J.alive = false;
+    J.detached = true;
     v.lost.push(J.id);
     partObj(v, J);
     if (v.ball && v.ball.inst === J) v.ball = null;
@@ -1161,8 +1164,12 @@ function teamWreck(v) {
     if (I.alive) {
       I.alive = false;
       const [x, y] = ipos(v, I);
-      if (Math.random() < 0.5) debris(x, y, I.id, v.a);
+      if (Math.random() < 0.25) debris(x, y, I.id, v.a);
     }
+  if (!v.wreckMade) {
+    v.wreckMade = true;
+    makeWreck(v);
+  }
   B.flash = 0.4;
   B.flashCol = '255,200,120';
   B.shake = Math.max(B.shake || 0, 10);

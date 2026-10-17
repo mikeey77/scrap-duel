@@ -57,15 +57,9 @@ function brawlDesign(type, diff = 1, budget = BRAWL_BUDGET) {
 /** Your saved blueprint slots that fit the budget. */
 function brawlSaved() {
   const out = [];
-  for (let i = 0; i < 3; i++) {
-    const raw = load('sd.bp' + i);
-    if (!raw) continue;
-    try {
-      const p = JSON.parse(raw),
-        d = { base: new Map(p.base.filter(([, e]) => MOD[e.id])), top: new Map(p.top.filter(([, e]) => MOD[e.id])) };
-      if ([...d.base.values()].some(e => e.id === 'cockpit'))
-        out.push({ name: `Your blueprint ${i + 1}`, d, saved: true });
-    } catch (e) {}
+  for (let i = 0; i < BP_SLOTS; i++) {
+    const bp = bpRead(i);
+    if (bp) out.push({ name: bp.name, d: bp.d, saved: true });
   }
   return out;
 }

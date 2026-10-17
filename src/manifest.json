@@ -58,6 +58,8 @@
     "js/game/objectives.js",
     "js/game/banter.js",
     "js/render/hull.js",
+    "js/render/wear.js",
+    "js/render/weather.js",
     "js/render/battle-render.js",
     "js/render/cine.js",
     "js/game/play.js",
@@ -74,6 +76,7 @@
     "js/game/world-play.js",
     "js/game/world-net.js",
     "js/game/world-fx.js",
+    "js/game/world-garage.js",
     "js/game/gauntlet.js",
     "js/game/league.js",
     "js/game/daily.js",
@@ -89,6 +92,7 @@
     "js/ui/boot.js",
     "js/ui/gamepad.js",
     "js/ui/photo.js",
+    "js/ui/showroom.js",
     "js/ui/menu.js"
   ]
 }

@@ -158,7 +158,7 @@ function drawVehicle(c, v, alpha) {
     c.translate(v.x, v.y);
     c.rotate(v.a);
     c.translate(-v.comX, -v.comY);
-    drawHull(c, H.cells, S, v.a, { paint: v.paint, shadow: [5, 7], axles: H.axles });
+    drawHull(c, H.cells, S, v.a, { paint: v.paint, shadow: [5, 7], axles: H.axles, ruins: H.ruins });
     c.restore();
   }
   for (const layer of ['b', 't'])
@@ -198,6 +198,7 @@ function drawVehicle(c, v, alpha) {
           glowDisc(c, S * (0.8 + Math.sin(ANIM * 4) * 0.1), I.m.glow || RAR[I.m.rar].col);
           c.restore();
         }
+        if (onHullRattle(I)) c.translate(Math.sin(ANIM * 43 + I.n) * S * 0.025, Math.cos(ANIM * 51 + I.n) * S * 0.02);
         const kick = kickOf(I),
           pop = kick > 0 && !(I.m.art && I.m.art.k === 'gun') && !I.m.drive;
         if (pop) {
@@ -250,14 +251,19 @@ function drawVehicle(c, v, alpha) {
         }
         if (I.gear) drawGearPip(c, I);
         const r = I.hp / I.max;
-        if (r < 0.5) {
-          c.fillStyle = `rgba(25,12,4,${(0.5 - r) * 1.1})`;
-          c.save();
-          c.rotate((I.rot * Math.PI) / 2);
-          planShapeFill(c, I.m, S);
-          c.restore();
-          if (r < 0.25 && Math.random() < 0.04)
+        if (r < 0.82) {
+          // scratches, scorch, dents and cracks that grow as the part takes damage
+          if (I.cells.length <= 1) drawWear(c, layer === 't' ? S * 0.84 : S, r, I.n * 17 + 3);
+          else {
+            c.save();
+            c.rotate((I.rot * Math.PI) / 2);
+            c.fillStyle = `rgba(25,12,4,${Math.max(0, 0.5 - r) * 1.1})`;
+            planShapeFill(c, I.m, S);
+            c.restore();
+          }
+          if (r < 0.28 && Math.random() < 0.05)
             B.fx.push({ k: 'smoke', x, y, vx: rnd(-10, 10), vy: rnd(-30, -10), life: 0.8, max: 1, r: 4 });
+          if (r < 0.18 && Math.random() < 0.02) spark(x, y, 3, '#ffb36b');
         }
         if (I.hitT > 0) {
           c.fillStyle = `rgba(255,255,255,${I.hitT * 5})`;
@@ -461,6 +467,7 @@ function drawObj(c, o) {
     c.restore();
   }
   if (o.kind === 'part') drawModule(c, o.id, S, 0, 'p');
+  else if (o.kind === 'wreck') drawWreck(c, o);
   else if (o.kind === 'sentry') {
     c.rotate(-o.a);
     circ(c, 0, 0, o.r, '#3a3f44', '#1b1e21', 3);
@@ -1032,10 +1039,12 @@ function drawArena() {
     c.drawImage(ground, 0, 0);
   }
   planAmbient(c);
+  if (!B.ow) drawPuddles(c);
   for (const z of B.zones) if (z.kind !== 'ramp' && z.kind !== 'tramp') drawZone(c, z);
   for (const z of B.zones) if (z.kind === 'ramp' || z.kind === 'tramp') drawZone(c, z);
   for (const p of B.pk || []) drawPickup(c, p);
   if (B.ow) {
+    owDrawHQ(c);
     owDrawLife(c);
     owDrawMarks(c);
   }
@@ -1078,6 +1087,7 @@ function drawArena() {
     if (B.seq === 'out') drawTele(c, v, B.seqT / 1.3, true);
   }
   for (const o of B.objs) if (o.z > 0) drawObj(c, o);
+  if (B.ow) owDrawHQRoof(c);
   drawSpecialWorld(c);
   drawShots(c);
   drawFx(c);
@@ -1182,6 +1192,11 @@ function drawArena() {
     c.fillRect(0, 0, view.w, view.h);
   }
   if (v && !B.demo && !B.photo && !B.cinema) drawHitArrows(c, v, s);
+  {
+    const wdt = Math.max(0, Math.min(0.05, ANIM - (B._wxA ?? ANIM)));
+    B._wxA = ANIM;
+    drawWeather(c, wdt);
+  }
   if (B.special === 'night') drawNight(c, s);
   if (B.ow) owSky(c, s);
   drawGimmickOverlay(c, s);

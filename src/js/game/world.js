@@ -253,6 +253,7 @@ function owGenChunk(cx, cy) {
       ch.objs.push(o);
     }
   }
+  owHQChunk(ch);
   for (const z of ch.zones) z.ow = ch.k;
   for (const s of ch.st) s.ow = ch.k;
   // the same ids on every computer, so the host and a friend talk about the same crate
@@ -607,6 +608,8 @@ function startWorld(design, label, opt = {}) {
     Math.hypot(b.x - AW / 2, b.y - AH / 2) < Math.hypot(a.x - AW / 2, a.y - AH / 2) ? b : a
   );
   OW.home0 = { x: c0.x, y: c0.y };
+  OW.hq = owHQSpot();
+  OW.parked = S && Array.isArray(S.parked) ? S.parked.slice(0, OW_HQ_SLOTS) : [];
   if (S) for (const [i, j] of S.camps || []) OW.camps.find(c => c.i === i && c.j === j).seen = true;
   const c = (S && S.home && OW.camps.find(x => x.i === S.home[0] && x.j === S.home[1])) || c0;
   c.seen = true;
@@ -709,6 +712,7 @@ function leaveWorld() {
   if (b) b.hidden = true;
   const ov = $('#ovCamp');
   if (ov) ov.hidden = true;
+  for (const id of ['#owHQBtn', '#ovHQ']) if ($(id)) $(id).hidden = true;
 }
 
 /* ---------- each frame ---------- */
@@ -735,7 +739,12 @@ function owStep(dt) {
     B.theme = th;
     B.grip = th.grip;
     B.surf = surfaceOf(th);
-    OW.toast = { text: th.name, sub: `${surfaceOf(th).name} · ${(THEME_BLURB[th.id] || '').split('.')[0]}`, t: 0 };
+    const wk = weatherOf(th);
+    OW.toast = {
+      text: th.name,
+      sub: `${surfaceOf(th).name}${wk ? ' · ' + WEATHER[wk].name : ''} · ${(THEME_BLURB[th.id] || '').split('.')[0]}`,
+      t: 0
+    };
   }
   if (OW.toast) OW.toast.t += dt;
   for (const n of OW.notes) n.t += dt;
@@ -750,6 +759,7 @@ function owStep(dt) {
   }
   owFxStep(dt);
   owCampUI();
+  owHQButton();
   if (!host) return;
   // camps: repair, set the respawn point (for each player)
   for (const p of players) {
@@ -991,6 +1001,20 @@ function owHUD(c) {
     if (!cp.seen) continue;
     c.fillStyle = cp === OW.home ? '#3fe0a0' : '#f2b705';
     c.fillRect(mx + cp.x * k - 3, my + cp.y * k - 3, 6, 6);
+  }
+  if (OW.hq) {
+    // your garage: a little house
+    const hx = mx + OW.hq.x * k,
+      hy = my + OW.hq.y * k;
+    c.fillStyle = '#5be7ff';
+    c.beginPath();
+    c.moveTo(hx, hy - 6);
+    c.lineTo(hx + 5, hy - 1);
+    c.lineTo(hx + 5, hy + 4);
+    c.lineTo(hx - 5, hy + 4);
+    c.lineTo(hx - 5, hy - 1);
+    c.closePath();
+    c.fill();
   }
   for (const ch of OW.chunks.values()) {
     if (!OW.seen.has(ch.k)) continue;

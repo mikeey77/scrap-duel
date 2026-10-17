@@ -24,7 +24,10 @@ function drive(v, dt) {
   const S = surfaceAt(v) || SURFACES.asphalt;
   let sf = SF_CACHE.get(C);
   if (!sf || sf.s !== S) SF_CACHE.set(C, (sf = { s: S, ...surfaceFit(C.tyreW, S) }));
-  const bg = B.ow ? owThemeAt(v.x, v.y).grip : B.grip,
+  const wth = B.ow ? owThemeAt(v.x, v.y) : null,
+    bg =
+      (B.ow ? wth.grip * ((WEATHER[weatherOf(wth)] || {}).grip || 1) : B.grip) *
+      (B.puddles && B.puddles.length && inPuddle(v.x, v.y) ? 0.6 : 1),
     ground = (v.iceT > B.time ? Math.min(bg, 0.3) : bg) * sf.grip; // ice patches
   const grip = C.hoverMode ? 1 : C.studs ? Math.max(ground, 0.9) : Math.min(1.2, ground);
   let trac = C.trac * grip,

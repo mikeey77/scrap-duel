@@ -434,9 +434,9 @@ function owTravelHTML(camp) {
 }
 
 /* ---------- garage in the field ---------- */
-function owOpenGarage() {
+function owOpenGarage(force) {
   const v = myCar();
-  if (!v || v.dead || !owAtCamp(v)) return;
+  if (!v || v.dead || !(force || owAtCamp(v) || owInHQ(v))) return;
   owCloseCamp();
   // the normal garage state is set aside and comes back when you leave
   OW.keepG = {
@@ -870,6 +870,7 @@ function owSave() {
         label: OW.label,
         clock: Math.round(OW.clock || 0),
         camps: OW.camps.filter(c => c.seen).map(c => [c.i, c.j]),
+        parked: (OW.parked || []).map(p => p && { name: p.name, d: p.d, k: p.k }),
         at: Date.now()
       })
     );

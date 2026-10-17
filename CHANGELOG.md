@@ -2,6 +2,17 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.7.0 · Scars & Shelter · 2026-10-17
+
+**Damage shows, wrecks stay, weather bites, and your car gets a home.**
+
+- **Visible damage**: hit plates get scratches, scorch marks, dents and cracks, glow hot when nearly gone and rattle loose before they fall off.
+- **Real wrecks**: a destroyed car leaves a smoking, burning hulk on the field. In the open world you can break it open for parts.
+- **Weather per arena**: rain with puddles, thunderstorms with lightning, snow, dust wind, ash fall and fog. Wet, snowy and dusty floors give less grip, and puddles are slippery. The VS screen tells you what you're driving into.
+- **Showroom**: your car on a lit, turning turntable with three backdrops (studio, garage, neon). Drag to turn it, and save a photo as a PNG. Open it from the menu car, the garage or your world garage.
+- **6 named blueprint slots**: give each build a name, save, load and copy it as a car code to share.
+- **Your own garage in the open world**: a shed next to the first camp with three parking bays. Park a car and start a new one around a spare cockpit, swap between cars, build from your blueprints with the parts you own, and scrap loose parts for scrap.
+
 ## 2.6.0 · Heavy Metal · 2026-10-17
 
 **Cars look like machines now, not stacks of blocks.**

@@ -194,20 +194,30 @@ function drawHull(c, cells, s, rot, opt = {}) {
         }
       }
     }
+  if (opt.ruins) for (const q of opt.ruins) drawRuinCell(c, q.x * s, q.y * s, s, q.seed, (B ? B.time : 0) - (q.t || 0));
   c.restore();
 }
+/** Nearly broken plating on a hull rattles. */
+const onHullRattle = I =>
+  I.layer === 'b' && I.hp / I.max < 0.3 && I.m.art && (I.m.art.k === 'frame' || I.m.art.k === 'plate');
 
 /** Hull cells of a car in battle (alive, solid, not on a moving joint) and its wheels for axles. */
 function vehicleHull(v) {
   const cells = [],
-    axles = [];
+    axles = [],
+    ruins = [];
   for (const b of v.blocks) {
     const I = b.inst;
-    if (!I.alive || I.layer !== 'b' || b.chain) continue;
+    if (I.layer !== 'b' || b.chain) continue;
+    if (!I.alive) {
+      // shot off (not knocked loose): a bare charred frame stays behind
+      if (!I.detached && hullPart(I.m)) ruins.push({ x: b.gx, y: b.gy, seed: I.n * 7 + b.gx * 3 + b.gy, t: I.diedAt });
+      continue;
+    }
     if (hullPart(I.m)) cells.push({ x: b.gx, y: b.gy, part: I });
     else if (I.m.drive) axles.push({ x: b.gx, y: b.gy });
   }
-  return { cells, axles };
+  return { cells, axles, ruins };
 }
 
 /** Which of the four neighbours (up 1, right 2, down 4, left 8) pass a test. */

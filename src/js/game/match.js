@@ -95,6 +95,7 @@ function setupField(kind, f) {
     grip: kind === 'wait' ? 1 : B.theme.grip,
     surf: kind === 'wait' ? SURFACES.asphalt : surfaceOf(B.theme)
   });
+  setupWeather();
   B.uidc = Math.max(B.uidc, 0, ...B.objs.map(o => o.uid || 0));
 }
 
@@ -871,7 +872,7 @@ function showVS(cfg, done) {
     `<div class="vs"><div class="side"><img src="${img(me)}" alt="${esc(me.name)}'s car"><span class="nm" style="color:${me.paint}">${esc(me.name)}</span><span class="ttl">${title(me)}</span><span class="small">${G.score[0]} points</span></div>
     <div class="mid">VS</div>
     <div class="side r"><img src="${img(op)}" alt="${esc(op.name)}'s car"><span class="nm" style="color:${op.paint}">${esc(op.name)}</span><span class="ttl">${title(op)}</span><span class="small">${G.score[1]} points</span></div>
-    <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">${G.run ? `Scrap Gauntlet · wave ${cfg.round}${G.run.boss ? ' · BOSS' : ''}` : `Round ${cfg.round} of ${ROUNDS} · ${stakeLine(cfg.round)}`}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span><span class="vs-surf">${(Sf => `<b>${esc(Sf.name)}</b> · best here: ${esc(surfaceAdvice(Sf).top)}`)(surfaceOf(th))}</span>
+    <div class="meta">${tag ? `<span class="mptag">${tag}</span>` : ''}<span class="label">${G.run ? `Scrap Gauntlet · wave ${cfg.round}${G.run.boss ? ' · BOSS' : ''}` : `Round ${cfg.round} of ${ROUNDS} · ${stakeLine(cfg.round)}`}</span><b style="font-family:var(--f-display);font-size:22px">${th.name}</b><span class="small">${THEME_BLURB[th.id] || ''}</span><span class="vs-surf">${(Sf => `<b>${esc(Sf.name)}</b> · best here: ${esc(surfaceAdvice(Sf).top)}`)(surfaceOf(th))}</span>${(wk => (wk ? `<span class="vs-wx">${WEATHER[wk].icon} <b>${WEATHER[wk].name}</b> · ${esc(WEATHER[wk].note)}</span>` : ''))(weatherOf(th))}
     ${S ? `<div class="vssp" style="--sc:${S.col}"><span class="spi">${S.icon}</span><div><b>SPECIAL ROUND · ${esc(S.name)}</b><span>${esc(S.blurb)}</span></div></div>` : ''}
     ${(line => (line ? `<div class="vs-radio" style="--pc:${op.paint}"><span class="rd-who"><i></i>${esc(op.name)} on the radio</span><q>${esc(line)}</q></div>` : ''))(rivalRadio(cfg.round))}</div></div>`;
   $('#ovVS').hidden = false;

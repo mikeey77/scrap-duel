@@ -473,6 +473,7 @@ function stepArena(rdt) {
   updateCam(rdt);
   if (sim) simulate(dt);
   else clientStep(dt);
+  wreckFxStep(dt);
   if (B.ow) {
     owStep(dt);
     stepFx(dt);
@@ -582,6 +583,11 @@ function deathSeq(rdt) {
     if (v.lastBy) botSay(B.cars[v.lastBy.att], 'wreck');
     if (B.demo) demoFeed(B.killInfo || `${v.name} fell apart`);
     if (B.obj && B.obj.carrier === v.idx) dropDuck(v);
+  }
+  // once the chain of explosions is over, what is left becomes a wreck on the floor
+  if (B.seqT > 1.5 && !v.wreckMade && !respawns) {
+    v.wreckMade = true;
+    makeWreck(v);
   }
   if (respawns && B.seqT > 1.7) return respawnCar(v.idx);
   if (B.seqT > 2.8) {
