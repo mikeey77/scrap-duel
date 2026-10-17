@@ -2,6 +2,36 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.9.0 · Wild Weather · 2026-10-17
+
+**A greener, explained open world, real fire, clean skins and a lot more speed.**
+
+- **The open world, refreshed**:
+  - Forests, pines with snow, palms, cacti, rocks and glowing crystals per biome. Trunks and rocks are solid, and treetops turn see-through when you drive under them.
+  - Street lamps along every road light up at night, and cloud shadows drift over the land on sunny days.
+- **The open world, explained**:
+  - A field guide opens the first time you arrive (and any time with H).
+  - A *First steps* list in the corner teaches you by doing: loot, camps, missions, raiders and your garage. Each step pays 25 scrap.
+- **Fire**: every burning block has its own flames. They vary in number, size, speed and colour, lean away from the way you drive, and throw glowing embers and smoke. Burning no longer flashes parts white every frame.
+- **Skins fixed**: a skin is now painted over the whole body in one go, following the hull's rounded outline.
+  - No more squares or seams, and patterns run on from block to block.
+  - Chrome, gold, holo and nebula sweep across the whole car, hazard tape and neon follow the outside edge, and the cockpit keeps its face.
+- **Faster everywhere**:
+  - Parts that don't move are drawn once and reused.
+  - Only what is on screen gets drawn, and walls, zones and objects are looked up in a grid instead of checked one by one.
+  - Resting objects no longer test against each other.
+  - Entering the open world no longer stalls on the minimap.
+- **Performance mode does more**:
+  - The arena renders at 75% resolution, the open-world ground at half resolution, and weather is lighter.
+  - The game keeps fewer particles at once.
+- **Five new parts** (240 in total):
+  - Flare Gun: burning flares.
+  - Storm Coil: lightning that jumps through up to five targets.
+  - Scrap Blunderbuss: nine bits of scrap at once.
+  - Snow Plow: rams and shoves junk.
+  - Diamond Plate: tough chequered armour.
+- **Local duel** on one PC starts straight away, like a bot match: player 2 gets a ready-made car, so there is no car menu any more.
+
 ## 2.8.0 · Soundtrack · 2026-10-17
 
 **Real music, a working fullscreen button and sharper spikes.**

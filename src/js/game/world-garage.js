@@ -177,7 +177,14 @@ function owHQButton() {
   }
   const v = myCar(),
     open = $('#ovHQ') && !$('#ovHQ').hidden;
-  b.hidden = !(v && !v.dead && G.phase === 'world' && owInHQ(v) && !open);
+  b.hidden = !(
+    v &&
+    !v.dead &&
+    G.phase === 'world' &&
+    owInHQ(v) &&
+    !open &&
+    !($('#ovOwGuide') && !$('#ovOwGuide').hidden)
+  );
 }
 addEventListener('keydown', e => {
   if (e.key !== 'Enter' || G.phase !== 'world' || !OW) return;

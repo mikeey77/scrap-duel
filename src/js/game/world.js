@@ -254,6 +254,7 @@ function owGenChunk(cx, cy) {
     }
   }
   owHQChunk(ch);
+  owGenScenery(ch);
   for (const z of ch.zones) z.ow = ch.k;
   for (const s of ch.st) s.ow = ch.k;
   // the same ids on every computer, so the host and a friend talk about the same crate
@@ -265,13 +266,16 @@ function owGenChunk(cx, cy) {
 
 /** The ground picture of one chunk: biome colours in 20 px blocks, speckle, biome details, roads, camps. */
 function owGround(ch) {
-  const cv = document.createElement('canvas');
-  cv.width = cv.height = OW_CH;
+  // performance mode paints the ground at half resolution: a quarter of the pixels to paint and to draw
+  const R = SETTINGS.perf ? 0.5 : 1,
+    cv = document.createElement('canvas');
+  cv.width = cv.height = OW_CH * R;
   const g = cv.getContext('2d'),
     x0 = ch.cx * OW_CH,
     y0 = ch.cy * OW_CH,
     B2 = 40,
     PAD = 120;
+  g.scale(R, R);
   owSeeded(owHash(ch.cx, ch.cy, OW.seed ^ 0x9a1), () => {
     // biome colours as a tiny picture (one pixel per block, a bit past the chunk edge) that is
     // stretched with smoothing: soft borders for free, and neighbouring chunks meet without a seam
@@ -603,6 +607,7 @@ function startWorld(design, label, opt = {}) {
     mission: null
   };
   OW.camps = owCamps();
+  owGuideStart();
   cineDoors('Open world', opt.net ? 'Together' : S ? 'Welcome back' : 'A new world');
   const c0 = OW.camps.reduce((a, b) =>
     Math.hypot(b.x - AW / 2, b.y - AH / 2) < Math.hypot(a.x - AW / 2, a.y - AH / 2) ? b : a
@@ -724,6 +729,8 @@ function owStep(dt) {
     players = B.cars.filter(c => c && c.player);
   owStream((host ? players : [v]).map(c => [c.x, c.y]));
   owPaintAhead(v.x + v.vx * 0.8, v.y + v.vy * 0.8);
+  owMapRows(8);
+  owGuideStep();
   const cx = Math.floor(v.x / OW_CH),
     cy = Math.floor(v.y / OW_CH);
   for (let j = -2; j <= 2; j++) for (let i = -2; i <= 2; i++) OW.seen.add(owKey(cx + i, cy + j));
@@ -954,7 +961,7 @@ function owDrawGround(c) {
       const k = owKey(cx, cy);
       let ch = OW.chunks.get(k);
       if (!ch) OW.chunks.set(k, (ch = owGenChunk(cx, cy)));
-      if (ch.canvas) c.drawImage(ch.canvas, cx * OW_CH, cy * OW_CH);
+      if (ch.canvas) c.drawImage(ch.canvas, cx * OW_CH, cy * OW_CH, OW_CH, OW_CH);
       else {
         // not painted yet (it will be in a frame or two): the biome's colour stands in
         c.fillStyle = owThemeAt(cx * OW_CH + OW_CH / 2, cy * OW_CH + OW_CH / 2).ground[0];
@@ -967,15 +974,25 @@ function owBuildMap() {
   const n = (OW_N * OW_CH) / 100,
     cv = document.createElement('canvas');
   cv.width = cv.height = n;
-  const g = cv.getContext('2d');
-  for (let y = 0; y < n; y++)
+  OW.map = cv;
+  OW.mapRow = 0;
+  owMapRows(24);
+}
+/** Paints the next rows of the minimap (a few per frame, so entering the world doesn't stall). */
+function owMapRows(rows) {
+  const cv = OW.map;
+  if (!cv || OW.mapRow >= cv.height) return;
+  const n = cv.width,
+    g = cv.getContext('2d'),
+    end = Math.min(cv.height, OW.mapRow + rows);
+  for (let y = OW.mapRow; y < end; y++)
     for (let x = 0; x < n; x++) {
       const wx = x * 100 + 50,
         wy = y * 100 + 50;
       g.fillStyle = owOnRoad(wx, wy) ? '#9aa0a8' : owThemeAt(wx, wy).ground[0];
       g.fillRect(x, y, 1, 1);
     }
-  OW.map = cv;
+  OW.mapRow = end;
 }
 function owHUD(c) {
   const v = myCar();
@@ -992,11 +1009,17 @@ function owHUD(c) {
   c.fillRect(mx - 4, my - 4, M + 8, M + 8);
   c.imageSmoothingEnabled = false;
   if (OW.map) c.drawImage(OW.map, mx, my, M, M);
-  c.fillStyle = 'rgba(6,10,20,.88)';
-  for (let cy = 0; cy < OW_N; cy++)
-    for (let cx = 0; cx < OW_N; cx++)
-      if (!OW.seen.has(owKey(cx, cy)))
-        c.fillRect(mx + cx * OW_CH * k, my + cy * OW_CH * k, OW_CH * k + 0.6, OW_CH * k + 0.6);
+  // the fog over unseen chunks: a tiny picture, redrawn only when you have seen something new
+  if (!OW.fog || OW.fogN !== OW.seen.size) {
+    OW.fog = OW.fog || document.createElement('canvas');
+    OW.fog.width = OW.fog.height = OW_N;
+    const fg = OW.fog.getContext('2d');
+    fg.fillStyle = 'rgba(6,10,20,.88)';
+    for (let cy = 0; cy < OW_N; cy++)
+      for (let cx = 0; cx < OW_N; cx++) if (!OW.seen.has(owKey(cx, cy))) fg.fillRect(cx, cy, 1, 1);
+    OW.fogN = OW.seen.size;
+  }
+  c.drawImage(OW.fog, mx, my, M, M);
   for (const cp of OW.camps) {
     if (!cp.seen) continue;
     c.fillStyle = cp === OW.home ? '#3fe0a0' : '#f2b705';

@@ -1353,3 +1353,54 @@ body:not(.reduced-motion) #ovHQ:not([hidden]) .owhq {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* ---------- open world field guide ---------- */
+.owguide {
+  width: min(860px, 94vw);
+  text-align: left;
+}
+.owguide h2 {
+  margin: 2px 0 6px;
+}
+.owg-lead {
+  color: var(--muted, #9fb3cc);
+  margin: 0 0 16px;
+  max-width: 62ch;
+}
+.owg-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.owg-c {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(143, 163, 189, 0.22);
+  border-radius: 10px;
+  padding: 12px 12px 10px;
+}
+body:not(.reduced-motion) .owg-c {
+  animation: card-deal 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: var(--d);
+}
+.owg-i {
+  font-size: 26px;
+  line-height: 1;
+}
+.owg-c h3 {
+  margin: 8px 0 4px;
+  font-size: 16px;
+}
+.owg-c p {
+  margin: 0;
+  font-size: 14px;
+  color: #b6c8e0;
+  line-height: 1.35;
+}
+.owg-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 16px 0;
+  font-size: 14px;
+  color: #b6c8e0;
+}

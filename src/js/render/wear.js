@@ -285,3 +285,99 @@ function wreckFxStep(dt) {
       });
   }
 }
+
+/* ---------- burning parts ---------- */
+/** Flames on one burning block. Every block burns differently: its own number of tongues, their spots,
+ *  heights, speed and colour, all leaning away from the way the car drives. Embers and smoke fly off. */
+function drawBurn(c, x, y, S, I, v) {
+  const seed = I.n * 7.31 + (I.gcx || 0) * 3.7 + (I.gcy || 0) * 5.3,
+    hot = Math.min(1, I.burn / 1.5),
+    aura = I.burn > 1.6, // burning from a fire build: hotter, yellower
+    sp = Math.hypot(v.vx || 0, v.vy || 0),
+    la = sp > 20 ? Math.atan2(-(v.vy || 0), -(v.vx || 0)) : -Math.PI / 2 + Math.sin(ANIM * 0.7 + seed) * 0.4,
+    lean = Math.min(1, 0.35 + sp / 260),
+    n = 2 + Math.floor(hullHash(seed, 1) * 3),
+    cool = REDUCED.on;
+  c.save();
+  c.translate(x, y);
+  c.globalCompositeOperation = 'lighter';
+  // a glow under the flames that breathes
+  const gr = S * (0.6 + 0.12 * Math.sin(ANIM * (7 + hullHash(seed, 2) * 5) + seed)),
+    g = c.createRadialGradient(0, 0, 0, 0, 0, gr);
+  g.addColorStop(0, `rgba(255,${aura ? 150 : 110},30,${0.32 * hot})`);
+  g.addColorStop(1, 'rgba(255,60,10,0)');
+  c.fillStyle = g;
+  c.beginPath();
+  c.arc(0, 0, gr, 0, 7);
+  c.fill();
+  c.globalCompositeOperation = 'source-over';
+  const tongue = (w, len, wob) => {
+    c.beginPath();
+    c.moveTo(-w, 0);
+    c.quadraticCurveTo(-w * 0.95, -len * 0.5, wob, -len);
+    c.quadraticCurveTo(w * 0.95, -len * 0.5, w, 0);
+    c.arc(0, 0, w, 0, Math.PI);
+  };
+  for (let k = 0; k < n; k++) {
+    const h1 = hullHash(seed, k + 3),
+      h2 = hullHash(k + 7, seed),
+      bx = (h1 - 0.5) * S * 0.6,
+      by = (h2 - 0.5) * S * 0.6,
+      f = 5 + h1 * 7,
+      flick = cool ? 0.85 : 0.7 + 0.2 * Math.sin(ANIM * f + seed * 3 + k) + 0.1 * Math.sin(ANIM * f * 2.3 + k * 5),
+      len = S * (0.4 + h2 * 0.5) * flick * (0.6 + 0.4 * hot) * (1 + lean * 0.6),
+      w = S * (0.13 + h1 * 0.1),
+      a = la + (h2 - 0.5) * 0.9 + (cool ? 0 : Math.sin(ANIM * (3 + h1 * 4) + k) * 0.18),
+      wob = cool ? 0 : Math.sin(ANIM * f * 1.7 + k) * w * 0.4;
+    c.save();
+    c.translate(bx, by);
+    c.rotate(a + Math.PI / 2);
+    // the flame: orange at the root, deep red and see-through at the tip
+    const tg = c.createLinearGradient(0, w, 0, -len);
+    tg.addColorStop(0, aura ? 'rgba(255,205,70,.95)' : 'rgba(255,150,40,.95)');
+    tg.addColorStop(0.45, aura ? 'rgba(255,120,25,.85)' : 'rgba(232,72,18,.85)');
+    tg.addColorStop(1, 'rgba(120,18,8,0)');
+    c.fillStyle = tg;
+    c.globalAlpha = 0.6 + 0.4 * hot;
+    tongue(w, len, wob);
+    c.fill();
+    // a hot core inside it
+    c.globalCompositeOperation = 'lighter';
+    const cg = c.createLinearGradient(0, w * 0.5, 0, -len * 0.55);
+    cg.addColorStop(0, 'rgba(255,245,190,.85)');
+    cg.addColorStop(1, 'rgba(255,200,80,0)');
+    c.fillStyle = cg;
+    tongue(w * 0.5, len * 0.55, wob * 0.5);
+    c.fill();
+    c.restore();
+  }
+  c.restore();
+  // embers and smoke, from a random spot on the block, drifting the same way as the flames
+  if (!cool && Math.random() < 0.35 * (0.5 + hot)) {
+    const dx = Math.cos(la),
+      dy = Math.sin(la),
+      ox = rnd(-S * 0.35, S * 0.35),
+      oy = rnd(-S * 0.35, S * 0.35);
+    B.fx.push({
+      k: 'fire',
+      x: x + ox,
+      y: y + oy,
+      vx: dx * rnd(20, 60) + rnd(-12, 12),
+      vy: dy * rnd(20, 60) + rnd(-12, 12),
+      life: rnd(0.2, 0.45),
+      max: 0.45,
+      r: rnd(1.5, 4.5)
+    });
+  }
+  if (!cool && Math.random() < 0.06)
+    B.fx.push({
+      k: 'smoke',
+      x: x + rnd(-6, 6),
+      y: y + rnd(-6, 6),
+      vx: Math.cos(la) * 25,
+      vy: Math.sin(la) * 25,
+      life: 0.9,
+      max: 1.1,
+      r: rnd(4, 7)
+    });
+}

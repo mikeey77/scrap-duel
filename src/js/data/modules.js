@@ -3751,6 +3751,112 @@ D(
   { k: 'joint' },
   { dir: 1, joint: 1 }
 );
+// 2.9: Wild Weather parts
+D(
+  'flaregun',
+  'Flare Gun',
+  'weapon',
+  1,
+  't',
+  1,
+  40,
+  1,
+  'Fires a burning flare that sets whatever it hits on fire.',
+  'One shot, then a reload. Lights you up at night too.',
+  ['fire'],
+  { k: 'gun', b: 1, l: 0.8, w: 0.26, c: '#b8442a', v: 'flare', tip: '#ffb347' },
+  {
+    dir: 1,
+    front: 1,
+    ...W({
+      kind: 'rocket',
+      dmg: 14,
+      burst: 1,
+      reload: 1.2,
+      spd: 460,
+      rng: 800,
+      spr: 0.02,
+      splash: 50,
+      dt: 'fire',
+      cls: 'fire'
+    })
+  }
+);
+D(
+  'stormcoil',
+  'Storm Coil',
+  'weapon',
+  3,
+  't',
+  2,
+  70,
+  2.5,
+  'Lightning in a jar: one strike jumps through up to five targets.',
+  'Needs a heavy mount, and it is the first thing everyone aims at.',
+  ['energy'],
+  { k: 'tesla' },
+  { glow: '#d6c8ff', ...W({ kind: 'tesla', dmg: 18, cd: 1, rng: 260, chain: 5, dt: 'energy', cls: 'energy' }) }
+);
+D(
+  'blunderbuss',
+  'Scrap Blunderbuss',
+  'weapon',
+  0,
+  't',
+  1,
+  45,
+  1.6,
+  'Loads nine bits of scrap and lets them all go at once.',
+  'Wide spread and short reach; it kicks like a mule.',
+  ['gun', 'scrap'],
+  { k: 'gun', b: 1, l: 0.85, w: 0.3, c: '#6b4a2a', v: 'flare' },
+  {
+    dir: 1,
+    front: 1,
+    ...W({
+      kind: 'bullet',
+      n: 9,
+      dmg: 4,
+      rate: 0.9,
+      spd: 560,
+      rng: 240,
+      spr: 0.55,
+      recoil: 18,
+      dt: 'kin',
+      cls: 'ballistic'
+    })
+  }
+);
+D(
+  'snowplow',
+  'Snow Plow',
+  'melee',
+  1,
+  'b',
+  0,
+  190,
+  4,
+  'A big curved blade: rams hard and shoves junk out of the way.',
+  'Heavy at the front, so turning gets slower.',
+  ['melee', 'scrap', 'cold'],
+  { k: 'plate', c: '#d9a521', p: 'slope' },
+  { dir: 1, ram: 6, pusher: 1, front: 1 }
+);
+D(
+  'diamondplate',
+  'Diamond Plate',
+  'defense',
+  2,
+  'b',
+  1,
+  230,
+  3.4,
+  'Chequered steel: shrugs off bullets and takes the edge off crashes.',
+  'Heavier than ordinary armour.',
+  ['def'],
+  { k: 'plate', c: '#a9b3bc', p: 'bolts' },
+  { res: { light: 0.55, ram: 0.8 } }
+);
 const MOD = Object.fromEntries(MODS.map(m => [m.id, m]));
 const STARTER_GUNS = ['mg', 'smg', 'nailgun', 'pulse', 'rivet'];
 function starterKit(guns = [pick(STARTER_GUNS), pick(STARTER_GUNS)]) {

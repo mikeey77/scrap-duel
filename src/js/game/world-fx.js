@@ -21,6 +21,7 @@ function owSky(c, s) {
     drawNight(c, s, 0.66 * n, 1, light => {
       for (const cp of OW.camps) light(cp.x, cp.y, 340, 0.95);
       for (const ch of OW.chunks.values()) if (ch.on && ch.poi) light(ch.poi.x, ch.poi.y, 300, 0.85);
+      owSceneryLights(light);
     });
   // dusk and dawn: a warm wash
   const d = 4 * n * (1 - n);

@@ -13,9 +13,11 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
   if (!livery || livery === 'factory') return;
   const h = s / 2;
   c.save();
-  c.beginPath();
-  c.rect(-h * 0.92, -h * 0.92, h * 1.84, h * 1.84);
-  c.clip();
+  if (!ctx.whole) {
+    c.beginPath();
+    c.rect(-h * 0.92, -h * 0.92, h * 1.84, h * 1.84);
+    c.clip();
+  }
   switch (livery) {
     case 'stripes':
       if (gx === 0) {
@@ -25,7 +27,7 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
       }
       break;
     case 'hazard':
-      if (ctx.edge) {
+      if (ctx.edge && !ctx.whole) {
         c.globalAlpha = 0.6;
         c.fillStyle = '#1b1b1b';
         c.fillRect(-h, -h, s, s);
@@ -95,6 +97,7 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
         }
       break;
     case 'chrome': {
+      if (ctx.whole) break;
       const g = c.createLinearGradient(-h, -h, h, h),
         t = ((ANIM * 0.4 + (gx + gy) * 0.12) % 1.6) - 0.3;
       g.addColorStop(0, 'rgba(255,255,255,.1)');
@@ -105,6 +108,7 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
       break;
     }
     case 'gold': {
+      if (ctx.whole) break;
       const g = c.createLinearGradient(-h, -h, h, h);
       g.addColorStop(0, 'rgba(255,236,140,.75)');
       g.addColorStop(0.5, 'rgba(214,160,30,.65)');
@@ -139,7 +143,7 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
       }
       break;
     case 'neon':
-      if (ctx.edge) {
+      if (ctx.edge && !ctx.whole) {
         c.globalCompositeOperation = 'lighter';
         c.strokeStyle = `hsla(${(300 + Math.sin(ANIM * 2 + gx * 0.3) * 40) % 360},100%,62%,${0.65 + Math.sin(ANIM * 5) * 0.25})`;
         c.lineWidth = s * 0.12;
@@ -147,6 +151,7 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
       }
       break;
     case 'holo':
+      if (ctx.whole) break;
       c.globalCompositeOperation = 'lighter';
       c.fillStyle = `hsla(${(ANIM * 70 + gx * 35 + gy * 25) % 360},90%,60%,.35)`;
       c.fillRect(-h, -h, s, s);
@@ -161,6 +166,7 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
           if ((i + j) % 2) c.fillRect(-h + i * q, -h + j * q + q * 0.15, q, q * 0.7);
           else c.fillRect(-h + i * q + q * 0.15, -h + j * q, q * 0.7, q);
         }
+      if (ctx.whole) break;
       const g = c.createLinearGradient(-h, -h, h, h),
         t = ((ANIM * 0.25 + (gx - gy) * 0.08) % 1.4) - 0.2;
       g.addColorStop(0, 'rgba(255,255,255,0)');
@@ -226,7 +232,7 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
         c.fillRect(-h * 0.55, -h, h * 0.08, s);
         c.fillRect(h * 0.47, -h, h * 0.08, s);
       }
-      if (gx === 0 && gy === 0) {
+      if (gx === 0 && gy === (ctx.numY ?? 0)) {
         circ(c, 0, 0, h * 0.62, '#fafafa', '#151515', s * 0.05);
         c.fillStyle = '#151515';
         c.font = `700 ${Math.round(s * 0.42)}px "Chakra Petch", Impact, sans-serif`;
@@ -298,12 +304,14 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
       break;
     }
     case 'galaxy': {
-      const g = c.createRadialGradient(-h * 0.3, -h * 0.2, 0, 0, 0, s);
-      g.addColorStop(0, 'rgba(160,80,220,.8)');
-      g.addColorStop(0.5, 'rgba(40,30,110,.85)');
-      g.addColorStop(1, 'rgba(8,10,35,.9)');
-      c.fillStyle = g;
-      c.fillRect(-h, -h, s, s);
+      if (!ctx.whole) {
+        const g = c.createRadialGradient(-h * 0.3, -h * 0.2, 0, 0, 0, s);
+        g.addColorStop(0, 'rgba(160,80,220,.8)');
+        g.addColorStop(0.5, 'rgba(40,30,110,.85)');
+        g.addColorStop(1, 'rgba(8,10,35,.9)');
+        c.fillStyle = g;
+        c.fillRect(-h, -h, s, s);
+      }
       c.globalCompositeOperation = 'lighter';
       for (let k = 0; k < 5; k++) {
         const r = cellHash(gx * 11 + k, gy * 13 + k),
@@ -319,12 +327,14 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
       break;
     }
     case 'jackpot': {
-      const g = c.createLinearGradient(-h, -h, h, h);
-      g.addColorStop(0, 'rgba(255,240,170,.92)');
-      g.addColorStop(0.5, 'rgba(220,160,20,.9)');
-      g.addColorStop(1, 'rgba(255,215,90,.92)');
-      c.fillStyle = g;
-      c.fillRect(-h, -h, s, s);
+      if (!ctx.whole) {
+        const g = c.createLinearGradient(-h, -h, h, h);
+        g.addColorStop(0, 'rgba(255,240,170,.92)');
+        g.addColorStop(0.5, 'rgba(220,160,20,.9)');
+        g.addColorStop(1, 'rgba(255,215,90,.92)');
+        c.fillStyle = g;
+        c.fillRect(-h, -h, s, s);
+      }
       c.strokeStyle = 'rgba(150,100,0,.55)';
       c.lineWidth = Math.max(1, s * 0.035);
       const q = s / 3;
@@ -356,6 +366,175 @@ function drawLivery(c, livery, paint, gx, gy, s, ctx = {}) {
   }
   c.restore();
 }
+/**
+ * Paints a livery over a whole car at once: one layer clipped to the car's outline (rounded like the hull), so
+ * the pattern runs on from block to block without seams or square corners. The cockpit keeps its face.
+ * cells: [{x, y}] grid cells (centre at x*s, y*s in the current frame). minY: the front row.
+ */
+function drawLiveryHull(c, livery, paint, cells, s, minY, solid = []) {
+  if (!livery || livery === 'factory' || !cells.length) return;
+  const at = new Set(cells.map(q => q.x + ',' + q.y)),
+    body = new Set([...at, ...solid.map(q => q.x + ',' + q.y)]),
+    has = (x, y) => at.has(x + ',' + y),
+    on = (x, y) => body.has(x + ',' + y),
+    h = s / 2,
+    r = s * 0.22;
+  const outline = () => {
+    c.beginPath();
+    for (const q of cells) {
+      const up = has(q.x, q.y - 1),
+        dn = has(q.x, q.y + 1),
+        lf = has(q.x - 1, q.y),
+        rt = has(q.x + 1, q.y),
+        x0 = q.x * s - h - (lf ? 0.6 : 0),
+        y0 = q.y * s - h - (up ? 0.6 : 0),
+        x1 = q.x * s + h + (rt ? 0.6 : 0),
+        y1 = q.y * s + h + (dn ? 0.6 : 0),
+        rTL = !up && !lf ? r : 0,
+        rTR = !up && !rt ? r : 0,
+        rBR = !dn && !rt ? r : 0,
+        rBL = !dn && !lf ? r : 0;
+      c.moveTo(x0 + rTL, y0);
+      c.lineTo(x1 - rTR, y0);
+      if (rTR) c.arcTo(x1, y0, x1, y0 + rTR, rTR);
+      c.lineTo(x1, y1 - rBR);
+      if (rBR) c.arcTo(x1, y1, x1 - rBR, y1, rBR);
+      c.lineTo(x0 + rBL, y1);
+      if (rBL) c.arcTo(x0, y1, x0, y1 - rBL, rBL);
+      c.lineTo(x0, y0 + rTL);
+      if (rTL) c.arcTo(x0, y0, x0 + rTL, y0, rTL);
+      c.closePath();
+    }
+  };
+  // only the outside edges (stroking the full outline would also trace every seam inside)
+  const rim = () => {
+    c.beginPath();
+    for (const q of cells) {
+      const cx = q.x * s,
+        cy = q.y * s;
+      if (!on(q.x, q.y - 1)) (c.moveTo(cx - h, cy - h), c.lineTo(cx + h, cy - h));
+      if (!on(q.x + 1, q.y)) (c.moveTo(cx + h, cy - h), c.lineTo(cx + h, cy + h));
+      if (!on(q.x, q.y + 1)) (c.moveTo(cx + h, cy + h), c.lineTo(cx - h, cy + h));
+      if (!on(q.x - 1, q.y)) (c.moveTo(cx - h, cy + h), c.lineTo(cx - h, cy - h));
+    }
+  };
+  // the race number sits on the first body block behind the cockpit
+  const numY = has(0, 1) ? 1 : has(0, -1) ? -1 : 99;
+  let x0 = 1e9,
+    y0 = 1e9,
+    x1 = -1e9,
+    y1 = -1e9;
+  for (const q of cells) {
+    x0 = Math.min(x0, q.x * s - h);
+    y0 = Math.min(y0, q.y * s - h);
+    x1 = Math.max(x1, q.x * s + h);
+    y1 = Math.max(y1, q.y * s + h);
+  }
+  minY = Math.min(...cells.map(q => q.y));
+  const W = x1 - x0,
+    H = y1 - y0,
+    band = (t, col) => {
+      // a highlight band that sweeps across the whole car
+      const g = c.createLinearGradient(x0, y0, x1, y1);
+      g.addColorStop(0, 'rgba(255,255,255,0)');
+      g.addColorStop(clamp(t - 0.12, 0, 1), 'rgba(255,255,255,0)');
+      g.addColorStop(clamp(t, 0, 1), col);
+      g.addColorStop(clamp(t + 0.12, 0, 1), 'rgba(255,255,255,0)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = g;
+      c.fillRect(x0, y0, W, H);
+    };
+  c.save();
+  outline();
+  c.clip();
+  // backgrounds that run across the whole body
+  if (livery === 'chrome' || livery === 'gold' || livery === 'jackpot') {
+    const g = c.createLinearGradient(x0, y0, x1, y1),
+      stops =
+        livery === 'chrome'
+          ? ['rgba(235,240,245,.82)', 'rgba(150,160,172,.78)', 'rgba(220,226,232,.82)', 'rgba(110,120,132,.8)']
+          : livery === 'gold'
+            ? ['rgba(255,236,140,.8)', 'rgba(214,160,30,.72)', 'rgba(255,220,110,.8)', 'rgba(190,140,20,.75)']
+            : ['rgba(255,240,170,.92)', 'rgba(220,160,20,.9)', 'rgba(255,215,90,.92)', 'rgba(200,145,15,.9)'];
+    stops.forEach((col, i) => g.addColorStop(i / 3, col));
+    c.fillStyle = g;
+    c.fillRect(x0, y0, W, H);
+  } else if (livery === 'holo') {
+    const g = c.createLinearGradient(x0, y0, x1, y1);
+    for (let i = 0; i <= 6; i++) g.addColorStop(i / 6, `hsla(${(ANIM * 70 + i * 60) % 360},90%,62%,.38)`);
+    c.globalCompositeOperation = 'lighter';
+    c.fillStyle = g;
+    c.fillRect(x0, y0, W, H);
+    c.globalCompositeOperation = 'source-over';
+  } else if (livery === 'galaxy') {
+    const g = c.createRadialGradient(x0 + W * 0.35, y0 + H * 0.3, 0, x0 + W / 2, y0 + H / 2, Math.max(W, H) * 0.75);
+    g.addColorStop(0, 'rgba(170,90,230,.88)');
+    g.addColorStop(0.45, 'rgba(45,32,120,.9)');
+    g.addColorStop(1, 'rgba(8,10,35,.94)');
+    c.fillStyle = g;
+    c.fillRect(x0, y0, W, H);
+  }
+  for (const q of cells) {
+    c.save();
+    c.translate(q.x * s, q.y * s);
+    drawLivery(c, livery, paint, q.x, q.y, s, {
+      whole: true,
+      edge: DIRS.some(([dx, dy]) => !on(q.x + dx, q.y + dy)),
+      minY,
+      numY
+    });
+    c.restore();
+  }
+  if (livery === 'chrome') band(((ANIM * 0.25) % 1.6) - 0.3, 'rgba(255,255,255,.7)');
+  else if (livery === 'gold' || livery === 'jackpot') band(((ANIM * 0.2) % 1.8) - 0.4, 'rgba(255,250,220,.55)');
+  else if (livery === 'carbon') {
+    band(((ANIM * 0.18) % 1.6) - 0.3, 'rgba(255,255,255,.2)');
+    c.strokeStyle = paint;
+    c.lineWidth = s * 0.16;
+    c.lineCap = 'round';
+    c.globalAlpha = 0.9;
+    rim();
+    c.stroke();
+  }
+  if (livery === 'hazard') {
+    // warning tape all along the outline
+    if (!HAZARD_PAT) {
+      const t = document.createElement('canvas');
+      t.width = t.height = 24;
+      const g = t.getContext('2d');
+      g.fillStyle = '#1b1b1b';
+      g.fillRect(0, 0, 24, 24);
+      g.fillStyle = '#f2b705';
+      for (let k = -24; k < 48; k += 12) {
+        g.beginPath();
+        g.moveTo(k, 0);
+        g.lineTo(k + 6, 0);
+        g.lineTo(k + 30, 24);
+        g.lineTo(k + 24, 24);
+        g.closePath();
+        g.fill();
+      }
+      HAZARD_PAT = t;
+    }
+    c.globalAlpha = 0.7;
+    c.strokeStyle = c.createPattern(HAZARD_PAT, 'repeat');
+    c.lineWidth = s * 0.42;
+    c.lineCap = 'round';
+    rim();
+    c.stroke();
+  } else if (livery === 'neon') {
+    c.globalCompositeOperation = 'lighter';
+    c.strokeStyle = `hsla(${(300 + Math.sin(ANIM * 2) * 40) % 360},100%,62%,${0.65 + Math.sin(ANIM * 5) * 0.25})`;
+    c.lineWidth = s * 0.2;
+    c.shadowColor = '#ff4fd8';
+    c.shadowBlur = SETTINGS.perf ? 0 : s * 0.3;
+    c.lineCap = 'round';
+    rim();
+    c.stroke();
+  }
+  c.restore();
+}
+let HAZARD_PAT = null;
 /** Livery context for a car: front row (for flames) and which cells sit on the edge (for hazard tape). */
 function liveryCtx(grid, gx, gy, minY) {
   const edge = DIRS.some(([dx, dy]) => !grid.has(key(gx + dx, gy + dy)));

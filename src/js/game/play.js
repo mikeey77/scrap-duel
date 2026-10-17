@@ -326,7 +326,7 @@ function botThink(v, dt) {
         px > AW - WM - v.rad * 0.6 ||
         py < WM + v.rad * 0.6 ||
         py > AH - WM - v.rad * 0.6 ||
-        B.st.some(s => circRectDist(px, py, s) < v.rad * 0.7) ||
+        stNear(px, py, v.rad).some(s => circRectDist(px, py, s) < v.rad * 0.7) ||
         B.zones.some(z => z.kind === 'spikes' && circRectDist(px, py, z) < v.rad * 0.5) ||
         B.objs.some(o => (o.fixed || o.m >= 8) && o.z === 0 && Math.hypot(o.x - px, o.y - py) < o.r + v.rad * 0.5)
       )
@@ -846,13 +846,13 @@ function clientStep(dt) {
   if (Net.conn && !B.replay) Net.tickClient();
 }
 function stepFx(dt) {
-  for (let i = B.fx.length - 1; i >= 0; i--) {
-    const f = B.fx[i];
+  // in-place compaction: no splicing in the middle of a long list
+  const L = B.fx;
+  let n = 0;
+  for (let i = 0; i < L.length; i++) {
+    const f = L[i];
     f.life -= dt;
-    if (f.life <= 0) {
-      B.fx.splice(i, 1);
-      continue;
-    }
+    if (f.life <= 0) continue;
     if (f.vx !== undefined) {
       f.x += f.vx * dt;
       f.y += f.vy * dt;
@@ -863,8 +863,11 @@ function stepFx(dt) {
       else if (f.k === 'conf') f.vy += 240 * dt;
     }
     if (f.k === 'text') f.y -= 30 * dt;
+    L[n++] = f;
   }
-  if (B.fx.length > 1500) B.fx.splice(0, B.fx.length - 1500);
+  L.length = n;
+  const cap = SETTINGS.perf ? 450 : 1500;
+  if (L.length > cap) L.splice(0, L.length - cap);
   for (const h of B.hitDirs) h.t -= dt;
   if (B.hitDirs.length) B.hitDirs = B.hitDirs.filter(h => h.t > 0);
   stepBubbles(dt);

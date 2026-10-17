@@ -48,7 +48,7 @@ function rayHit(x, y, a, rng, pierce, own) {
   for (let t = 0; t < rng; t += 6) {
     const px = x + dx * t,
       py = y + dy * t;
-    if (px < WM || px > AW - WM || py < WM || py > AH - WM || B.st.some(s => inRect(px, py, s))) {
+    if (px < WM || px > AW - WM || py < WM || py > AH - WM || !!stHit(px, py)) {
       end = t;
       break;
     }
@@ -1729,7 +1729,7 @@ function blink(v) {
     nx > AW - WM - v.rad ||
     ny < WM + v.rad ||
     ny > AH - WM - v.rad ||
-    B.st.some(s => circRectDist(nx, ny, s) < v.rad * 0.6)
+    stNear(nx, ny, v.rad).some(s => circRectDist(nx, ny, s) < v.rad * 0.6)
   ) {
     txt(v.x, v.y - 30, 'BLOCKED', '#c58bff', 0.6);
     return;
@@ -2066,12 +2066,12 @@ function stepShots(dt) {
         oy = s.y;
       s.x += (s.vx * dt) / 2;
       s.y += (s.vy * dt) / 2;
-      const wall = s.x < WM || s.x > AW - WM || s.y < WM || s.y > AH - WM || B.st.some(t => inRect(s.x, s.y, t));
+      const wall = s.x < WM || s.x > AW - WM || s.y < WM || s.y > AH - WM || !!stHit(s.x, s.y);
       if (wall) {
         if (s.kind === 'bounce' && s.bounces > 0) {
           s.bounces--;
-          const hx = s.x < WM || s.x > AW - WM || B.st.some(t => inRect(s.x, oy, t)),
-            hy = s.y < WM || s.y > AH - WM || B.st.some(t => inRect(ox, s.y, t));
+          const hx = s.x < WM || s.x > AW - WM || !!stHit(s.x, oy),
+            hy = s.y < WM || s.y > AH - WM || !!stHit(ox, s.y);
           s.x = ox;
           s.y = oy;
           if (hx) s.vx *= -1;

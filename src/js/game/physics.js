@@ -1,7 +1,75 @@
 // Driving, collisions (walls, junk, car vs car), objects, hazards and pickups.
 /* =================== PHYSICS =================== */
+/* ---- lookups that stay fast in the big open world ---- */
+// zones grouped by kind (rebuilt when the list changes or a new step starts)
+const ZK = { ref: null, len: -1, t: -1, map: new Map() };
+function zonesOf(kind) {
+  if (ZK.ref !== B.zones || ZK.len !== B.zones.length || ZK.t !== B.time) {
+    ZK.ref = B.zones;
+    ZK.len = B.zones.length;
+    ZK.t = B.time;
+    ZK.map.clear();
+    for (const z of B.zones) {
+      let l = ZK.map.get(z.kind);
+      if (!l) ZK.map.set(z.kind, (l = []));
+      l.push(z);
+    }
+  }
+  return ZK.map.get(kind) || [];
+}
 function zoneAt(x, y, kind) {
-  return B.zones.find(z => z.kind === kind && inZone(x, y, z));
+  for (const z of zonesOf(kind)) if (inZone(x, y, z)) return z;
+  return undefined;
+}
+// walls and buildings in a coarse grid, so a car or a bullet only checks the ones near it
+const STG = { ref: null, len: -1, map: new Map(), big: [], q: 0, C: 256 };
+function stGrid() {
+  if (STG.ref === B.st && STG.len === B.st.length) return STG;
+  STG.ref = B.st;
+  STG.len = B.st.length;
+  STG.map.clear();
+  STG.big = [];
+  const C = STG.C;
+  for (const s of B.st) {
+    if (s.w > C * 8 || s.h > C * 8) {
+      STG.big.push(s);
+      continue;
+    }
+    for (let gx = Math.floor(s.x / C); gx <= Math.floor((s.x + s.w) / C); gx++)
+      for (let gy = Math.floor(s.y / C); gy <= Math.floor((s.y + s.h) / C); gy++) {
+        const k = gx * 65536 + gy;
+        let l = STG.map.get(k);
+        if (!l) STG.map.set(k, (l = []));
+        l.push(s);
+      }
+  }
+  return STG;
+}
+/** Is a point inside a wall? (no allocation: used per bullet per frame) */
+function stHit(x, y) {
+  const G = stGrid(),
+    l = G.map.get(Math.floor(x / G.C) * 65536 + Math.floor(y / G.C));
+  if (l) for (const s of l) if (x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h) return s;
+  for (const s of G.big) if (x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h) return s;
+  return null;
+}
+/** The walls within r of a point (a superset: callers still test them exactly). */
+function stNear(x, y, r) {
+  const G = stGrid(),
+    C = G.C,
+    out = G.big.slice(),
+    q = ++G.q;
+  for (let gx = Math.floor((x - r) / C); gx <= Math.floor((x + r) / C); gx++)
+    for (let gy = Math.floor((y - r) / C); gy <= Math.floor((y + r) / C); gy++) {
+      const l = G.map.get(gx * 65536 + gy);
+      if (l)
+        for (const s of l)
+          if (s._q !== q) {
+            s._q = q;
+            out.push(s);
+          }
+    }
+  return out;
 }
 const SF_CACHE = new WeakMap();
 const SURF_MARK = {
@@ -220,17 +288,17 @@ function land(v, speed) {
     for (const I of v.insts) if (I.alive && I.m.drive) hurtInst(v, I, (hard - 380) * 0.08, 'ram');
   if (!chute && (Math.abs(v.w) > 2.4 || hard > 720) && !v.c.flipRes && Math.random() < 0.65) flipCar(v);
 }
-const WALLS = () => [
+const WALLS = v => [
   { x: -1e4, y: -1e4, w: 1e4 + WM, h: 2e4 + AH },
   { x: AW - WM, y: -1e4, w: 1e4, h: 2e4 + AH },
   { x: -1e4, y: -1e4, w: 2e4 + AW, h: 1e4 + WM },
   { x: -1e4, y: AH - WM, w: 2e4 + AW, h: 1e4 },
-  ...B.st
+  ...(v ? stNear(v.x, v.y, (v.rad || 200) + S * 2) : B.st)
 ];
 function collideStatic(v) {
   if (v.z > 60) return;
   const h = S * 0.5,
-    walls = WALLS();
+    walls = WALLS(v);
   for (let pass = 0; pass < 2; pass++) {
     let best = 0,
       hitB = null,
@@ -544,7 +612,7 @@ function stepObjs(dt) {
       if (o.d.motor) o.a = -Math.PI / 2;
     }
     if (o.z < 60)
-      for (const s of B.st) {
+      for (const s of stNear(o.x, o.y, o.r + 4)) {
         const cx = clamp(o.x, s.x, s.x + s.w),
           cy = clamp(o.y, s.y, s.y + s.h),
           dx = o.x - cx,
@@ -566,50 +634,77 @@ function stepObjs(dt) {
       }
     tickObj(o, dt);
   }
+  // object against object: a grid of nearby objects, and two resting ones never need a check
+  const C = 160,
+    grid = new Map(),
+    bigs = [],
+    moving = o => !o.fixed && (o.vx * o.vx + o.vy * o.vy > 1 || o.z > 0 || o.d.motor || !o._settled);
   for (let i = 0; i < L.length; i++) {
-    const a = L[i];
-    if (a.dead || a.z > 20) continue;
-    for (let j = i + 1; j < L.length; j++) {
-      const b = L[j];
-      if (b.dead || b.z > 20) continue;
-      const dx = b.x - a.x,
-        dy = b.y - a.y,
-        d = Math.hypot(dx, dy),
-        o = a.r + b.r - d;
-      if (o > 0 && d > 0) {
-        const nx = dx / d,
-          ny = dy / d,
-          am = a.fixed ? 1e6 : a.m,
-          bm = b.fixed ? 1e6 : b.m,
-          tot = am + bm;
+    const o = L[i];
+    if (o.dead || o.z > 20) continue;
+    o._i = i;
+    if (o.r > C / 2) {
+      bigs.push(o);
+      continue;
+    }
+    const k = Math.floor(o.x / C) * 65536 + Math.floor(o.y / C);
+    let l = grid.get(k);
+    if (!l) grid.set(k, (l = []));
+    l.push(o);
+  }
+  const pair = (a, b) => {
+    if (!moving(a) && !moving(b)) return;
+    const dx = b.x - a.x,
+      dy = b.y - a.y,
+      d = Math.hypot(dx, dy),
+      o = a.r + b.r - d;
+    if (o > 0 && d > 0) {
+      const nx = dx / d,
+        ny = dy / d,
+        am = a.fixed ? 1e6 : a.m,
+        bm = b.fixed ? 1e6 : b.m,
+        tot = am + bm;
+      if (!a.fixed) {
+        a.x -= (nx * o * bm) / tot;
+        a.y -= (ny * o * bm) / tot;
+      }
+      if (!b.fixed) {
+        b.x += (nx * o * am) / tot;
+        b.y += (ny * o * am) / tot;
+      }
+      const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+      if (rv < 0) {
+        const e = Math.max(a.bounce, b.bounce),
+          j_ = (-(1 + e) * rv) / (1 / am + 1 / bm);
         if (!a.fixed) {
-          a.x -= (nx * o * bm) / tot;
-          a.y -= (ny * o * bm) / tot;
+          a.vx -= (j_ / am) * nx;
+          a.vy -= (j_ / am) * ny;
         }
         if (!b.fixed) {
-          b.x += (nx * o * am) / tot;
-          b.y += (ny * o * am) / tot;
+          b.vx += (j_ / bm) * nx;
+          b.vy += (j_ / bm) * ny;
         }
-        const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-        if (rv < 0) {
-          const e = Math.max(a.bounce, b.bounce),
-            j_ = (-(1 + e) * rv) / (1 / am + 1 / bm);
-          if (!a.fixed) {
-            a.vx -= (j_ / am) * nx;
-            a.vy -= (j_ / am) * ny;
-          }
-          if (!b.fixed) {
-            b.vx += (j_ / bm) * nx;
-            b.vy += (j_ / bm) * ny;
-          }
-          if (-rv > 250) {
-            dmgObj(a, (-rv - 250) * 0.04, 'ram');
-            dmgObj(b, (-rv - 250) * 0.04, 'ram');
-          }
+        if (-rv > 250) {
+          dmgObj(a, (-rv - 250) * 0.04, 'ram');
+          dmgObj(b, (-rv - 250) * 0.04, 'ram');
         }
       }
     }
-  }
+  };
+  for (const l of grid.values())
+    for (const a of l) {
+      const gx = Math.floor(a.x / C),
+        gy = Math.floor(a.y / C);
+      for (let ox = -1; ox <= 1; ox++)
+        for (let oy = -1; oy <= 1; oy++) {
+          const n = grid.get((gx + ox) * 65536 + gy + oy);
+          if (n) for (const b of n) if (b._i > a._i && !b.dead && !a.dead) pair(a, b);
+        }
+    }
+  for (const a of bigs)
+    for (const b of L) if (b !== a && !b.dead && b.z <= 20 && (bigs.indexOf(b) < 0 || b._i > a._i)) pair(a, b);
+  // an object counts as settled once it has had a moment to push free of whatever it spawned on
+  for (const o of L) if (!o._settled && (o._settleT = (o._settleT || 0) + dt) >= 0.6) o._settled = true;
   if (L.some(o => o.dead)) B.objs = L.filter(o => !o.dead);
 }
 function tickObj(o, dt) {
@@ -736,7 +831,7 @@ function losClear(x1, y1, x2, y2) {
   for (let i = 1; i < n; i++) {
     const x = x1 + ((x2 - x1) * i) / n,
       y = y1 + ((y2 - y1) * i) / n;
-    if (B.st.some(s => inRect(x, y, s))) return false;
+    if (stHit(x, y)) return false;
   }
   return true;
 }

@@ -282,14 +282,14 @@ function menuOpts() {
       'rt'
     )}</div>${G.runTeams === 2 ? `<div class="hg-o"><span class="mlab">Your partner</span>${seg('partnerSeg', PARTNER_STYLES, G.partnerStyle, 'p')}</div>` : ''}<p class="small">Survive as long as you can. Hearts carry over; relics stack. Your loadout gear comes along.${G.runTeams === 2 ? ' With a partner, every wave brings two rivals.' : ''}</p><button class="btn hg-go2" id="mPlay">Start a run</button>`,
     world:
-      (sv => `<p class="small">One big map built from every arena, with day and night. Loot buildings for parts, rebuild your car at camps, take missions, wreck raiders and bosses. To play together: Friends → Host a room → Open world.</p>
+      (sv => `<p class="small">One big map built from every arena, with day and night. Loot buildings for parts, rebuild your car at camps, take missions, wreck raiders and bosses. To play together: Friends → Host a room → Open world. A field guide shows you around when you arrive.</p>
       ${owCarPicker('owCar')}
       <div class="mrow">${sv ? `<button class="btn hg-go2" id="owCont">Continue · ${sv.done} missions, ${Object.values(sv.inv).reduce((a, b) => a + b, 0)} parts</button>` : ''}<button class="btn ${sv ? 'ghost' : 'hg-go2'}" id="owPlay">${sv ? 'New world' : 'Enter the open world'}</button></div>`)(
         owSaved()
       ),
     online: `<p class="small">Host a room and share the code. As host you pick Draft duel or Blueprint Brawl.</p><div class="mrow"><button class="btn" id="mHost">Host a room</button><input class="codein" id="mCode" maxlength="4" placeholder="CODE" aria-label="Room code"><button class="btn ghost" id="mJoin">Join</button></div>
-      <div class="hg-o local2"><span class="mlab">On this PC</span><p class="small">Player 1 on keyboard and mouse, player 2 on a controller. Both bring a finished car, five rounds.${PAD.on ? ' Controller ready.' : ''}</p>
-      <div class="mrow"><select id="p2Car" aria-label="Player 2's car">${BRAWL_TYPES.map(t => `<option>${esc(t.name)}</option>`).join('')}</select><button class="btn ghost" id="mLocal">Local duel</button></div></div>`
+      <div class="hg-o local2"><span class="mlab">On this PC</span><p class="small">Player 1 on keyboard and mouse, player 2 on a controller. Player 2 gets a ready-made car, five rounds.${PAD.on ? ' Controller ready.' : ''}</p>
+      <div class="mrow"><button class="btn ghost" id="mLocal">Local duel</button></div></div>`
   }[m.id];
   el.style.setProperty('--rc', m.col);
   el.innerHTML = body;
@@ -314,7 +314,7 @@ function menuOpts() {
     $('#mLocal').onclick = () => {
       sfx('ui');
       G.started = true;
-      startLocalDuel($('#p2Car').value);
+      startLocalDuel();
     };
   if ($('#dlPlay'))
     $('#dlPlay').onclick = () => {
@@ -1071,6 +1071,7 @@ if (window.__SD_TEST__)
     BattleMusic,
     SOUNDTRACK,
     SHINE,
+    SPR,
     SETTINGS,
     makeCar,
     designConnected,

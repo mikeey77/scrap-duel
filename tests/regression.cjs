@@ -199,7 +199,7 @@ test('catalog loads and every starter is connected, usable and owned', () => {
     signatures.add(G.starterGuns.join(','));
   }
   assert(signatures.size > 10);
-  assert.equal(a.MODS.length, 235);
+  assert.equal(a.MODS.length, 240);
 });
 test('all heavy drafted modules include enough free support', () => {
   for (const m of a.MODS.filter(m => m.layer === 't' && m.mnt === 2)) {

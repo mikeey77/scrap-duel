@@ -334,7 +334,14 @@ function owCampUI() {
   const v = myCar(),
     b = owCampButton(),
     open = $('#ovCamp') && !$('#ovCamp').hidden;
-  b.hidden = !(v && !v.dead && G.phase === 'world' && owAtCamp(v) && !open);
+  b.hidden = !(
+    v &&
+    !v.dead &&
+    G.phase === 'world' &&
+    owAtCamp(v) &&
+    !open &&
+    !($('#ovOwGuide') && !$('#ovOwGuide').hidden)
+  );
 }
 addEventListener('keydown', e => {
   if (e.key !== 'Enter' || G.phase !== 'world' || !OW) return;

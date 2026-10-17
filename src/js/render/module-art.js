@@ -199,8 +199,128 @@ function cockpitFace(v) {
   const la = Math.atan2((v.aimY ?? v.y - 1) - v.y, (v.aimX ?? v.x) - v.x) - v.a;
   return { mood, lookA: la, seed: v.idx * 1.7, badge: (v.look && v.look.badge) || null };
 }
-/** Every module: its own artwork, plus a small rarity notch on chassis blocks. */
+/* ---- sprite cache: parts that look the same every frame are drawn once into a small bitmap ----
+   A part qualifies when its art does not move (checked once by drawing it at two moments) and it looks the
+   same through the cache as drawn directly. Turning parts, cockpits with eyes, glowing and animated parts and
+   anything with live state (recoil, heat, charge…) are always drawn live. */
+const SPR = { map: new Map(), ok: {}, hits: 0, miss: 0 };
+const SPR_LIVE = [
+  'kick',
+  'rev',
+  'pour',
+  'heat',
+  'charge',
+  'fire',
+  'punch',
+  'ammo',
+  'fired',
+  'down',
+  'pa',
+  'active',
+  'spin',
+  'cargo',
+  'anchored',
+  'roll',
+  'shine',
+  'mood',
+  'lookA',
+  'badge'
+];
+function sprStatic(id) {
+  if (SPR.ok[id] !== undefined) return SPR.ok[id];
+  let ok = false;
+  try {
+    const m = MOD[id],
+      n = 40,
+      W = n * 4,
+      mk = () => {
+        const cv = document.createElement('canvas');
+        cv.width = cv.height = W;
+        const g = cv.getContext('2d');
+        g.fillStyle = '#5a6068';
+        g.fillRect(0, 0, W, W);
+        g.translate(W / 2, W / 2);
+        return [cv, g];
+      };
+    if (m && id !== 'cockpit' && !m.glow && !m.plan && typeof document !== 'undefined') {
+      const keep = ANIM,
+        [a, ga] = mk(),
+        [b, gb] = mk();
+      ANIM = 0.37;
+      drawModuleCore(ga, id, n, 0, 'p', {});
+      ANIM = 2.91;
+      drawModuleCore(gb, id, n, 0, 'p', {});
+      ANIM = keep;
+      const da = ga.getImageData(0, 0, W, W).data,
+        db = gb.getImageData(0, 0, W, W).data;
+      ok = da.length > 0;
+      for (let i = 0; i < da.length && ok; i += 4)
+        if (Math.abs(da[i] - db[i]) > 6 || Math.abs(da[i + 1] - db[i + 1]) > 6) ok = false;
+      // additive glows look different on a sprite than drawn straight onto the floor
+      if (ok) {
+        const [sp, gs] = mk(),
+          [cv, gc] = mk();
+        gs.clearRect(-W / 2, -W / 2, W, W);
+        drawModuleCore(gs, id, n, 0, 'p', {});
+        ANIM = 0.37;
+        gc.drawImage(sp, -W / 2, -W / 2);
+        ANIM = keep;
+        const dc = gc.getImageData(0, 0, W, W).data;
+        for (let i = 0; i < da.length && ok; i += 4)
+          if (Math.abs(da[i] - dc[i]) > 10 || Math.abs(da[i + 2] - dc[i + 2]) > 10) ok = false;
+      }
+    }
+  } catch (e) {
+    ok = false;
+  }
+  return (SPR.ok[id] = ok);
+}
 function drawModule(c, id, s, ang, team, st) {
+  const q4 = ang / (Math.PI / 2);
+  if (
+    typeof c.getTransform === 'function' &&
+    !(st && st.builder) &&
+    Math.abs(q4 - Math.round(q4)) < 1e-4 &&
+    !(st && SPR_LIVE.some(k => (typeof st[k] === 'number' ? st[k] > 0.001 : !!st[k]))) &&
+    sprStatic(id)
+  ) {
+    const T = c.getTransform(),
+      sc = T ? Math.hypot(T.a, T.b) : 1,
+      q = Math.pow(2, Math.ceil(Math.log2(Math.max(0.25, sc)) * 4) / 4),
+      m = MOD[id],
+      span = s * Math.max(1, m.size || 1) * 1.7,
+      key = [
+        id,
+        s,
+        (Math.round(q4) + 4) % 4,
+        team,
+        q,
+        st && st.hull ? 1 : 0,
+        (st && st.nb) || 0,
+        st && st.hull ? st.gx + ',' + st.gy : '',
+        (st && st.paint) || '',
+        st && st.turret ? 1 : 0
+      ].join('|');
+    let sp = SPR.map.get(key);
+    if (!sp) {
+      SPR.miss++;
+      if (SPR.map.size > 700) SPR.map.clear();
+      const px = Math.ceil(span * q);
+      sp = document.createElement('canvas');
+      sp.width = sp.height = px;
+      const g = sp.getContext('2d');
+      g.scale(q, q);
+      g.translate(span / 2, span / 2);
+      drawModuleCore(g, id, s, ang, team, st);
+      SPR.map.set(key, sp);
+    } else SPR.hits++;
+    c.drawImage(sp, -span / 2, -span / 2, span, span);
+    return;
+  }
+  drawModuleCore(c, id, s, ang, team, st);
+}
+/** Every module: its own artwork, plus a small rarity notch on chassis blocks. */
+function drawModuleCore(c, id, s, ang, team, st) {
   drawModuleArt(c, id, s, ang, team, st);
   const m = MOD[id];
   if (
@@ -2199,11 +2319,18 @@ function designURL(design, size, paint, livery, overlay) {
       gy: e.y,
       nb: onHull ? nbMask(e.x, e.y, (x, y) => (design.base.get(key(x, y)) || {}).id === e.id) : 0
     });
-    if (livery && livery !== 'factory' && liveryPart(e.id))
-      drawLivery(c, livery, paint || '#f2b705', e.x, e.y, cs * 0.96, {
-        edge: DIRS.some(([dx, dy]) => !design.base.has(key(e.x + dx, e.y + dy))),
-        minY: y0
-      });
+    c.restore();
+  }
+  if (livery && livery !== 'factory') {
+    const cells = [],
+      solid = [];
+    for (const [, e] of design.base)
+      if (hullPart(MOD[e.id]))
+        for (const [x, y] of footprint(e.id, e.rot, e.x, e.y))
+          (liveryPart(e.id) && e.id !== 'cockpit' ? cells : solid).push({ x, y });
+    c.save();
+    c.translate(ox + cs / 2, oy + cs / 2);
+    drawLiveryHull(c, livery, paint || '#f2b705', cells, cs, y0, solid);
     c.restore();
   }
   for (const [, e] of design.top) {

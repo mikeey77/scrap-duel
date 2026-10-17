@@ -102,7 +102,7 @@ function drawWeather(c, dt) {
   if (!w || B.demo) return;
   const W = view.w,
     H = view.h,
-    calm = REDUCED.on;
+    calm = REDUCED.on || SETTINGS.perf;
   if (!B.wx || B.wx.kind !== w || B.wx.w !== W) {
     const n = Math.round(((W * H) / 9000) * (calm ? 0.35 : 1) * (w === 'fog' ? 0.04 : w === 'dust' ? 0.6 : 1));
     B.wx = { kind: w, w: W, p: [] };

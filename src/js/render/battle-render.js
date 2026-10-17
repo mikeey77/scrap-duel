@@ -161,7 +161,26 @@ function drawVehicle(c, v, alpha) {
     drawHull(c, H.cells, S, v.a, { paint: v.paint, shadow: [5, 7], axles: H.axles, ruins: H.ruins });
     c.restore();
   }
-  for (const layer of ['b', 't'])
+  const burning = [];
+  for (const layer of ['b', 't']) {
+    // the skin: painted over the whole body in one go, after the chassis parts and before the top layer
+    if (layer === 't' && !under && look.livery && look.livery !== 'factory') {
+      const cells = [],
+        solid = [];
+      for (const b of v.blocks) {
+        const I = b.inst;
+        if (!I.alive || I.layer !== 'b' || b.chain) continue;
+        if (liveryPart(I.id) && I.id !== 'cockpit' && hullPart(I.m)) cells.push({ x: b.gx, y: b.gy });
+        else if (hullPart(I.m)) solid.push({ x: b.gx, y: b.gy });
+      }
+      c.save();
+      c.translate(v.x, v.y);
+      c.rotate(v.a);
+      if (v.flip > 0) c.scale(1, flipS);
+      c.translate(-v.comX, -v.comY);
+      drawLiveryHull(c, look.livery, v.paint, cells, S, v.minGy, solid);
+      c.restore();
+    }
     for (const I of alive) {
       if (I.layer !== layer) continue;
       if (under && layer === 't') continue;
@@ -238,8 +257,6 @@ function drawVehicle(c, v, alpha) {
           spin: isJoint(I.id) && jtype(I) === 'rotator' ? I.s : 0
         });
         if (pop) c.restore();
-        if (layer === 'b' && look.livery !== 'factory' && liveryPart(I.id))
-          drawLivery(c, look.livery, v.paint, I.gcx, I.gcy, S, liveryCtx(v.grid, I.gcx, I.gcy, v.minGy));
         if (layer === 'b' && look.stickers && look.stickers.length) {
           const si = stickerCells(v).indexOf(I);
           if (si >= 0 && look.stickers[si]) {
@@ -272,11 +289,13 @@ function drawVehicle(c, v, alpha) {
           planShapeFill(c, I.m, S);
           c.restore();
         }
-        if (I.burn > 0 && Math.random() < 0.4)
-          B.fx.push({ k: 'fire', x, y, vx: rnd(-10, 10), vy: rnd(-30, -10), life: 0.3, max: 0.4, r: 4 });
+        if (I.burn > 0) burning.push([x, y, I]);
       }
       c.restore();
     }
+  }
+  // burning parts: flames on top of everything, each block with its own fire
+  for (const [x, y, I] of burning) drawBurn(c, x, y, S, I, v);
   for (const s of v.stuck) {
     const [x, y] = lpos(v, s.gx, s.gy);
     c.save();
@@ -762,7 +781,7 @@ function carAlpha(v) {
 }
 function drawShots(c) {
   for (const sh of B.shots) {
-    if (sh.delay > 0) continue;
+    if (sh.delay > 0 || !owInView(sh.x, sh.y, 220)) continue;
     const a = Math.atan2(sh.vy, sh.vx),
       mine = sh.own === B.me;
     c.save();
@@ -862,13 +881,17 @@ function drawShots(c) {
 }
 function drawFx(c) {
   for (const f of B.fx) {
+    if (f.x !== undefined && !owInView(f.x, f.y, 120)) continue;
     const t = f.life / f.max;
     if (drawCosmeticFx(c, f, t)) continue;
     if (f.k === 'fire') {
-      c.fillStyle = `rgba(255,${Math.round(120 + 120 * t)},40,${t})`;
+      // an ember: hot yellow when fresh, cooling to a dim red spark as it flies
+      c.globalCompositeOperation = 'lighter';
+      c.fillStyle = `rgba(255,${Math.round(70 + 160 * t)},${Math.round(20 + 60 * t * t)},${0.85 * t})`;
       c.beginPath();
-      c.arc(f.x, f.y, f.r * (0.5 + t), 0, 7);
+      c.arc(f.x, f.y, f.r * (0.35 + 0.5 * t), 0, 7);
       c.fill();
+      c.globalCompositeOperation = 'source-over';
     } else if (f.k === 'smoke') {
       c.fillStyle = `rgba(${f.col || '80,74,68'},${Math.min(0.6, t * (f.col ? 0.4 : 0.55))})`;
       c.beginPath();
@@ -1021,7 +1044,7 @@ function drawGearPip(c, I) {
 }
 function drawArena() {
   const c = ax,
-    d = dprOf();
+    d = arenaDpr();
   c.setTransform(d, 0, 0, d, 0, 0);
   c.fillStyle = '#1b1712';
   c.fillRect(0, 0, view.w, view.h);
@@ -1040,16 +1063,23 @@ function drawArena() {
   }
   planAmbient(c);
   if (!B.ow) drawPuddles(c);
-  for (const z of B.zones) if (z.kind !== 'ramp' && z.kind !== 'tramp') drawZone(c, z);
-  for (const z of B.zones) if (z.kind === 'ramp' || z.kind === 'tramp') drawZone(c, z);
-  for (const p of B.pk || []) drawPickup(c, p);
+  // only what is on screen gets drawn (the open world holds thousands of things)
+  const vw = view.w / (2 * s) + 160,
+    vh = view.h / (2 * s) + 160,
+    seeP = (x, y, r) => Math.abs(x - cam.x) < vw + r && Math.abs(y - cam.y) < vh + r,
+    seeR = q => q.x < cam.x + vw && q.x + q.w > cam.x - vw && q.y < cam.y + vh && q.y + q.h > cam.y - vh,
+    seeZ = z => (z.r !== undefined ? seeP(z.x, z.y, z.r + 40) : z.w === undefined || seeR(z));
+  for (const z of B.zones) if (z.kind !== 'ramp' && z.kind !== 'tramp' && seeZ(z)) drawZone(c, z);
+  for (const z of B.zones) if ((z.kind === 'ramp' || z.kind === 'tramp') && seeZ(z)) drawZone(c, z);
+  for (const p of B.pk || []) if (seeP(p.x, p.y, 60)) drawPickup(c, p);
   if (B.ow) {
     owDrawHQ(c);
     owDrawLife(c);
     owDrawMarks(c);
+    owDrawScenery(c, 'base');
   }
-  for (const st of B.st) drawStaticThemed(c, st, st.wall || B.theme.wall);
-  for (const o of B.objs) if (o.z <= 0) drawObj(c, o);
+  for (const st of B.st) if (!st.scen && seeR(st)) drawStaticThemed(c, st, st.wall || B.theme.wall);
+  for (const o of B.objs) if (o.z <= 0 && seeP(o.x, o.y, (o.r || 30) + 40)) drawObj(c, o);
   for (const db of B.debris) {
     c.save();
     c.globalAlpha = Math.min(1, db.life);
@@ -1082,12 +1112,17 @@ function drawArena() {
   const order = [...B.cars].sort((a, b) => a.z - b.z);
   for (const v of order) {
     const va = carAlpha(v);
-    if (!v.dead || (B.seq === 'death' && B.deadIdx === v.idx)) drawVehicle(c, v, va);
+    if ((!v.dead || (B.seq === 'death' && B.deadIdx === v.idx)) && seeP(v.x, v.y, (v.rad || 120) + 60))
+      drawVehicle(c, v, va);
     if (B.seq === 'in') drawTele(c, v, B.seqT / 1.1, false);
     if (B.seq === 'out') drawTele(c, v, B.seqT / 1.3, true);
   }
   for (const o of B.objs) if (o.z > 0) drawObj(c, o);
-  if (B.ow) owDrawHQRoof(c);
+  if (B.ow) {
+    owDrawScenery(c, 'top');
+    owDrawHQRoof(c);
+    owDrawClouds(c);
+  }
   drawSpecialWorld(c);
   drawShots(c);
   drawFx(c);
@@ -1213,7 +1248,10 @@ function drawArena() {
   } else if (B.cinema) {
     // trailer capture: no HUD at all
   } else if (B.ow) {
-    if (!B.photo) owHUD(c);
+    if (!B.photo) {
+      owHUD(c);
+      owGuideHUD(c);
+    }
   } else if (!B.photo) drawHUD(c);
 }
 /** Countdown beats and banners go to the big-moment layer (also when the HUD is hidden). */
@@ -1563,7 +1601,7 @@ let nightCv = null;
 function drawNight(c, s, dark = 0.9, flash = 1, extra = null) {
   const W = view.w,
     H = view.h,
-    d = dprOf();
+    d = arenaDpr();
   if (!nightCv) nightCv = document.createElement('canvas');
   if (nightCv.width !== Math.round(W * d) || nightCv.height !== Math.round(H * d)) {
     nightCv.width = Math.round(W * d);
@@ -1579,8 +1617,9 @@ function drawNight(c, s, dark = 0.9, flash = 1, extra = null) {
   const toS = (x, y) => worldToScreen(x, y, s);
   const light = (x, y, r, a = 1) => {
     const [sx, sy] = toS(x, y),
-      R = r * s,
-      g = n.createRadialGradient(sx, sy, 0, sx, sy, R);
+      R = r * s;
+    if (sx + R < 0 || sy + R < 0 || sx - R > W || sy - R > H) return;
+    const g = n.createRadialGradient(sx, sy, 0, sx, sy, R);
     g.addColorStop(0, `rgba(0,0,0,${a})`);
     g.addColorStop(1, 'rgba(0,0,0,0)');
     n.fillStyle = g;

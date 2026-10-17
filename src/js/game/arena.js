@@ -21,7 +21,7 @@ function worldToScreen(x, y, s = view.sc * cam.z) {
 }
 function sizeArena() {
   const r = ac.getBoundingClientRect(),
-    d = dprOf();
+    d = arenaDpr();
   view.w = r.width;
   view.h = r.height;
   view.worldW = r.width;
@@ -1028,7 +1028,7 @@ function hurtInst(v, I, amt, type, sx, sy, dirX, dirY, att) {
   I.hp -= a;
   v.acc = (v.acc || 0) + a;
   if (B.obj && B.obj.carrier === v.idx) B.obj.carryDmg += a;
-  I.hitT = 0.12;
+  if (type !== 'none') I.hitT = 0.12; // burning ticks don't flash the part white every frame
   v.lastHit = B.time;
   if (I.hp <= 0) killInst(v, I);
 }

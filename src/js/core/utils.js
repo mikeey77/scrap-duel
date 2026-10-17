@@ -84,6 +84,14 @@ const dprOf = () => {
   } catch (e) {}
   return perf ? 1 : Math.min(2, window.devicePixelRatio || 1);
 };
+/** The arena canvas: performance mode draws it at 75% and lets the browser stretch it (a lot less to fill). */
+const arenaDpr = () => {
+  let perf = false;
+  try {
+    perf = !!SETTINGS.perf;
+  } catch (e) {}
+  return perf ? 0.75 : dprOf();
+};
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v),
   rnd = (a, b) => a + Math.random() * (b - a),
   pick = a => a[Math.floor(Math.random() * a.length)];

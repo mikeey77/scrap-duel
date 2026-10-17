@@ -78,6 +78,8 @@
     "js/game/world-net.js",
     "js/game/world-fx.js",
     "js/game/world-garage.js",
+    "js/game/world-scenery.js",
+    "js/game/world-guide.js",
     "js/game/gauntlet.js",
     "js/game/league.js",
     "js/game/daily.js",
