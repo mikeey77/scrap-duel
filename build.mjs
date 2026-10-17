@@ -54,6 +54,9 @@ if (faces) fs.writeFileSync(out('fonts/fonts.css'), faces);
 fs.rmSync(out('voice'), { recursive: true, force: true });
 fs.mkdirSync(out('voice'), { recursive: true });
 for (const id of Object.keys(voiceIndex)) fs.copyFileSync(new URL(id + '.ogg', voiceDir), out('voice/' + id + '.ogg'));
+// the soundtrack (tools/make-music.py)
+fs.rmSync(out('music'), { recursive: true, force: true });
+fs.cpSync(new URL('./assets/music/', import.meta.url), out('music'), { recursive: true });
 console.log(
   `built site/index.html: ${css.length} stylesheets, ${js.length} scripts, ${(html.length / 1024).toFixed(0)} KB, ${Object.keys(voiceIndex).length} voice clips`
 );

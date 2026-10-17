@@ -100,6 +100,7 @@ function createWindow() {
     title: 'Scrap Duel',
     icon: path.join(SITE, 'icons', 'icon-512.png'),
     autoHideMenuBar: true,
+    fullscreen: s.fullscreen !== false, // a game starts fullscreen; F11 or the ⛶ button leaves it
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -112,8 +113,7 @@ function createWindow() {
     }
   });
   win.setMenuBarVisibility(false);
-  if (s.maximized) win.maximize();
-  if (s.fullscreen !== false) win.setFullScreen(true); // a game starts fullscreen; F11 or the ⛶ button leaves it
+  if (s.maximized && s.fullscreen === false) win.maximize();
   win.once('ready-to-show', () => win.show());
   win.on('close', () => saveState(win));
   win.webContents.on('render-process-gone', (_e, d) => logError('renderer gone: ' + d.reason));
@@ -149,7 +149,7 @@ function smokeTest(win) {
   win.webContents.once('did-finish-load', () =>
     setTimeout(async () => {
       const info = await win.webContents.executeJavaScript(
-        `JSON.stringify({menu: !document.querySelector('#ovMenu').hidden, peer: !!window.Peer || 'lazy', desktop: !!window.desktop, font: document.fonts.check('16px "Chakra Petch"'), name: localStorage.getItem('sd.name'), full: !!(window.desktop && window.desktop.isFullscreen), reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, mFull: (document.querySelector('#mFull')||{}).textContent})`
+        `JSON.stringify({menu: !document.querySelector('#ovMenu').hidden, peer: !!window.Peer || 'lazy', desktop: !!window.desktop, font: document.fonts.check('16px "Chakra Petch"'), name: localStorage.getItem('sd.name'), full: !!(window.desktop && window.desktop.fullscreen()), reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, mFull: (document.querySelector('#mFull')||{}).textContent})`
       );
       fs.writeFileSync(process.env.SD_SMOKE, (await win.webContents.capturePage()).toPNG());
       console.log('SMOKE', info, 'win-full:', win.isFullScreen(), 'errors:', JSON.stringify(errors));

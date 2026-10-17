@@ -13,6 +13,13 @@ contextBridge.exposeInMainWorld('desktop', {
     } catch (e) {}
     return full;
   },
+  // a function, not a getter: contextBridge copies getters once, so a getter would be stuck on its first value
+  fullscreen: () => {
+    try {
+      full = ipcRenderer.sendSync('fullscreen:get');
+    } catch (e) {}
+    return full;
+  },
   toggleFullscreen: () => ipcRenderer.invoke('fullscreen:toggle').then(v => (full = v)),
   quit: () => ipcRenderer.invoke('app:quit'),
   // the save file: read once at start-up (sync, before the game reads its settings), written in the background

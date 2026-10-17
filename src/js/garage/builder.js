@@ -576,7 +576,10 @@ function drawPiece(c, e, top, scale = 1) {
     c.shadowBlur = cell * 0.22;
   }
   const b = top ? baseAt(key(e.x, e.y)) : null,
-    onHull = !top && !e.ghost && hullPart(m);
+    onHull = !top && !e.ghost && hullPart(m),
+    shineT = SHINE.get(key(e.x, e.y)),
+    shine = shineT ? (performance.now() - shineT) / 900 : null;
+  if (shine > 1) SHINE.delete(key(e.x, e.y));
   drawModule(
     c,
     e.id,
@@ -590,6 +593,7 @@ function drawPiece(c, e, top, scale = 1) {
       gy: e.y,
       nb: onHull ? nbMask(e.x, e.y, (x, y) => (baseAt(key(x, y)) || {}).id === e.id) : 0,
       turret: top && b && b.id === 'ring',
+      shine: shine != null && shine <= 1 ? shine : null,
       paint: G.paint,
       ...(e.id === 'cockpit'
         ? {
@@ -1617,11 +1621,17 @@ function act(x, y, mode) {
     if (mode !== 'remove') {
       const id = G.sel;
       placeSound(id);
+      if (MOD[id] && MOD[id].art && MOD[id].art.k === 'spike') {
+        SHINE.set(key(x, y), performance.now());
+        if (G.mirror && x !== 0) SHINE.set(key(-x, y), performance.now());
+      }
     }
   }
   refreshUI();
 }
 /** Heavy parts land with a metal clank, electronics give a soft beep. */
+/** Fresh spikes get a glint across the steel (key -> time placed). */
+const SHINE = new Map();
 function placeSound(id) {
   const m = id && MOD[id];
   if (!m) return;

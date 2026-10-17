@@ -64,6 +64,7 @@
     "js/render/cine.js",
     "js/game/play.js",
     "js/audio/sfx.js",
+    "js/audio/music.js",
     "js/audio/voice.js",
     "js/audio/announcer.js",
     "js/game/crowd.js",

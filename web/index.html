@@ -148,12 +148,93 @@
         text-decoration: none;
         clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
       }
+      .top nav .gh {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .top nav .gh svg {
+        width: 16px;
+        height: 16px;
+      }
+      /* background music: an equalizer that only moves while the music plays */
+      .snd {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 18px;
+        margin-right: 12px;
+        padding: 7px 12px;
+        background: transparent;
+        border: 1px solid var(--line);
+        color: var(--steel);
+        font: 600 15px var(--body);
+        cursor: pointer;
+      }
+      .snd:hover,
+      .snd[aria-pressed='true'] {
+        color: var(--paper);
+        border-color: var(--amber);
+      }
+      .snd .eq {
+        display: inline-flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 14px;
+      }
+      .snd .eq i {
+        width: 3px;
+        height: 4px;
+        background: currentColor;
+      }
+      .snd[aria-pressed='true'] .eq i {
+        background: var(--amber);
+        animation: eq 0.9s ease-in-out infinite alternate;
+      }
+      .snd .eq i:nth-child(2) {
+        animation-delay: -0.3s !important;
+      }
+      .snd .eq i:nth-child(3) {
+        animation-delay: -0.6s !important;
+      }
+      .snd .eq i:nth-child(4) {
+        animation-delay: -0.15s !important;
+      }
+      @keyframes eq {
+        from {
+          height: 3px;
+        }
+        to {
+          height: 14px;
+        }
+      }
+      .snd:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 2px;
+      }
       @media (max-width: 760px) {
         .top nav {
           display: none;
         }
-        .top .mini {
+        .snd {
           margin-left: auto;
+          margin-right: 8px;
+          padding: 7px 9px;
+        }
+        .logo {
+          flex-shrink: 0;
+        }
+        .snd .lbl {
+          display: none;
+        }
+        .top .mini {
+          margin-left: 0;
+          padding: 7px 12px;
+          font-size: 15px;
+        }
+        .top .logo {
+          font-size: 18px;
+          gap: 8px;
         }
       }
 
@@ -819,7 +900,13 @@
           <a href="#modes">Modes</a>
           <a href="#new">What's new</a>
           <a href="#install">Install</a>
+          <a href="{{REPO}}" class="gh" rel="noopener"
+            ><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>GitHub</a
+          >
         </nav>
+        <button class="snd" id="snd" type="button" aria-pressed="false" title="Background music">
+          <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="lbl">Music</span>
+        </button>
         <a class="mini" href="{{SETUP_URL}}">Download</a>
       </div>
     </header>
@@ -1187,6 +1274,42 @@
       box.addEventListener('click', e => {
         if (e.target === box) box.close();
       });
+      // background music: the game's hangar theme. Browsers only allow sound after a click, so it starts on the
+      // first click anywhere (unless it was switched off before), and the button turns it on and off.
+      const music = new Audio(),
+        sndBtn = document.getElementById('snd');
+      music.loop = true;
+      music.volume = 0.45;
+      music.preload = 'none';
+      music.src = music.canPlayType('audio/ogg; codecs=opus') ? 'media/music.ogg' : 'media/music.m4a';
+      let musicOn = false;
+      const pref = () => {
+        try {
+          return localStorage.getItem('sd.siteMusic');
+        } catch (e) {
+          return null;
+        }
+      };
+      const setMusic = on => {
+        musicOn = on;
+        sndBtn.setAttribute('aria-pressed', on);
+        if (on) music.play().catch(() => setMusic(false));
+        else music.pause();
+        try {
+          localStorage.setItem('sd.siteMusic', on ? '1' : '0');
+        } catch (e) {}
+      };
+      sndBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        setMusic(!musicOn);
+      });
+      addEventListener(
+        'pointerdown',
+        e => {
+          if (pref() !== '0' && !musicOn && !e.target.closest('#snd, [data-trailer], #playTrailer')) setMusic(true);
+        },
+        { once: true }
+      );
       // the trailer: plays with sound in a dialog, stops when it closes
       const tb = document.getElementById('trailerBox'),
         tv = tb.querySelector('video');
@@ -1198,7 +1321,11 @@
           tv.play().catch(() => {});
         })
       );
-      tb.addEventListener('close', () => tv.pause());
+      tb.addEventListener('close', () => {
+        tv.pause();
+        if (musicOn) music.play().catch(() => {});
+      });
+      tv.addEventListener('play', () => music.pause());
       tb.addEventListener('click', e => {
         if (e.target === tb) tb.close();
       });

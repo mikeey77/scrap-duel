@@ -391,7 +391,7 @@ test('release version contains all requested UI affordances', () => {
     'id="btnArcs"',
     'Weak links',
     'Search modules',
-    'Battle music',
+    'Music volume',
     'Reconnect window expired',
     'LMB/Space'
   ])

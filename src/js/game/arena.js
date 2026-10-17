@@ -59,6 +59,13 @@ function clearArenaInput() {
   edges.clear();
   mouse.down = mouse.right = false;
 }
+/** Is the game fullscreen right now (the desktop window, or the browser's fullscreen)? */
+function isFullNow() {
+  if (document.fullscreenElement) return true;
+  const d = window.desktop;
+  if (!d) return false;
+  return typeof d.fullscreen === 'function' ? !!d.fullscreen() : !!d.isFullscreen;
+}
 /** Fullscreen: the desktop app asks its window; a browser falls back to the Fullscreen API. */
 async function toggleFullscreen() {
   try {
@@ -71,6 +78,7 @@ async function toggleFullscreen() {
   clearArenaInput();
   presentationKey = '';
   syncPresentation();
+  fullscreenLabels();
 }
 $('#btnFS').onclick = () => {
   sfx('ui');
@@ -78,7 +86,7 @@ $('#btnFS').onclick = () => {
 };
 /** Keep every fullscreen label in step with the window (browser fullscreen or the desktop window). */
 function fullscreenLabels() {
-  const on = !!(document.fullscreenElement || (window.desktop && window.desktop.isFullscreen));
+  const on = isFullNow();
   $('#btnFS').setAttribute('aria-pressed', on);
   $('#btnFS').title = on ? 'Leave fullscreen (F11)' : 'Fullscreen (F11)';
   const m = $('#mFull');

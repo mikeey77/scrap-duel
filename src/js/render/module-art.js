@@ -970,24 +970,117 @@ function drawModuleArtCore(c, id, s, ang, team, st) {
       break;
     }
     case 'spike': {
+      // no bracket box: the spikes are welded straight onto the car, with a slim collar at their roots
       c.save();
       c.rotate(ang);
-      mountBar(c, -h * 0.75, -h * 0.2, h * 1.5, h * 0.9, s);
-      const tri = (x, w, l) => {
-        c.beginPath();
-        c.moveTo(x - w, -h * 0.2);
-        c.lineTo(x, -h * 0.2 - l);
-        c.lineTo(x + w, -h * 0.2);
-        c.closePath();
-        const g = c.createLinearGradient(x - w, 0, x + w, 0);
-        g.addColorStop(0, '#e6eaed');
-        g.addColorStop(1, '#7c848b');
-        c.fillStyle = g;
+      const by = h * 0.55,
+        spikes = [
+          [-h * 0.62, h * 0.2, h * 0.95],
+          [h * 0.62, h * 0.2, h * 0.95],
+          [0, h * 0.34, h * 1.5]
+        ],
+        path = (x, w, l) => {
+          c.beginPath();
+          c.moveTo(x - w, by);
+          c.lineTo(x, by - l);
+          c.lineTo(x + w, by);
+          c.closePath();
+        };
+      // a soft drop shadow so they stand off the floor
+      c.fillStyle = 'rgba(0,0,0,.28)';
+      for (const [x, w, l] of spikes) {
+        c.save();
+        c.translate(s * 0.04, s * 0.05);
+        path(x, w, l);
         c.fill();
-      };
-      tri(0, h * 0.32, h);
-      tri(-h * 0.55, h * 0.18, h * 0.5);
-      tri(h * 0.55, h * 0.18, h * 0.5);
+        c.restore();
+      }
+      for (const [x, w, l] of spikes) {
+        // two facets: the lit left side and the shaded right side meet in a sharp ridge
+        c.beginPath();
+        c.moveTo(x - w, by);
+        c.lineTo(x, by - l);
+        c.lineTo(x, by);
+        c.closePath();
+        const gl = c.createLinearGradient(x - w, by, x, by - l);
+        gl.addColorStop(0, '#9aa3ab');
+        gl.addColorStop(1, '#f4f7f9');
+        c.fillStyle = gl;
+        c.fill();
+        c.beginPath();
+        c.moveTo(x + w, by);
+        c.lineTo(x, by - l);
+        c.lineTo(x, by);
+        c.closePath();
+        const gr = c.createLinearGradient(x + w, by, x, by - l);
+        gr.addColorStop(0, '#3c4349');
+        gr.addColorStop(1, '#8b949c');
+        c.fillStyle = gr;
+        c.fill();
+        path(x, w, l);
+        c.strokeStyle = 'rgba(20,23,26,.8)';
+        c.lineWidth = Math.max(1, s * 0.025);
+        c.stroke();
+        c.strokeStyle = 'rgba(255,255,255,.55)';
+        c.lineWidth = Math.max(0.6, s * 0.012);
+        c.beginPath();
+        c.moveTo(x - w * 0.55, by - l * 0.1);
+        c.lineTo(x - w * 0.08, by - l * 0.86);
+        c.stroke();
+      }
+      // the weld collar
+      const cg = c.createLinearGradient(0, by - h * 0.1, 0, by + h * 0.1);
+      cg.addColorStop(0, '#6b737b');
+      cg.addColorStop(1, '#2a2f34');
+      rr(c, -h * 0.86, by - h * 0.08, h * 1.72, h * 0.17, h * 0.08);
+      c.fillStyle = cg;
+      c.fill();
+      c.strokeStyle = '#16191c';
+      c.lineWidth = Math.max(1, s * 0.02);
+      c.stroke();
+      // a glint: runs over the steel when you place them, and now and then while you build
+      let gp = st.shine != null ? st.shine : -1;
+      if (gp < 0 && st.builder && SETTINGS.motion !== false) {
+        const ph = (ANIM * 0.3 + hullHash(st.gx || 0, st.gy || 0) * 3) % 4;
+        if (ph < 1) gp = ph;
+      }
+      if (gp >= 0 && gp <= 1) {
+        c.save();
+        c.beginPath();
+        for (const [x, w, l] of spikes) {
+          c.moveTo(x - w, by);
+          c.lineTo(x, by - l);
+          c.lineTo(x + w, by);
+          c.closePath();
+        }
+        c.clip();
+        const gx = -h * 1.4 + gp * h * 2.8,
+          sg = c.createLinearGradient(gx - h * 0.35, by, gx + h * 0.35, by - h * 0.7);
+        sg.addColorStop(0, 'rgba(255,255,255,0)');
+        sg.addColorStop(0.5, 'rgba(255,255,255,.95)');
+        sg.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = sg;
+        c.fillRect(-h * 1.5, by - h * 1.7, h * 3, h * 1.9);
+        c.restore();
+        // a four-point star on the main tip
+        const tw = Math.sin(Math.PI * gp),
+          r = h * 0.45 * tw;
+        if (r > 0.5) {
+          c.save();
+          c.translate(0, by - h * 1.5);
+          c.globalCompositeOperation = 'lighter';
+          c.fillStyle = `rgba(255,250,225,${0.9 * tw})`;
+          c.beginPath();
+          for (let k = 0; k < 8; k++) {
+            const a = (k * Math.PI) / 4,
+              rad = k % 2 ? r * 0.16 : r;
+            c.lineTo(Math.sin(a) * rad, -Math.cos(a) * rad);
+          }
+          c.closePath();
+          c.fill();
+          c.restore();
+        }
+      }
       c.restore();
       break;
     }

@@ -24,6 +24,7 @@ try {
 const saveSettings = () => store('sd.settings', SETTINGS);
 function applyVolume() {
   if (MASTER) MASTER.gain.value = 0.45 * SETTINGS.vol;
+  if (MUSIC_OUT) MUSIC_OUT.gain.value = 0.45 * SETTINGS.vol;
 }
 
 const CONTROLS = [
@@ -59,7 +60,7 @@ function openSettings(back) {
     <div class="setgrid">
     <section><h3>Sound</h3>
     <label class="vol"><span>Volume</span><input type="range" id="setVol" min="0" max="1" step="0.05" value="${SETTINGS.vol}"><b id="setVolV">${Math.round(SETTINGS.vol * 100)}%</b></label>
-    <label class="vol"><span>Battle music</span><input type="range" id="setMusic" aria-label="Battle music volume" min="0" max="1" step="0.05" value="${SETTINGS.music}"><b id="setMusicV">${Math.round(SETTINGS.music * 100)}%</b></label>
+    <label class="vol"><span>Music</span><input type="range" id="setMusic" aria-label="Music volume" min="0" max="1" step="0.05" value="${SETTINGS.music}"><b id="setMusicV">${Math.round(SETTINGS.music * 100)}%</b></label>
     ${toggle('setVoice', 'Announcer voice', SETTINGS.voice !== false)}
     ${toggle('setCommVoice', 'Commentator voices', SETTINGS.commVoice !== false)}
     <p class="small">Volume at 0% is silent. The Sound on/off button in the menu mutes everything at once.</p></section>
@@ -75,7 +76,7 @@ function openSettings(back) {
     <section><h3>Performance</h3>
     ${toggle('setPerf', 'Performance mode (lower resolution, smoother on older PCs)', SETTINGS.perf)}
     ${toggle('setFps', 'Show frame rate (FPS)', SETTINGS.fps)}
-    ${window.desktop ? `<button class="btn ghost sm" id="setFull" type="button">${window.desktop.isFullscreen ? 'Leave fullscreen' : 'Play fullscreen'} · F11</button>` : ''}
+    ${window.desktop ? `<button class="btn ghost sm" id="setFull" type="button">${isFullNow() ? 'Leave fullscreen' : 'Play fullscreen'} · F11</button>` : ''}
     <h3>Progress</h3>
     <div class="rbtns"><button class="btn ghost sm" id="setTips">Show the tips again</button><button class="btn ghost sm warn" id="setReset">Reset level and unlocks</button>${window.desktop && window.desktop.openSaveFolder ? '<button class="btn ghost sm" id="setSaves">Open the save folder</button><button class="btn ghost sm" id="setLog">Report a problem (error log)</button>' : ''}</div></section>
     </div>
@@ -125,7 +126,7 @@ function openSettings(back) {
   if (full)
     full.addEventListener('click', async () => {
       await window.desktop.toggleFullscreen();
-      full.textContent = `${window.desktop.isFullscreen ? 'Leave fullscreen' : 'Play fullscreen'} · F11`;
+      full.textContent = `${isFullNow() ? 'Leave fullscreen' : 'Play fullscreen'} · F11`;
       sfx('ui');
     });
   $('#setTips').addEventListener('click', e => {
@@ -176,7 +177,7 @@ function togglePause(force) {
       <button class="btn ghost" id="pSettings"><i>⚙</i>Settings</button>
       <button class="btn ghost" id="pControls"><i>⌨</i>Controls</button>
       ${canPhoto() ? '<button class="btn ghost" id="pPhoto"><i>▣</i>Photo mode · F2</button>' : ''}
-      <button class="btn ghost" id="pFull"><i>⛶</i>${document.fullscreenElement || (window.desktop && window.desktop.isFullscreen) ? 'Exit fullscreen' : 'Fullscreen'}</button>
+      <button class="btn ghost" id="pFull"><i>⛶</i>${isFullNow() ? 'Exit fullscreen' : 'Fullscreen'}</button>
       ${forfeit ? '<button class="btn ghost warn" id="pForfeit"><i>⚑</i>Forfeit round</button>' : ''}
       <button class="btn ghost quit" id="pMenu"><i>⏏</i>Main menu</button>
     </div>

@@ -69,7 +69,7 @@ const ART_COVER = {},
   ART_FILL = {};
 /** Parts that sit on the hull: solid blocks, plus mounts and gadgets that fill much of their cell
     (spike mounts, coolers, pods). Wheels, tracks and loose shapes stay off it. */
-const NO_HULL = new Set(['wheel', 'track', 'omni', 'hover', 'shape', 'joint', 'beam', 'coupler', 'chain']);
+const NO_HULL = new Set(['wheel', 'track', 'omni', 'hover', 'shape', 'joint', 'beam', 'coupler', 'chain', 'spike']);
 function hullPart(m) {
   if (m.layer === 't' || m.drive || (m.art && NO_HULL.has(m.art.k))) return false;
   solidPart(m);

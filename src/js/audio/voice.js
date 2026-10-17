@@ -80,6 +80,7 @@ const Voice = {
   },
   /** Music drops under the voices and comes back after. */
   duck(sec) {
+    SOUNDTRACK.duck(sec);
     const bus = BattleMusic.bus;
     if (!bus || !AC) return;
     const t = AC.currentTime,

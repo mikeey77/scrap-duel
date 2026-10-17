@@ -2,6 +2,16 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.8.0 · Soundtrack · 2026-10-17
+
+**Real music, a working fullscreen button and sharper spikes.**
+
+- **A soundtrack**: four new looping tracks. *Hangar* plays in the menu and the garage, *Scrap Metal* and *Neon Brawl* in battle (depending on the arena), and *Open Road* in the open world. Tracks crossfade when you switch screens, go quiet when you pause and drop under the commentators. The volume slider is now just called Music.
+- **Music on the website**: the Hangar theme plays after your first click, with a music button in the top bar to turn it off. It pauses while the trailer plays.
+- **GitHub link** in the website's top bar.
+- **Fullscreen fixed**: the fullscreen button and its label now follow the window every time, and a maximised window no longer gets stuck when you leave fullscreen.
+- **Spikes** are welded straight onto the car without a bracket box behind them, with lit and shaded faces. A glint runs over the steel when you place them, and now and then while you build.
+
 ## 2.7.0 · Scars & Shelter · 2026-10-17
 
 **Damage shows, wrecks stay, weather bites, and your car gets a home.**

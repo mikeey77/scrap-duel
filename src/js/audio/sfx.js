@@ -4,6 +4,7 @@ let AC = null,
   MASTER = null,
   NOISE = null,
   MUTE = false,
+  MUSIC_OUT = null,
   NET_REPLAY = false;
 const lastS = {};
 function audio() {
@@ -18,6 +19,10 @@ function audio() {
     if (comp.threshold) comp.threshold.value = -18;
     if (comp.ratio) comp.ratio.value = 4;
     MASTER.connect(comp);
+    // music skips the room reverb (the tracks have their own) but follows the main volume
+    MUSIC_OUT = AC.createGain();
+    MUSIC_OUT.gain.value = 0.45 * SETTINGS.vol;
+    MUSIC_OUT.connect(comp);
     try {
       // a short garage-sized room: everything gets a little tail so the hits feel physical
       const verb = AC.createConvolver(),
@@ -122,7 +127,16 @@ const BattleMusic = {
       };
     }
   },
+  /** Which soundtrack fits what is on screen right now (null: silence). */
+  trackFor() {
+    if (G.phase === 'world' && B && B.ow) return 'openroad';
+    if (B && !B.demo && (G.phase === 'battle' || G.phase === 'replay')) return musicTrackFor(B.theme);
+    if (['build', 'draft', 'review', 'menu', 'result', 'final', 'wait'].includes(G.phase) || (B && B.demo))
+      return 'hangar';
+    return null;
+  },
   update() {
+    if (typeof SOUNDTRACK !== 'undefined' && this.updateTrack()) return;
     const garage = !B && ['build', 'draft', 'review'].includes(G.phase) && G.started;
     const active =
       AC &&
@@ -141,6 +155,7 @@ const BattleMusic = {
       this.bus.gain.value = 0;
       this.bus.connect(MASTER);
     }
+    if (SOUNDTRACK.cur) SOUNDTRACK.stop();
     const want = garage ? 'lounge' : musicStyleFor(B && B.theme);
     const level = SETTINGS.music * (garage ? 0.55 : 1);
     if (this.level !== level) {
@@ -347,6 +362,7 @@ const MUSIC_BY_THEME = {
   carwash: 'surf',
   market: 'surf'
 };
+const musicTrackFor = th => (['neon', 'toy', 'surf'].includes(musicStyleFor(th)) ? 'neonbrawl' : 'scrapmetal');
 const musicStyleFor = th => MUSIC_BY_THEME[(th && th.id) || ''] || 'metal';
 
 /* Per-sound variation: a random pitch nudge and stereo position (set by playSfx). */
