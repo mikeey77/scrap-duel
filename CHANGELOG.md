@@ -2,6 +2,17 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 2.6.0 · Heavy Metal · 2026-10-17
+
+**Cars look like machines now, not stacks of blocks.**
+
+- **One hull per car**: every chassis block is drawn as one welded body with rounded outer corners, one light across the whole car, an outline only around the outside, rim light and shade on the edges, engraved seams between parts and a row of rivets along the rim. Your paint tints the metal a little.
+- **Details instead of tiles**: scrap frames are plain plating with the odd vent, hatch or weld scar; grilles, girders, springs and hubs sit in recessed panels.
+- **Armour joins up**: plates of the same kind next to each other become one big bolted plate with chamfered corners.
+- **Gadgets are housings**: newer modules sit on the hull as rounded pods and capsules instead of coloured squares.
+- **Axles** connect the wheels to the body; spikes and saws sit on bolted brackets.
+- Works everywhere: the garage, every battle, the open world and all car previews.
+
 ## 2.5.0 · Showtime · 2026-10-15
 
 **Every big moment now hits like one.**

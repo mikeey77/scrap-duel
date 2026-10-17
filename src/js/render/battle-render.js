@@ -65,7 +65,16 @@ function partMotion(v) {
 }
 /* Parts that do not fill their cell (wheels, spikes, round guns…) must not get the dark hull plate
    behind them, or they sit in a black box. Measured once per part from its own art. */
-const ART_COVER = {};
+const ART_COVER = {},
+  ART_FILL = {};
+/** Parts that sit on the hull: solid blocks, plus mounts and gadgets that fill much of their cell
+    (spike mounts, coolers, pods). Wheels, tracks and loose shapes stay off it. */
+const NO_HULL = new Set(['wheel', 'track', 'omni', 'hover', 'shape', 'joint', 'beam', 'coupler', 'chain']);
+function hullPart(m) {
+  if (m.layer === 't' || m.drive || (m.art && NO_HULL.has(m.art.k))) return false;
+  solidPart(m);
+  return ART_COVER[m.id] || ART_FILL[m.id] > 0.42;
+}
 function solidPart(m) {
   if (ART_COVER[m.id] !== undefined) return ART_COVER[m.id];
   let cover = 1;
@@ -82,6 +91,7 @@ function solidPart(m) {
     for (let i = 3; i < d.length; i += 4) if (d[i] > 160) on++;
     if (d.length >= s * n * s * n * 4) cover = on / (cellCount(m) * s * s);
   } catch (e) {}
+  ART_FILL[m.id] = cover;
   return (ART_COVER[m.id] = cover > 0.82);
 }
 function kickOf(I) {
@@ -141,24 +151,15 @@ function drawVehicle(c, v, alpha) {
   const flipS = v.flip > 0 ? Math.cos(Math.min(1, v.flipAnim) * Math.PI) : 1,
     under = v.flip > 0 && flipS < 0;
   if (!under) drawJointRods(c, v);
-  // one hull: a soft shadow under the whole car and a dark outline around its chassis
-  if (!under && !SETTINGS.perf) {
-    for (const [dx, dy, col, k] of [
-      [5, 7, 'rgba(0,0,0,.26)', 1.02],
-      [0, 0, '#0a0d12', 1.14]
-    ]) {
-      c.fillStyle = col;
-      for (const I of alive) {
-        if (I.layer !== 'b' || !solidPart(I.m)) continue;
-        const [x, y] = ipos(v, I);
-        c.save();
-        c.translate(x + dx, y + dy);
-        c.rotate(v.a + (I.la || 0) + (I.rot * Math.PI) / 2);
-        c.scale(k, k);
-        planShapeFill(c, I.m, S);
-        c.restore();
-      }
-    }
+  // one hull: every solid chassis cell drawn as one lit body, with axles out to the wheels
+  if (!under) {
+    const H = vehicleHull(v);
+    c.save();
+    c.translate(v.x, v.y);
+    c.rotate(v.a);
+    c.translate(-v.comX, -v.comY);
+    drawHull(c, H.cells, S, v.a, { paint: v.paint, shadow: [5, 7], axles: H.axles });
+    c.restore();
   }
   for (const layer of ['b', 't'])
     for (const I of alive) {
@@ -203,7 +204,18 @@ function drawVehicle(c, v, alpha) {
           c.save();
           c.scale(1 + 0.13 * kick, 1 + 0.13 * kick);
         }
+        const onHull = layer === 'b' && !I.chain && hullPart(I.m);
         drawModule(c, I.id, layer === 't' ? S * 0.84 : S, rotA, team, {
+          hull: onHull,
+          gx: I.gcx,
+          gy: I.gcy,
+          nb:
+            onHull && I.cells.length <= 1
+              ? nbMask(I.gcx, I.gcy, (x, y) => {
+                  const nb = v.grid.get(key(x, y));
+                  return !!(nb && nb.inst.alive && nb.inst.id === I.id && !nb.chain);
+                })
+              : 0,
           kick,
           rev: I.spin || 0,
           pour: I.pour,

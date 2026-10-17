@@ -30,7 +30,20 @@ function rr(c, x, y, w, h, r) {
   c.closePath();
 }
 /** A metal plate: shaded body, a rim light on the top-left edges, shade on the bottom-right and an inset panel seam. */
+let HULL_ART = false; // set while a part draws on a hull: its square plate is the hull itself
 function bevel(c, h, col, r) {
+  if (HULL_ART) {
+    // only a faint inset outline of the part's own colour, so it still reads as a separate unit
+    rr(c, -h * 0.82, -h * 0.82, h * 1.64, h * 1.64, Math.max(2, r));
+    c.fillStyle = col;
+    c.globalAlpha *= 0.28;
+    c.fill();
+    c.globalAlpha /= 0.28;
+    c.strokeStyle = 'rgba(0,0,0,.3)';
+    c.lineWidth = Math.max(0.8, h * 0.05);
+    c.stroke();
+    return;
+  }
   const g = c.createLinearGradient(-h, -h, h, h);
   g.addColorStop(0, mix(col, 0.3));
   g.addColorStop(0.45, col);
@@ -125,6 +138,30 @@ function glowDisc(c, r, col) {
   c.globalAlpha /= 0.55;
 }
 let ANIM = 0;
+/** A bolted steel bracket that a weapon is mounted on. */
+function mountBar(c, x, y, w, hh, s) {
+  c.fillStyle = 'rgba(0,0,0,.3)';
+  rr(c, x + s * 0.03, y + s * 0.05, w, hh, s * 0.06);
+  c.fill();
+  const g = c.createLinearGradient(x, y, x + w * 0.4, y + hh);
+  g.addColorStop(0, '#7d868f');
+  g.addColorStop(0.5, '#555d65');
+  g.addColorStop(1, '#353a40');
+  rr(c, x, y, w, hh, s * 0.06);
+  c.fillStyle = g;
+  c.fill();
+  c.strokeStyle = '#1f2327';
+  c.lineWidth = Math.max(1, s * 0.03);
+  c.stroke();
+  if (s > 18) {
+    c.fillStyle = '#9aa4ad';
+    for (const fx of [0.18, 0.82]) {
+      c.beginPath();
+      c.arc(x + w * fx, y + hh * 0.62, s * 0.035, 0, 7);
+      c.fill();
+    }
+  }
+}
 /** The turret ring under top-mounted equipment: a soft shadow, a steel ring and six bolts. */
 function topMount(c, h, s) {
   c.fillStyle = 'rgba(0,0,0,.32)';
@@ -169,6 +206,7 @@ function drawModule(c, id, s, ang, team, st) {
   if (
     m &&
     m.layer !== 't' &&
+    !(st && st.hull) &&
     m.rar >= 1 &&
     (m.cat === 'struct' || m.cat === 'defense') &&
     cellCount(m) === 1 &&
@@ -187,6 +225,18 @@ function drawModule(c, id, s, ang, team, st) {
   }
 }
 function drawModuleArt(c, id, s, ang, team, st) {
+  st = st || {};
+  if (st.hull && MOD[id].art && MOD[id].art.k !== 'cockpit' && MOD[id].art.k !== 'frame' && MOD[id].art.k !== 'plate') {
+    HULL_ART = true;
+    try {
+      return drawModuleArtCore(c, id, s, ang, team, st);
+    } finally {
+      HULL_ART = false;
+    }
+  }
+  return drawModuleArtCore(c, id, s, ang, team, st);
+}
+function drawModuleArtCore(c, id, s, ang, team, st) {
   const m = MOD[id],
     A = m.art,
     h = s / 2,
@@ -245,6 +295,7 @@ function drawModuleArt(c, id, s, ang, team, st) {
       break;
     }
     case 'frame': {
+      if (st.hull) return frameOnHull(c, A, s, h, ang, st);
       const col = A.c,
         dk = mix(col, -0.38),
         lt = mix(col, 0.28);
@@ -921,9 +972,7 @@ function drawModuleArt(c, id, s, ang, team, st) {
     case 'spike': {
       c.save();
       c.rotate(ang);
-      rr(c, -h * 0.75, -h * 0.2, h * 1.5, h, s * 0.06);
-      c.fillStyle = '#4a5056';
-      c.fill();
+      mountBar(c, -h * 0.75, -h * 0.2, h * 1.5, h * 0.9, s);
       const tri = (x, w, l) => {
         c.beginPath();
         c.moveTo(x - w, -h * 0.2);
@@ -945,9 +994,7 @@ function drawModuleArt(c, id, s, ang, team, st) {
     case 'saw': {
       c.save();
       c.rotate(ang);
-      rr(c, -h * 0.35, -h * 0.1, h * 0.7, h, s * 0.05);
-      c.fillStyle = '#4a5056';
-      c.fill();
+      mountBar(c, -h * 0.35, -h * 0.1, h * 0.7, h, s);
       c.translate(0, -h * 0.35);
       c.rotate(ANIM * 14);
       c.beginPath();
@@ -1109,6 +1156,7 @@ function drawModuleArt(c, id, s, ang, team, st) {
       break;
     }
     case 'plate': {
+      if (st.hull && A.p !== 'tires') return plateOnHull(c, A, s, h, ang, st);
       const col = A.c,
         dk = mix(col, -0.4),
         lt = mix(col, 0.3);
@@ -2034,25 +2082,30 @@ function designURL(design, size, paint, livery, overlay) {
   const c = cv.getContext('2d');
   const ox = (size - cols * cs) / 2 - x0 * cs,
     oy = (size - rows * cs) / 2 - y0 * cs;
-  // shadow and dark outline behind the chassis, so the preview reads as one vehicle
-  for (const [dx, dy, col, pad] of [
-    [cs * 0.08, cs * 0.12, 'rgba(0,0,0,.3)', 0],
-    [0, 0, '#0a0d12', cs * 0.06]
-  ]) {
-    c.fillStyle = col;
-    for (const [x, y] of cells)
-      c.fillRect(
-        ox + x * cs + dx - pad + cs * 0.02,
-        oy + y * cs + dy - pad + cs * 0.02,
-        cs * 0.96 + pad * 2,
-        cs * 0.96 + pad * 2
-      );
-  }
+  // one hull under every solid chassis cell, so the preview reads as one vehicle
+  const hc = [],
+    ax = [];
+  for (const [, e] of design.base)
+    for (const [x, y] of footprint(e.id, e.rot, e.x, e.y))
+      if (hullPart(MOD[e.id])) hc.push({ x, y, part: e });
+      else if (MOD[e.id].drive) ax.push({ x, y });
+  c.save();
+  c.translate(ox + cs / 2, oy + cs / 2);
+  drawHull(c, hc, cs, 0, { paint, shadow: [cs * 0.08, cs * 0.12], axles: ax });
+  c.restore();
   for (const [, e] of design.base) {
-    const [ccx, ccy] = instCenter(e);
+    const [ccx, ccy] = instCenter(e),
+      onHull = hullPart(MOD[e.id]);
     c.save();
     c.translate(ox + (ccx + 0.5) * cs, oy + (ccy + 0.5) * cs);
-    drawModule(c, e.id, cs * 0.96, (e.rot * Math.PI) / 2, 'p', { builder: 1, paint });
+    drawModule(c, e.id, onHull ? cs : cs * 0.96, (e.rot * Math.PI) / 2, 'p', {
+      builder: 1,
+      paint,
+      hull: onHull,
+      gx: e.x,
+      gy: e.y,
+      nb: onHull ? nbMask(e.x, e.y, (x, y) => (design.base.get(key(x, y)) || {}).id === e.id) : 0
+    });
     if (livery && livery !== 'factory' && liveryPart(e.id))
       drawLivery(c, livery, paint || '#f2b705', e.x, e.y, cs * 0.96, {
         edge: DIRS.some(([dx, dy]) => !design.base.has(key(e.x + dx, e.y + dy))),
@@ -2068,6 +2121,231 @@ function designURL(design, size, paint, livery, overlay) {
   }
   if (overlay) overlay(c, ox, oy, cs);
   return cv.toDataURL();
+}
+
+/* ---------- chassis parts on a hull: details only, the hull is the plate ---------- */
+const hullHash = (x, y) => {
+  let n = (x * 374761393 + y * 668265263) | 0;
+  n = (n ^ (n >>> 13)) * 1274126177;
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+};
+/** A panel tinted toward the part's own colour, so special frames keep their look. */
+function hullTint(c, s, col, a) {
+  c.fillStyle = col;
+  c.globalAlpha *= a;
+  c.fillRect(-s / 2 - 0.5, -s / 2 - 0.5, s + 1, s + 1);
+  c.globalAlpha /= a;
+}
+function frameOnHull(c, A, s, h, ang, st) {
+  const col = A.c,
+    dk = 'rgba(0,0,0,.34)',
+    lt = 'rgba(255,255,255,.16)',
+    pick = hullHash(st.gx || 0, st.gy || 0);
+  if (!/^#(5|6|4)/.test(col) || A.s !== 'x') hullTint(c, s, col, A.s === 'block' ? 0.18 : 0.38);
+  if (s < 12) return;
+  const inset = (w, hh, rad) => {
+    rr(c, -w / 2, -hh / 2, w, hh, rad);
+    c.fillStyle = 'rgba(0,0,0,.22)';
+    c.fill();
+    c.strokeStyle = lt;
+    c.lineWidth = Math.max(0.8, s * 0.025);
+    c.stroke();
+  };
+  if (A.s === 'x') {
+    // plain scrap plating: most cells stay clean, some get a vent, a hatch or a weld scar
+    if (pick < 0.22) {
+      c.save();
+      c.rotate(ang);
+      for (let i = -1; i <= 1; i++) {
+        rr(c, -h * 0.42, i * h * 0.3 - h * 0.07, h * 0.84, h * 0.14, h * 0.07);
+        c.fillStyle = 'rgba(0,0,0,.42)';
+        c.fill();
+      }
+      c.restore();
+    } else if (pick < 0.36) {
+      inset(h * 1.05, h * 1.05, h * 0.16);
+      circ(c, h * 0.28, 0, s * 0.045, lt);
+    } else if (pick < 0.46) {
+      line(
+        c,
+        [-h * 0.5, h * 0.2, -h * 0.1, h * 0.05, h * 0.25, h * 0.32, h * 0.5, h * 0.1],
+        'rgba(255,190,120,.22)',
+        s * 0.035
+      );
+    }
+  } else if (A.s === 'mesh') {
+    inset(h * 1.3, h * 1.3, h * 0.14);
+    c.strokeStyle = 'rgba(255,255,255,.12)';
+    c.lineWidth = s * 0.03;
+    c.beginPath();
+    for (let i = -2; i <= 2; i++) {
+      c.moveTo(i * h * 0.24, -h * 0.55);
+      c.lineTo(i * h * 0.24, h * 0.55);
+    }
+    c.stroke();
+  } else if (A.s === 'beam') {
+    c.save();
+    c.rotate(ang);
+    c.fillStyle = lt;
+    c.fillRect(-h, -h * 0.62, s, h * 0.14);
+    c.fillRect(-h, h * 0.48, s, h * 0.14);
+    c.fillStyle = dk;
+    c.fillRect(-h * 0.08, -h * 0.42, h * 0.16, h * 0.84);
+    c.restore();
+  } else if (A.s === 'hub') {
+    gradCirc(c, h * 0.42, col);
+    circ(c, 0, 0, h * 0.13, mix(col, -0.5));
+  } else if (A.s === 'block') {
+    inset(h * 1.36, h * 0.62, h * 0.08);
+    c.fillStyle = '#c9a43a';
+    rr(c, -h * 0.32, -h * 0.1, h * 0.64, h * 0.2, 2);
+    c.fill();
+  } else if (A.s === 'spring') {
+    inset(h * 0.8, h * 1.4, h * 0.12);
+    const p = [];
+    for (let i = 0; i <= 8; i++) p.push((i % 2 ? 1 : -1) * h * 0.24, -h * 0.58 + i * h * 0.145);
+    line(c, p, '#c9d2da', s * 0.05);
+  } else if (A.s === 'nano') {
+    c.strokeStyle = 'rgba(95,227,200,.75)';
+    c.lineWidth = s * 0.035;
+    c.beginPath();
+    for (let k = 0; k < 6; k++) {
+      const a = (k * Math.PI) / 3;
+      c.lineTo(Math.cos(a) * h * 0.42, Math.sin(a) * h * 0.42);
+    }
+    c.closePath();
+    c.stroke();
+  }
+}
+/** Armour on a hull: a raised plate with chamfered corners, bolted down. Plates of the same kind
+    next to each other (st.nb: up 1, right 2, down 4, left 8) join into one bigger plate. */
+function plateOnHull(c, A, s, h, ang, st) {
+  const col = A.c,
+    nb = st.nb || 0,
+    e = h * 0.86,
+    ch = h * 0.24,
+    U = nb & 1,
+    R = nb & 2,
+    D = nb & 4,
+    L = nb & 8;
+  // edges reach the cell border where the next plate continues
+  const x0 = L ? -h - 0.5 : -e,
+    x1 = R ? h + 0.5 : e,
+    y0 = U ? -h - 0.5 : -e,
+    y1 = D ? h + 0.5 : e;
+  const cTL = !U && !L ? ch : 0,
+    cTR = !U && !R ? ch : 0,
+    cBR = !D && !R ? ch : 0,
+    cBL = !D && !L ? ch : 0;
+  const path = (ox, oy) => {
+    c.beginPath();
+    c.moveTo(x0 + cTL + ox, y0 + oy);
+    c.lineTo(x1 - cTR + ox, y0 + oy);
+    c.lineTo(x1 + ox, y0 + cTR + oy);
+    c.lineTo(x1 + ox, y1 - cBR + oy);
+    c.lineTo(x1 - cBR + ox, y1 + oy);
+    c.lineTo(x0 + cBL + ox, y1 + oy);
+    c.lineTo(x0 + ox, y1 - cBL + oy);
+    c.lineTo(x0 + ox, y0 + cTL + oy);
+    c.closePath();
+  };
+  c.fillStyle = 'rgba(0,0,0,.26)';
+  path(2, 3);
+  c.fill();
+  const g = c.createLinearGradient(-h, -h, h, h);
+  g.addColorStop(0, mix(col, 0.28));
+  g.addColorStop(0.5, col);
+  g.addColorStop(1, mix(col, -0.26));
+  path(0, 0);
+  c.fillStyle = g;
+  c.fill();
+  // outline only on the plate's open sides
+  c.strokeStyle = mix(col, -0.55);
+  c.lineWidth = Math.max(1, s * 0.045);
+  c.lineCap = 'round';
+  c.beginPath();
+  if (!U) (c.moveTo(x0 + cTL, y0), c.lineTo(x1 - cTR, y0));
+  if (!U && !R) c.lineTo(x1, y0 + cTR);
+  if (!R) (c.moveTo(x1, y0 + cTR), c.lineTo(x1, y1 - cBR));
+  if (!D && !R) c.lineTo(x1 - cBR, y1);
+  if (!D) (c.moveTo(x1 - cBR, y1), c.lineTo(x0 + cBL, y1));
+  if (!D && !L) c.lineTo(x0, y1 - cBL);
+  if (!L) (c.moveTo(x0, y1 - cBL), c.lineTo(x0, y0 + cTL));
+  if (!U && !L) c.lineTo(x0 + cTL, y0);
+  c.stroke();
+  // a light edge on top and left, where they are open
+  c.strokeStyle = 'rgba(255,255,255,.28)';
+  c.lineWidth = Math.max(0.8, s * 0.03);
+  c.beginPath();
+  if (!U) (c.moveTo(x0 + cTL + 2, y0 + 2), c.lineTo(x1 - cTR - 1, y0 + 2));
+  if (!L) (c.moveTo(x0 + 2, y0 + cTL + 2), c.lineTo(x0 + 2, y1 - cBL - 1));
+  c.stroke();
+  if (s < 14) return;
+  c.save();
+  c.rotate(ang);
+  if (A.p === 'slope') {
+    c.fillStyle = 'rgba(255,255,255,.16)';
+    c.beginPath();
+    c.moveTo(-e * 0.8, e * 0.3);
+    c.lineTo(0, -e * 0.6);
+    c.lineTo(e * 0.8, e * 0.3);
+    c.lineTo(e * 0.8, -e * 0.05);
+    c.lineTo(0, -e * 0.9);
+    c.lineTo(-e * 0.8, -e * 0.05);
+    c.closePath();
+    c.fill();
+  } else if (A.p === 'heavy') {
+    rr(c, -e * 0.55, -e * 0.55, e * 1.1, e * 1.1, s * 0.04);
+    c.strokeStyle = mix(col, -0.4);
+    c.lineWidth = s * 0.05;
+    c.stroke();
+  } else if (A.p === 'reactive') {
+    for (const [x, y] of [
+      [-1, -1],
+      [1, -1],
+      [-1, 1],
+      [1, 1]
+    ]) {
+      rr(c, x * e * 0.45 - e * 0.36, y * e * 0.45 - e * 0.36, e * 0.72, e * 0.72, 2);
+      c.strokeStyle = mix(col, -0.5);
+      c.lineWidth = s * 0.03;
+      c.stroke();
+      circ(c, x * e * 0.45, y * e * 0.45, s * 0.04, '#f2b705');
+    }
+  } else if (A.p === 'tile') {
+    c.globalAlpha *= 0.55;
+    c.fillStyle = '#ffcf8a';
+    c.beginPath();
+    c.moveTo(0, -e * 0.42);
+    c.quadraticCurveTo(e * 0.3, 0, 0, e * 0.4);
+    c.quadraticCurveTo(-e * 0.3, 0, 0, -e * 0.42);
+    c.fill();
+    c.globalAlpha /= 0.55;
+  } else if (A.p === 'spikes') {
+    c.fillStyle = '#e6eaed';
+    for (let i = -1; i <= 1; i += 2)
+      for (let j = -1; j <= 1; j += 2) {
+        c.beginPath();
+        c.moveTo(i * e * 0.42 - e * 0.13, j * e * 0.42 + e * 0.12);
+        c.lineTo(i * e * 0.42, j * e * 0.42 - e * 0.22);
+        c.lineTo(i * e * 0.42 + e * 0.13, j * e * 0.42 + e * 0.12);
+        c.fill();
+      }
+  }
+  c.restore();
+  // bolts only in open corners
+  c.fillStyle = mix(col, -0.5);
+  for (const [a, b, open] of [
+    [-1, -1, !U && !L],
+    [1, -1, !U && !R],
+    [-1, 1, !D && !L],
+    [1, 1, !D && !R]
+  ])
+    if (open) {
+      c.beginPath();
+      c.arc(a * e * 0.68, b * e * 0.68, s * 0.04, 0, 7);
+      c.fill();
+    }
 }
 
 /** Art for the shape pieces (wedge, half plate, corner fillet, round bumper, beams). */

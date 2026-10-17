@@ -57,6 +57,7 @@
     "js/game/weapons.js",
     "js/game/objectives.js",
     "js/game/banter.js",
+    "js/render/hull.js",
     "js/render/battle-render.js",
     "js/render/cine.js",
     "js/game/play.js",

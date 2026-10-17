@@ -702,15 +702,42 @@ function planDrawModule(c, m, s, ang, st) {
     t = SETTINGS?.motion === false || REDUCED.on ? 0 : ANIM;
   c.save();
   c.rotate(ang);
-  for (const [x, y] of moduleCells(m)) {
-    c.save();
-    c.translate((x - b.cx) * s, (y - b.cy) * s);
-    bevel(c, s * 0.46, m.layer === 't' ? '#313e4c' : col, s * 0.08);
-    c.strokeStyle = col;
-    c.lineWidth = s * 0.035;
-    c.strokeRect(-s * 0.37, -s * 0.37, s * 0.74, s * 0.74);
-    c.restore();
-  }
+  if (HULL_ART) {
+    // on a hull: one rounded housing over all its cells, bolted onto the body
+    const cs = moduleCells(m),
+      x0 = Math.min(...cs.map(q => q[0])) - b.cx,
+      y0 = Math.min(...cs.map(q => q[1])) - b.cy,
+      pw = b.w * s - s * 0.18,
+      ph = b.h * s - s * 0.18,
+      px = (x0 - 0.5) * s + s * 0.09,
+      py = (y0 - 0.5) * s + s * 0.09,
+      rad = Math.min(pw, ph) * 0.42;
+    c.fillStyle = 'rgba(0,0,0,.3)';
+    rr(c, px + s * 0.04, py + s * 0.06, pw, ph, rad);
+    c.fill();
+    const g = c.createLinearGradient(px, py, px + pw, py + ph);
+    g.addColorStop(0, mix(col, -0.05));
+    g.addColorStop(1, mix(col, -0.55));
+    rr(c, px, py, pw, ph, rad);
+    c.fillStyle = g;
+    c.fill();
+    c.strokeStyle = mix(col, 0.35);
+    c.lineWidth = Math.max(1, s * 0.04);
+    c.stroke();
+    rr(c, px + s * 0.07, py + s * 0.07, pw - s * 0.14, ph - s * 0.14, Math.max(1, rad - s * 0.07));
+    c.strokeStyle = 'rgba(0,0,0,.35)';
+    c.lineWidth = Math.max(0.8, s * 0.025);
+    c.stroke();
+  } else
+    for (const [x, y] of moduleCells(m)) {
+      c.save();
+      c.translate((x - b.cx) * s, (y - b.cy) * s);
+      bevel(c, s * 0.46, m.layer === 't' ? '#313e4c' : col, s * 0.08);
+      c.strokeStyle = col;
+      c.lineWidth = s * 0.035;
+      c.strokeRect(-s * 0.37, -s * 0.37, s * 0.74, s * 0.74);
+      c.restore();
+    }
   circ(c, 0, 0, s * 0.28, '#172332', col, s * 0.04);
   c.save();
   c.rotate(t * (m.cat === 'move' || m.branch === 'hook' ? 2 : 0.5));

@@ -575,18 +575,30 @@ function drawPiece(c, e, top, scale = 1) {
     c.shadowColor = '#bfefff';
     c.shadowBlur = cell * 0.22;
   }
-  const b = top ? baseAt(key(e.x, e.y)) : null;
-  drawModule(c, e.id, cell * (top ? 0.82 : 0.96), e.ghost ? (e.rot * Math.PI) / 2 : turnAngle(e, top), 'p', {
-    builder: 1,
-    turret: top && b && b.id === 'ring',
-    paint: G.paint,
-    ...(e.id === 'cockpit'
-      ? {
-          badge: G.style.badge,
-          mood: performance.now() - (G.lastInput || performance.now()) > 20000 ? 'sleep' : G.scars ? 'hurt' : 'idle'
-        }
-      : null)
-  });
+  const b = top ? baseAt(key(e.x, e.y)) : null,
+    onHull = !top && !e.ghost && hullPart(m);
+  drawModule(
+    c,
+    e.id,
+    onHull ? cell : cell * (top ? 0.82 : 0.96),
+    e.ghost ? (e.rot * Math.PI) / 2 : turnAngle(e, top),
+    'p',
+    {
+      builder: 1,
+      hull: onHull,
+      gx: e.x,
+      gy: e.y,
+      nb: onHull ? nbMask(e.x, e.y, (x, y) => (baseAt(key(x, y)) || {}).id === e.id) : 0,
+      turret: top && b && b.id === 'ring',
+      paint: G.paint,
+      ...(e.id === 'cockpit'
+        ? {
+            badge: G.style.badge,
+            mood: performance.now() - (G.lastInput || performance.now()) > 20000 ? 'sleep' : G.scars ? 'hurt' : 'idle'
+          }
+        : null)
+    }
+  );
   c.shadowBlur = 0;
   if (cold) drawFrost(c, cell * (top ? 0.82 : 0.96), ccx * 7 + ccy * 3);
   const scar = G.scars && building() && G.scars[(top ? 't|' : 'b|') + key(e.x, e.y)];
@@ -972,21 +984,19 @@ function drawBP() {
       if (t >= 1) G.spin = null;
     }
   }
-  // one hull: a shadow and a steel-grey outline behind every chassis cell, so the blocks read as one car
-  for (const [dx, dy, col, pad] of [
-    [cell * 0.08, cell * 0.12, 'rgba(0,0,0,.3)', 0],
-    [0, 0, '#2b3542', cell * 0.05]
-  ]) {
-    c.fillStyle = col;
+  // one hull: every solid chassis cell is part of one body, with axles out to the wheels
+  {
+    const hc = [],
+      ax = [];
     for (const e of G.base.values())
-      if (solidPart(MOD[e.id]))
-        for (const [a, b] of footprint(e.id, e.rot, e.x, e.y))
-          c.fillRect(
-            cpx(a) + dx - pad + cell * 0.02,
-            cpy(b) + dy - pad + cell * 0.02,
-            cell * 0.96 + pad * 2,
-            cell * 0.96 + pad * 2
-          );
+      for (const [a, b] of footprint(e.id, e.rot, e.x, e.y))
+        if (hullPart(MOD[e.id])) hc.push({ x: a, y: b, part: e });
+        else if (MOD[e.id].drive) ax.push({ x: a, y: b });
+    c.save();
+    c.translate(cpx(0) + cell / 2, cpy(0) + cell / 2);
+    if (G.layerView === 'top') c.globalAlpha *= 0.22;
+    drawHull(c, hc, cell, 0, { paint: G.paint, shadow: [cell * 0.08, cell * 0.12], axles: ax });
+    c.restore();
   }
   for (const [k, e] of G.base) {
     const pt = pops.get('b' + k);
