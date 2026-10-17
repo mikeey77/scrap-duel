@@ -2,6 +2,29 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 3.0.0 · Weather Gear · 2026-10-17
+
+**25 new parts (265 in total), each with its own symbol, housing and job.**
+
+- **Grapple Gun**: a long-range hook that reels the other car in.
+- **Snow Cannon**: three snowballs that make the target slide and steer badly for a moment.
+- **Hover Skid**: a wide hover plate that glides over oil, spikes, mud and snow.
+- **Oil Dropper**: leaves a big oil slick behind you every few seconds, all by itself.
+- **Raider Siren**: calls raiders from far away in the open world, and raiders you wreck pay 50% more scrap. In a duel it honks.
+- **Fire Hose** and **Leaf Blower**: water and wind that shove cars and junk away.
+- **Sand Blaster**: a short, roaring cone of grit.
+- **Hail Mortar**: an ice shell that bursts into four hailstones.
+- **Thunder Drum**: short-range lightning on every beat.
+- **Log Ram**, **Wrench Arm** and **Pickaxe Arm** for close work.
+- **Cactus Plate** pricks whoever rams it. **Tyre Stack** bounces crashes off. **Boulder Ballast** makes you very hard to shove.
+- **Storm Umbrella** stops mortars and shrapnel. **Ice Cooler** keeps fire out. **Road Flares** pull rockets away.
+- **Storm Lantern**: a big light around you at night, and your guns lock on better.
+- **Snow Chains** and **Balloon Tyre**: grip on ice, bounce on sand.
+- **Mud Flinger**: clogs the other car's wheels for a moment.
+- **Gyro Compass**: sharper steering, and it keeps you the right way up.
+- **First Aid Kit**: slowly patches up your most damaged parts.
+- Every new gadget has its own level 5 and level 10 gear specials.
+
 ## 2.9.0 · Wild Weather · 2026-10-17
 
 **A greener, explained open world, real fire, clean skins and a lot more speed.**

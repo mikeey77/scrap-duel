@@ -1627,11 +1627,12 @@ function drawNight(c, s, dark = 0.9, flash = 1, extra = null) {
   };
   for (const v of B.cars) {
     if (v.dead) continue;
-    light(v.x, v.y, v.rad + 90, 0.95);
+    const lamp = v.has && v.has.lantern;
+    light(v.x, v.y, v.rad + (lamp ? 300 : 90), 0.95);
     // headlight cone
     const fa = v.a - Math.PI / 2,
       [sx, sy] = toS(v.x, v.y),
-      L = 460 * s,
+      L = (lamp ? 720 : 460) * s,
       g = n.createRadialGradient(sx, sy, v.rad * s, sx, sy, L);
     g.addColorStop(0, 'rgba(0,0,0,.9)');
     g.addColorStop(1, 'rgba(0,0,0,0)');

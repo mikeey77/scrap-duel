@@ -862,13 +862,17 @@ function raiderThink(v, dt) {
   let d = 1e9;
   for (const p of B.cars) if (p && p.player && !p.dead) d = Math.min(d, Math.hypot(p.x - v.x, p.y - v.y));
   const hitByPlayer = v.lastBy && B.cars[v.lastBy.att] && B.cars[v.lastBy.att].player;
-  if (d < 850 || (hitByPlayer && d < 2000)) v.aggro = true;
+  // a Raider Siren calls them from much further away
+  const siren = B.cars.some(
+    p => p && p.player && !p.dead && p.has && p.has.siren && Math.hypot(p.x - v.x, p.y - v.y) < 2200
+  );
+  if (d < (siren ? 2200 : 850) || (hitByPlayer && d < 2000)) v.aggro = true;
   if (v.aggro && !v.said) {
     // a raider tells you it has seen you
     v.said = true;
     if (Math.random() < 0.7) txt(v.x, v.y - v.rad - 26, pick(v.hunter ? HUNTER_LINES : RAIDER_LINES), '#ff9a84', 2);
   }
-  if (d > 1900 && !v.mission && !v.hunter) v.aggro = false;
+  if (d > (siren ? 2600 : 1900) && !v.mission && !v.hunter) v.aggro = false;
   // camps are safe ground: raiders turn away from them
   const camp = OW.camps.find(c => Math.hypot(c.x - v.x, c.y - v.y) < 420);
   if (v.aggro && !camp) return botThink(v, dt);
@@ -921,7 +925,13 @@ function owRaiderDown(v) {
   if (Math.random() < 0.45) txt(v.x, v.y - v.rad - 26, pick(WRECK_LINES), '#ece8df', 1.8);
   const by = v.lastBy && B.cars[v.lastBy.att],
     k = by && by.player && !by.dead ? by : B.cars.find(c => c.player && !c.dead);
-  if (k) coinPop(v.x, v.y, 15 + v.diff * 15 + (v.hunter ? 60 : 0) + (v.boss ? 100 : 0), k);
+  if (k)
+    coinPop(
+      v.x,
+      v.y,
+      Math.round((15 + v.diff * 15 + (v.hunter ? 60 : 0) + (v.boss ? 100 : 0)) * (k.has && k.has.siren ? 1.5 : 1)),
+      k
+    );
   if (Math.random() < 0.3) B.pk.push({ kind: 'repair', x: v.x, y: v.y, val: 0.3, cd: 0, uid: owUid() });
   if (v.convoy || v.hunter || v.boss || Math.random() < 0.25) {
     const n = v.boss ? 3 : v.convoy ? 3 : 1;

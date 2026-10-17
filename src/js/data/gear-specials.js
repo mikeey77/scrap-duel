@@ -165,6 +165,26 @@ const GEAR_SPECIAL_ALT = {
 };
 // Parts with their own idea; either slot can be null to fall back to the group.
 const GEAR_SPECIAL_PART = {
+  oildropper: [
+    gsp('armourdrum', 'Armoured Drum', '+30% part HP.', { hp: 1.3 }),
+    gsp('greased', 'Greased Getaway', '+8% acceleration for the whole car.', { accel: 1.08 })
+  ],
+  siren: [
+    gsp('loudproud', 'Loud and Proud', 'The crowd loves it: +50% hype.', { hype: 0.5 }),
+    gsp('steelnerves', 'Steel Nerves', '30% less knockback on the car.', { knockRes: 0.3 })
+  ],
+  lantern: [
+    gsp('toughglass', 'Toughened Glass', '+30% part HP.', { hp: 1.3 }),
+    gsp('eternalflame', 'Eternal Flame', 'Slowly repairs itself.', { regen: 0.02 })
+  ],
+  compass: [
+    gsp('steadyneedle', 'Steady Needle', '25% less knockback on the car.', { knockRes: 0.25 }),
+    gsp('truenorth', 'True North', '+10% acceleration.', { accel: 1.1 })
+  ],
+  firstaid: [
+    gsp('biggerkit', 'Bigger Kit', '+30% part HP.', { hp: 1.3 }),
+    gsp('fieldsurgeon', 'Field Surgeon', 'Slowly repairs itself.', { regen: 0.03 })
+  ],
   sniper: [
     gsp('headshot', 'Headshot', '25% chance to hit for 2.5× damage.', { crit: 0.25 }),
     gsp('armourpiercer', 'Armour Piercer', '+50% damage.', { dmg: 1.5 })

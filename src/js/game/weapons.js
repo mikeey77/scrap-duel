@@ -831,6 +831,27 @@ function weapons(v, dt) {
     if (!I.alive) continue;
     I.hitT -= dt;
     I.punch -= dt;
+    // Oil Dropper: a big slick behind you every few seconds while you drive
+    if (
+      I.m.autoOil &&
+      B.seq === 'play' &&
+      B.net !== 'client' &&
+      !(I.sp > B.time) &&
+      Math.hypot(v.vx, v.vy) > 90 &&
+      v.z <= 0
+    ) {
+      I.sp = B.time + 2.6;
+      const sp = Math.hypot(v.vx, v.vy);
+      B.zones.push({
+        kind: 'oil',
+        x: v.x - (v.vx / sp) * (v.rad + 30),
+        y: v.y - (v.vy / sp) * (v.rad + 30),
+        r: rnd(38, 50),
+        life: 14 * (1 + (v.aura.slickLife || 0)),
+        own: v.idx
+      });
+      sfx('splat', v.x, v.y);
+    }
     if (I.burn > 0) {
       I.burn -= dt;
       hurtInst(v, I, 8 * dt, 'none');

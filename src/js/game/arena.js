@@ -670,6 +670,12 @@ function recalc(v, init) {
   v.shields = alive.filter(I => I.m.shield);
   v.has = {};
   for (const I of alive) v.has[I.id] = (v.has[I.id] || 0) + 1;
+  // newer parts that do an older part's job count as that part too (a siren honks, road flares are flares)
+  for (const I of alive) {
+    const m = I.m,
+      alias = m.horn ? 'horn' : m.counter ? { jam: 'jammer', flash: 'flashbang' }[m.counter] || m.counter : null;
+    if (alias && alias !== I.id) v.has[alias] = (v.has[alias] || 0) + 1;
+  }
   v.syn = synergyOf(alive.map(I => I.id));
   v.aura = mergeAura(auraOf(alive.map(I => I.id)), v.syn.aura);
   v.fragile = alive.some(I => I.m.fragile) ? 0.1 : 0;

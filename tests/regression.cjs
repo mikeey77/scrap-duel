@@ -199,7 +199,7 @@ test('catalog loads and every starter is connected, usable and owned', () => {
     signatures.add(G.starterGuns.join(','));
   }
   assert(signatures.size > 10);
-  assert.equal(a.MODS.length, 240);
+  assert.equal(a.MODS.length, 265);
 });
 test('all heavy drafted modules include enough free support', () => {
   for (const m of a.MODS.filter(m => m.layer === 't' && m.mnt === 2)) {
@@ -708,7 +708,7 @@ test('open overlays release held input and prevent background fire', () => {
   assert.equal(aa.keys.size, 0);
 });
 test('all fifty designs have unique names, intended shapes, tags and executable mechanics', () => {
-  const added = a.MODS.filter(m => m.plan && !m.odd);
+  const added = a.MODS.filter(m => m.plan && !m.odd && !m.wild);
   assert.equal(added.length, 50);
   assert.equal(new Set(a.MODS.map(m => m.name)).size, a.MODS.length);
   const counts = {};
@@ -719,6 +719,27 @@ test('all fifty designs have unique names, intended shapes, tags and executable 
     assert(m.desc && m.con);
   }
   assert.deepEqual(counts, { '1x1': 15, '1x2': 10, '1x3': 5, '2x2': 10, '2x3': 5, special: 5 });
+});
+test('the 25 weather-gear parts are complete and unique', () => {
+  const wild = a.MODS.filter(m => m.wild);
+  assert.equal(wild.length, 25);
+  assert(wild.every(m => m.glyph && m.desc && m.con && m.art.k === 'plan' && m.hp > 0 && m.mass > 0));
+  assert(
+    wild.every(
+      m =>
+        m.wpn ||
+        m.mel ||
+        m.drive ||
+        m.res ||
+        m.ram ||
+        m.counter ||
+        m.horn ||
+        m.medic ||
+        m.turn ||
+        m.autoOil ||
+        m.lantern
+    )
+  );
 });
 test('odd parts cover every rarity, have glyphs and unusual shapes', () => {
   const odd = a.MODS.filter(m => m.odd);
