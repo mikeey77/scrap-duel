@@ -892,9 +892,10 @@ function drawModuleArtCore(c, id, s, ang, team, st) {
       c.save();
       c.rotate(ang);
       if (st.turret) circ(c, 0, 0, h * 0.86, null, '#f2b705', s * 0.04);
+      // barrels reach out past the turret, so a gun reads as a gun and not as a box
       const n = A.b || 1,
-        w = (A.w || 0.1) * s,
-        len = (A.l || 1.2) * h,
+        w = (A.w || 0.1) * s * 1.2,
+        len = (A.l || 1.2) * h * 1.5,
         gap = w + s * 0.05,
         kick = st.kick || 0;
       // barrels slide back when a shot goes off; the housing stays put
@@ -924,7 +925,11 @@ function drawModuleArtCore(c, id, s, ang, team, st) {
       } else
         for (let i = 0; i < n; i++) {
           const x = (i - (n - 1) / 2) * gap;
-          c.fillStyle = '#1c2024';
+          const bg = c.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
+          bg.addColorStop(0, '#5a636c');
+          bg.addColorStop(0.45, '#2a3036');
+          bg.addColorStop(1, '#15191d');
+          c.fillStyle = bg;
           c.fillRect(x - w / 2, -len, w, len);
           c.fillStyle = A.tip || mix(A.c, -0.15);
           c.fillRect(x - w * 0.65, -len, w * 1.3, h * 0.2);

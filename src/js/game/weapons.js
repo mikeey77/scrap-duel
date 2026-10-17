@@ -697,92 +697,12 @@ function planDrawLinks(c, v) {
   c.restore();
 }
 function planDrawModule(c, m, s, ang, st) {
-  const b = shapeBounds(m),
-    col = m.art.c,
-    t = SETTINGS?.motion === false || REDUCED.on ? 0 : ANIM;
+  const t = SETTINGS?.motion === false || REDUCED.on ? 0 : ANIM,
+    col = m.art.c;
   c.save();
   c.rotate(ang);
-  if (HULL_ART) {
-    // on a hull: one rounded housing over all its cells, bolted onto the body
-    const cs = moduleCells(m),
-      x0 = Math.min(...cs.map(q => q[0])) - b.cx,
-      y0 = Math.min(...cs.map(q => q[1])) - b.cy,
-      pw = b.w * s - s * 0.18,
-      ph = b.h * s - s * 0.18,
-      px = (x0 - 0.5) * s + s * 0.09,
-      py = (y0 - 0.5) * s + s * 0.09,
-      rad = Math.min(pw, ph) * 0.42;
-    c.fillStyle = 'rgba(0,0,0,.3)';
-    rr(c, px + s * 0.04, py + s * 0.06, pw, ph, rad);
-    c.fill();
-    const g = c.createLinearGradient(px, py, px + pw, py + ph);
-    g.addColorStop(0, mix(col, -0.05));
-    g.addColorStop(1, mix(col, -0.55));
-    rr(c, px, py, pw, ph, rad);
-    c.fillStyle = g;
-    c.fill();
-    c.strokeStyle = mix(col, 0.35);
-    c.lineWidth = Math.max(1, s * 0.04);
-    c.stroke();
-    rr(c, px + s * 0.07, py + s * 0.07, pw - s * 0.14, ph - s * 0.14, Math.max(1, rad - s * 0.07));
-    c.strokeStyle = 'rgba(0,0,0,.35)';
-    c.lineWidth = Math.max(0.8, s * 0.025);
-    c.stroke();
-  } else
-    for (const [x, y] of moduleCells(m)) {
-      c.save();
-      c.translate((x - b.cx) * s, (y - b.cy) * s);
-      bevel(c, s * 0.46, m.layer === 't' ? '#313e4c' : col, s * 0.08);
-      c.strokeStyle = col;
-      c.lineWidth = s * 0.035;
-      c.strokeRect(-s * 0.37, -s * 0.37, s * 0.74, s * 0.74);
-      c.restore();
-    }
-  circ(c, 0, 0, s * 0.28, '#172332', col, s * 0.04);
-  c.save();
-  c.rotate(t * (m.cat === 'move' || m.branch === 'hook' ? 2 : 0.5));
-  if (m.branch === 'cold') {
-    for (let i = 0; i < 3; i++) {
-      c.rotate(Math.PI / 3);
-      line(c, [-s * 0.22, 0, s * 0.22, 0], col, s * 0.04);
-    }
-  } else if (m.branch === 'hook') {
-    for (let i = 0; i < 3; i++) circ(c, 0, 0, s * (0.08 + i * 0.05), null, col, s * 0.025);
-    line(c, [0, 0, 0, -s * 0.43], col, s * 0.035);
-  } else if (m.branch === 'econ') {
-    rr(c, -s * 0.21, -s * 0.15, s * 0.42, s * 0.3, s * 0.04);
-    c.fillStyle = col;
-    c.fill();
-    line(c, [-s * 0.15, -s * 0.2, s * 0.15, -s * 0.2], col, s * 0.04);
-  } else if (m.branch === 'slip') {
-    for (let i = 0; i < 3; i++)
-      circ(c, Math.cos(i * 2.1) * s * 0.12, Math.sin(i * 2.1) * s * 0.12, s * 0.07, null, col, s * 0.025);
-  } else if (m.glyph) {
-    c.rotate(-t * 0.5 - ang);
-    c.font = `${s * 0.36}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.fillText(m.glyph, 0, s * 0.02);
-  } else {
-    c.beginPath();
-    c.moveTo(-s * 0.15, s * 0.15);
-    c.quadraticCurveTo(-s * 0.22, -s * 0.05, 0, -s * 0.25);
-    c.quadraticCurveTo(s * 0.25, s * 0.05, s * 0.1, s * 0.15);
-    c.closePath();
-    c.fillStyle = col;
-    c.fill();
-  }
-  c.restore();
-  if (m.wpn || m.mel) {
-    line(c, [0, -s * 0.18, 0, -s * 0.48], col, s * 0.12);
-  }
-  if (m.cat === 'move' && m.drive) {
-    c.save();
-    c.rotate(t * 4);
-    circ(c, 0, 0, s * 0.23, '#15202a', col, s * 0.07);
-    line(c, [-s * 0.2, 0, s * 0.2, 0], '#f2f6fc', s * 0.025);
-    c.restore();
-  }
+  // the part as the thing it is (js/render/part-objects.js), not a tile
+  drawPartObject(c, m, s, { ...st, _ang: ang }, t);
   if (['cinderfan', 'snowblower'].includes(m.id)) {
     c.save();
     c.rotate(t * 3);

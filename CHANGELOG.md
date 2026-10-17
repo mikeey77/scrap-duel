@@ -2,6 +2,24 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 3.1.0 · Real Parts · 2026-10-17
+
+**Only the chassis is made of blocks now. Every other part looks like what it is.**
+
+- **Weapons**:
+  - Flamethrowers and hoses carry a fuel or water tank and a nozzle with a flared tip and a pilot light.
+  - Guns get a receiver and one to three barrels; scatter guns get a wide muzzle.
+  - Rocket and dart launchers are tube pods. Mortars are open tubes. Tesla and thunder parts are copper coils with a glowing orb.
+- **Big weapons** use their extra cells for supply: tanks for liquids, ammo drums for guns, batteries for energy weapons.
+- **Turret guns** have longer, shaded barrels that reach past the turret.
+- **Melee parts** are an arm with a real tool on the end:
+  - a spinning saw, prongs, a pickaxe, a wrench head, a wrecking ball, an ice spike or a steel wedge.
+  - Rams are one long beam with a capped nose.
+- **Wheels and skates** are tyres with tread that rolls; hover parts are glowing pads.
+- **Gadgets** are little canisters in their own colour with a symbol window. Horns and sirens get a horn, sprayers a nozzle, and sensors and lanterns an antenna.
+- **Shaped parts** that take several cells are one connected piece that follows their shape, without seams or grid lines.
+- **Armour** plates join up into one riveted plate. Spiky armour gets real spikes and bumpers a rubber rim.
+
 ## 3.0.0 · Weather Gear · 2026-10-17
 
 **25 new parts (265 in total), each with its own symbol, housing and job.**

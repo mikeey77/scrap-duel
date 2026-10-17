@@ -59,6 +59,7 @@
     "js/game/banter.js",
     "js/render/hull.js",
     "js/render/wear.js",
+    "js/render/part-objects.js",
     "js/render/weather.js",
     "js/render/battle-render.js",
     "js/render/cine.js",
