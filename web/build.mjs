@@ -36,7 +36,8 @@ const fill = {
   CHANGES: changes,
   REPO,
   SETUP_URL: '/download',
-  ZIP_URL: '/download/zip'
+  ZIP_URL: '/download/zip',
+  PORTABLE_URL: '/download/portable'
 };
 const html = readFileSync(join(here, 'index.html'), 'utf8').replace(/\{\{(\w+)\}\}/g, (m, k) => {
   if (!(k in fill)) throw new Error(`Unknown placeholder ${m}`);
@@ -51,9 +52,12 @@ for (const dir of ['img', 'fonts', 'media']) cpSync(join(here, dir), join(out, d
 // Short download links that always point at the newest release
 writeFileSync(
   join(out, '_redirects'),
-  [`/download      ${LATEST}/ScrapDuel-Setup.exe   302`, `/download/zip  ${LATEST}/ScrapDuel-Windows.zip 302`, ''].join(
-    '\n'
-  )
+  [
+    `/download      ${LATEST}/ScrapDuel-Setup.exe   302`,
+    `/download/zip  ${LATEST}/ScrapDuel-Windows.zip 302`,
+    `/download/portable  ${LATEST}/ScrapDuel-Portable.exe 302`,
+    ''
+  ].join('\n')
 );
 writeFileSync(
   join(out, '_headers'),

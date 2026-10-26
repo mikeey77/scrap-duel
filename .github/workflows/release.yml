@@ -42,13 +42,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npx electron-builder --win nsis zip --x64 --publish never
+      - run: npx electron-builder --win nsis zip portable --x64 --publish never
       - name: Release notes from CHANGELOG.md
         shell: bash
         run: |
           v="${{ needs.check.outputs.version }}"
           awk -v v="$v" '/^## /{p = index($0, "## " v) == 1; next} p' CHANGELOG.md > notes.md
-          printf '\n**Install:** download `ScrapDuel-Setup.exe` and run it. If Windows says it protected your PC, click *More info* and then *Run anyway*.\n' >> notes.md
+          printf '\n**Install:** download `ScrapDuel-Setup.exe` and run it, or `ScrapDuel-Portable.exe` to play without installing (one file, no unzipping). If Windows says it protected your PC, click *More info* and then *Run anyway*.\n' >> notes.md
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.check.outputs.version }}
@@ -58,3 +58,4 @@ jobs:
           files: |
             dist/ScrapDuel-Setup.exe
             dist/ScrapDuel-Windows.zip
+            dist/ScrapDuel-Portable.exe

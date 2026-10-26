@@ -22,7 +22,7 @@
     "peerjs": "^1.5.5",
     "prettier": "^3.9.9"
   },
-  "version": "3.1.0",
+  "version": "3.1.1",
   "main": "desktop/main.cjs",
   "build": {
     "appId": "nl.scrapduel.game",
@@ -48,10 +48,19 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "site/icons/icon-512.png",
       "artifactName": "ScrapDuel-Windows.${ext}"
+    },
+    "portable": {
+      "artifactName": "ScrapDuel-Portable.${ext}"
     },
     "nsis": {
       "oneClick": false,

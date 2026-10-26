@@ -2,6 +2,14 @@
 
 Each version is released on GitHub with a Windows installer and a zip. The download page shows the newest section of this file, so keep the newest version at the top.
 
+## 3.1.1 · Safe Start · 2026-10-26
+
+**For PCs where the game wouldn't open.**
+
+- **Portable version**: `ScrapDuel-Portable.exe` is one file. Download it and double-click, with no installing or unzipping.
+- **Safe mode**: if the game didn't make it to the screen last time (usually a graphics driver that dislikes the GPU boost), it starts in safe mode with software drawing. If the graphics process crashes, the game restarts itself in safe mode. `--safe-mode` forces it.
+- **No more silent failures**: the window always appears. If the game files are missing, for example when it is started from inside a zip, a message explains how to fix it. Every problem is written to the error log.
+
 ## 3.1.0 · Real Parts · 2026-10-17
 
 **Only the chassis is made of blocks now. Every other part looks like what it is.**

@@ -1,6 +1,6 @@
 // Scrap Duel desktop app (Electron). Loads the built game from site/ through a private
 // app:// protocol so saves (localStorage) live in a stable place in the user's profile.
-const { app, BrowserWindow, protocol, net, ipcMain, shell, screen } = require('electron');
+const { app, BrowserWindow, protocol, net, ipcMain, shell, screen, dialog } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
@@ -50,10 +50,41 @@ function logError(text) {
   } catch (e) {}
 }
 
-// Use the graphics card for canvas drawing wherever possible, also on GPUs Chromium is cautious about.
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
+/* ---------- safe start ----------
+   A flag file is written at every start and removed once the game is on screen. If it is still there at the
+   next start, the last start never got that far (usually a graphics driver that chokes on the GPU tricks below),
+   so this start runs in safe mode: no forced GPU features, software drawing. --safe-mode does the same. */
+const LAUNCH_FLAG = () => path.join(app.getPath('userData'), 'starting.flag');
+let SAFE = process.argv.includes('--safe-mode');
+try {
+  if (fs.existsSync(LAUNCH_FLAG())) SAFE = true;
+  fs.mkdirSync(app.getPath('userData'), { recursive: true });
+  fs.writeFileSync(LAUNCH_FLAG(), String(Date.now()));
+} catch (e) {}
+if (SAFE) app.disableHardwareAcceleration();
+else {
+  // Use the graphics card for canvas drawing wherever possible, also on GPUs Chromium is cautious about.
+  app.commandLine.appendSwitch('ignore-gpu-blocklist');
+  app.commandLine.appendSwitch('enable-gpu-rasterization');
+  app.commandLine.appendSwitch('enable-zero-copy');
+}
+function startedOK() {
+  try {
+    fs.unlinkSync(LAUNCH_FLAG());
+  } catch (e) {}
+}
+/** Something stopped the game from starting: say what, and how to fix it, instead of quietly closing. */
+function startupError(title, text) {
+  logError(title + ': ' + text);
+  try {
+    dialog.showErrorBox(
+      'Scrap Duel: ' + title,
+      text +
+        '\n\nTips:\n• Unzip the download first (right-click the zip → Extract All) and start Scrap Duel.exe from the unzipped folder.\n• Or use ScrapDuel-Setup.exe or ScrapDuel-Portable.exe from scrap-duel.netlify.app.\n\nError log: ' +
+        LOG_FILE()
+    );
+  } catch (e) {}
+}
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 // Windows' "animation effects" switch (often off on laptops) would turn off every transition in the game.
 // The game has its own Interface animations setting, so that one decides, not the OS.
@@ -115,6 +146,18 @@ function createWindow() {
   win.setMenuBarVisibility(false);
   if (s.maximized && s.fullscreen === false) win.maximize();
   win.once('ready-to-show', () => win.show());
+  // never stay invisible: if the page takes too long, show the window anyway
+  setTimeout(() => {
+    if (!win.isDestroyed() && !win.isVisible()) {
+      logError('window shown by the fallback timer');
+      win.show();
+    }
+  }, 8000);
+  win.webContents.once('did-finish-load', () => setTimeout(startedOK, 4000));
+  win.webContents.on('did-fail-load', (_e, code, desc, url) => {
+    if (code === -3) return; // aborted by a redirect: harmless
+    startupError('the game could not load', `${desc} (${code}) while loading ${url}`);
+  });
   win.on('close', () => saveState(win));
   win.webContents.on('render-process-gone', (_e, d) => logError('renderer gone: ' + d.reason));
   win.webContents.on('did-finish-load', () => win.webContents.send('fullscreen', win.isFullScreen()));
@@ -152,13 +195,30 @@ function smokeTest(win) {
         `JSON.stringify({menu: !document.querySelector('#ovMenu').hidden, peer: !!window.Peer || 'lazy', desktop: !!window.desktop, font: document.fonts.check('16px "Chakra Petch"'), name: localStorage.getItem('sd.name'), full: !!(window.desktop && window.desktop.fullscreen()), reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, mFull: (document.querySelector('#mFull')||{}).textContent})`
       );
       fs.writeFileSync(process.env.SD_SMOKE, (await win.webContents.capturePage()).toPNG());
-      console.log('SMOKE', info, 'win-full:', win.isFullScreen(), 'errors:', JSON.stringify(errors));
+      console.log('SMOKE', info, 'win-full:', win.isFullScreen(), 'safe:', SAFE, 'errors:', JSON.stringify(errors));
+      startedOK();
       app.quit();
     }, 2500)
   );
 }
 
 app.whenReady().then(() => {
+  if (!fs.existsSync(path.join(SITE, 'index.html'))) {
+    startupError(
+      'game files missing',
+      'Scrap Duel could not find its game files next to the program. This happens when it is started straight from inside a zip file, or when files were left out while copying.'
+    );
+    startedOK();
+    return app.quit();
+  }
+  // a crashed graphics process: start again in safe mode (once)
+  app.on('child-process-gone', (_e, d) => {
+    if (d.type === 'GPU' && d.reason !== 'clean-exit' && !SAFE) {
+      logError('GPU process gone: ' + d.reason + ', restarting in safe mode');
+      app.relaunch({ args: process.argv.slice(1).concat('--safe-mode') });
+      app.exit(0);
+    }
+  });
   protocol.handle('app', req => {
     const rel = decodeURIComponent(new URL(req.url).pathname).replace(/^\/+/, '') || 'index.html';
     const file = path.normalize(path.join(SITE, rel));
