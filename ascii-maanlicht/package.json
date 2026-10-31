@@ -1,0 +1,49 @@
+{
+  "name": "maanlicht",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Maanlicht: een ASCII-avontuur bij maanlicht",
+  "author": "Maanlicht",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node build.mjs && electron .",
+    "dist:win": "node build.mjs && electron-builder --win portable --x64 -c.win.signAndEditExecutable=false"
+  },
+  "devDependencies": {
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12",
+    "peerjs": "^1.5.5"
+  },
+  "build": {
+    "appId": "nl.maanlicht.game",
+    "productName": "Maanlicht",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "desktop/**",
+      "app/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "Maanlicht.exe"
+    },
+    "electronLanguages": [
+      "en-US",
+      "nl"
+    ],
+    "compression": "maximum",
+    "asar": true
+  }
+}

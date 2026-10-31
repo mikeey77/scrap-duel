@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Maanlicht</title>
+<style>
+/* @styles */
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<div id="huds"></div>
+<div id="topright"><canvas id="minimap" width="170" height="170"></canvas><div id="clock"></div><div id="fps" class="dim"></div></div>
+<div id="log"></div>
+<div id="keys" class="dim">P1 WASD · spatie aanval · Q spreuk · E actie · H drankje · I tas &nbsp;|&nbsp; P2 pijltjes · . aanval · , spreuk · / actie · ; drankje · P tas &nbsp;|&nbsp; M kaart · T ruw · −/= tekens</div>
+<div id="panels"></div>
+<div id="mapwrap"><div class="mapbox"><div class="ihead"><span>KAART VAN HET EILAND</span><span class="dim">sluiten (M)</span></div><canvas id="bigmap" width="760" height="760"></canvas></div></div>
+<div id="title">
+  <pre class="logo"></pre>
+  <div class="sub">een ASCII-avontuur bij maanlicht</div>
+  <div class="ident">jij bent <input id="name" maxlength="16" spellcheck="false"> <span class="dim">id <span id="myid"></span></span></div>
+  <div class="menu">
+    <button id="bHost">Mijn wereld starten <span class="dim">· anderen doen mee met code <b id="mycode"></b></span></button>
+    <div class="joinrow"><input id="code" placeholder="WERELDCODE" maxlength="8" spellcheck="false"><button id="bJoin">Meedoen</button></div>
+    <button id="bTwo">Lokaal met 2 spelers <span class="dim">· zelfde toetsenbord</span></button>
+    <button id="bNew">Andere wereld genereren</button>
+  </div>
+  <div id="net" class="small"></div>
+  <div class="dim" id="seed"></div>
+  <div class="dim small">de tijd en het weer lopen gelijk met het echte leven · controllers: druk op Start om mee te doen</div>
+</div>
+<div id="err"></div>
+<script>/* @peer */</script>
+<script>
+/* @scripts */
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# Builds Maanlicht.exe (portable, Windows) whenever the game changes; download it from the run's artifacts.
+name: Maanlicht exe
+on:
+  push:
+    paths: ['ascii-maanlicht/**', '.github/workflows/maanlicht.yml']
+  workflow_dispatch:
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: ascii-maanlicht
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run dist:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Maanlicht-Windows
+          path: ascii-maanlicht/dist/Maanlicht.exe
