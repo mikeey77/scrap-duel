@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Maanlicht – ASCII-demo</title>
+<style>
+  html,body{margin:0;height:100%;background:#05070b;overflow:hidden;touch-action:none;
+    font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;color:#cfd8e3}
+  canvas{display:block;width:100vw;height:100vh}
+  #hud{position:fixed;left:12px;top:12px;padding:8px 10px;background:rgba(3,5,9,.78);
+    border:1px solid #2a3442;font-size:11px;line-height:1.5;pointer-events:none;min-width:170px}
+  #hud b{color:#fff}
+  .bar{display:inline-block;width:90px;height:7px;border:1px solid #6b7889;vertical-align:middle;margin:0 6px}
+  .bar i{display:block;height:100%;background:repeating-linear-gradient(90deg,#dfe7f0 0 3px,transparent 3px 4px)}
+  .tag{position:fixed;font-size:11px;color:#e8eef5;text-shadow:0 0 3px #000,0 0 6px #000;
+    transform:translate(-50%,-100%);pointer-events:none;white-space:nowrap}
+  #ui{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:92vw}
+  #ui button{font:inherit;font-size:12px;color:#cfd8e3;background:rgba(6,9,14,.85);border:1px solid #33404f;
+    padding:7px 10px;border-radius:4px}
+  #ui button.on{border-color:#c9b27a;color:#ffe6a8}
+  #help{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));font-size:11px;color:#7f8b99;pointer-events:none}
+  #stick{position:fixed;width:90px;height:90px;border:1px solid rgba(200,210,225,.25);border-radius:50%;
+    display:none;pointer-events:none;transform:translate(-50%,-50%)}
+  #stick i{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px;border-radius:50%;background:rgba(220,230,240,.25)}
+  @media (pointer:coarse),(max-width:700px){#help{display:none}}
+  #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:30px;text-align:center}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div><b>Wanderer</b> · <span id="fps">-</span> fps</div>
+  <div>HP<span class="bar"><i style="width:72%"></i></span></div>
+  <div>MP<span class="bar"><i style="width:94%"></i></span></div>
+  <div id="grid" style="color:#7f8b99">-</div>
+</div>
+<div class="tag" id="tagMe">jij</div>
+<div class="tag" id="tagNpc">Dwaler</div>
+<div id="stick"><i></i></div>
+<div id="help">WASD / pijltjes of sleep om te lopen · T ruw beeld · R regen · L lantaarn · [ ] tekengrootte</div>
+<div id="ui">
+  <button id="bRaw">Ruw beeld</button>
+  <button id="bRain">Regen</button>
+  <button id="bLamp" class="on">Lantaarn</button>
+  <button id="bMinus">Tekens −</button>
+  <button id="bPlus">Tekens +</button>
+</div>
+<div id="err">WebGL2 is niet beschikbaar in deze browser.</div>
+
+<script id="sceneFS" type="x-shader">#version 300 es
+precision highp float;
+uniform vec2 uRes, uCell, uCam, uPlayer, uLamp, uNpc, uNpcLamp;
+uniform float uPPU, uTime, uRain, uLantern, uWalk, uSide, uNpcWalk, uNpcSide;
+out vec4 o;
+#define GLYPHS
+
+const vec2 G = vec2(13.0, 7.0);
+const vec3 L = vec3(-0.45, 0.55, 0.70);
+
+float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+vec2  h22(vec2 p){ float n=h21(p); return vec2(n, h21(p+n*17.13)); }
+float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+  return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
+float fbm(vec2 p){ float s=0., a=.5; for(int i=0;i<4;i++){ s+=a*vn(p); p=p*2.03+vec2(1.7,9.2); a*=.5; } return s; }
+float seg(vec2 p, vec2 a, vec2 b){ vec2 pa=p-a, ba=b-a; float h=clamp(dot(pa,ba)/dot(ba,ba),0.,1.); return length(pa-ba*h); }
+int pick(int base, int n, float v){ return base + int(clamp(v,0.,.999)*float(n)); }
+
+float rockSD(vec2 p){ vec2 q=(p-G)*vec2(.75,1.); return length(q)-7.0+(fbm(p*.35)-.47)*5.0; }
+float poolSD(vec2 p){ vec2 q=(p-G-vec2(-1.,-1.5))*vec2(.85,1.25); return length(q)-3.6+(fbm(p*.6+3.)-.47)*1.6; }
+float pathSD(vec2 p){ return abs(p.y+3.0-2.5*sin(p.x*.11)-1.2*sin(p.x*.27+1.))-1.0+(vn(p*.8)-.5)*.6; }
+float rockH(vec2 p){ return clamp(-rockSD(p),0.,3.)*.6 + fbm(p*1.3)*.9; }
+
+float treeSD(vec2 p, out vec2 tc, out float tr){
+  float best=1e9; tc=vec2(0); tr=1.;
+  vec2 id=floor(p/8.);
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){
+    vec2 cid=id+vec2(i,j); vec2 h=h22(cid);
+    if(h.x<.3) continue;
+    vec2 c=(cid+.5+(h-.5)*.55)*8.;
+    if(length(c)<7. || rockSD(c)<2. || pathSD(c)<2.) continue;
+    float r=2.3+h.y*1.8;
+    float d=length(p-c)-r*(.82+.32*vn(p*1.1+cid*7.));
+    if(d<best){ best=d; tc=c; tr=r; }
+  }
+  return best;
+}
+
+vec3 fireflies(vec2 p, float t, out float near){
+  vec3 acc=vec3(0); near=1e9;
+  vec2 id=floor(p/5.);
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){
+    vec2 cid=id+vec2(i,j); vec2 h=h22(cid+31.);
+    if(h.x<.35) continue;
+    float ph=h.y*6.283;
+    vec2 fp=(cid+.5)*5.+vec2(sin(t*(.3+h.x*.4)+ph), cos(t*(.25+h.y*.3)+ph*1.7))*1.8;
+    float blink=smoothstep(.2,.9,sin(t*(.8+h.x)+ph*3.)*.5+.5);
+    float d=length(p-fp);
+    acc+=vec3(.75,1.,.45)*blink*.45/(1.+d*d*2.5);
+    near=min(near, d/max(blink,.05));
+  }
+  return acc;
+}
+
+// upright figure, q = position relative to feet; returns sdf, writes shade/part
+float figure(vec2 q, float walk, float side, out float part){
+  float sw=sin(walk)*.22;
+  float legs=min(seg(q,vec2(-.17,.75),vec2(-.18+sw,.05)), seg(q,vec2(.17,.75),vec2(.18-sw,.05)))-.12;
+  float r=mix(.62,.36,clamp((q.y-.55)/1.0,0.,1.));
+  float body=seg(q,vec2(0,.65),vec2(0,1.5))-r;
+  float head=length(q-vec2(0,1.88))-.33;
+  float arm=seg(q,vec2(side*.38,1.45),vec2(side*.62,.95+sw*.2))-.1;
+  float d=min(min(legs,body),min(head,arm));
+  part = head<.0 ? 2. : (arm<.0 ? 3. : (body<.0 ? 1. : 0.));
+  return d;
+}
+
+vec3 lampLight(vec2 p, vec2 lp, vec3 col, float k){
+  vec2 d=p-lp; float dd=dot(d,d);
+  return col*k*2.6/(1.+dd*.45)*smoothstep(110.,9.,dd);
+}
+
+void main(){
+  vec2 cell=floor(gl_FragCoord.xy);
+  vec2 p=uCam+((cell+.5)*uCell-uRes*.5)/uPPU;
+  vec2 wc=floor(p*uPPU/uCell+.5);            // stable world lattice id for this cell
+  float t=uTime;
+  float rnd=h21(wc), rnd2=h21(wc+7.3);
+
+  // ---- light ----
+  vec3 moon=vec3(.40,.56,.95)*(1.-.35*uRain);
+  vec2 sdir=normalize(vec2(.55,-1.));
+  float sx=dot(p,vec2(-sdir.y,sdir.x));
+  float shaft=smoothstep(.58,.9,vn(vec2(sx*.16,t*.05)))*(.6+.4*vn(p*.1+t*.02))*(1.-.7*uRain);
+  float ffNear; vec3 ff=fireflies(p,t,ffNear);
+  vec3 lamp=lampLight(p,uLamp,vec3(1.,.68,.32),uLantern) + lampLight(p,uNpcLamp,vec3(.55,1.,.35),.8);
+  vec3 lt=moon*(.22+shaft*1.1);
+
+  // tree shadow (moon) + player shadows
+  vec2 tc2; float tr2;
+  float shSD=treeSD(p+L.xy/L.z*2.6,tc2,tr2);
+  float shadow=mix(.3,1.,smoothstep(-.4,.4,shSD));
+  vec2 ps=(p-uPlayer-vec2(.55,-.35))*vec2(1.,2.2);
+  vec2 ns=(p-uNpc-vec2(.55,-.35))*vec2(1.,2.2);
+  shadow*=mix(.35,1.,smoothstep(.3,.8,length(ps)))*mix(.35,1.,smoothstep(.3,.8,length(ns)));
+
+  vec3 col; int g; vec3 emis=vec3(0);
+
+  float rk=rockSD(p);
+  float pl=poolSD(p);
+  vec2 tc; float tr; float td=treeSD(p,tc,tr);
+
+  if(rk<0.){
+    if(pl<0.){
+      // dark grotto pool
+      float w=vn(p*vec2(.6,2.2)+vec2(t*.25,0.));
+      float depth=clamp(-pl/2.5,0.,1.);
+      col=vec3(.02,.05,.09)*(1.-depth*.5);
+      float refl=pow(vn(p*.5+t*.05),3.)*.9;
+      col+=moon*refl*.25 + lamp*.25 + ff*1.2;
+      float lum=dot(col,vec3(.3,.5,.2));
+      g = w>.6 ? G_WATER+3 : (w>.45 ? G_WATER+2 : pick(G_WATER,2,lum*6.));
+      if(h21(wc+floor(t*4.))>.985){ g=G_SPARK; col+=vec3(.5,.7,1.)*.6; }
+      if(uRain>.5 && h21(wc+floor(t*6.)+3.)>.96){ g=G_SPARK+2; col+=vec3(.3,.4,.5); }
+    } else {
+      // rock with normal-mapped moon light
+      float e=.15;
+      float hc=rockH(p);
+      vec3 n=normalize(vec3(rockH(p-vec2(e,0))-rockH(p+vec2(e,0)), rockH(p-vec2(0,e))-rockH(p+vec2(0,e)), 2.*e));
+      float dif=max(dot(n,normalize(L)),0.);
+      float cave=smoothstep(2.5,0.,pl);                 // darker near the cave mouth
+      vec3 alb=mix(vec3(.20,.22,.27),vec3(.36,.36,.35),fbm(p*.9))*(1.-cave*.8);
+      col=alb*(moon*(.12+dif*.9+shaft*.8)*shadow + lamp*(.4+.6*dif) + ff);
+      float lum=dot(col,vec3(.3,.5,.2));
+      g=pick(G_ROCK,G_ROCK_N,pow(lum*2.4,.8)+(rnd-.5)*.12);
+    }
+  } else if(td<0.){
+    // tree canopy, sphere-ish normal for depth
+    vec2 d=(p-tc)/tr; float z=sqrt(max(0.,1.-dot(d,d)));
+    vec3 n=normalize(vec3(d,z+.15));
+    float leaf=fbm(p*1.7+tc);
+    float dif=max(dot(n,normalize(L)),0.);
+    vec3 alb=mix(vec3(.04,.16,.09),vec3(.14,.36,.20),leaf);
+    float edge=smoothstep(-.8,0.,td);
+    col=alb*(moon*(.28+dif*1.5+shaft*1.)*(1.-edge*.5) + lamp*.25 + ff*.6);
+    float lum=dot(col,vec3(.3,.5,.2));
+    g = leaf>.62 && rnd>.4 ? G_LEAF+5+int(rnd2*3.) : pick(G_LEAF,5,lum*4.5);
+  } else {
+    // ground: grass, dirt path, flowers
+    float pa=pathSD(p);
+    float wind=sin(dot(p,vec2(.35,.18))-t*1.7+vn(p*.2+t*.1)*3.);
+    if(pa<0.){
+      vec3 alb=mix(vec3(.22,.18,.13),vec3(.34,.29,.22),fbm(p*1.5));
+      col=alb*(lt*shadow+lamp+ff);
+      float lum=dot(col,vec3(.3,.5,.2));
+      g=pick(G_DIRT,G_DIRT_N,lum*3.5+(rnd-.5)*.2);
+      if(uRain>.5 && h21(wc+floor(t*5.))>.97){ g=G_SPARK+2; col+=vec3(.25,.3,.4); }
+    } else {
+      float gn=fbm(p*.25);
+      vec3 alb=mix(vec3(.08,.26,.10),vec3(.20,.50,.20),gn)*(.65+.7*rnd);
+      float edge=smoothstep(1.2,0.,pa);
+      alb=mix(alb,vec3(.2,.22,.12),edge*.4);
+      col=alb*(lt*shadow+lamp+ff*1.3)*(.85+.3*wind*rnd2);
+      float lum=dot(col,vec3(.3,.5,.2));
+      float lean=wind*.8+(rnd2-.5)*1.1;
+      if(lum<.025) g=G_GRASS;                  // space
+      else if(lum<.06) g=G_GRASS+1+int(rnd*2.); // . ,
+      else g = lean>.35 ? G_GRASS+5 : (lean<-.35 ? G_GRASS+6 : (rnd>.85 ? G_GRASS+7 : G_GRASS+4));
+      // flower clumps
+      float fl=vn(p*.33+5.);
+      if(fl>.7 && rnd>.8 && edge<.5){
+        bool white=vn(p*.12+11.)>.5;
+        vec3 fc=white?vec3(.75,.85,1.):vec3(.62,.45,.95);
+        col=fc*(lt*shadow*1.3+lamp+ff*1.5) + (white?fc*shaft*.25:vec3(0));
+        g=G_FLOWER+int(rnd2*4.);
+      }
+    }
+  }
+
+  // ---- characters (drawn on top) ----
+  float part;
+  for(int k=0;k<2;k++){
+    vec2 fp = k==0 ? uPlayer : uNpc;
+    float fd=figure(p-fp, k==0?uWalk:uNpcWalk, k==0?uSide:uNpcSide, part);
+    if(fd<0.){
+      vec2 q=p-fp;
+      vec3 lp=lampLight(p,k==0?uLamp:uNpcLamp,k==0?vec3(1.,.68,.32):vec3(.55,1.,.35),k==0?uLantern:.8);
+      vec3 alb = k==0 ? vec3(.30,.32,.40) : vec3(.26,.36,.28);
+      if(part==2.) alb*=.6;                 // hood
+      float fold=.8+.25*sin(q.x*16.+q.y*3.);
+      float rim=smoothstep(-.25,0.,fd);       // silhouette rim catches moonlight
+      col=alb*fold*(moon*(.35+rim*.8+shaft*.6)+lp*1.3+ff);
+      float lum=dot(col,vec3(.3,.5,.2));
+      g=pick(G_BODY,G_BODY_N,lum*2.2+.15);
+    }
+  }
+  // lanterns
+  for(int k=0;k<2;k++){
+    vec2 lp2 = k==0 ? uLamp : uNpcLamp;
+    float on = k==0 ? uLantern : 1.;
+    if(length(p-lp2)<.24 && on>.5){ g=G_SPARK; col=(k==0?vec3(1.,.8,.45):vec3(.7,1.,.5))*2.; }
+  }
+  // fireflies themselves
+  if(ffNear<.28){ g = ffNear<.14 ? G_SPARK : G_SPARK+3; col=vec3(.85,1.,.55)*1.6; }
+
+  // ---- rain overlay (screen space streaks) ----
+  if(uRain>.5){
+    float colid=floor(cell.x-cell.y*.3);
+    float sy=cell.y+t*38.+h21(vec2(colid,1.))*97.;
+    float sg=floor(sy/11.);
+    float f=fract(sy/11.);
+    if(h21(vec2(colid,sg))>.82 && f<.2){ g=G_RAIN; col=mix(col,vec3(.55,.65,.82),.75); }
+  }
+
+  col=1.-exp(-col*1.9);
+  o=vec4(col, float(g)/255.);
+}
+</script>
+
+<script id="compFS" type="x-shader">#version 300 es
+precision highp float;
+uniform sampler2D uScene, uAtlas;
+uniform vec2 uRes, uCell, uCam, uLamp, uNpcLamp;
+uniform float uPPU, uTime, uRaw, uLantern, uRain;
+out vec4 o;
+float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+vec2  h22(vec2 p){ float n=h21(p); return vec2(n, h21(p+n*17.13)); }
+float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+  return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
+void main(){
+  ivec2 fc=ivec2(gl_FragCoord.xy), cs=ivec2(uCell);
+  ivec2 cell=fc/cs, lc=fc-cell*cs;
+  vec4 s=texelFetch(uScene,cell,0);
+  int idx=int(s.a*255.+.5);
+  float g=texelFetch(uAtlas,ivec2(idx*cs.x+lc.x,cs.y-1-lc.y),0).r;
+  vec3 c = uRaw>.5 ? s.rgb : s.rgb*g*2.1 + s.rgb*.07;
+
+  // continuous glow over the glyphs (this is what sells the "light")
+  vec2 p=uCam+(gl_FragCoord.xy-uRes*.5)/uPPU;
+  float t=uTime;
+  vec2 d=p-uLamp; float dd=dot(d,d);
+  c+=vec3(1.,.66,.3)*uLantern*(.16*exp(-dd*.35)+.6*exp(-dd*14.));
+  d=p-uNpcLamp; dd=dot(d,d);
+  c+=vec3(.55,1.,.35)*(.12*exp(-dd*.35)+.5*exp(-dd*14.));
+  vec2 id=floor(p/5.);
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){
+    vec2 cid=id+vec2(i,j); vec2 h=h22(cid+31.);
+    if(h.x<.35) continue;
+    float ph=h.y*6.283;
+    vec2 fp=(cid+.5)*5.+vec2(sin(t*(.3+h.x*.4)+ph), cos(t*(.25+h.y*.3)+ph*1.7))*1.8;
+    float blink=smoothstep(.2,.9,sin(t*(.8+h.x)+ph*3.)*.5+.5);
+    float q=dot(p-fp,p-fp);
+    c+=vec3(.7,1.,.45)*blink*(.10*exp(-q*1.2)+.35*exp(-q*20.));
+  }
+  // moon haze in the shafts
+  vec2 sdir=normalize(vec2(.55,-1.));
+  float sx=dot(p,vec2(-sdir.y,sdir.x));
+  float shaft=smoothstep(.58,.9,vn(vec2(sx*.16,t*.05)))*(1.-.7*uRain);
+  c+=vec3(.35,.5,.8)*shaft*.05;
+
+  vec2 uv=gl_FragCoord.xy/uRes;
+  c*=1.-.55*pow(length(uv-.5)*1.25,2.2);
+  c+=(h21(gl_FragCoord.xy+fract(t)*91.)-.5)*.018;
+  o=vec4(c,1.);
+}
+</script>
+
+<script>
+const VS = `#version 300 es
+in vec2 a; void main(){ gl_Position=vec4(a,0.,1.); }`;
+
+// Glyph sets: each is a contiguous run in the atlas, ordered dark -> bright
+const SETS = {
+  RAMP:   " .:-=+*#%@",
+  GRASS:  " .,'|/\\\"",
+  ROCK:   " .,:;icoaqdbpQS$&#M",
+  WATER:  ".-~=",
+  LEAF:   " .:;o%&@8",
+  DIRT:   " .,:;'",
+  FLOWER: "*o+x",
+  BODY:   " .:+xX#MW@",
+  SPARK:  "*+o.",
+  RAIN:   "/",
+};
+let ATLAS = "", defs = "";
+for (const [k, v] of Object.entries(SETS)) {
+  defs += `#define G_${k} ${ATLAS.length}\n#define G_${k}_N ${v.length}\n`;
+  ATLAS += v;
+}
+
+const cv = document.getElementById("c");
+const gl = cv.getContext("webgl2", { antialias: false });
+if (!gl) { document.getElementById("err").style.display = "flex"; throw new Error("no webgl2"); }
+
+function prog(fs) {
+  const mk = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+  const p = gl.createProgram();
+  gl.attachShader(p, mk(gl.VERTEX_SHADER, VS)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs));
+  gl.bindAttribLocation(p, 0, "a"); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) { const nm = gl.getActiveUniform(p, i).name; u[nm] = gl.getUniformLocation(p, nm); }
+  return { p, u };
+}
+const sceneP = prog(document.getElementById("sceneFS").textContent.replace("#define GLYPHS", defs));
+const compP = prog(document.getElementById("compFS").textContent);
+
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+const tex = () => { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+  for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.NEAREST);
+  for (const k of [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T]) gl.texParameteri(gl.TEXTURE_2D, k, gl.CLAMP_TO_EDGE);
+  return t; };
+const sceneTex = tex(), atlasTex = tex();
+const fbo = gl.createFramebuffer();
+
+// ---- sizing ----
+const isTouch = matchMedia("(pointer:coarse)").matches;
+let cellH = isTouch ? 9 : 11;               // css px; width follows monospace ratio
+let dpr, W, H, cw, ch, cols, rows, ppu;
+function buildAtlas() {
+  const c = document.createElement("canvas"); c.width = cw * ATLAS.length; c.height = ch;
+  const x = c.getContext("2d");
+  x.fillStyle = "#000"; x.fillRect(0, 0, c.width, c.height);
+  x.fillStyle = "#fff"; x.textAlign = "center"; x.textBaseline = "middle";
+  x.font = `bold ${Math.min(ch * .95, cw / .6)}px "Courier New", ui-monospace, monospace`;
+  for (let i = 0; i < ATLAS.length; i++) x.fillText(ATLAS[i], i * cw + cw / 2, ch / 2 + 1);
+  gl.bindTexture(gl.TEXTURE_2D, atlasTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+}
+function resize() {
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  W = cv.width = Math.floor(innerWidth * dpr); H = cv.height = Math.floor(innerHeight * dpr);
+  ch = Math.max(5, Math.round(cellH * dpr)); cw = Math.max(3, Math.round(ch * .6));
+  cols = Math.ceil(W / cw); rows = Math.ceil(H / ch);
+  ppu = Math.sqrt(W * H) / 28;
+  gl.bindTexture(gl.TEXTURE_2D, sceneTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, cols, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, sceneTex, 0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  buildAtlas();
+  document.getElementById("grid").textContent = `${cols}×${rows} tekens`;
+}
+addEventListener("resize", resize); resize();
+
+// ---- state & input ----
+const S = { raw: false, rain: false, lamp: true };
+const me = { x: 0, y: 0, walk: 0, side: 1 };
+const npc = { x: 0, y: 0, walk: 0, side: 1 };
+let cam = { x: 0, y: 0 };
+const keys = {};
+addEventListener("keydown", e => {
+  keys[e.key.toLowerCase()] = true;
+  const k = e.key.toLowerCase();
+  if (k === "t") toggle("raw", bRaw); if (k === "r") toggle("rain", bRain); if (k === "l") toggle("lamp", bLamp);
+  if (k === "[") size(1); if (k === "]") size(-1);
+});
+addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+const $ = id => document.getElementById(id);
+const bRaw = $("bRaw"), bRain = $("bRain"), bLamp = $("bLamp");
+function toggle(k, b) { S[k] = !S[k]; b.classList.toggle("on", S[k]); }
+function size(d) { cellH = Math.max(4, Math.min(22, cellH + d)); resize(); }
+bRaw.onclick = () => toggle("raw", bRaw); bRain.onclick = () => toggle("rain", bRain); bLamp.onclick = () => toggle("lamp", bLamp);
+$("bMinus").onclick = () => size(1); $("bPlus").onclick = () => size(-1);   // smaller cells = more characters
+
+let touch = null; const stick = $("stick");
+cv.addEventListener("pointerdown", e => { touch = { x0: e.clientX, y0: e.clientY, dx: 0, dy: 0, id: e.pointerId };
+  stick.style.display = "block"; stick.style.left = e.clientX + "px"; stick.style.top = e.clientY + "px"; });
+addEventListener("pointermove", e => { if (!touch || e.pointerId !== touch.id) return;
+  touch.dx = e.clientX - touch.x0; touch.dy = e.clientY - touch.y0;
+  const m = Math.hypot(touch.dx, touch.dy), k = m > 35 ? 35 / m : 1;
+  stick.firstChild.style.transform = `translate(${touch.dx * k}px,${touch.dy * k}px)`; });
+const end = e => { if (touch && e.pointerId === touch.id) { touch = null; stick.style.display = "none"; } };
+addEventListener("pointerup", end); addEventListener("pointercancel", end);
+
+const blocked = (x, y) => Math.hypot((x - 13) * .75, y - 7) < 5.6;
+
+// ---- loop ----
+let last = performance.now(), fpsT = 0, fpsN = 0;
+const t0 = last;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  const time = (now - t0) / 1000;
+  let mx = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0);
+  let my = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0);
+  if (touch && Math.hypot(touch.dx, touch.dy) > 8) { mx = touch.dx; my = -touch.dy; }
+  const m = Math.hypot(mx, my);
+  if (m > 0) {
+    const sp = 5.5 * dt / m, nx = me.x + mx * sp, ny = me.y + my * sp;
+    if (!blocked(nx, me.y)) me.x = nx; if (!blocked(me.x, ny)) me.y = ny;
+    me.walk += dt * 9; if (Math.abs(mx) > .1 * m) me.side = Math.sign(mx);
+  }
+  // wandering NPC on a loop
+  const a = time * .12, nxp = -9 + Math.cos(a) * 7, nyp = 9 + Math.sin(a * 2) * 3.5;
+  npc.side = nxp < npc.x ? -1 : 1; npc.walk += Math.hypot(nxp - npc.x, nyp - npc.y) * 1.6; npc.x = nxp; npc.y = nyp;
+
+  cam.x += (me.x - cam.x) * Math.min(1, dt * 4); cam.y += (me.y + .9 - cam.y) * Math.min(1, dt * 4);
+  // snap camera to the character lattice so glyphs never swim
+  const cx = Math.round(cam.x * ppu / cw) * cw / ppu, cy = Math.round(cam.y * ppu / ch) * ch / ppu;
+  const lamp = [me.x + me.side * .66, me.y + .9 + Math.sin(me.walk) * .04];
+  const nlamp = [npc.x + npc.side * .66, npc.y + .9];
+
+  // pass 1: scene at one sample per character cell
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo); gl.viewport(0, 0, cols, rows);
+  gl.useProgram(sceneP.p); const u = sceneP.u;
+  gl.uniform2f(u.uRes, cols * cw, rows * ch); gl.uniform2f(u.uCell, cw, ch); gl.uniform2f(u.uCam, cx, cy);
+  gl.uniform1f(u.uPPU, ppu); gl.uniform1f(u.uTime, time); gl.uniform1f(u.uRain, S.rain ? 1 : 0);
+  gl.uniform1f(u.uLantern, S.lamp ? 1 : 0); gl.uniform2f(u.uPlayer, me.x, me.y); gl.uniform2f(u.uLamp, ...lamp);
+  gl.uniform1f(u.uWalk, m > 0 ? me.walk : 0); gl.uniform1f(u.uSide, me.side);
+  gl.uniform2f(u.uNpc, npc.x, npc.y); gl.uniform2f(u.uNpcLamp, ...nlamp);
+  gl.uniform1f(u.uNpcWalk, npc.walk); gl.uniform1f(u.uNpcSide, npc.side);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  // pass 2: glyphs + glow at full resolution
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, W, H);
+  gl.useProgram(compP.p); const v = compP.u;
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, sceneTex); gl.uniform1i(v.uScene, 0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.uniform1i(v.uAtlas, 1);
+  // composite uses the same origin as pass 1 (grid may overhang the canvas slightly)
+  gl.uniform2f(v.uRes, cols * cw, rows * ch); gl.uniform2f(v.uCell, cw, ch); gl.uniform2f(v.uCam, cx, cy);
+  gl.uniform1f(v.uPPU, ppu); gl.uniform1f(v.uTime, time); gl.uniform1f(v.uRaw, S.raw ? 1 : 0);
+  gl.uniform1f(v.uLantern, S.lamp ? 1 : 0); gl.uniform1f(v.uRain, S.rain ? 1 : 0);
+  gl.uniform2f(v.uLamp, ...lamp); gl.uniform2f(v.uNpcLamp, ...nlamp);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  // name tags
+  const tag = (el, x, y) => { const sx = ((x - cx) * ppu + cols * cw / 2) / dpr, sy = (H - ((y - cy) * ppu + rows * ch / 2)) / dpr;
+    el.style.left = sx + "px"; el.style.top = sy + "px"; };
+  tag($("tagMe"), me.x, me.y + 2.5); tag($("tagNpc"), npc.x, npc.y + 2.5);
+
+  fpsN++; fpsT += dt; if (fpsT > .5) { $("fps").textContent = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
